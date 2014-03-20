@@ -61,7 +61,7 @@ var tipSchema = new mongoose.Schema({
   }]
 });
 
-var tipModel = mongoose.model('Tip', tipSchema);
+var tipModel = mongoose.model(modelName, tipSchema);
 
 /**
  * Alpha user is sending a Beta number to invite and become a babysitter.
