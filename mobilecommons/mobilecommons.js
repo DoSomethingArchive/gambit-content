@@ -6,8 +6,6 @@
 var request = require('request')
     ;
 
-var exports = module.exports;
-
 /**
  * Opt-in mobile numbers into specified Mobile Commons paths.
  */
