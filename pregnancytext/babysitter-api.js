@@ -26,12 +26,11 @@ var optinBsOnInvite = exports.optinBsOnInvite = 165621;
 
 /**
  * Sets of Mobile Commons opt-in paths for tips.
- * @todo
  */
-var waitTips = [1,2,3,4];
-var safeTips = [11,12,13,14];
-var parentTips = [21,22,23,24];
-var rightsTips = [31,32,33,34];
+var waitTips = [165699, 165701, 165703, 165707, 165709, 165711, 165713, 165715, 165717, 165719];
+var safeTips = [165683, 165685, 165687, 165689, 165691, 165693, 165695, 165697];
+var parentTips = [165677, 165679, 165681];
+var rightsTips = [165671, 165673, 165675];
 
 /**
  * Name identifiers for the sets of the tips in the database.
@@ -241,5 +240,5 @@ exports.deliverTips = function(request, response, tipName) {
     }
   );
 
-  response.send('OK');
+  response.send();
 };
