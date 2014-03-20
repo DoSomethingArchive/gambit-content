@@ -75,13 +75,13 @@ exports.onSendBabysitterInvite = function(request, response) {
 
   // Validate the phone number
   var betaNotValid = false;
-  var isValidString = (typeof betaPhone === 'string') && betaPhone != '';
+  var isValidString = (typeof betaPhone === 'string') && betaPhone !== '';
   if (isValidString) {
     // Remove any non-numeric characters
     betaPhone = betaPhone.replace(/[^0-9]/g, '');
 
     // Not valid if not a 10 digit number or for 11 digits if the first number isn't '1'
-    if (!(betaPhone.length == 11 && betaPhone.charAt(0) == '1') && betaPhone.length != 10) {
+    if (!(betaPhone.length === 11 && betaPhone.charAt(0) === '1') && betaPhone.length !== 10) {
       betaNotValid = true;
     }
   }
@@ -150,7 +150,7 @@ exports.deliverTips = function(request, response, tipName) {
 
         // Check to see what tip the user received last
         for (var i = 0; i < doc.last_tip_delivered.length; i++) {
-          if (doc.last_tip_delivered[i].name == tipName) {
+          if (doc.last_tip_delivered[i].name === tipName) {
             lastTip = doc.last_tip_delivered[i].last_tip;
             ltdIndex = i;
           }
