@@ -157,7 +157,9 @@ exports.onSendBabysitterInvite = function(request, response) {
   var betaPhone = false;
   var args = request.body.args;
   if (!(betaPhone = hasValidPhone(args))) {
-    sendGenericResponse(request.body.phone);
+    if (request.body.dev !== '1') {
+      sendGenericResponse(request.body.phone);
+    }
     response.send("That wasn't a valid phone number.");
     return;
   }
@@ -173,7 +175,9 @@ exports.onSendBabysitterInvite = function(request, response) {
     betaOptin: optinBsOnInvite
   };
 
-  mobilecommons.optin(args);
+  if (request.body.dev !== '1') {
+    mobilecommons.optin(args);
+  }
 
   response.send('OK');
 };
@@ -257,7 +261,9 @@ exports.deliverTips = function(request, response, tipName) {
           alphaOptin: optin
         };
 
-        mobilecommons.optin(args);
+        if (request.body.dev !== '1') {
+          mobilecommons.optin(args);
+        }
 
         // Update the existing doc in the database
         var data = {
@@ -284,7 +290,10 @@ exports.deliverTips = function(request, response, tipName) {
           alphaPhone: request.body.phone,
           alphaOptin: optin
         };
-        mobilecommons.optin(args);
+
+        if (request.body.dev !== '1') {
+          mobilecommons.optin(args);
+        }
 
         // Create a new doc
         var model = new tipModel({
