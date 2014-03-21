@@ -39,4 +39,16 @@ app.listen(port, function() {
 /**
  * Pregnancy Text 2014
  */
-app.post('/send-babysitter-invite', babysitter_api.onSendBabysitterInvite);
+app.post('/pregnancy-text/send-babysitter-invite', babysitter_api.onSendBabysitterInvite);
+app.post('/pregnancy-text/wait-tips', function(req, res) {
+  babysitter_api.deliverTips(req, res, babysitter_api.waitTipsName);
+});
+app.post('/pregnancy-text/safe-tips', function(req, res) {
+  babysitter_api.deliverTips(req, res, babysitter_api.safeTipsName);
+});
+app.post('/pregnancy-text/parent-tips', function(req, res) {
+  babysitter_api.deliverTips(req, res, babysitter_api.parentTipsName);
+});
+app.post('/pregnancy-text/rights-tips', function(req, res) {
+  babysitter_api.deliverTips(req, res, babysitter_api.rightsTipsName);
+});

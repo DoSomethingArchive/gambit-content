@@ -5,6 +5,7 @@
     "dependencies": {
         "express": "3.x",
         "path": "~0.4.9",
+        "mongoose": "~3.8.8",
         "mysql": "2.1.x",
         "request": "2.34.x"
     }
