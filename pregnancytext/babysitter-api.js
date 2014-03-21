@@ -63,34 +63,87 @@ var tipSchema = new mongoose.Schema({
 
 var tipModel = mongoose.model(modelName, tipSchema);
 
+
+/**
+ * Check if a character is one that can be valid in a phone number.
+ *
+ * @return True or false.
+ */
+var canIgnoreForValidPhone = function(c) {
+  if (c === '('
+      || c === ')'
+      || c === '['
+      || c === ']'
+      || c === ','
+      || c === '.'
+      || c === '-') {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Check if a character is numeric.
+ *
+ * @return True if numeric, otherwise false.
+ */
+var isNumeric = function(c) {
+  return /^\d$/.test(c);
+}
+
+/**
+ * Determine whether or not a string has a valid phone number at the start of
+ * its message.
+ *
+ * @return The valid phone number if one exists, otherwise false.
+ */
+var hasValidPhone = function(message) {
+  var phone = '';
+
+  // Remove whitespace
+  message = message.replace(/ /g, '');
+
+  for (var i = 0; i < message.length; i++) {
+    var c = message.charAt(i);
+
+    // If first number is a 1, then skip
+    if (i === 0 && c === '1')
+      continue;
+
+    // If it's a number, then add to our phone string
+    if (isNumeric(c)) {
+      phone += c;
+
+      // If we've reached 10 digits, we got ourselves a phone number
+      if (phone.length == 10)
+        return phone;
+      else
+        continue;
+    }
+
+    // If it's non-numeric, see if it's a character we can skip
+    if (canIgnoreForValidPhone(c))
+      continue;
+
+    // If we're here, then a character was found that makes this number invalid
+    break;
+
+  }
+
+  return false;
+};
+
 /**
  * Alpha user is sending a Beta number to invite and become a babysitter.
  */
 exports.onSendBabysitterInvite = function(request, response) {
   var alpha = request.body.phone;
 
+  // Validate and retrieve the beta's phone number from the message body.
+  var betaPhone = false;
   var args = request.body.args;
-  var words = args.split(' ');
-  var betaPhone = words[0];
-
-  // Validate the phone number
-  var betaNotValid = false;
-  var isValidString = (typeof betaPhone === 'string') && betaPhone !== '';
-  if (isValidString) {
-    // Remove any non-numeric characters
-    betaPhone = betaPhone.replace(/[^0-9]/g, '');
-
-    // Not valid if not a 10 digit number or for 11 digits if the first number isn't '1'
-    if (!(betaPhone.length === 11 && betaPhone.charAt(0) === '1') && betaPhone.length !== 10) {
-      betaNotValid = true;
-    }
-  }
-  else {
-    betaNotValid = true;
-  }
-
-  // Error response if beta number is not valid
-  if (betaNotValid) {
+  if (!(betaPhone = hasValidPhone(args))) {
     response.send("That wasn't a valid phone number.");
     return;
   }
