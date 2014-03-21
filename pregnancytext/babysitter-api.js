@@ -97,31 +97,35 @@ var hasValidPhone = function(message) {
   for (var i = 0; i < message.length; i++) {
     var c = message.charAt(i);
 
-    // If first number is a 1, then skip
-    if (i === 0 && c === '1')
-      continue;
-
     // If it's a number, then add to our phone string
     if (isNumeric(c)) {
-      phone += c;
+
+      // If first number is a 1, then skip. All other cases, it's safe to append.
+      if (phone.length > 0 || (phone.length === 0 && c !== '1')) {
+        phone += c;
+      }
 
       // If we've reached 10 digits, we got ourselves a phone number
-      if (phone.length == 10)
-        return phone;
-      else
-        continue;
+      if (phone.length === 10) {
+        break;
+      }
+
     }
+    // See if it's a character we can skip
+    else if (!canIgnoreForValidPhone(c)) {
 
-    // If it's non-numeric, see if it's a character we can skip
-    if (canIgnoreForValidPhone(c))
-      continue;
+      // If we're here, then a character was found that makes this number invalid
+      break;
 
-    // If we're here, then a character was found that makes this number invalid
-    break;
-
+    }
   }
 
-  return false;
+  if (phone.length === 10) {
+    return phone;
+  }
+  else {
+    return false;
+  }
 };
 
 /**
