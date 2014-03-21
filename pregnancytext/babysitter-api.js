@@ -70,17 +70,7 @@ var tipModel = mongoose.model(modelName, tipSchema);
  * @return True or false.
  */
 var canIgnoreForValidPhone = function(c) {
-  if (c === '('
-      || c === ')'
-      || c === '['
-      || c === ']'
-      || c === ','
-      || c === '.'
-      || c === '-') {
-    return true;
-  }
-
-  return false;
+  return /^[\(\)\[\]\,\.\-]$/.test(c);
 }
 
 /**
