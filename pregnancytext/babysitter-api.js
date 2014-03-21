@@ -25,6 +25,11 @@ var campaignIdParentNoBs = exports.campaignIdParentNoBs = 124863;
 var optinBsOnInvite = exports.optinBsOnInvite = 165621;
 
 /**
+ * Array of generic response Mobile Commons opt-in paths.
+ */
+var genericResponses = [165647, 165649, 165651, 165653];
+
+/**
  * Sets of Mobile Commons opt-in paths for tips.
  */
 var waitTips = [165699, 165701, 165703, 165707, 165709, 165711, 165713, 165715, 165717, 165719];
@@ -129,6 +134,20 @@ var hasValidPhone = function(message) {
 };
 
 /**
+ * Randomly selects a generic response to opt the user into.
+ */
+var sendGenericResponse = function(phone) {
+  var args = {alphaPhone: phone};
+
+  // Randomly select a opt-in path
+  var index = Math.floor(Math.random() * genericResponses.length);
+  args['alphaOptin'] = genericResponses[index];
+
+  // Trigger the opt-in to send the message to the user
+  mobilecommons.optin(args);
+}
+
+/**
  * Alpha user is sending a Beta number to invite and become a babysitter.
  */
 exports.onSendBabysitterInvite = function(request, response) {
@@ -138,6 +157,7 @@ exports.onSendBabysitterInvite = function(request, response) {
   var betaPhone = false;
   var args = request.body.args;
   if (!(betaPhone = hasValidPhone(args))) {
+    sendGenericResponse(request.body.phone);
     response.send("That wasn't a valid phone number.");
     return;
   }
