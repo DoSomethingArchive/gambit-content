@@ -11,13 +11,15 @@ var mobilecommons = require('../mobilecommons/mobilecommons')
  * The Mobile Commons opt-in path a parent gets pushed to when he sends a
  * babysitter invitation.
  */
-var optinParentOnInvite = exports.optinParentOnInvite = 165619;
+var optinParentOnInviteAlpha = exports.optinParentOnInviteAlpha = 165619;
+var optinParentOnInviteBeta = exports.optinParentOnInviteBeta = 165765;
 
 /**
  * The Mobile Commons campaign id for parents without a babysitter. When a
  * a babysitter invite is sent, parents get opted out of this campaign.
  */
-var campaignIdParentNoBs = exports.campaignIdParentNoBs = 124863;
+var campaignIdParentNoBsAlpha = exports.campaignIdParentNoBsAlpha = 124863;
+var campaignIdParentNoBsBeta = exports.campaignIdParentNoBsBeta = 124945;
 
 /**
  * The Mobile Commons opt-in path a babysitter gets pushed to on the invite.
@@ -150,7 +152,7 @@ var sendGenericResponse = function(phone) {
 /**
  * Alpha user is sending a Beta number to invite and become a babysitter.
  */
-exports.onSendBabysitterInvite = function(request, response) {
+exports.onSendBabysitterInvite = function(request, response, optinParent, optoutId) {
   var alpha = request.body.phone;
 
   // Validate and retrieve the beta's phone number from the message body.
@@ -160,7 +162,7 @@ exports.onSendBabysitterInvite = function(request, response) {
     if (request.body.dev !== '1') {
       sendGenericResponse(request.body.phone);
     }
-    response.send("That wasn't a valid phone number.");
+    response.send();
     return;
   }
 
@@ -168,18 +170,28 @@ exports.onSendBabysitterInvite = function(request, response) {
   // alpha/parent user into the "with babysitter" Mobile Commons campaign.
   var alphaPhone = request.body.phone;
 
-  var args = {
+  var optinArgs = {
     alphaPhone: alphaPhone,
     betaPhone: betaPhone,
-    alphaOptin: optinParentOnInvite,
+    alphaOptin: optinParent,
     betaOptin: optinBsOnInvite
   };
 
   if (request.body.dev !== '1') {
-    mobilecommons.optin(args);
+    mobilecommons.optin(optinArgs);
   }
 
-  response.send('OK');
+  // Opt the alpha/parent user out of the "without babysitter" Mobile Commons campaign.
+  var optoutArgs = {
+    phone: alphaPhone,
+    campaignId: optoutId
+  };
+
+  if (request.body.dev !== '1') {
+    mobilecommons.optout(optoutArgs);
+  }
+
+  response.send();
 };
 
 /**
