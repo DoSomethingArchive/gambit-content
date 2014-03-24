@@ -69,15 +69,22 @@ exports.optout = function(args) {
   var phone = args.phone || null;
   var campaignId = args.campaignId || null;
   var companyKey = process.env.MOBILECOMMONS_COMPANY_KEY || null;
+  var authEmail = process.env.MOBILECOMMONS_AUTH_EMAIL;
+  var authPass = process.env.MOBILECOMMONS_AUTH_PASS;
 
   // Exit out if one of the values isn't available
-  if (!phone || !campaignId || !companyKey)
+  if (!phone || !campaignId || !companyKey || !authEmail || !authPass) {
     return;
+  }
 
   // Send opt-out request
   request.post(
     url,
     {
+      'auth': {
+        'user': authEmail,
+        'pass': authPass
+      },
       form: {
         'person[phone]': phone,
         campaign: campaignId,

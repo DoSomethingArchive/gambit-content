@@ -152,7 +152,7 @@ var sendGenericResponse = function(phone) {
 /**
  * Alpha user is sending a Beta number to invite and become a babysitter.
  */
-exports.onSendBabysitterInvite = function(request, response, optinParent, optout) {
+exports.onSendBabysitterInvite = function(request, response, optinParent, optoutId) {
   var alpha = request.body.phone;
 
   // Validate and retrieve the beta's phone number from the message body.
@@ -170,7 +170,7 @@ exports.onSendBabysitterInvite = function(request, response, optinParent, optout
   // alpha/parent user into the "with babysitter" Mobile Commons campaign.
   var alphaPhone = request.body.phone;
 
-  var args = {
+  var optinArgs = {
     alphaPhone: alphaPhone,
     betaPhone: betaPhone,
     alphaOptin: optinParent,
@@ -178,10 +178,18 @@ exports.onSendBabysitterInvite = function(request, response, optinParent, optout
   };
 
   if (request.body.dev !== '1') {
-    mobilecommons.optin(args);
+    mobilecommons.optin(optinArgs);
   }
 
-  // @todo optout
+  // Opt the alpha/parent user out of the "without babysitter" Mobile Commons campaign.
+  var optoutArgs = {
+    phone: alphaPhone,
+    campaignId: optoutId
+  };
+
+  if (request.body.dev !== '1') {
+    mobilecommons.optout(optoutArgs);
+  }
 
   response.send();
 };
