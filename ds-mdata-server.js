@@ -1,5 +1,6 @@
 var application_root = __dirname
     , express = require('express')
+    , fs = require('fs')
     , path = require('path')
     , request = require('request')
     , mobilecommons = require('./mobilecommons/mobilecommons')
@@ -35,6 +36,30 @@ app.listen(port, function() {
  * Routes
  */
 
+/**
+ * For loader.io load testing.
+ */
+if (process.env.LOADERIO_VERIFY_KEY) {
+  // loader.io verifies the domain by querying this location based off of the
+  // generated key that they provide.
+  app.get('/' + process.env.LOADERIO_VERIFY_KEY, function(req, res) {
+
+    // Return the key file provided by loader.io.
+    var filename = process.env.LOADERIO_VERIFY_KEY + '.txt';
+    fs.readFile(filename, "binary", function(err, file) {
+        if(err) {
+          res.writeHead(500, {"Content-Type": "text/plain"});
+          res.write(err + "\n");
+          res.end();
+          return;
+        }
+
+        res.writeHead(200);
+        res.write(file, "binary");
+        res.end();
+      });
+  });
+}
 
 /**
  * Pregnancy Text 2014
