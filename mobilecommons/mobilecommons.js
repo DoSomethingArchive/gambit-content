@@ -68,9 +68,9 @@ exports.optout = function(args) {
 
   var phone = args.phone || null;
   var campaignId = args.campaignId || null;
-  var companyKey = process.env.MOBILECOMMONS_COMPANY_KEY || null;
-  var authEmail = process.env.MOBILECOMMONS_AUTH_EMAIL;
-  var authPass = process.env.MOBILECOMMONS_AUTH_PASS;
+  var companyKey = args.mc_company_key || process.env.MOBILECOMMONS_COMPANY_KEY || null;
+  var authEmail = args.mc_auth_email || process.env.MOBILECOMMONS_AUTH_EMAIL || null;
+  var authPass = args.mc_auth_pass || process.env.MOBILECOMMONS_AUTH_PASS || null;
 
   // Exit out if one of the values isn't available
   if (!phone || !campaignId || !companyKey || !authEmail || !authPass) {
