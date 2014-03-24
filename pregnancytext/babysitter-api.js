@@ -184,7 +184,12 @@ exports.onSendBabysitterInvite = function(request, response, optinParent, optout
   // Opt the alpha/parent user out of the "without babysitter" Mobile Commons campaign.
   var optoutArgs = {
     phone: alphaPhone,
-    campaignId: optoutId
+    campaignId: optoutId,
+
+    // Override company key and auth credentials for the Pregnancy Text affiliate account.
+    mc_company_key: process.env.MOBILECOMMONS_PREGTEXT_COMPANY_KEY || null,
+    mc_auth_email: process.env.MOBILECOMMONS_PREGTEXT_AUTH_EMAIL || null,
+    mc_auth_pass: process.env.MOBILECOMMONS_PREGTEXT_AUTH_PASS || null
   };
 
   if (request.body.dev !== '1') {
@@ -289,8 +294,9 @@ exports.deliverTips = function(request, response, tipName) {
           function(err, num, raw) {
             if (err) return console.log(err);
 
-            console.log('Updated %d document(s).', num);
-            console.log('The raw response from Mongo was ' + raw + "\n\n\n");
+            console.log('Updated %d document(s). Mongo raw response:', num);
+            console.log(raw);
+            console.log("\n\n");
           }
         );
       }
