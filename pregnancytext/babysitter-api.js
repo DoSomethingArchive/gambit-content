@@ -5,49 +5,50 @@
 
 var mobilecommons = require('../mobilecommons/mobilecommons')
     , mongoose = require('mongoose')
+    , config = require('./config.json')
     ;
 
 /**
  * The Mobile Commons opt-in path a parent gets pushed to when he sends a
  * babysitter invitation.
  */
-var optinParentOnInviteAlpha = exports.optinParentOnInviteAlpha = 165619;
-var optinParentOnInviteBeta = exports.optinParentOnInviteBeta = 165765;
+var optinParentOnInviteAlpha = exports.optinParentOnInviteAlpha = config.optinParentOnInviteAlpha;
+var optinParentOnInviteBeta = exports.optinParentOnInviteBeta = config.optinParentOnInviteBeta;
 
 /**
  * The Mobile Commons campaign id for parents without a babysitter. When a
  * a babysitter invite is sent, parents get opted out of this campaign.
  */
-var campaignIdParentNoBsAlpha = exports.campaignIdParentNoBsAlpha = 124863;
-var campaignIdParentNoBsBeta = exports.campaignIdParentNoBsBeta = 124945;
+var campaignIdParentNoBsAlpha = exports.campaignIdParentNoBsAlpha = config.campaignIdParentNoBsAlpha;
+var campaignIdParentNoBsBeta = exports.campaignIdParentNoBsBeta = config.campaignIdParentNoBsBeta;
 
 /**
  * The Mobile Commons opt-in path a babysitter gets pushed to on the invite.
  */
-var optinBsOnInvite = exports.optinBsOnInvite = 165621;
+var optinBsOnInvite = exports.optinBsOnInvite = config.optinBsOnInvite;
 
 /**
  * Array of generic response Mobile Commons opt-in paths.
  */
-var genericResponses = [165647, 165649, 165651, 165653];
+var genericResponses = config.genericResponses;
 
 /**
  * Sets of Mobile Commons opt-in paths for tips.
  */
-var waitTips = [165699, 165701, 165703, 165707, 165709, 165711, 165713, 165715, 165717, 165719];
-var safeTips = [165683, 165685, 165687, 165689, 165691, 165693, 165695, 165697];
-var parentTips = [165677, 165679, 165681];
-var rightsTips = [165671, 165673, 165675];
+var waitTips = config.waitTips.optins;
+var safeTips = config.safeTips.optins;
+var parentTips = config.parentTips.optins;
+var rightsTips = config.rightsTips.optins;
 
 /**
  * Name identifiers for the sets of the tips in the database.
  */
-var waitTipsName = exports.waitTipsName = 'pregtext2014-wait';
-var safeTipsName = exports.safeTipsName = 'pregtext2014-safe';
-var parentTipsName = exports.parentTipsName = 'pregtext2014-parent';
-var rightsTipsName = exports.rightsTipsName = 'pregtext2014-rights';
+var waitTipsName = exports.waitTipsName = config.waitTips.dbKey;
+var safeTipsName = exports.safeTipsName = config.safeTips.dbKey;
+var parentTipsName = exports.parentTipsName = config.parentTips.dbKey;
+var rightsTipsName = exports.rightsTipsName = config.rightsTips.dbKey;
 
-var modelName = 'Tip';
+var tipModelName = config.tipModelName;
 
 /**
  * Mongo setup and config.
@@ -68,7 +69,7 @@ var tipSchema = new mongoose.Schema({
   }]
 });
 
-var tipModel = mongoose.model(modelName, tipSchema);
+var tipModel = mongoose.model(tipModelName, tipSchema);
 
 
 /**
