@@ -74,6 +74,15 @@ app.post('/pregnancy-text/send-babysitter-invite-beta', function(req, res) {
     babysitter_api.campaignIdParentNoBsBeta);
 });
 
+// For players who accidentally opt-out, we give them the option to get back into
+// the game through an opt-in in a different campaign that continues the drip
+// messages on the same day. For babysitter invites sent from this campaign,
+// we'll push the players to the Beta w/ Babysitter campaign.
+app.post('/pregnancy-text/send-babysitter-invite-resurrected', function(req, res) {
+  babysitter_api.onSendBabysitterInvite(req, res, babysitter_api.optinParentOnInviteBeta,
+    babysitter_api.campaignIdParentNoBsResurrected);
+});
+
 app.post('/pregnancy-text/wait-tips', function(req, res) {
   babysitter_api.deliverTips(req, res, babysitter_api.waitTipsName);
 });

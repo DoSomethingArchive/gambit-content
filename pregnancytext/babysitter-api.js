@@ -21,6 +21,7 @@ var optinParentOnInviteBeta = exports.optinParentOnInviteBeta = config.optinPare
  */
 var campaignIdParentNoBsAlpha = exports.campaignIdParentNoBsAlpha = config.campaignIdParentNoBsAlpha;
 var campaignIdParentNoBsBeta = exports.campaignIdParentNoBsBeta = config.campaignIdParentNoBsBeta;
+var campaignIdParentNoBsResurrected = exports.campaignIdParentNoBsResurrected = config.campaignIdParentNoBsResurrected;
 
 /**
  * The Mobile Commons opt-in path a babysitter gets pushed to on the invite.
