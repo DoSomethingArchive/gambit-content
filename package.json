@@ -1,7 +1,7 @@
 {
-    "name": "pregnancy-text-helpers",
+    "name": "ds-mdata-responder",
     "version": "0.0.1",
-    "description": "Helper scripts for DoSomething.org's Pregnancy Text.",
+    "description": "Interface for interacting with DoSomething.org SMS experiences.",
     "dependencies": {
         "express": "3.x",
         "path": "~0.4.9",
