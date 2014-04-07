@@ -1,10 +1,8 @@
 var application_root = __dirname
     , express = require('express')
     , fs = require('fs')
-    , path = require('path')
-    , request = require('request')
-    , mobilecommons = require('./mobilecommons/mobilecommons')
     , babysitter_api = require('./pregnancytext/babysitter-api')
+    , comebackclothes_api = require('./lib/comeback-clothes/comebackclothes-api')
     ;
 
 /**
@@ -94,4 +92,11 @@ app.post('/pregnancy-text/parent-tips', function(req, res) {
 });
 app.post('/pregnancy-text/rights-tips', function(req, res) {
   babysitter_api.deliverTips(req, res, babysitter_api.rightsTipsName);
+});
+
+/**
+ * Comeback Clothes 2014
+ */
+app.post('/comeback-clothes/poster-tips', function(req, res) {
+  comebackclothes_api.deliverTips(req, res, null);
 });
