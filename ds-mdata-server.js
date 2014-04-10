@@ -1,9 +1,10 @@
 var application_root = __dirname
+    , local_lib = './lib/'
     , express = require('express')
     , fs = require('fs')
     , babysitter_api = require('./pregnancytext/babysitter-api')
-    , comebackclothes_api = require('./lib/comeback-clothes/comebackclothes-api')
-    , ds_routing_api = require('./lib/ds-routing/ds-routing-api')
+    , comebackclothes_api = require(local_lib + 'comeback-clothes/comebackclothes-api')
+    , ds_routing_api = require(local_lib + 'ds-routing/ds-routing-api')
     ;
 
 /**
