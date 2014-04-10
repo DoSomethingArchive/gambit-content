@@ -1,8 +1,10 @@
 var application_root = __dirname
+    , local_lib = './lib/'
     , express = require('express')
     , fs = require('fs')
     , babysitter_api = require('./pregnancytext/babysitter-api')
-    , comebackclothes_api = require('./lib/comeback-clothes/comebackclothes-api')
+    , comebackclothes_api = require(local_lib + 'comeback-clothes/comebackclothes-api')
+    , ds_routing_api = require(local_lib + 'ds-routing/ds-routing-api')
     ;
 
 /**
@@ -45,17 +47,17 @@ if (process.env.LOADERIO_VERIFY_KEY) {
     // Return the key file provided by loader.io.
     var filename = process.env.LOADERIO_VERIFY_KEY + '.txt';
     fs.readFile(filename, "binary", function(err, file) {
-        if(err) {
-          res.writeHead(500, {"Content-Type": "text/plain"});
-          res.write(err + "\n");
-          res.end();
-          return;
-        }
-
-        res.writeHead(200);
-        res.write(file, "binary");
+      if(err) {
+        res.writeHead(500, {"Content-Type": "text/plain"});
+        res.write(err + "\n");
         res.end();
-      });
+        return;
+      }
+
+      res.writeHead(200);
+      res.write(file, "binary");
+      res.end();
+    });
   });
 }
 
@@ -99,4 +101,11 @@ app.post('/pregnancy-text/rights-tips', function(req, res) {
  */
 app.post('/comeback-clothes/poster-tips', function(req, res) {
   comebackclothes_api.deliverTips(req, res, null);
+});
+
+/**
+ * DS Custom Routing
+ */
+app.get('/ds-routing/yes-no-gateway', function(req, res) {
+  ds_routing_api.yesNoGateway(req, res);
 });
