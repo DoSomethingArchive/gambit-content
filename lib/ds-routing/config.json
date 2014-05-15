@@ -1,4 +1,12 @@
 {
+  "startCampaignTransitions": [
+    {
+      "_name": "Thumb Wars 2014",
+      "mdataId": 9943,
+      "optin": 167209,
+      "optout": 126067
+    }
+  ],
   "yesNoPaths": [
     {
       "_name": "Comeback Clothes 2014",

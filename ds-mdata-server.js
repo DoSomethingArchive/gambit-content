@@ -109,3 +109,10 @@ app.post('/comeback-clothes/poster-tips', function(req, res) {
 app.get('/ds-routing/yes-no-gateway', function(req, res) {
   ds_routing_api.yesNoGateway(req, res);
 });
+
+/**
+ * Transition users for the sign up campaign to the actual campaign.
+ */
+app.post('/ds-routing/start-campaign-gate', function(req, res) {
+  ds_routing_api.startCampaignGate(req, res);
+});
