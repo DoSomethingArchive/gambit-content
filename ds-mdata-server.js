@@ -119,6 +119,15 @@ app.post('/ds-routing/start-campaign-gate', function(req, res) {
 });
 
 /**
+ * Once in the actual campaign, the first message a user gets is a welcome
+ * message with the KNOW, PLAN, DO, and PROVE options. People can text 1-4 to
+ * select what they want to do. This handles that.
+ */
+app.post('/ds/handle-start-campaign-response', function(req, res) {
+  ds_routing_api.handleStartCampaignResponse(req, res);
+});
+
+/**
  * Retrieve in-order tips.
  */
 app.post('/ds/tips', function(req, res) {

@@ -6,6 +6,10 @@
       "mdataId": 10673,
       "name": "thumbwars2014-know",
       "optins": [
+        167263,
+        167265,
+        167269,
+        167271
       ]
     },
     {
@@ -13,6 +17,9 @@
       "mdataId": 10663,
       "name": "thumbwars2014-plan",
       "optins": [
+        167273,
+        167275,
+        167277
       ]
     },
     {
@@ -20,6 +27,9 @@
       "mdataId": 10243,
       "name": "thumbwars2014-do",
       "optins": [
+        167279,
+        167281,
+        167283
       ]
     }
   ]
