@@ -121,6 +121,6 @@ app.post('/ds-routing/start-campaign-gate', function(req, res) {
 /**
  * Retrieve in-order tips.
  */
-app.get('/ds/tips', function(req, res) {
+app.post('/ds/tips', function(req, res) {
   tips_api.deliverTips(req, res);
 });
