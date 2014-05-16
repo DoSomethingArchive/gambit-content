@@ -1,0 +1,26 @@
+{
+  "modelName": "Tip",
+  "tips": [
+    {
+      "__comments": "Thumb Wars 2014 - KNOW tips.",
+      "mdataId": 10673,
+      "name": "thumbwars2014-know",
+      "optins": [
+      ]
+    },
+    {
+      "__comments": "Thumb Wars 2014 - PLAN tips.",
+      "mdataId": 10663,
+      "name": "thumbwars2014-plan",
+      "optins": [
+      ]
+    },
+    {
+      "__comments": "Thumb Wars 2014 - DO tips.",
+      "mdataId": 10243,
+      "name": "thumbwars2014-do",
+      "optins": [
+      ]
+    }
+  ]
+}
