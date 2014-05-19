@@ -4,7 +4,8 @@ var application_root = __dirname
     , fs = require('fs')
     , babysitter_api = require('./pregnancytext/babysitter-api')
     , comebackclothes_api = require(local_lib + 'comeback-clothes/comebackclothes-api')
-    , ds_routing_api = require(local_lib + 'ds-routing/ds-routing-api')
+    , ds_routing_api = require(local_lib + 'ds/ds-routing-api')
+    , tips_api = require(local_lib + 'ds/tips-api')
     ;
 
 /**
@@ -104,8 +105,31 @@ app.post('/comeback-clothes/poster-tips', function(req, res) {
 });
 
 /**
- * DS Custom Routing
+ * Route user to appropriate opt-in path based on their answer to a Y/N question.
  */
 app.get('/ds-routing/yes-no-gateway', function(req, res) {
   ds_routing_api.yesNoGateway(req, res);
+});
+
+/**
+ * Transition users for the sign up campaign to the actual campaign.
+ */
+app.post('/ds-routing/start-campaign-gate', function(req, res) {
+  ds_routing_api.startCampaignGate(req, res);
+});
+
+/**
+ * Once in the actual campaign, the first message a user gets is a welcome
+ * message with the KNOW, PLAN, DO, and PROVE options. People can text 1-4 to
+ * select what they want to do. This handles that.
+ */
+app.post('/ds/handle-start-campaign-response', function(req, res) {
+  ds_routing_api.handleStartCampaignResponse(req, res);
+});
+
+/**
+ * Retrieve in-order tips.
+ */
+app.post('/ds/tips', function(req, res) {
+  tips_api.deliverTips(req, res);
 });

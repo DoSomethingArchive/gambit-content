@@ -11,7 +11,7 @@
     165651,
     165653
   ],
-  "tipModelName": "Tip",
+  "tipModelName": "PregnancyTextTip",
   "waitTips": {
     "dbKey": "pregtext2014-wait",
     "optins": [
