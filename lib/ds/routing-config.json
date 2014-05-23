@@ -1,25 +1,25 @@
 {
   "startCampaignTransitions": {
     "9943": {
-      "_name": "Thumb Wars 2014",
+      "__comments": "Thumb Wars 2014",
       "optin": 167209,
       "optout": 126067
     },
     "10857": {
-      "_name": "The Hunt 2014 Quiz to Pre-Campaign Tips",
+      "__comments": "The Hunt 2014 Quiz to Pre-Campaign Tips",
       "optin": 167415,
       "optout": 126181
     }
   },
   "yesNoPaths": [
     {
-      "_name": "Comeback Clothes 2014",
+      "__comments": "Comeback Clothes 2014",
       "incomingPath": 166253,
       "yes": 165419,
       "no": 165417
     },
     {
-      "_name": "Thumb Wars 2014 MMS Check",
+      "__comments": "Thumb Wars 2014 MMS Check",
       "incomingPath": 167259,
       "yes": 167297,
       "no": 167299
