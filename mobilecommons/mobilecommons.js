@@ -12,7 +12,6 @@ var request = require('request')
 exports.optin = function(args) {
   var url = 'https://secure.mcommons.com/profiles/join';
 
-  // var request = args.request || null;
   var alphaPhone = args.alphaPhone || null;
   var betaPhone = args.betaPhone || null;
   var alphaOptin = args.alphaOptin || 0;
