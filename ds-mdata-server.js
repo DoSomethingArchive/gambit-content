@@ -3,7 +3,6 @@ var application_root = __dirname
     , express = require('express')
     , fs = require('fs')
     , babysitter_api = require('./pregnancytext/babysitter-api')
-    , comebackclothes_api = require(local_lib + 'comeback-clothes/comebackclothes-api')
     , ds_routing_api = require(local_lib + 'ds/ds-routing-api')
     , tips_api = require(local_lib + 'ds/tips-api')
     ;
@@ -82,26 +81,6 @@ app.post('/pregnancy-text/send-babysitter-invite-beta', function(req, res) {
 app.post('/pregnancy-text/send-babysitter-invite-resurrected', function(req, res) {
   babysitter_api.onSendBabysitterInvite(req, res, babysitter_api.optinParentOnInviteBeta,
     babysitter_api.campaignIdParentNoBsResurrected);
-});
-
-app.post('/pregnancy-text/wait-tips', function(req, res) {
-  babysitter_api.deliverTips(req, res, babysitter_api.waitTipsName);
-});
-app.post('/pregnancy-text/safe-tips', function(req, res) {
-  babysitter_api.deliverTips(req, res, babysitter_api.safeTipsName);
-});
-app.post('/pregnancy-text/parent-tips', function(req, res) {
-  babysitter_api.deliverTips(req, res, babysitter_api.parentTipsName);
-});
-app.post('/pregnancy-text/rights-tips', function(req, res) {
-  babysitter_api.deliverTips(req, res, babysitter_api.rightsTipsName);
-});
-
-/**
- * Comeback Clothes 2014
- */
-app.post('/comeback-clothes/poster-tips', function(req, res) {
-  comebackclothes_api.deliverTips(req, res, null);
 });
 
 /**
