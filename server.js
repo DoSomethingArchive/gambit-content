@@ -7,8 +7,6 @@ var application_root = __dirname
  */
 var app = express();
 
-var routes = require('./app/router.js')(app);
-
 app.configure(function() {
   // Parses request body and populates request.body
   app.use(express.bodyParser());
@@ -25,6 +23,8 @@ app.configure(function() {
   // Add static path
   app.use(express.static(path.join(__dirname, 'public')));
 });
+
+var routes = require('./app/router.js')(app);
 
 // Start server
 var port = process.env.PORT || 4711;
