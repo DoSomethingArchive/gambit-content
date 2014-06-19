@@ -1,24 +1,24 @@
 module.exports = function(app) {
 
-  var babysitter_api = require('../pregnancytext/babysitter-api');
-  var ds_routing_api = require('../lib/ds/ds-routing-api');
-  var tips_api = require('../lib/ds/tips-api');
+  var Babysitter = require('./controllers/Babysitter');
+  var MCRouting = require('./controllers/MCRouting');
+  var Tips = require('./controllers/Tips');
 
-  var Babysitter = new babysitter_api(app);
-  var DSRouting = new ds_routing_api(app);
-  var Tips = new tips_api(app);
+  var babysitter = new Babysitter(app);
+  var mcRouting = new MCRouting(app);
+  var tips = new Tips(app);
 
   /**
    * Pregnancy Text 2014
    */
   app.post('/pregnancy-text/send-babysitter-invite-alpha', function(req, res) {
-    Babysitter.onSendBabysitterInvite(req, res, Babysitter.optinParentOnInviteAlpha,
-      Babysitter.campaignIdParentNoBsAlpha);
+    babysitter.onSendBabysitterInvite(req, res, babysitter.optinParentOnInviteAlpha,
+      babysitter.campaignIdParentNoBsAlpha);
   });
 
   app.post('/pregnancy-text/send-babysitter-invite-beta', function(req, res) {
-    Babysitter.onSendBabysitterInvite(req, res, Babysitter.optinParentOnInviteBeta,
-      Babysitter.campaignIdParentNoBsBeta);
+    babysitter.onSendBabysitterInvite(req, res, babysitter.optinParentOnInviteBeta,
+      babysitter.campaignIdParentNoBsBeta);
   });
 
   // For players who accidentally opt-out, we give them the option to get back into
@@ -26,22 +26,22 @@ module.exports = function(app) {
   // messages on the same day. For babysitter invites sent from this campaign,
   // we'll push the players to the Beta w/ Babysitter campaign.
   app.post('/pregnancy-text/send-babysitter-invite-resurrected', function(req, res) {
-    Babysitter.onSendBabysitterInvite(req, res, Babysitter.optinParentOnInviteBeta,
-      Babysitter.campaignIdParentNoBsResurrected);
+    babysitter.onSendBabysitterInvite(req, res, babysitter.optinParentOnInviteBeta,
+      babysitter.campaignIdParentNoBsResurrected);
   });
 
   /**
    * Route user to appropriate opt-in path based on their answer to a Y/N question.
    */
   app.get('/ds-routing/yes-no-gateway', function(req, res) {
-    DSRouting.yesNoGateway(req, res);
+    mcRouting.yesNoGateway(req, res);
   });
 
   /**
    * Transition users for the sign up campaign to the actual campaign.
    */
   app.post('/ds-routing/start-campaign-gate', function(req, res) {
-    DSRouting.startCampaignGate(req, res);
+    mcRouting.startCampaignGate(req, res);
   });
 
   /**
@@ -50,14 +50,14 @@ module.exports = function(app) {
    * select what they want to do. This handles that.
    */
   app.post('/ds/handle-start-campaign-response', function(req, res) {
-    DSRouting.handleStartCampaignResponse(req, res);
+    mcRouting.handleStartCampaignResponse(req, res);
   });
 
   /**
    * Retrieve in-order tips.
    */
   app.post('/ds/tips', function(req, res) {
-    Tips.deliverTips(req, res);
+    tips.deliverTips(req, res);
   });
 
 }
