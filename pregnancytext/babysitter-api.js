@@ -141,7 +141,7 @@ Babysitter.prototype.onSendBabysitterInvite = function(request, response, optinP
     alphaPhone: alphaPhone,
     betaPhone: betaPhone,
     alphaOptin: optinParent,
-    betaOptin: optinBsOnInvite
+    betaOptin: this.optinBsOnInvite
   };
 
   if (request.body.dev !== '1') {
