@@ -9,6 +9,6 @@
     "mysql": "2.1.x",
     "request": "2.34.x",
     "stathat": "0.0.8",
-    "node-mobilecommons": ">=0.0.4"
+    "mobilecommons": ">=0.0.4"
   }
 }
