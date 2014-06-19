@@ -27,14 +27,17 @@ module.exports = function(app, express) {
     if (file != path.basename(__filename)) {
 
       var name = file.substr(0, file.lastIndexOf('.'))
-      var data = fs.readFileSync(root_dirname + '/app/config/' + file);
+      var ext = file.substr(file.lastIndexOf('.'));
+      if (ext === '.json') {
+        var data = fs.readFileSync(root_dirname + '/app/config/' + file);
 
-      app.set(
-        name,
-        JSON.parse(data)
-      );
+        app.set(
+          name,
+          JSON.parse(data)
+        );
 
-      // Example:  app.get('mongo') will have the json object from app/config/mongo.json
+        // Example:  app.get('mongo') will have the json object from app/config/mongo.json
+      }
 
     }
   });
