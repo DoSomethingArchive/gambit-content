@@ -33,23 +33,31 @@ module.exports = function(app) {
   /**
    * Route user to appropriate opt-in path based on their answer to a Y/N question.
    */
-  app.get('/ds-routing/yes-no-gateway', DSRouting.yesNoGateway);
+  app.get('/ds-routing/yes-no-gateway', function(req, res) {
+    DSRouting.yesNoGateway(req, res);
+  });
 
   /**
    * Transition users for the sign up campaign to the actual campaign.
    */
-  app.post('/ds-routing/start-campaign-gate', DSRouting.startCampaignGate);
+  app.post('/ds-routing/start-campaign-gate', function(req, res) {
+    DSRouting.startCampaignGate(req, res);
+  });
 
   /**
    * Once in the actual campaign, the first message a user gets is a welcome
    * message with the KNOW, PLAN, DO, and PROVE options. People can text 1-4 to
    * select what they want to do. This handles that.
    */
-  app.post('/ds/handle-start-campaign-response', DSRouting.handleStartCampaignResponse);
+  app.post('/ds/handle-start-campaign-response', function(req, res) {
+    DSRouting.handleStartCampaignResponse(req, res);
+  });
 
   /**
    * Retrieve in-order tips.
    */
-  app.post('/ds/tips', Tips.deliverTips);
+  app.post('/ds/tips', function(req, res) {
+    Tips.deliverTips(req, res);
+  });
 
 }
