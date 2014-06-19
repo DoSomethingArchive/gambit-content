@@ -1,37 +1,41 @@
+var mobilecommons = require('../mobilecommons/mobilecommons');
+var mongoose = require('mongoose');
+
 /**
  * Interface for guiding the babysitter aspect of Pregnancy Text 2014.
- *
  */
+var Babysitter = function(app) {
+  this.app = app;
+  this.config = app.get('babysitter-config');
 
-var mobilecommons = require('../mobilecommons/mobilecommons')
-    , mongoose = require('mongoose')
-    , config = require('./config.json')
-    ;
+  /**
+   * The Mobile Commons opt-in path a parent gets pushed to when he sends a
+   * babysitter invitation.
+   */
+  this.optinParentOnInviteAlpha = this.config.optinParentOnInviteAlpha;
+  this.optinParentOnInviteBeta = this.config.optinParentOnInviteBeta;
 
-/**
- * The Mobile Commons opt-in path a parent gets pushed to when he sends a
- * babysitter invitation.
- */
-var optinParentOnInviteAlpha = exports.optinParentOnInviteAlpha = config.optinParentOnInviteAlpha;
-var optinParentOnInviteBeta = exports.optinParentOnInviteBeta = config.optinParentOnInviteBeta;
+  /**
+   * The Mobile Commons campaign id for parents without a babysitter. When a
+   * a babysitter invite is sent, parents get opted out of this campaign.
+   */
+  this.campaignIdParentNoBsAlpha = this.config.campaignIdParentNoBsAlpha;
+  this.campaignIdParentNoBsBeta = this.config.campaignIdParentNoBsBeta;
+  this.campaignIdParentNoBsResurrected = this.config.campaignIdParentNoBsResurrected;
 
-/**
- * The Mobile Commons campaign id for parents without a babysitter. When a
- * a babysitter invite is sent, parents get opted out of this campaign.
- */
-var campaignIdParentNoBsAlpha = exports.campaignIdParentNoBsAlpha = config.campaignIdParentNoBsAlpha;
-var campaignIdParentNoBsBeta = exports.campaignIdParentNoBsBeta = config.campaignIdParentNoBsBeta;
-var campaignIdParentNoBsResurrected = exports.campaignIdParentNoBsResurrected = config.campaignIdParentNoBsResurrected;
+  /**
+   * The Mobile Commons opt-in path a babysitter gets pushed to on the invite.
+   */
+  this.optinBsOnInvite = this.config.optinBsOnInvite;
 
-/**
- * The Mobile Commons opt-in path a babysitter gets pushed to on the invite.
- */
-var optinBsOnInvite = exports.optinBsOnInvite = config.optinBsOnInvite;
+  /**
+   * Array of generic response Mobile Commons opt-in paths.
+   */
+  this.genericResponses = this.config.genericResponses;
 
-/**
- * Array of generic response Mobile Commons opt-in paths.
- */
-var genericResponses = config.genericResponses;
+}
+
+module.exports = Babysitter;
 
 
 /**
@@ -39,7 +43,7 @@ var genericResponses = config.genericResponses;
  *
  * @return True or false.
  */
-var canIgnoreForValidPhone = function(c) {
+function canIgnoreForValidPhone(c) {
   return /^[\(\)\[\]\,\.\-]$/.test(c);
 }
 
@@ -48,7 +52,7 @@ var canIgnoreForValidPhone = function(c) {
  *
  * @return True if numeric, otherwise false.
  */
-var isNumeric = function(c) {
+function isNumeric(c) {
   return /^\d$/.test(c);
 }
 
@@ -58,7 +62,7 @@ var isNumeric = function(c) {
  *
  * @return The valid phone number if one exists, otherwise false.
  */
-var hasValidPhone = function(message) {
+function hasValidPhone(message) {
   var phone = '';
 
   // Remove whitespace
@@ -101,7 +105,7 @@ var hasValidPhone = function(message) {
 /**
  * Randomly selects a generic response to opt the user into.
  */
-var sendGenericResponse = function(phone) {
+function sendGenericResponse(phone) {
   var args = {alphaPhone: phone};
 
   // Randomly select a opt-in path
@@ -115,7 +119,7 @@ var sendGenericResponse = function(phone) {
 /**
  * Alpha user is sending a Beta number to invite and become a babysitter.
  */
-exports.onSendBabysitterInvite = function(request, response, optinParent, optoutId) {
+Babysitter.prototype.onSendBabysitterInvite = function(request, response, optinParent, optoutId) {
   var alpha = request.body.phone;
 
   // Validate and retrieve the beta's phone number from the message body.
@@ -137,7 +141,7 @@ exports.onSendBabysitterInvite = function(request, response, optinParent, optout
     alphaPhone: alphaPhone,
     betaPhone: betaPhone,
     alphaOptin: optinParent,
-    betaOptin: optinBsOnInvite
+    betaOptin: this.optinBsOnInvite
   };
 
   if (request.body.dev !== '1') {
