@@ -1,4 +1,4 @@
-var mobilecommons = require('../mobilecommons/mobilecommons');
+var mobilecommons = require('../../mobilecommons/mobilecommons');
 var mongoose = require('mongoose');
 
 /**
