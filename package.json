@@ -1,14 +1,14 @@
 {
-    "name": "ds-mdata-responder",
-    "version": "0.0.1",
-    "description": "Interface for interacting with DoSomething.org SMS experiences.",
-    "dependencies": {
-        "express": "3.x",
-        "path": "~0.4.9",
-        "mongoose": "~3.8.8",
-        "mysql": "2.1.x",
-        "request": "2.34.x",
-        "stathat": "~0.0.8",
-        "node-mobilecommons": ">=0.0.4"
-    }
+  "name": "ds-mdata-responder",
+  "version": "0.0.1",
+  "description": "Interface for interacting with DoSomething.org SMS experiences.",
+  "dependencies": {
+    "express": "3.x",
+    "path": "~0.4.9",
+    "mongoose": "~3.8.8",
+    "mysql": "2.1.x",
+    "request": "2.34.x",
+    "stathat": "0.0.8",
+    "node-mobilecommons": ">=0.0.4"
+  }
 }
