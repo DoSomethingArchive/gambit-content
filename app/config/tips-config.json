@@ -41,6 +41,53 @@
         166169
       ]
     },
+    "10921": {
+      "__comments": "Thumb Wars SMS 2014 - FUN flow",
+      "name": "thumbwars2014-sms-fun",
+      "optins": [
+        168119,
+        168121,
+        168123,
+        168125,
+        168127,
+        168129,
+        168131,
+        168133,
+        168135,
+        168137,
+        168139
+      ]
+    },
+    "10923": {
+      "__comments": "Thumb Wars SMS 2014 - DRAMA flow",
+      "name": "thumbwars2014-sms-drama",
+      "optins": [
+        168141,
+        168143,
+        168145,
+        168147,
+        168149,
+        168151,
+        168153,
+        168155,
+        168157,
+        168159,
+        168181
+      ]
+    },
+    "10925": {
+      "__comments": "Thumb Wars SMS 2014 - FACT flow",
+      "name": "thumbwars2014-sms-fact",
+      "optins": [
+        168161,
+        168163,
+        168165,
+        168167,
+        168169,
+        168171,
+        168173
+      ]
+    },
     "11145": {
       "__comments": "Pregnancy Text - WAIT",
       "name": "pregtext2014-wait",
