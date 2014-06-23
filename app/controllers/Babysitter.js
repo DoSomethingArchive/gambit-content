@@ -1,5 +1,4 @@
-var mobilecommons = require('../mobilecommons/mobilecommons');
-var mongoose = require('mongoose');
+var mobilecommons = require('../../mobilecommons/mobilecommons');
 
 /**
  * Interface for guiding the babysitter aspect of Pregnancy Text 2014.

@@ -3,7 +3,7 @@
  */
 
 var mobilecommons = require('../../mobilecommons/mobilecommons');
-var Tips = require('./tips-api');
+var Tips = require('./Tips');
 
 var MCRouting = function(app) {
   this.app = app;

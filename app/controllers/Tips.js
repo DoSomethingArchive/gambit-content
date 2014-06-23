@@ -9,23 +9,7 @@ var stathat = require('stathat');
 var Tips = function(app) {
   this.app = app;
   this.config = app.get('tips-config');
-
-  /**
-   * Mongo setup and config.
-   */
-  var mongoUri = 'mongodb://localhost/ds-mdata-responder-last-tip-delivered';
-  var db = mongoose.createConnection(mongoUri);
-
-  // Schema
-  var schema = new mongoose.Schema({
-    phone: String,
-    last_tip_delivered: [{
-      name: String,
-      last_tip: Number
-    }]
-  });
-
-  this.tipModel = db.model(this.config.modelName, schema);
+  this.tipModel = require('../models/Tip')(this.config.modelName);
 }
 
 module.exports = Tips;
