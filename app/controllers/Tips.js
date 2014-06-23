@@ -9,7 +9,7 @@ var stathat = require('stathat');
 var Tips = function(app) {
   this.app = app;
   this.config = app.get('tips-config');
-  this.tipModel = require('../models/Tip')(this.config.modelName);
+  this.tipModel = require('../models/Tip')(app, this.config.modelName);
 }
 
 module.exports = Tips;

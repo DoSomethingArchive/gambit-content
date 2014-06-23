@@ -4,10 +4,9 @@
 
 var mongoose = require('mongoose');
 
-var Tip = function(modelName) {
+var Tip = function(app, modelName) {
 
-  var uri = 'mongodb://localhost/ds-mdata-responder-last-tip-delivered';
-  var db = mongoose.createConnection(uri);
+  var db = mongoose.createConnection(app.get('database-uri'));
 
   var schema = new mongoose.Schema({
     phone: String,
