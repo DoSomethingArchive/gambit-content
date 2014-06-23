@@ -104,16 +104,16 @@ function hasValidPhone(message) {
 /**
  * Randomly selects a generic response to opt the user into.
  */
-function sendGenericResponse(phone) {
+Babysitter.prototype.sendGenericResponse = function(phone) {
   var args = {alphaPhone: phone};
 
   // Randomly select a opt-in path
-  var index = Math.floor(Math.random() * genericResponses.length);
-  args['alphaOptin'] = genericResponses[index];
+  var index = Math.floor(Math.random() * this.genericResponses.length);
+  args['alphaOptin'] = this.genericResponses[index];
 
   // Trigger the opt-in to send the message to the user
   mobilecommons.optin(args);
-}
+};
 
 /**
  * Alpha user is sending a Beta number to invite and become a babysitter.
@@ -126,7 +126,7 @@ Babysitter.prototype.onSendBabysitterInvite = function(request, response, optinP
   var args = request.body.args;
   if (!(betaPhone = hasValidPhone(args))) {
     if (request.body.dev !== '1') {
-      sendGenericResponse(request.body.phone);
+      this.sendGenericResponse(request.body.phone);
     }
     response.send();
     return;
