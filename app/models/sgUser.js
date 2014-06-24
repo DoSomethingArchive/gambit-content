@@ -1,12 +1,12 @@
 /**
- * Mongoose data model for a user.
+ * Mongoose data model for an SMS game user.
  */
 
 var mongoose = require('mongoose')
     ;
 
-var SGUser = function(app) {
-  var modelName = 'SGUser';
+var sgUser = function(app) {
+  var modelName = 'sg_user';
   var db = mongoose.createConnection(app.get('database-uri'));
 
   var schema = new mongoose.Schema({
@@ -22,4 +22,4 @@ var SGUser = function(app) {
   return model;
 };
 
-module.exports = SGUser;
+module.exports = sgUser;
