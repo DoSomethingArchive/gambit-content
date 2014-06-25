@@ -79,7 +79,7 @@ module.exports = function(app) {
       gameController = new SGMostLikelyToController(app);
     }
     else {
-      response.send(406)
+      response.send(406, 'Invalid type parameter.');
     }
 
     if (gameController) {
