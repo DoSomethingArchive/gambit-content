@@ -21,6 +21,9 @@ module.exports = function(app, express) {
 
     // Add static path
     app.use(express.static(path.join(root_dirname, 'public')));
+
+    // Set the database URI this app will use.
+    app.set('database-uri', 'mongodb://localhost/ds-mdata-responder');
   });
 
   fs.readdirSync('./app/config').forEach(function(file) {
