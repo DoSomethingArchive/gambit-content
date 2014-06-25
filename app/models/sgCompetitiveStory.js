@@ -44,4 +44,4 @@ var sgCompetitveStory = function(app) {
   return db.model(modelName, schema);
 };
 
-modul.exports = sgCompetitiveStory;
+module.exports = sgCompetitiveStory;

@@ -1,8 +1,12 @@
-module.exports = function(app) {
+var Babysitter = require('./controllers/Babysitter')
+  , MCRouting = require('./controllers/MCRouting')
+  , Tips = require('./controllers/Tips')
+  , SGCollaborativeStoryController = require('./controllers/SGCollaborativeStoryController')
+  , SGCompetitiveStoryController = require('./controllers/SGCompetitiveStoryController')
+  , SGMostLikelyToController = require('./controllers/SGMostLikelyToController')
+  ;
 
-  var Babysitter = require('./controllers/Babysitter');
-  var MCRouting = require('./controllers/MCRouting');
-  var Tips = require('./controllers/Tips');
+module.exports = function(app) {
 
   var babysitter = new Babysitter(app);
   var mcRouting = new MCRouting(app);
@@ -58,6 +62,29 @@ module.exports = function(app) {
    */
   app.post('/ds/tips', function(req, res) {
     tips.deliverTips(req, res);
+  });
+
+  /**
+   * Create a team SMS game.
+   */
+  app.post('/game/create', function(request, response) {
+    var gameController = null;
+    if (request.body.type === 'collaborative-story') {
+      gameController = new SGCollaborativeStoryController(app);
+    }
+    else if (request.body.type === 'competitive-story') {
+      gameController = new SGCompetitiveStoryController(app);
+    }
+    else if (request.body.type === 'most-likely-to') {
+      gameController = new SGMostLikelyToController(app);
+    }
+    else {
+      response.send(406)
+    }
+
+    if (gameController) {
+      gameController.createGame(request, response);
+    }
   });
 
 }

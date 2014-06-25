@@ -45,4 +45,4 @@ var sgCollaborativeStory = function(app) {
   return db.model(modelName, schema);
 };
 
-modul.exports = sgCollaborativeStory;
+module.exports = sgCollaborativeStory;
