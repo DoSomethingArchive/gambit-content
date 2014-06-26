@@ -4,7 +4,7 @@
 
 var mongoose = require('mongoose');
 
-var Tip = function(app, modelName) {
+var tip = function(app, modelName) {
 
   var db = mongoose.createConnection(app.get('database-uri'));
 
@@ -21,4 +21,4 @@ var Tip = function(app, modelName) {
   return model;
 };
 
-module.exports = Tip;
+module.exports = tip;
