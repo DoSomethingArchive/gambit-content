@@ -1,0 +1,38 @@
+{
+  "1": {
+    "__comments": "This is a test.",
+    "alpha_wait_oip": 168445,
+    "alpha_start_ask_oip": 168447,
+    "beta_join_ask_oip": 168449,
+    "beta_wait_oip": 168451,
+    "story_start_oip": 168453,
+    "story": {
+      "168453": [
+        {
+          "oip": 168455,
+          "valid_answers": [
+            "LEVEL 1-1A",
+            "LEVEL 11A",
+            "A"
+          ]
+        },
+        {
+          "oip": 168457,
+          "valid_answers": [
+            "LEVEL 1-1B",
+            "LEVEL 11B",
+            "B"
+          ]
+        },
+        {
+          "oip": 168459,
+          "valid_answers": [
+            "LEVEL 1-1C",
+            "LEVEL 11C",
+            "C"
+          ]
+        }
+      ]
+    }
+  }
+}
