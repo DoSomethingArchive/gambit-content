@@ -8,6 +8,9 @@ var mongoose = require('mongoose')
 var sgGameSchema = function() {
   var schema = new mongoose.Schema();
   schema.add({
+    // ID of the story to play through
+    story_id: Number,
+
     // Name of the alpha user
     alpha_name: String,
 

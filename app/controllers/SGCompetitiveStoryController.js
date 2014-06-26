@@ -23,6 +23,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
   // Return a 406 if some data is missing, or there are too many friends.
   if (typeof request.body === 'undefined'
+      || typeof request.body.story_id === 'undefined'
       || typeof request.body.person === 'undefined'
       || typeof request.body.person.first_name === 'undefined'
       || typeof request.body.friends === 'undefined'
@@ -34,6 +35,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
   // Compile a new game document.
   var gameDoc = {
+    story_id: request.body.story_id,
     alpha_name: request.body.person.first_name,
     alpha_phone: request.body.person.phone,
     betas: []
