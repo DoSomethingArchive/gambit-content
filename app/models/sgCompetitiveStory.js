@@ -5,7 +5,7 @@ var mongoose = require('mongoose')
     , sgGameSchema = require('./sgGameSchema')()
     ;
 
-var sgCompetitveStory = function(app) {
+var sgCompetitiveStory = function(app) {
   var modelName = 'sg_competitivestory_game';
 
   var schema = sgGameSchema;
