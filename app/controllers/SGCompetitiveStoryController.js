@@ -2,6 +2,9 @@
  * Game controller for the Competitive Story template.
  */
 
+var mobilecommons = require('../../mobilecommons/mobilecommons')
+  ;
+
 var CREATE_GAME_MIN_FRIENDS = 3;
 var CREATE_GAME_MAX_FRIENDS = 3;
 
@@ -9,6 +12,7 @@ var SGCompetitiveStoryController = function(app) {
   this.app = app;
   this.gameModel = require('../models/sgCompetitiveStory')(app);
   this.userModel = require('../models/sgUser')(app);
+  this.gameConfig = app.get('competitive-stories');
 };
 
 /**
@@ -24,6 +28,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   // Return a 406 if some data is missing, or there are too many friends.
   if (typeof request.body === 'undefined'
       || typeof request.body.story_id === 'undefined'
+      || typeof this.gameConfig[request.body.story_id] === 'undefined'
       || typeof request.body.person === 'undefined'
       || typeof request.body.person.first_name === 'undefined'
       || typeof request.body.friends === 'undefined'
@@ -53,6 +58,8 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
   var self = this;
   game.then(function(doc) {
+    var config = self.gameConfig[doc.story_id];
+
     // Upsert the document for the alpha user.
     self.userModel.update(
       {phone: doc.alpha_phone},
@@ -62,12 +69,22 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
       }},
       {upsert: true},
       function(err, num, raw) {
-        console.log(raw);
+        if (err) {
+          console.log(err);
+        }
+        else {
+          console.log(raw);
+        }
       }
     );
 
     // Upsert documents for the beta users.
+    var betaPhones = [];
     doc.betas.forEach(function(value, index, set) {
+      // Extract phone number for Mobile Commons opt in.
+      betaPhones[betaPhones.length] = value.phone;
+
+      // Upsert user document for the beta.
       self.userModel.update(
         {phone: value.phone},
         {$set: {
@@ -76,10 +93,25 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
         }},
         {upsert: true},
         function(err, num, raw) {
-          console.log(raw);
+          if (err) {
+            console.log(err);
+          }
+          else {
+            console.log(raw);
+          }
         }
       );
     });
+
+    // Opt users into their appropriate paths.
+    var optinArgs = {
+      alphaPhone: doc.alpha_phone,
+      alphaOptin: config.alpha_wait_oip,
+      betaOptin: config.beta_join_ask_oip,
+      betaPhone: betaPhones
+    };
+
+    mobilecommons.optin(optinArgs);
   });
 
   response.send(202);
