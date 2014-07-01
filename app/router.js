@@ -112,7 +112,7 @@ module.exports = function(app) {
   });
 
   /**
-   * @todo
+   * Alpha manually chooses to start a game.
    */
   app.post('/game/alpha-start', function(request, response) {
     var gameController = getGameController(request.body.type);
