@@ -10,11 +10,8 @@ var sgCompetitiveStory = function(app) {
 
   var schema = sgGameSchema;
   schema.add({
-    // Last Mobile Commons opt in path delivered to the alpha player
-    alpha_current_opt_in_path: Number,
-
-    // Current status of beta players
-    betas_current_status: [{
+    // Current status of players
+    players_current_status: [{
       // Player's phone number
       phone: String,
 

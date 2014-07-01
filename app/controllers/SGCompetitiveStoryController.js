@@ -240,7 +240,7 @@ SGCompetitiveStoryController.prototype.onInvitedBetaGameFound = function(err, do
 
     // If all have joined, then start the game.
     if (allJoined) {
-      this.startGame(this.gameConfig, doc);
+      doc = this.startGame(this.gameConfig, doc);
       this.response.send(202);
     }
     // If we're still waiting on people, send appropriate messages to the recently
@@ -248,15 +248,17 @@ SGCompetitiveStoryController.prototype.onInvitedBetaGameFound = function(err, do
     else {
       console.log('Waiting on ' + numWaitingOn + ' people to join.');
 
-      this.sendWaitMessages(this.gameConfig, doc, this.joiningBetaPhone);
+      doc = this.sendWaitMessages(this.gameConfig, doc, this.joiningBetaPhone);
       this.response.send(202);
     }
 
-    // @todo Update game doc with the last message received for each joined user
-    // Save the doc in the database with the betas update.
+    // Save the doc in the database with the betas and current status updates.
     this.gameModel.update(
       {_id: doc._id},
-      {$set: {betas: doc.betas}},
+      {$set: {
+        betas: doc.betas,
+        players_current_status: doc.players_current_status
+      }},
       function(err, num, raw) {
         if (err) {
           console.log(err);
@@ -273,12 +275,45 @@ SGCompetitiveStoryController.prototype.onInvitedBetaGameFound = function(err, do
 };
 
 /**
+ * Updates the game document with the player's current status.
+ *
+ * @param gameDoc
+ *   Game document for users to start the game for.
+ * @param phone
+ *   Phone number of the player to update.
+ * @param currentPath
+ *   Current opt in path that the user is on.
+ *
+ * @return Updated game document.
+ */
+SGCompetitiveStoryController.prototype.updatePlayerCurrentStatus = function(gameDoc, phone, currentPath) {
+  var updated = false;
+  for (var i = 0; i < gameDoc.players_current_status.length; i++) {
+    if (gameDoc.players_current_status[i].phone == phone) {
+      gameDoc.players_current_status[i].opt_in_path = currentPath;
+      updated = true;
+    }
+  }
+
+  if (!updated) {
+    var idx = gameDoc.players_current_status.length;
+    gameDoc.players_current_status[idx] = {};
+    gameDoc.players_current_status[idx].phone = phone;
+    gameDoc.players_current_status[idx].opt_in_path = currentPath;
+  }
+
+  return gameDoc;
+};
+
+/**
  * Start the game.
  *
  * @param gameConfig
  *   Config object with game story details.
  * @param gameDoc
  *   Game document for users to start the game for.
+ *
+ * @return Updated game document.
  */
 SGCompetitiveStoryController.prototype.startGame = function(gameConfig, gameDoc) {
   // Get the starting opt in path from the game config.
@@ -292,17 +327,25 @@ SGCompetitiveStoryController.prototype.startGame = function(gameConfig, gameDoc)
 
   mobilecommons.optin(alphaArgs);
 
+  // Update the alpha's current status.
+  gameDoc = this.updatePlayerCurrentStatus(gameDoc, gameDoc.alpha_phone, startMessage);
+
   // Opt in the beta users who have joined.
-  gameDoc.betas.forEach(function(value, index, set) {
-    if (value.invite_accepted == true) {
+  for (var i = 0; i < gameDoc.betas.length; i++) {
+    if (gameDoc.betas[i].invite_accepted == true) {
       var betaArgs = {
-        alphaPhone: value.phone,
+        alphaPhone: gameDoc.betas[i].phone,
         alphaOptin: startMessage
       };
 
       mobilecommons.optin(betaArgs);
+
+      // Update the beta's current status.
+      gameDoc = this.updatePlayerCurrentStatus(gameDoc, gameDoc.betas[i].phone, startMessage);
     }
-  });
+  }
+
+  return gameDoc;
 };
 
 /**
@@ -315,6 +358,8 @@ SGCompetitiveStoryController.prototype.startGame = function(gameConfig, gameDoc)
  *   Game document for users of the pending game.
  * @param betaPhone
  *   Phone number of the recently joined beta to send a message to.
+ *
+ * @return Updated game document.
  */
 SGCompetitiveStoryController.prototype.sendWaitMessages = function(gameConfig, gameDoc, betaPhone) {
   var alphaMessage = gameConfig[gameDoc.story_id].alpha_start_ask_oip;
@@ -328,6 +373,9 @@ SGCompetitiveStoryController.prototype.sendWaitMessages = function(gameConfig, g
 
   mobilecommons.optin(alphaArgs);
 
+  // Update the alpha's current status.
+  gameDoc = this.updatePlayerCurrentStatus(gameDoc, gameDoc.alpha_phone, alphaMessage);
+
   // Send the waiting message to the beta user.
   var betaArgs = {
     alphaPhone: betaPhone,
@@ -335,6 +383,11 @@ SGCompetitiveStoryController.prototype.sendWaitMessages = function(gameConfig, g
   };
 
   mobilecommons.optin(betaArgs);
+
+  // Update the beta's current status.
+  gameDoc = this.updatePlayerCurrentStatus(gameDoc, betaPhone, betaMessage);
+
+  return gameDoc;
 };
 
 /**
