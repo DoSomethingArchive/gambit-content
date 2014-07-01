@@ -8,6 +8,13 @@ var mobilecommons = require('../../mobilecommons/mobilecommons')
 var CREATE_GAME_MIN_FRIENDS = 3;
 var CREATE_GAME_MAX_FRIENDS = 3;
 
+// Values assigned to requests so we know how to handle them when they reach
+// the end of a chain of callbacks that find the relevant game document.
+var RequestType = {
+  ALPHA_START: 'alpha-start',
+  BETA_JOIN: 'beta-join'
+};
+
 var SGCompetitiveStoryController = function(app) {
   this.app = app;
   this.gameMappingModel = require('../models/sgGameMapping')(app);
@@ -155,23 +162,52 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
     response.send(406, '`phone` parameter required.')
   }
 
-  // Create object for callbacks to reference for data on the request.
+  // Create object for callbacks to refer to for data on the request.
   var self = this;
   self.joiningBetaPhone = request.body.phone;
   self.response = response;
+  self.requestType = RequestType.BETA_JOIN;
 
   // Find the user's document to get the game id.
   this.userModel.findOne(
     {phone: request.body.phone},
-    createCallback(self, this.onInvitedBetaFound)
+    createCallback(self, this.onUserFound)
   );
 };
 
 /**
- * Callback when an invited beta's document is found. Use the game id in the beta's
+ * Alpha chooses to start the game even without all players having joined.
+ */
+SGCompetitiveStoryController.prototype.alphaStartGame = function(request, response) {
+  if (typeof request.body === 'undefined'
+      || typeof request.body.phone === 'undefined'
+      || typeof request.body.args === 'undefined') {
+    response.send(406);
+  }
+
+  // If alpha doesn't respond with 'Y', then just ignore
+  if (request.body.args.toUpperCase() !== 'Y') {
+    response.send();
+  }
+  else {
+    // Create object for callbacks to refer to for data on the request.
+    var self = this;
+    self.requestType = RequestType.ALPHA_START;
+    self.response = response;
+
+    // Find the user's document to get the game id.
+    this.userModel.findOne(
+      {phone: request.body.phone},
+      createCallback(self, this.onUserFound)
+    );
+  }
+};
+
+/**
+ * Callback when a user's document is found. Use the game id in the user's
  * document to then find the collection to search for the game in.
  */
-SGCompetitiveStoryController.prototype.onInvitedBetaFound = function(err, doc) {
+SGCompetitiveStoryController.prototype.onUserFound = function(err, doc) {
   if (err) {
     console.log(err);
   }
@@ -182,7 +218,7 @@ SGCompetitiveStoryController.prototype.onInvitedBetaFound = function(err, doc) {
     // Find the game model to determine what game collection to search over.
     this.gameMappingModel.findOne(
       {game_id: doc.current_game_id},
-      createCallback(this, this.onInvitedBetaGameMappingFound)
+      createCallback(this, this.onGameMappingFound)
     );
   }
   else {
@@ -191,10 +227,10 @@ SGCompetitiveStoryController.prototype.onInvitedBetaFound = function(err, doc) {
 };
 
 /**
- * Callback when an invited beta's game is found in the mapping collection. This
- * then tells us when collection to search for the game on.
+ * Callback when a user's game is found in the mapping collection. This
+ * then tells us which collection to search for the game on.
  */
-SGCompetitiveStoryController.prototype.onInvitedBetaGameMappingFound = function(err, doc) {
+SGCompetitiveStoryController.prototype.onGameMappingFound = function(err, doc) {
   if (err) {
     console.log(err);
   }
@@ -203,7 +239,7 @@ SGCompetitiveStoryController.prototype.onInvitedBetaGameMappingFound = function(
     // Find the game via its id.
     this.gameModel.findOne(
       {_id: doc.game_id},
-      createCallback(this, this.onInvitedBetaGameFound)
+      createCallback(this, this.onGameFound)
     );
   }
   else {
@@ -212,62 +248,21 @@ SGCompetitiveStoryController.prototype.onInvitedBetaGameMappingFound = function(
 };
 
 /**
- * Callback when an invited beta's game document is found.
+ * Callback when a user's game document is found.
  */
-SGCompetitiveStoryController.prototype.onInvitedBetaGameFound = function(err, doc) {
+SGCompetitiveStoryController.prototype.onGameFound = function(err, doc) {
   if (err) {
     console.log(err);
   }
 
   if (doc) {
-    // Update game doc marking this beta as having joined the game
-    for (var i = 0; i < doc.betas.length; i++) {
-      if (doc.betas[i].phone == this.joiningBetaPhone) {
-        doc.betas[i].invite_accepted = true;
-        break;
-      }
+    // Now that we have the game document, handle the request based on its type.
+    if (this.requestType == RequestType.ALPHA_START) {
+      this.execAlphaStartGame(doc);
     }
-
-    // Check if all betas have joined.
-    var numWaitingOn = 0;
-    var allJoined = true;
-    for (var i = 0; i < doc.betas.length; i++) {
-      if (doc.betas[i].invite_accepted == false) {
-        allJoined = false;
-        numWaitingOn++;
-      }
+    else if (this.requestType == RequestType.BETA_JOIN) {
+      this.execBetaJoinGame(doc);
     }
-
-    // If all have joined, then start the game.
-    if (allJoined) {
-      doc = this.startGame(this.gameConfig, doc);
-      this.response.send(202);
-    }
-    // If we're still waiting on people, send appropriate messages to the recently
-    // joined beta and alpha users.
-    else {
-      console.log('Waiting on ' + numWaitingOn + ' people to join.');
-
-      doc = this.sendWaitMessages(this.gameConfig, doc, this.joiningBetaPhone);
-      this.response.send(202);
-    }
-
-    // Save the doc in the database with the betas and current status updates.
-    this.gameModel.update(
-      {_id: doc._id},
-      {$set: {
-        betas: doc.betas,
-        players_current_status: doc.players_current_status
-      }},
-      function(err, num, raw) {
-        if (err) {
-          console.log(err);
-        }
-        else {
-          console.log(raw);
-        }
-      }
-    );
   }
   else {
     this.response.send(404);
@@ -391,10 +386,90 @@ SGCompetitiveStoryController.prototype.sendWaitMessages = function(gameConfig, g
 };
 
 /**
- * @todo
+ * Handles a beta joining the game. Update persistent storage, send
+ * game-pending messages if all player haven't joined yet, or auto-start the game
+ * if all players are joined.
+ *
+ * @param doc
+ *   The game document of the game the beta's joining.
  */
-SGCompetitiveStoryController.prototype.alphaStartGame = function(request,response) {
-  response.send('TODO: implement SGCompetitiveStoryController.onAlphaStartGame');
+SGCompetitiveStoryController.prototype.execBetaJoinGame = function(doc) {
+  // Update game doc marking this beta as having joined the game
+  for (var i = 0; i < doc.betas.length; i++) {
+    if (doc.betas[i].phone == this.joiningBetaPhone) {
+      doc.betas[i].invite_accepted = true;
+      break;
+    }
+  }
+
+  // Check if all betas have joined.
+  var numWaitingOn = 0;
+  var allJoined = true;
+  for (var i = 0; i < doc.betas.length; i++) {
+    if (doc.betas[i].invite_accepted == false) {
+      allJoined = false;
+      numWaitingOn++;
+    }
+  }
+
+  // If all have joined, then start the game.
+  if (allJoined) {
+    doc = this.startGame(this.gameConfig, doc);
+    this.response.send(202);
+  }
+  // If we're still waiting on people, send appropriate messages to the recently
+  // joined beta and alpha users.
+  else {
+    console.log('Waiting on ' + numWaitingOn + ' people to join.');
+
+    doc = this.sendWaitMessages(this.gameConfig, doc, this.joiningBetaPhone);
+    this.response.send(202);
+  }
+
+  // Save the doc in the database with the betas and current status updates.
+  this.gameModel.update(
+    {_id: doc._id},
+    {$set: {
+      betas: doc.betas,
+      players_current_status: doc.players_current_status
+    }},
+    function(err, num, raw) {
+      if (err) {
+        console.log(err);
+      }
+      else {
+        console.log(raw);
+      }
+    }
+  );
+};
+
+/**
+ * Handles an alpha choosing to start the game before all players have joined.
+ *
+ * @param doc
+ *   The game document of the game the alpha is starting.
+ */
+SGCompetitiveStoryController.prototype.execAlphaStartGame = function(doc) {
+  // Start the game.
+  doc = this.startGame(this.gameConfig, doc);
+  this.response.send(202);
+
+  // Save the doc in the database with the current status updates.
+  this.gameModel.update(
+    {_id: doc._id},
+    {$set: {
+      players_current_status: doc.players_current_status
+    }},
+    function(err, num, raw) {
+      if (err) {
+        console.log(err);
+      }
+      else {
+        console.log(raw);
+      }
+    }
+  );
 };
 
 module.exports = SGCompetitiveStoryController;
