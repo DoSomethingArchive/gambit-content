@@ -240,16 +240,20 @@ SGCompetitiveStoryController.prototype.onInvitedBetaGameFound = function(err, do
 
     // If all have joined, then start the game.
     if (allJoined) {
-      this.response.send('TODO: Start the game.');
+      this.startGame(this.gameConfig, doc);
+      this.response.send(202);
     }
     // If we're still waiting on people, send appropriate messages to the recently
     // joined beta and alpha users.
     else {
-      this.response.send('TODO: Waiting on ' + numWaitingOn + ' people to join.');
+      console.log('Waiting on ' + numWaitingOn + ' people to join.');
+
+      this.sendWaitMessages(this.gameConfig, doc, this.joiningBetaPhone);
+      this.response.send(202);
     }
 
+    // @todo Update game doc with the last message received for each joined user
     // Save the doc in the database with the betas update.
-    console.log(doc);
     this.gameModel.update(
       {_id: doc._id},
       {$set: {betas: doc.betas}},
@@ -266,6 +270,71 @@ SGCompetitiveStoryController.prototype.onInvitedBetaGameFound = function(err, do
   else {
     this.response.send(404);
   }
+};
+
+/**
+ * Start the game.
+ *
+ * @param gameConfig
+ *   Config object with game story details.
+ * @param gameDoc
+ *   Game document for users to start the game for.
+ */
+SGCompetitiveStoryController.prototype.startGame = function(gameConfig, gameDoc) {
+  // Get the starting opt in path from the game config.
+  var startMessage = gameConfig[gameDoc.story_id].story_start_oip;
+
+  // Opt in the alpha user.
+  var alphaArgs = {
+    alphaPhone: gameDoc.alpha_phone,
+    alphaOptin: startMessage,
+  };
+
+  mobilecommons.optin(alphaArgs);
+
+  // Opt in the beta users who have joined.
+  gameDoc.betas.forEach(function(value, index, set) {
+    if (value.invite_accepted == true) {
+      var betaArgs = {
+        alphaPhone: value.phone,
+        alphaOptin: startMessage
+      };
+
+      mobilecommons.optin(betaArgs);
+    }
+  });
+};
+
+/**
+ * Send messages to the alpha and recently joined beta user about the pending
+ * game status.
+ *
+ * @param gameConfig
+ *   Config object with game story details.
+ * @param gameDoc
+ *   Game document for users of the pending game.
+ * @param betaPhone
+ *   Phone number of the recently joined beta to send a message to.
+ */
+SGCompetitiveStoryController.prototype.sendWaitMessages = function(gameConfig, gameDoc, betaPhone) {
+  var alphaMessage = gameConfig[gameDoc.story_id].alpha_start_ask_oip;
+  var betaMessage = gameConfig[gameDoc.story_id].beta_wait_oip;
+
+  // Send message to alpha asking if they want to start now.
+  var alphaArgs = {
+    alphaPhone: gameDoc.alpha_phone,
+    alphaOptin: alphaMessage
+  };
+
+  mobilecommons.optin(alphaArgs);
+
+  // Send the waiting message to the beta user.
+  var betaArgs = {
+    alphaPhone: betaPhone,
+    alphaOptin: betaMessage
+  };
+
+  mobilecommons.optin(betaArgs);
 };
 
 /**
