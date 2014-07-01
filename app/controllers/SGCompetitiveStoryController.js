@@ -155,7 +155,9 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
     response.send(406, '`phone` parameter required.')
   }
 
+  // Create object for callbacks to reference for data on the request.
   var self = this;
+  self.joiningBetaPhone = request.body.phone;
   self.response = response;
 
   // Find the user's document to get the game id.
@@ -217,10 +219,53 @@ SGCompetitiveStoryController.prototype.onInvitedBetaGameFound = function(err, do
     console.log(err);
   }
 
-  this.response.send(doc);
-  // @todo update to this beta's object.invite_accepted = true
-  // @todo if all betas invite_accepted = true, then auto-start the game
-  // @todo else, send appropriate messages to alpha and the recently-joined beta
+  if (doc) {
+    // Update game doc marking this beta as having joined the game
+    for (var i = 0; i < doc.betas.length; i++) {
+      if (doc.betas[i].phone == this.joiningBetaPhone) {
+        doc.betas[i].invite_accepted = true;
+        break;
+      }
+    }
+
+    // Check if all betas have joined.
+    var numWaitingOn = 0;
+    var allJoined = true;
+    for (var i = 0; i < doc.betas.length; i++) {
+      if (doc.betas[i].invite_accepted == false) {
+        allJoined = false;
+        numWaitingOn++;
+      }
+    }
+
+    // If all have joined, then start the game.
+    if (allJoined) {
+      this.response.send('TODO: Start the game.');
+    }
+    // If we're still waiting on people, send appropriate messages to the recently
+    // joined beta and alpha users.
+    else {
+      this.response.send('TODO: Waiting on ' + numWaitingOn + ' people to join.');
+    }
+
+    // Save the doc in the database with the betas update.
+    console.log(doc);
+    this.gameModel.update(
+      {_id: doc._id},
+      {$set: {betas: doc.betas}},
+      function(err, num, raw) {
+        if (err) {
+          console.log(err);
+        }
+        else {
+          console.log(raw);
+        }
+      }
+    );
+  }
+  else {
+    this.response.send(404);
+  }
 };
 
 /**
