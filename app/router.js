@@ -65,26 +65,62 @@ module.exports = function(app) {
   });
 
   /**
+   * Gets a game controller.
+   *
+   * @param String gameType
+   *
+   * @return Instance of the appropriate game controller for the game type
+   */
+  function getGameController(gameType) {
+    if (gameType === 'collaborative-story') {
+      return new SGCollaborativeStoryController(app);
+    }
+    else if (gameType === 'competitive-story') {
+      return new SGCompetitiveStoryController(app);
+    }
+    else if (gameType === 'most-likely-to') {
+      return new SGMostLikelyToController(app);
+    }
+
+    return null;
+  }
+
+  /**
    * Create a team SMS game.
    */
   app.post('/game/create', function(request, response) {
-    var gameController = null;
-    if (request.body.type === 'collaborative-story') {
-      gameController = new SGCollaborativeStoryController(app);
-    }
-    else if (request.body.type === 'competitive-story') {
-      gameController = new SGCompetitiveStoryController(app);
-    }
-    else if (request.body.type === 'most-likely-to') {
-      gameController = new SGMostLikelyToController(app);
-    }
-    else {
+    var gameController = getGameController(request.body.type);
+    if (gameController == null) {
       response.send(406, 'Invalid type parameter.');
     }
-
-    if (gameController) {
+    else {
       gameController.createGame(request, response);
     }
   });
 
+  /**
+   * Beta accepts the invite to a game request.
+   */
+  app.post('/game/beta-join', function(request, response) {
+    var gameController = getGameController(request.body.type);
+    if (gameController == null) {
+      response.send(406, 'Invalid type parameter.');
+    }
+    else {
+      gameController.betaJoinGame(request, response);
+    }
+  });
+
+  /**
+   * @todo
+   */
+  app.post('/game/alpha-start', function(request, response) {
+    var gameController = getGameController(request.body.type);
+    if (gameController == null) {
+      response.send(406, 'Invalid type parameter.');
+    }
+    else {
+      gameController.alphaStartGame(request, response);
+    }
+  });
 }

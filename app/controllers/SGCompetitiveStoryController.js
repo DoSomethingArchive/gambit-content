@@ -10,6 +10,7 @@ var CREATE_GAME_MAX_FRIENDS = 3;
 
 var SGCompetitiveStoryController = function(app) {
   this.app = app;
+  this.gameMappingModel = require('../models/sgGameMapping')(app);
   this.gameModel = require('../models/sgCompetitiveStory')(app);
   this.userModel = require('../models/sgUser')(app);
   this.gameConfig = app.get('competitive-stories');
@@ -59,6 +60,16 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   var self = this;
   game.then(function(doc) {
     var config = self.gameConfig[doc.story_id];
+
+    // Create game id to game type mapping.
+    self.gameMappingModel.create(
+      {game_id: doc._id, game_model: self.gameModel.modelName},
+      function(err, doc) {
+        if (err) {
+          console.log(err);
+        }
+      }
+    );
 
     // Upsert the document for the alpha user.
     self.userModel.update(
@@ -116,6 +127,107 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
   response.send(202);
 
+};
+
+/**
+ * Method for passing object data into a delegate.
+ *
+ * @param obj
+ *   The object to apply to the 'this' value in the delegate.
+ * @param delegate
+ *   The function delegate.
+ */
+function createCallback(obj, delegate)
+{
+  return function() {
+    delegate.apply(obj, arguments);
+  }
+};
+
+/**
+ * @todo consider moving all of the join game behavior to a parent class SGGameController
+ *
+ * Joins a beta to the game she's been invited to.
+ */
+SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response) {
+  if (typeof request.body === 'undefined'
+      || typeof request.body.phone === 'undefined') {
+    response.send(406, '`phone` parameter required.')
+  }
+
+  var self = this;
+  self.response = response;
+
+  // Find the user's document to get the game id.
+  this.userModel.findOne(
+    {phone: request.body.phone},
+    createCallback(self, this.onInvitedBetaFound)
+  );
+};
+
+/**
+ * Callback when an invited beta's document is found. Use the game id in the beta's
+ * document to then find the collection to search for the game in.
+ */
+SGCompetitiveStoryController.prototype.onInvitedBetaFound = function(err, doc) {
+  if (err) {
+    console.log(err);
+  }
+
+  if (doc) {
+    var gameId = doc.current_game_id;
+
+    // Find the game model to determine what game collection to search over.
+    this.gameMappingModel.findOne(
+      {game_id: doc.current_game_id},
+      createCallback(this, this.onInvitedBetaGameMappingFound)
+    );
+  }
+  else {
+    this.response.send(404);
+  }
+};
+
+/**
+ * Callback when an invited beta's game is found in the mapping collection. This
+ * then tells us when collection to search for the game on.
+ */
+SGCompetitiveStoryController.prototype.onInvitedBetaGameMappingFound = function(err, doc) {
+  if (err) {
+    console.log(err);
+  }
+
+  if (doc && doc.game_model == this.gameModel.modelName) {
+    // Find the game via its id.
+    this.gameModel.findOne(
+      {_id: doc.game_id},
+      createCallback(this, this.onInvitedBetaGameFound)
+    );
+  }
+  else {
+    this.response.send(404);
+  }
+};
+
+/**
+ * Callback when an invited beta's game document is found.
+ */
+SGCompetitiveStoryController.prototype.onInvitedBetaGameFound = function(err, doc) {
+  if (err) {
+    console.log(err);
+  }
+
+  this.response.send(doc);
+  // @todo update to this beta's object.invite_accepted = true
+  // @todo if all betas invite_accepted = true, then auto-start the game
+  // @todo else, send appropriate messages to alpha and the recently-joined beta
+};
+
+/**
+ * @todo
+ */
+SGCompetitiveStoryController.prototype.alphaStartGame = function(request,response) {
+  response.send('TODO: implement SGCompetitiveStoryController.onAlphaStartGame');
 };
 
 module.exports = SGCompetitiveStoryController;
