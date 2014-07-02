@@ -158,21 +158,28 @@ function createCallback(obj, delegate)
  */
 SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response) {
   if (typeof request.body === 'undefined'
-      || typeof request.body.phone === 'undefined') {
-    response.send(406, '`phone` parameter required.')
+      || typeof request.body.phone === 'undefined'
+      || typeof request.body.args === 'undefined') {
+    response.send(406, '`phone` and `args` parameters required.');
   }
 
-  // Create object for callbacks to refer to for data on the request.
-  var self = this;
-  self.joiningBetaPhone = request.body.phone;
-  self.response = response;
-  self.requestType = RequestType.BETA_JOIN;
+  // If beta doesn't respond with 'Y', then just ignore
+  if (request.body.args.toUpperCase() !== 'Y') {
+    response.send();
+  }
+  else {
+    // Create object for callbacks to refer to for data on the request.
+    var self = this;
+    self.joiningBetaPhone = request.body.phone;
+    self.response = response;
+    self.requestType = RequestType.BETA_JOIN;
 
-  // Find the user's document to get the game id.
-  this.userModel.findOne(
-    {phone: request.body.phone},
-    createCallback(self, this.onUserFound)
-  );
+    // Find the user's document to get the game id.
+    this.userModel.findOne(
+      {phone: request.body.phone},
+      createCallback(self, this.onUserFound)
+    );
+  }
 };
 
 /**
@@ -182,7 +189,7 @@ SGCompetitiveStoryController.prototype.alphaStartGame = function(request, respon
   if (typeof request.body === 'undefined'
       || typeof request.body.phone === 'undefined'
       || typeof request.body.args === 'undefined') {
-    response.send(406);
+    response.send(406, '`phone` and `args` parameters required.');
   }
 
   // If alpha doesn't respond with 'Y', then just ignore
