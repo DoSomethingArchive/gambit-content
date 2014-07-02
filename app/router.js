@@ -89,7 +89,7 @@ module.exports = function(app) {
    * Create a team SMS game.
    */
   app.post('/game/create', function(request, response) {
-    var gameController = getGameController(request.body.type);
+    var gameController = getGameController(request.query.type);
     if (gameController == null) {
       response.send(406, 'Invalid type parameter.');
     }
@@ -102,7 +102,7 @@ module.exports = function(app) {
    * Beta accepts the invite to a game request.
    */
   app.post('/game/beta-join', function(request, response) {
-    var gameController = getGameController(request.body.type);
+    var gameController = getGameController(request.query.type);
     if (gameController == null) {
       response.send(406, 'Invalid type parameter.');
     }
@@ -115,7 +115,7 @@ module.exports = function(app) {
    * Alpha manually chooses to start a game.
    */
   app.post('/game/alpha-start', function(request, response) {
-    var gameController = getGameController(request.body.type);
+    var gameController = getGameController(request.query.type);
     if (gameController == null) {
       response.send(406, 'Invalid type parameter.');
     }
