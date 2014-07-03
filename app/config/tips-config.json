@@ -1,6 +1,36 @@
 {
   "modelName": "Tip",
   "tips": {
+    "9521": {
+      "__comments": "Fifth Harmony #ImABoss 2014 - KNOW",
+      "name": "imaboss2014-know",
+      "optins": [
+        168565,
+        168567,
+        168569,
+        168571,
+        168573
+      ]
+    },
+    "9531": {
+      "__comments": "Fifth Harmony #ImABoss 2014 - PLAN",
+      "name": "imaboss2014-plan",
+      "optins": [
+        168575,
+        168577,
+        168579,
+        168581
+      ]
+    },
+    "9541": {
+      "__comments": "Fifth Harmony #ImABoss 2014 - DO",
+      "name": "imaboss2014-do",
+      "optins": [
+        168583,
+        168585,
+        168587
+      ]
+    },
     "10673": {
       "__comments": "Thumb Wars 2014 - KNOW tips.",
       "name": "thumbwars2014-know",
