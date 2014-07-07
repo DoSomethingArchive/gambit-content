@@ -9,6 +9,11 @@
       "__comments": "The Hunt 2014 Quiz to Pre-Campaign Tips",
       "optin": 167415,
       "optout": 126181
+    },
+    "9491": {
+      "__comments": "Fifth Harmony #ImABoss 2014",
+      "optin": 168561,
+      "optout": 126959
     }
   },
   "yesNoPaths": [
@@ -23,6 +28,12 @@
       "incomingPath": 167259,
       "yes": 167297,
       "no": 167299
+    },
+    {
+      "__comments": "Fifth Harmony #ImABoss 2014 MMS Check",
+      "incomingPath": 168591,
+      "yes": 168593,
+      "no": 168595
     }
   ]
 }
