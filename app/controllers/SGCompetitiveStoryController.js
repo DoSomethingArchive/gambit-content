@@ -46,20 +46,33 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     return;
   }
 
+  var alphaPhone = this.getNormalizedPhone(request.body.person.phone);
+  if (!this.isValidPhone(alphaPhone)) {
+    response.send(406, 'Invalid alpha phone number.');
+    return;
+  }
+
   // Compile a new game document.
   var gameDoc = {
     story_id: request.body.story_id,
     alpha_name: request.body.person.first_name,
-    alpha_phone: request.body.person.phone,
+    alpha_phone: alphaPhone,
     betas: []
   };
 
-  request.body.friends.forEach(function(value, index, set) {
-    gameDoc.betas[index] = {};
-    gameDoc.betas[index].invite_accepted = false;
-    gameDoc.betas[index].name = value.first_name;
-    gameDoc.betas[index].phone = value.phone;
-  });
+  for (var i = 0; i < request.body.friends.length; i++) {
+    gameDoc.betas[i] = {};
+    gameDoc.betas[i].invite_accepted = false;
+    gameDoc.betas[i].name = request.body.friends[i].first_name;
+
+    var phone = this.getNormalizedPhone(request.body.friends[i].phone);
+    if (!this.isValidPhone(phone)) {
+      response.send(406, 'Invalid beta phone number.');
+      return;
+    }
+
+    gameDoc.betas[i].phone = phone;
+  }
 
   // Save game to the database.
   var game = this.gameModel.create(gameDoc);
@@ -134,6 +147,41 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
   response.send(202);
 
+};
+
+/**
+ * Normalizes a phone number for processing. Prepends the '1' US international
+ * code to the phone number if it doesn't have it.
+ *
+ * @param phone
+ *   Phone number to normalize.
+ *
+ * @return Normalized phone number string.
+ */
+SGCompetitiveStoryController.prototype.getNormalizedPhone = function(phone) {
+  var newPhone = phone.replace(/\D/g, '');
+  if (newPhone.length === 10) {
+    newPhone = '1' + newPhone;
+  }
+
+  return newPhone;
+}
+
+/**
+ * Checks if a phone number is valid.
+ *
+ * @param phone
+ *   Phone number to check.
+ *
+ * @return true if valid. false, otherwise.
+ */
+SGCompetitiveStoryController.prototype.isValidPhone = function(phone) {
+  if (phone.length === 11) {
+    return true;
+  }
+  else {
+    return false;
+  }
 };
 
 /**
