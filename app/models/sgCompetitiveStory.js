@@ -5,16 +5,13 @@ var mongoose = require('mongoose')
     , sgGameSchema = require('./sgGameSchema')()
     ;
 
-var sgCompetitveStory = function(app) {
+var sgCompetitiveStory = function(app) {
   var modelName = 'sg_competitivestory_game';
 
   var schema = sgGameSchema;
   schema.add({
-    // Last Mobile Commons opt in path delivered to the alpha player
-    alpha_current_opt_in_path: Number,
-
-    // Current status of beta players
-    betas_current_status: [{
+    // Current status of players
+    players_current_status: [{
       // Player's phone number
       phone: String,
 
@@ -22,19 +19,16 @@ var sgCompetitveStory = function(app) {
       opt_in_path: Number
     }],
 
-    // Defines the story the game plays through
-    story: [{
-      // Mobile Commons opt in path to deliver the message
-      opt_in_path: Number,
+    // Tracks the results of the story as it gets played out
+    story_results: [{
+      // Mobile Commons opt in path that the user played.
+      oip: Number,
 
-      // Array of possible next scenes in the story
-      choices: [{
-        // Mobile Commons opt in path to go to
-        opt_in_path: Number,
+      // Phone number of the player this result is for.
+      phone: String,
 
-        // User response that maps to this choice
-        answer: String
-      }],
+      // The answer given by the user.
+      answer: String
 
       // @TODO add fields for aggregate choice logic and pinch points
     }]

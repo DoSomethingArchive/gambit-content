@@ -23,22 +23,28 @@ exports.optin = function(args) {
 
   // If we have beta details, then create form with that beta info
   if (betaPhone != null && betaOptin > 0) {
-    request.post(
-      url,
-      {
-        form: {
-          opt_in_path: alphaOptin,
-          friends_opt_in_path: betaOptin,
-          'person[phone]': alphaPhone,
-          'friends[]': betaPhone
-        }
-      },
-      function (error, response, body) {
-        if (!error && response.statusCode == 200) {
-            console.log(body)
-        }
+    var payload = {
+      form: {
+        opt_in_path: alphaOptin,
+        friends_opt_in_path: betaOptin,
+        'person[phone]': alphaPhone
       }
-    );
+    };
+
+    if (Array.isArray(betaPhone)) {
+      betaPhone.forEach(function(value, index, set) {
+        payload.form['friends['+index+']'] = value;
+      });
+    }
+    else {
+      payload.form['friends[]'] = betaPhone;
+    }
+
+    request.post( url, payload, function (error, response, body) {
+      if (!error && response.statusCode == 200) {
+          console.log(body)
+      }
+    });
   }
   // Otherwise, just execute the opt in for the alpha user
   else {
