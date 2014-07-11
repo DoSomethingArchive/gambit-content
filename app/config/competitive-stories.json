@@ -7,32 +7,149 @@
     "beta_wait_oip": 168451,
     "story_start_oip": 168453,
     "story": {
-      "168453": [
-        {
-          "oip": 168455,
-          "valid_answers": [
-            "LEVEL 1-1A",
-            "LEVEL 11A",
-            "A"
-          ]
-        },
-        {
-          "oip": 168457,
-          "valid_answers": [
-            "LEVEL 1-1B",
-            "LEVEL 11B",
-            "B"
-          ]
-        },
-        {
-          "oip": 168459,
-          "valid_answers": [
-            "LEVEL 1-1C",
-            "LEVEL 11C",
-            "C"
-          ]
-        }
-      ]
+      "168453": {
+        "__comments": "Level 1-0",
+        "choices": [
+          {
+            "next": 168455,
+            "valid_answers": [
+              "A",
+              "LOOK"
+            ]
+          },
+          {
+            "next": 168457,
+            "valid_answers": [
+              "B",
+              "DOOR"
+            ]
+          }
+        ]
+      },
+      "168455": {
+        "__comments": "Level 1-1A",
+        "choices": [
+          {
+            "next": 168459,
+            "valid_answers": [
+              "L12A"
+            ]
+          },
+          {
+            "next": 168655,
+            "valid_answers": [
+              "L12C"
+            ]
+          }
+        ]
+      },
+      "168457": {
+        "__comments": "Level 1-1B",
+        "choices": [
+          {
+            "next": 168459,
+            "valid_answers": [
+              "L12A"
+            ]
+          },
+          {
+            "next": 168461,
+            "valid_answers": [
+              "L12B"
+            ]
+          }
+        ]
+      },
+      "168459": {
+        "__comments": "Level 1-2A",
+        "choices": [
+          {
+            "next": 168657,
+            "valid_answers": [
+              "L13A"
+            ]
+          }
+        ]
+      },
+      "168461": {
+        "__comments": "Level 1-2B",
+        "choices": [
+          {
+            "next": 168659,
+            "valid_answers": [
+              "L13B"
+            ]
+          }
+        ]
+      },
+      "168655": {
+        "__comments": "Level 1-2C",
+        "choices": [
+          {
+            "next": 168659,
+            "valid_answers": [
+              "L13B"
+            ]
+          }
+        ]
+      },
+      "168657": {
+        "__comments": "Level 1-3A",
+        "choices": [
+          {
+            "next": "END-Level1",
+            "valid_answers": [
+              "L14A"
+            ]
+          },
+          {
+            "next": "END-Level1",
+            "valid_answers": [
+              "L14B"
+            ]
+          }
+        ]
+      },
+      "168659": {
+        "__comments": "Level 1-3B",
+        "choices": [
+          {
+            "next": "END-Level1",
+            "valid_answers": [
+              "L14A"
+            ]
+          },
+          {
+            "next": "END-Level1",
+            "valid_answers": [
+              "L14C"
+            ]
+          }
+        ]
+      },
+      "END-Level1": {
+        "__comments": "This is all TBD. I'm not exactly sure how I'm dealing with end-level scenarios yet.",
+        "choices": [
+          {
+            "next": "@TODO: oip for L1 result A",
+            "conditions": {
+              "$or": ["L12B", "L12C"]
+            }
+          },
+          {
+            "next": "@TODO: oip for L1 result B",
+            "conditions": {
+              "$and": ["L12A", {"$or": ["L14B", "L14C"]}]
+            }
+          },
+          {
+            "next": "@TODO: oip for L1 result C",
+            "conditions": {
+              "$and": ["L12A", "L14A"]
+            }
+          }
+        ]
+      }
     }
   }
 }

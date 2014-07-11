@@ -341,10 +341,84 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
   }
 
   /**
-   * @todo
+   * Callback after user's game is found. Determines how to progress the user
+   * forward in the story based on her answer.
    */
   var execUserAction = function(obj, doc) {
-    obj.response.send(doc);
+
+    // Uppercase, trim and only get first word of user's response.
+    var userArgs = obj.request.body.args.toUpperCase().trim();
+    var userFirstWord = userArgs;
+    if (userArgs.indexOf(' ') >= 0) {
+      userFirstWord = userArgs.substr(0, userARgs.indexOf(' '));
+    }
+
+    // Find player's current status.
+    var userPhone = obj.getNormalizedPhone(obj.request.body.phone);
+    var currentOip = 0;
+    for (var i = 0; i < doc.players_current_status.length; i++) {
+      if (doc.players_current_status[i].phone == userPhone) {
+        currentOip = doc.players_current_status[i].opt_in_path;
+        break;
+      }
+    }
+
+    // Get the story config.
+    var storyConfig = obj.gameConfig[doc.story_id];
+
+    // Check if user response is valid.
+    var choiceIndex = -1;
+    var storyItem = storyConfig.story[currentOip];
+
+    if (storyItem && storyItem.choices) {
+      for (var i = 0; i < storyItem.choices.length; i++) {
+
+        // Check if user's response is a valid choice.
+        if (storyItem.choices[i].valid_answers.indexOf(userFirstWord) >= 0) {
+          choiceIndex = i;
+          break;
+        }
+
+      }
+    }
+
+    // Determine next message based on whether or not answer was valid.
+    var nextOip = 0;
+    if (choiceIndex >= 0) {
+      // Progress player to the next message.
+      nextOip = storyItem.choices[choiceIndex].next;
+
+      // Update the player's current status and save to the database.
+      var gameDoc = obj.updatePlayerCurrentStatus(doc, userPhone, nextOip);
+      obj.gameModel.update(
+        {_id: doc._id},
+        {$set: {
+          players_current_status: gameDoc.players_current_status
+        }},
+        function(err, num, raw) {
+          if (err) {
+            console.log(err);
+          }
+          else {
+            console.log(raw);
+          }
+        }
+      );
+    }
+    else {
+      // Resend the same message by opting into the current path again.
+      nextOip = currentOip;
+    }
+
+    // Send message via Mobile Commons opt in.
+    var optinArgs = {
+      alphaPhone: userPhone,
+      alphaOptin: nextOip,
+    };
+
+    mobilecommons.optin(optinArgs);
+
+    obj.response.send(200);
   };
 
   // Object for callbacks to reference.
