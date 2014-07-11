@@ -388,12 +388,18 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
       // Progress player to the next message.
       nextOip = storyItem.choices[choiceIndex].next;
 
-      // Update the player's current status and save to the database.
-      var gameDoc = obj.updatePlayerCurrentStatus(doc, userPhone, nextOip);
+      var gameDoc = doc;
+      // Update the results of the player's progression through a story.
+      gameDoc = obj.updateStoryResults(gameDoc, userPhone, currentOip, userFirstWord);
+
+      // Update the player's current status.
+      gameDoc = obj.updatePlayerCurrentStatus(gameDoc, userPhone, nextOip);
+
       obj.gameModel.update(
         {_id: doc._id},
         {$set: {
-          players_current_status: gameDoc.players_current_status
+          players_current_status: gameDoc.players_current_status,
+          story_results: gameDoc.story_results
         }},
         function(err, num, raw) {
           if (err) {
@@ -508,7 +514,7 @@ SGCompetitiveStoryController.prototype.findUserGame = function(obj, onUserGameFo
  * Updates the game document with the player's current status.
  *
  * @param gameDoc
- *   Game document for users to start the game for.
+ *   Game document to modify.
  * @param phone
  *   Phone number of the player to update.
  * @param currentPath
@@ -531,6 +537,31 @@ SGCompetitiveStoryController.prototype.updatePlayerCurrentStatus = function(game
     gameDoc.players_current_status[idx].phone = phone;
     gameDoc.players_current_status[idx].opt_in_path = currentPath;
   }
+
+  return gameDoc;
+};
+
+/**
+ * Adds a story_results item to the game document.
+ *
+ * @param gameDoc
+ *   Game document to modify.
+ * @param phone
+ *   Phone number of the player to update.
+ * @param oip
+ *   Opt in path that the user submitted an answer for.
+ * @param answer
+ *   User's answer.
+ *
+ * @return Updated game document.
+ */
+SGCompetitiveStoryController.prototype.updateStoryResults = function(gameDoc, phone, oip, answer) {
+  var index = gameDoc.story_results.length;
+
+  gameDoc.story_results[index] = {};
+  gameDoc.story_results[index].oip = oip;
+  gameDoc.story_results[index].phone = phone;
+  gameDoc.story_results[index].answer = answer;
 
   return gameDoc;
 };
