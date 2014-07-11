@@ -138,7 +138,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     mobilecommons.optin(optinArgs);
   });
 
-  response.send(202);
+  response.send(200);
 
 };
 
@@ -237,7 +237,7 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
       // If all have joined, then start the game.
       if (allJoined) {
         doc = obj.startGame(obj.gameConfig, doc);
-        obj.response.send(202);
+        obj.response.send(200);
       }
       // If we're still waiting on people, send appropriate messages to the recently
       // joined beta and alpha users.
@@ -245,7 +245,7 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
         console.log('Waiting on ' + numWaitingOn + ' people to join.');
 
         doc = obj.sendWaitMessages(obj.gameConfig, doc, obj.joiningBetaPhone);
-        obj.response.send(202);
+        obj.response.send(200);
       }
 
       // Save the doc in the database with the betas and current status updates.
@@ -300,7 +300,7 @@ SGCompetitiveStoryController.prototype.alphaStartGame = function(request, respon
     var execAlphaStartGame = function(obj, doc) {
       // Start the game.
       doc = obj.startGame(obj.gameConfig, doc);
-      obj.response.send(202);
+      obj.response.send(200);
 
       // Save the doc in the database with the current status updates.
       obj.gameModel.update(
