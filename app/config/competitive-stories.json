@@ -13,6 +13,7 @@
           {
             "next": 168455,
             "valid_answers": [
+              "L11A",
               "A",
               "LOOK"
             ]
@@ -20,6 +21,7 @@
           {
             "next": 168457,
             "valid_answers": [
+              "L11B",
               "B",
               "DOOR"
             ]
@@ -97,13 +99,13 @@
         "__comments": "Level 1-3A",
         "choices": [
           {
-            "next": "END-Level1",
+            "next": "END-LEVEL1",
             "valid_answers": [
               "L14A"
             ]
           },
           {
-            "next": "END-Level1",
+            "next": "END-LEVEL1",
             "valid_answers": [
               "L14B"
             ]
@@ -114,36 +116,36 @@
         "__comments": "Level 1-3B",
         "choices": [
           {
-            "next": "END-Level1",
+            "next": "END-LEVEL1",
             "valid_answers": [
               "L14A"
             ]
           },
           {
-            "next": "END-Level1",
+            "next": "END-LEVEL1",
             "valid_answers": [
               "L14C"
             ]
           }
         ]
       },
-      "END-Level1": {
-        "__comments": "This is all TBD. I'm not exactly sure how I'm dealing with end-level scenarios yet.",
+      "END-LEVEL1": {
+        "__comments": "This is all TBD. I'm not exactly sure how I'm dealing with end-level scenarios yet. Maybe use opt-in paths instead of the string answers here.",
         "choices": [
           {
-            "next": "@TODO: oip for L1 result A",
+            "next": "168825",
             "conditions": {
               "$or": ["L12B", "L12C"]
             }
           },
           {
-            "next": "@TODO: oip for L1 result B",
+            "next": "168827",
             "conditions": {
               "$and": ["L12A", {"$or": ["L14B", "L14C"]}]
             }
           },
           {
-            "next": "@TODO: oip for L1 result C",
+            "next": "168831",
             "conditions": {
               "$and": ["L12A", "L14A"]
             }
