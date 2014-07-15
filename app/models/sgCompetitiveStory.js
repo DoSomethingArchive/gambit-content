@@ -1,8 +1,7 @@
 /**
  * Mongoose model for Competitive Story SMS games.
  */
-var mongoose = require('mongoose')
-    , sgGameSchema = require('./sgGameSchema')()
+var sgGameSchema = require('./sgGameSchema')()
     ;
 
 var sgCompetitiveStory = function(app) {
@@ -34,8 +33,7 @@ var sgCompetitiveStory = function(app) {
     }]
   });
 
-  var db = mongoose.createConnection(app.get('database-uri'));
-  return db.model(modelName, schema);
+  return app.getModel(modelName, schema);
 };
 
 module.exports = sgCompetitiveStory;

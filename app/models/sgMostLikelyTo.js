@@ -2,8 +2,7 @@
  * Mongoose model for the Most Likely To SMS game.
  */
 
-var mongoose = require('mongoose')
-    , sgGameSchema = require('./sgGameSchema')()
+var sgGameSchema = require('./sgGameSchema')()
     ;
 
 var sgMostLikelyTo = function(app) {
@@ -31,8 +30,7 @@ var sgMostLikelyTo = function(app) {
     }]
   });
 
-  var db = mongoose.createConnection(app.get('database-uri'));
-  return db.model(modelName, schema);
+  return app.getModel(modelName, schema);
 };
 
 module.exports = sgMostLikelyTo;

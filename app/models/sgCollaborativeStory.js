@@ -1,8 +1,7 @@
 /**
  * Mongoose model for Collaborative Story SMS games.
  */
-var mongoose = require('mongoose')
-    , sgGameSchema = require('./sgGameSchema')()
+var sgGameSchema = require('./sgGameSchema')()
     ;
 
 var sgCollaborativeStory = function(app) {
@@ -41,8 +40,7 @@ var sgCollaborativeStory = function(app) {
     }]
   });
 
-  var db = mongoose.createConnection(app.get('database-uri'));
-  return db.model(modelName, schema);
+  return app.getModel(modelName, schema);
 };
 
 module.exports = sgCollaborativeStory;

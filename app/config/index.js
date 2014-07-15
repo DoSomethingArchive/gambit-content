@@ -1,6 +1,8 @@
-var path = require('path');
-var fs = require('fs');
-var root_dirname = path.dirname(path.dirname(__dirname));
+var path = require('path')
+  , fs = require('fs')
+  , root_dirname = path.dirname(path.dirname(__dirname))
+  , mongoose = require('mongoose')
+  ;
 
 module.exports = function(app, express) {
 
@@ -25,6 +27,32 @@ module.exports = function(app, express) {
 
   // Set the database URI this app will use.
   app.set('database-uri', 'mongodb://localhost/ds-mdata-responder');
+
+  // Create a single database connection to be used for the lifetime of the app.
+  var dbConnection = mongoose.createConnection(app.get('database-uri'));
+
+  /**
+   * Helper function to retrieve a Mongoose model.
+   *
+   * @param modelName
+   *   String of the name of the model
+   * @param schema
+   *   Mongoose schema to create a model with
+   *
+   * @return Mongoose model
+   */
+  app.getModel = function(modelName, schema) {
+    // If a model by this name has already been created, return it.
+    var modelNames = dbConnection.modelNames();
+    for (var i = 0; i < modelNames.length; i++) {
+      if (modelName == modelNames[i]) {
+        return dbConnection.model(modelName);
+      }
+    }
+
+    // If no existing model is found, create a new one.
+    return dbConnection.model(modelName, schema);
+  };
 
   // Read through .json configs in the config folder and set to app variables
   fs.readdirSync('./app/config').forEach(function(file) {
