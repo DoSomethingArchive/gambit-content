@@ -19,8 +19,7 @@ var sgGameMapping = function(app) {
     game_model: String
   });
 
-  var db = mongoose.createConnection(app.get('database-uri'));
-  return db.model(modelName, schema);
+  return app.getModel(modelName, schema);
 };
 
 module.exports = sgGameMapping;
