@@ -138,7 +138,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     mobilecommons.optin(optinArgs);
   });
 
-  response.send(202);
+  response.send(200);
 
 };
 
@@ -237,7 +237,7 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
       // If all have joined, then start the game.
       if (allJoined) {
         doc = obj.startGame(obj.gameConfig, doc);
-        obj.response.send(202);
+        obj.response.send(200);
       }
       // If we're still waiting on people, send appropriate messages to the recently
       // joined beta and alpha users.
@@ -245,7 +245,7 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
         console.log('Waiting on ' + numWaitingOn + ' people to join.');
 
         doc = obj.sendWaitMessages(obj.gameConfig, doc, obj.joiningBetaPhone);
-        obj.response.send(202);
+        obj.response.send(200);
       }
 
       // Save the doc in the database with the betas and current status updates.
@@ -300,7 +300,7 @@ SGCompetitiveStoryController.prototype.alphaStartGame = function(request, respon
     var execAlphaStartGame = function(obj, doc) {
       // Start the game.
       doc = obj.startGame(obj.gameConfig, doc);
-      obj.response.send(202);
+      obj.response.send(200);
 
       // Save the doc in the database with the current status updates.
       obj.gameModel.update(
@@ -341,10 +341,90 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
   }
 
   /**
-   * @todo
+   * Callback after user's game is found. Determines how to progress the user
+   * forward in the story based on her answer.
    */
   var execUserAction = function(obj, doc) {
-    obj.response.send(doc);
+
+    // Uppercase, trim and only get first word of user's response.
+    var userArgs = obj.request.body.args.toUpperCase().trim();
+    var userFirstWord = userArgs;
+    if (userArgs.indexOf(' ') >= 0) {
+      userFirstWord = userArgs.substr(0, userARgs.indexOf(' '));
+    }
+
+    // Find player's current status.
+    var userPhone = obj.getNormalizedPhone(obj.request.body.phone);
+    var currentOip = 0;
+    for (var i = 0; i < doc.players_current_status.length; i++) {
+      if (doc.players_current_status[i].phone == userPhone) {
+        currentOip = doc.players_current_status[i].opt_in_path;
+        break;
+      }
+    }
+
+    // Get the story config.
+    var storyConfig = obj.gameConfig[doc.story_id];
+
+    // Check if user response is valid.
+    var choiceIndex = -1;
+    var storyItem = storyConfig.story[currentOip];
+
+    if (storyItem && storyItem.choices) {
+      for (var i = 0; i < storyItem.choices.length; i++) {
+
+        // Check if user's response is a valid choice.
+        if (storyItem.choices[i].valid_answers.indexOf(userFirstWord) >= 0) {
+          choiceIndex = i;
+          break;
+        }
+
+      }
+    }
+
+    // Determine next message based on whether or not answer was valid.
+    var nextOip = 0;
+    if (choiceIndex >= 0) {
+      // Progress player to the next message.
+      nextOip = storyItem.choices[choiceIndex].next;
+
+      var gameDoc = doc;
+      // Update the results of the player's progression through a story.
+      gameDoc = obj.updateStoryResults(gameDoc, userPhone, currentOip, userFirstWord);
+
+      // Update the player's current status.
+      gameDoc = obj.updatePlayerCurrentStatus(gameDoc, userPhone, nextOip);
+
+      obj.gameModel.update(
+        {_id: doc._id},
+        {$set: {
+          players_current_status: gameDoc.players_current_status,
+          story_results: gameDoc.story_results
+        }},
+        function(err, num, raw) {
+          if (err) {
+            console.log(err);
+          }
+          else {
+            console.log(raw);
+          }
+        }
+      );
+    }
+    else {
+      // Resend the same message by opting into the current path again.
+      nextOip = currentOip;
+    }
+
+    // Send message via Mobile Commons opt in.
+    var optinArgs = {
+      alphaPhone: userPhone,
+      alphaOptin: nextOip,
+    };
+
+    mobilecommons.optin(optinArgs);
+
+    obj.response.send(200);
   };
 
   // Object for callbacks to reference.
@@ -434,7 +514,7 @@ SGCompetitiveStoryController.prototype.findUserGame = function(obj, onUserGameFo
  * Updates the game document with the player's current status.
  *
  * @param gameDoc
- *   Game document for users to start the game for.
+ *   Game document to modify.
  * @param phone
  *   Phone number of the player to update.
  * @param currentPath
@@ -457,6 +537,31 @@ SGCompetitiveStoryController.prototype.updatePlayerCurrentStatus = function(game
     gameDoc.players_current_status[idx].phone = phone;
     gameDoc.players_current_status[idx].opt_in_path = currentPath;
   }
+
+  return gameDoc;
+};
+
+/**
+ * Adds a story_results item to the game document.
+ *
+ * @param gameDoc
+ *   Game document to modify.
+ * @param phone
+ *   Phone number of the player to update.
+ * @param oip
+ *   Opt in path that the user submitted an answer for.
+ * @param answer
+ *   User's answer.
+ *
+ * @return Updated game document.
+ */
+SGCompetitiveStoryController.prototype.updateStoryResults = function(gameDoc, phone, oip, answer) {
+  var index = gameDoc.story_results.length;
+
+  gameDoc.story_results[index] = {};
+  gameDoc.story_results[index].oip = oip;
+  gameDoc.story_results[index].phone = phone;
+  gameDoc.story_results[index].answer = answer;
 
   return gameDoc;
 };
