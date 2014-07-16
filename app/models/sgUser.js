@@ -7,7 +7,6 @@ var mongoose = require('mongoose')
 
 var sgUser = function(app) {
   var modelName = 'sg_user';
-  var db = mongoose.createConnection(app.get('database-uri'));
 
   var schema = new mongoose.Schema({
     // Phone number of this user
@@ -17,9 +16,7 @@ var sgUser = function(app) {
     current_game_id: mongoose.Schema.Types.ObjectId
   });
 
-  var model = db.model(modelName, schema);
-
-  return model;
+  return app.getModel(modelName, schema);
 };
 
 module.exports = sgUser;

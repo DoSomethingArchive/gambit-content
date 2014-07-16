@@ -6,8 +6,6 @@ var mongoose = require('mongoose');
 
 var tip = function(app, modelName) {
 
-  var db = mongoose.createConnection(app.get('database-uri'));
-
   var schema = new mongoose.Schema({
     phone: String,
     last_tip_delivered: [{
@@ -16,9 +14,7 @@ var tip = function(app, modelName) {
     }]
   });
 
-  var model = db.model(modelName, schema);
-
-  return model;
+  return app.getModel(modelName, schema);
 };
 
 module.exports = tip;
