@@ -34,13 +34,15 @@
           {
             "next": 168459,
             "valid_answers": [
-              "L12A"
+              "L12A",
+              "A"
             ]
           },
           {
             "next": 168655,
             "valid_answers": [
-              "L12C"
+              "L12C",
+              "C"
             ]
           }
         ]
@@ -51,13 +53,15 @@
           {
             "next": 168459,
             "valid_answers": [
-              "L12A"
+              "L12A",
+              "A"
             ]
           },
           {
             "next": 168461,
             "valid_answers": [
-              "L12B"
+              "L12B",
+              "B"
             ]
           }
         ]
@@ -68,7 +72,8 @@
           {
             "next": 168657,
             "valid_answers": [
-              "L13A"
+              "L13A",
+              "A"
             ]
           }
         ]
@@ -79,7 +84,8 @@
           {
             "next": 168659,
             "valid_answers": [
-              "L13B"
+              "L13B",
+              "B"
             ]
           }
         ]
@@ -90,7 +96,8 @@
           {
             "next": 168659,
             "valid_answers": [
-              "L13B"
+              "L13B",
+              "B"
             ]
           }
         ]
@@ -101,13 +108,15 @@
           {
             "next": "END-LEVEL1",
             "valid_answers": [
-              "L14A"
+              "L14A",
+              "A"
             ]
           },
           {
             "next": "END-LEVEL1",
             "valid_answers": [
-              "L14B"
+              "L14B",
+              "B"
             ]
           }
         ]
@@ -118,13 +127,15 @@
           {
             "next": "END-LEVEL1",
             "valid_answers": [
-              "L14A"
+              "L14A",
+              "A"
             ]
           },
           {
             "next": "END-LEVEL1",
             "valid_answers": [
-              "L14C"
+              "L14C",
+              "C"
             ]
           }
         ]
@@ -133,22 +144,55 @@
         "__comments": "This is all TBD. I'm not exactly sure how I'm dealing with end-level scenarios yet. Maybe use opt-in paths instead of the string answers here.",
         "choices": [
           {
-            "next": "168825",
+            "next": 168825,
             "conditions": {
               "$or": ["L12B", "L12C"]
             }
           },
           {
-            "next": "168827",
+            "next": 168827,
             "conditions": {
               "$and": ["L12A", {"$or": ["L14B", "L14C"]}]
             }
           },
           {
-            "next": "168831",
+            "next": 168831,
             "conditions": {
               "$and": ["L12A", "L14A"]
             }
+          }
+        ]
+      },
+      "END-LEVEL1-GROUP": {
+        "__comments": "More TBD stuff. This defines the messages users should get when the entire team makes it to the end of the level.",
+        "choices": [
+          {
+            "next": 168897,
+            "majority_players_result": 168825
+          },
+          {
+            "next": 168899,
+            "majority_players_result": "DEFAULT"
+          }
+        ],
+        "next_level": 168901
+      },
+      "168901": {
+        "__comments": "Level 2-0",
+        "choices": [
+          {
+            "next": "@todo level 2-1A",
+            "valid_answers": [
+              "L21A",
+              "A"
+            ]
+          },
+          {
+            "next": "@todo level 2-1B",
+            "valid_answers": [
+              "L21B",
+              "B"
+            ]
           }
         ]
       }
