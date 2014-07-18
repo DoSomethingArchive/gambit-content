@@ -26,7 +26,7 @@ module.exports = function(app, express) {
   app.use(express.static(path.join(root_dirname, 'public')));
 
   // Set the database URI this app will use.
-  app.set('database-uri', 'mongodb://localhost/ds-mdata-responder');
+  app.set('database-uri', process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder');
 
   // Create a single database connection to be used for the lifetime of the app.
   var dbConnection = mongoose.createConnection(app.get('database-uri'));
