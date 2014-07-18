@@ -8,6 +8,12 @@ var mobilecommons = require('../../mobilecommons/mobilecommons')
 var CREATE_GAME_MIN_FRIENDS = 3;
 var CREATE_GAME_MAX_FRIENDS = 3;
 
+// Delay (in milliseconds) for end level group messages to be sent.
+var END_LEVEL_GROUP_MESSAGE_DELAY = 15000;
+
+// Delay (in milliseconds) for next level start messages to be sent.
+var NEXT_LEVEL_START_DELAY = 30000;
+
 var SGCompetitiveStoryController = function(app) {
   this.app = app;
   this.gameMappingModel = require('../models/sgGameMapping')(app);
@@ -135,7 +141,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
       betaPhone: betaPhones
     };
 
-    mobilecommons.optin(optinArgs);
+    self.scheduleMobileCommonsOptIn(optinArgs);
   });
 
   response.send(200);
@@ -382,8 +388,8 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
       }
     }
 
-    // Determine next message based on whether or not answer was valid.
     var nextOip = 0;
+    // We have a valid answer if choiceIndex is >= 0
     if (choiceIndex >= 0) {
       // Save the first answer in the valid_answers array to the database.
       var answerToSave = storyItem.choices[choiceIndex].valid_answers[0];
@@ -397,25 +403,83 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
 
       // Progress player to the next message.
       nextOip = storyItem.choices[choiceIndex].next;
+      // Update the game document with player's current status.
+      gameDoc = obj.updatePlayerCurrentStatus(gameDoc, userPhone, nextOip);
 
-      // In end-level and end-game cases, the next opt in path is determined by
-      // evaluating a combination of player answers.
       if (typeof nextOip === 'string') {
+        // Player has reached the end of a level.
         if (nextOip.match(/^END-LEVEL/)) {
-          nextOip = obj.getEndLevelMessage(userPhone, nextOip, storyConfig, gameDoc);
+          var level = nextOip;
+          nextOip = obj.getEndLevelMessage(userPhone, level, storyConfig, gameDoc);
+          gameDoc = obj.updatePlayerCurrentStatus(gameDoc, userPhone, nextOip);
 
-          // @todo check if all other players are in the END-LEVEL state
-          // @todo if so, calculate and send all players to the next level
-          // @todo else, mark this user as being in the END-LEVEL state
+          // Check if all players are waiting in an end-level state.
+          var readyForNextLevel = true;
+          for (var i = 0; i < gameDoc.players_current_status.length; i++) {
+            // Skip this current user.
+            if (gameDoc.players_current_status[i].phone == userPhone)
+              continue;
+
+            var playerAtEndLevel = false;
+            var currentStatus = gameDoc.players_current_status[i].opt_in_path;
+            for (var j = 0; j < storyConfig.story[level].choices.length; j++) {
+              if (currentStatus == storyConfig.story[level].choices[j].next) {
+                playerAtEndLevel = true;
+                break;
+              }
+            }
+
+            if (!playerAtEndLevel) {
+              readyForNextLevel = false;
+              break;
+            }
+          }
+
+          // All players have reached the end of the level.
+          if (readyForNextLevel) {
+
+            /**
+             * Note: This probably isn't clear from just glancing at the code. The
+             * following two group messages are sent after a delay. But for this
+             * current user, she'll additionally be receiving the individual end
+             * level message first.
+             */
+
+            // Get messages to send to the entire group.
+            var endLevelGroupKey = level + '-GROUP';
+            var groupOptin = obj.getEndLevelGroupMessage(endLevelGroupKey, storyConfig, gameDoc);
+            var nextLevelOptin = storyConfig.story[endLevelGroupKey].next_level;
+
+            for (var i = 0; i < gameDoc.players_current_status.length; i++) {
+              var playerPhone = gameDoc.players_current_status[i].phone;
+
+              // Send group the end level message.
+              var endLevelGroupArgs = {
+                alphaPhone: playerPhone,
+                alphaOptin: groupOptin
+              };
+
+              obj.scheduleMobileCommonsOptIn(endLevelGroupArgs, END_LEVEL_GROUP_MESSAGE_DELAY);
+
+              // Send group the next level message.
+              var nextLevelArgs = {
+                alphaPhone: playerPhone,
+                alphaOptin: nextLevelOptin
+              };
+
+              obj.scheduleMobileCommonsOptIn(nextLevelArgs, NEXT_LEVEL_START_DELAY);
+
+              // Update player's current status to the starting message for the next level.
+              gameDoc = obj.updatePlayerCurrentStatus(gameDoc, playerPhone, nextLevelOptin);
+            }
+          }
         }
         else if (nextOip.match(/^END-GAME/)) {
           nextOip = obj.getEndGameMessage();
         }
       }
 
-      // Update the player's current status.
-      gameDoc = obj.updatePlayerCurrentStatus(gameDoc, userPhone, nextOip);
-
+      // Update the player's current status in the database.
       obj.gameModel.update(
         {_id: doc._id},
         {$set: {
@@ -437,14 +501,14 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
       nextOip = currentOip;
     }
 
+    // Send next immediate message via Mobile Commons opt in.
     if (userPhone && nextOip) {
-      // Send message via Mobile Commons opt in.
       var optinArgs = {
         alphaPhone: userPhone,
         alphaOptin: nextOip,
       };
 
-      mobilecommons.optin(optinArgs);
+      obj.scheduleMobileCommonsOptIn(optinArgs);
 
       obj.response.send(200);
     }
@@ -612,7 +676,7 @@ SGCompetitiveStoryController.prototype.startGame = function(gameConfig, gameDoc)
     alphaOptin: startMessage,
   };
 
-  mobilecommons.optin(alphaArgs);
+  this.scheduleMobileCommonsOptIn(alphaArgs);
 
   // Update the alpha's current status.
   gameDoc = this.updatePlayerCurrentStatus(gameDoc, gameDoc.alpha_phone, startMessage);
@@ -625,7 +689,7 @@ SGCompetitiveStoryController.prototype.startGame = function(gameConfig, gameDoc)
         alphaOptin: startMessage
       };
 
-      mobilecommons.optin(betaArgs);
+      this.scheduleMobileCommonsOptIn(betaArgs);
 
       // Update the beta's current status.
       gameDoc = this.updatePlayerCurrentStatus(gameDoc, gameDoc.betas[i].phone, startMessage);
@@ -658,7 +722,7 @@ SGCompetitiveStoryController.prototype.sendWaitMessages = function(gameConfig, g
     alphaOptin: alphaMessage
   };
 
-  mobilecommons.optin(alphaArgs);
+  this.scheduleMobileCommonsOptIn(alphaArgs);
 
   // Update the alpha's current status.
   gameDoc = this.updatePlayerCurrentStatus(gameDoc, gameDoc.alpha_phone, alphaMessage);
@@ -669,7 +733,7 @@ SGCompetitiveStoryController.prototype.sendWaitMessages = function(gameConfig, g
     alphaOptin: betaMessage
   };
 
-  mobilecommons.optin(betaArgs);
+  this.scheduleMobileCommonsOptIn(betaArgs);
 
   // Update the beta's current status.
   gameDoc = this.updatePlayerCurrentStatus(gameDoc, betaPhone, betaMessage);
@@ -776,7 +840,74 @@ SGCompetitiveStoryController.prototype.getEndLevelMessage = function(phone, leve
   }
 
   return nextOip;
-}
+};
+
+/**
+ * Evaluates and returns the opt-in path for the message to be sent to the entire
+ * group at the end of a level.
+ *
+ * @param endLevelGroupKey
+ *   String key (ex: "END-LEVEL1-GROUP") to find details on how to evaluate the end level group message.
+ * @param storyConfig
+ *   Object defining details for the current story.
+ * @param gameDoc
+ *   Document for the current game.
+ *
+ * @return End level group message opt-in path.
+ */
+SGCompetitiveStoryController.prototype.getEndLevelGroupMessage = function(endLevelGroupKey, storyConfig, gameDoc) {
+  // Figure out what the majority end-level result was for all players.
+  var playerResults = {};
+  for (var i = 0; i < gameDoc.players_current_status.length; i++) {
+    var oip = gameDoc.players_current_status[i].opt_in_path;
+    if (playerResults[oip]) {
+      playerResults[oip]++;
+    }
+    else {
+      playerResults[oip] = 1;
+    }
+  }
+
+  var storyItem = storyConfig.story[endLevelGroupKey];
+
+  /**
+   * Determine if path1 is listed before path2 in the array of END-LEVEL*-GROUP choices.
+   */
+  var isHigherPriorityPath = function(path1, path2) {
+    for (var i = 0; i < storyItem.choices.length; i++) {
+      if (storyItem.choices[i].next == path1)
+        return true;
+      else if (storyItem.choices[i].next == path2)
+        return false;
+    }
+
+    return true;
+  };
+
+  var majorityResult = 0;
+  var maxCount = 0;
+  var keys = Object.keys(playerResults);
+  for (var i = 0; i < keys.length; i++) {
+    // Set new majority if count is higher or path is higher priority
+    var countIsGreater = playerResults[keys[i]] > maxCount;
+    var isHigherPriority = playerResults[keys[i]] == maxCount && isHigherPriorityPath(keys[i], majorityResult);
+    if (countIsGreater || isHigherPriority) {
+      majorityResult = keys[i];
+    }
+  }
+
+  // Return the end level group message based on majority found.
+  for (var i = 0; i < storyItem.choices.length; i++) {
+    if (storyItem.choices[i].majority_players_result == 'DEFAULT') {
+      return storyItem.choices[i].next;
+    }
+    else if (storyItem.choices[i].majority_players_result == majorityResult) {
+      return storyItem.choices[i].next;
+    }
+  }
+
+  return null;
+};
 
 /**
  * @todo
@@ -784,5 +915,23 @@ SGCompetitiveStoryController.prototype.getEndLevelMessage = function(phone, leve
 SGCompetitiveStoryController.prototype.getEndGameMessage = function(phone, level, storyConfig, gameDoc) {
   return null;
 };
+
+/**
+ * Schedule a message to be sent via a Mobile Commons opt in.
+ *
+ * @param args
+ *   The opt-in args needed for the call to mobilecommons.optin()
+ * @param delay
+ *   Time in millisecons to delay the message. Defaults to 0 if not set.
+ */
+SGCompetitiveStoryController.prototype.scheduleMobileCommonsOptIn = function(args, delay) {
+  if (!delay) {
+    delay = 0;
+  }
+
+  setTimeout(function() {
+    mobilecommons.optin(args);
+  }, delay);
+}
 
 module.exports = SGCompetitiveStoryController;
