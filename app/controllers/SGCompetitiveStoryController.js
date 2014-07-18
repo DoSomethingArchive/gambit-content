@@ -930,6 +930,11 @@ SGCompetitiveStoryController.prototype.scheduleMobileCommonsOptIn = function(arg
   }
 
   setTimeout(function() {
+    // Skip the actual Mobile Commons opt-in in test mode.
+    if (process.env.NODE_ENV == 'test') {
+      return;
+    }
+
     mobilecommons.optin(args);
   }, delay);
 }
