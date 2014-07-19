@@ -205,6 +205,9 @@ describe('End-to-end game playthrough:', function() {
 
   describe('Beta 2 joining the game', function() {
     betaJoinGameTest(betaPhone2);
+
+    it('should auto-start the game')
+    it('should send the start message to all players')
   })
 
   after(function() {
