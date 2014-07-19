@@ -3,6 +3,7 @@
  */
 
 var mobilecommons = require('../../mobilecommons/mobilecommons')
+  , emitter = require('../eventEmitter');
   ;
 
 var CREATE_GAME_MIN_FRIENDS = 3;
@@ -75,9 +76,9 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
   // Save game to the database.
   var game = this.gameModel.create(gameDoc);
-
   var self = this;
   game.then(function(doc) {
+    emitter.emit('game-created', doc);
     var config = self.gameConfig[doc.story_id];
 
     // Create game id to game type mapping.
@@ -87,6 +88,8 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
         if (err) {
           console.log(err);
         }
+
+        emitter.emit('game-mapping-created', doc);
       }
     );
 
@@ -103,6 +106,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
           console.log(err);
         }
         else {
+          emitter.emit('alpha-user-created');
           console.log(raw);
         }
       }
@@ -127,6 +131,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
             console.log(err);
           }
           else {
+            emitter.emit('beta-user-created');
             console.log(raw);
           }
         }
