@@ -213,7 +213,7 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
       || typeof request.body.phone === 'undefined'
       || typeof request.body.args === 'undefined') {
     response.send(406, '`phone` and `args` parameters required.');
-    return;
+    return false;
   }
 
   // If beta doesn't respond with 'Y', then just ignore
@@ -271,6 +271,7 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
             console.log(err);
           }
           else {
+            emitter.emit('game-updated');
             console.log(raw);
           }
         }
@@ -286,6 +287,8 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
     // Finds the beta user's game and calls execBetaJoinGame() when found.
     this.findUserGame(self, execBetaJoinGame);
   }
+
+  return true;
 };
 
 /**
