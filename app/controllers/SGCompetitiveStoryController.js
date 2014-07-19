@@ -43,13 +43,13 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
       || request.body.friends.length < CREATE_GAME_MIN_FRIENDS
       || request.body.friends.length > CREATE_GAME_MAX_FRIENDS) {
     response.send(406, request.body);
-    return;
+    return false;
   }
 
   var alphaPhone = this.getNormalizedPhone(request.body.person.phone);
   if (!this.isValidPhone(alphaPhone)) {
     response.send(406, 'Invalid alpha phone number.');
-    return;
+    return false;
   }
 
   // Compile a new game document.
@@ -68,7 +68,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     var phone = this.getNormalizedPhone(request.body.friends[i].phone);
     if (!this.isValidPhone(phone)) {
       response.send(406, 'Invalid beta phone number.');
-      return;
+      return false;
     }
 
     gameDoc.betas[i].phone = phone;
@@ -150,7 +150,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   });
 
   response.send(200);
-
+  return true;
 };
 
 /**
