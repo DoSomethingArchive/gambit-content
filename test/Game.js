@@ -14,10 +14,12 @@ describe('End-to-end game playthrough:', function() {
   betaPhone0 = '5555550101';
   betaPhone1 = '5555550102';
   betaPhone2 = '5555550103';
+  storyId = 1;
 
   before(function() {
     app = express();
     require('../app/config')(app, express);
+    gameConfig = app.get('competitive-stories');
 
     gameController = new SGCompetitiveStoryController(app);
     gameId = 0;
@@ -47,7 +49,7 @@ describe('End-to-end game playthrough:', function() {
       // Test request object to create the game.
       request = {
         body: {
-          story_id: 1,
+          story_id: storyId,
           person: {
             first_name: alphaName,
             phone: alphaPhone
@@ -187,7 +189,7 @@ describe('End-to-end game playthrough:', function() {
             }
           }
         }
-        
+
         if (!updated) assert(false);
       })
     })
@@ -206,7 +208,35 @@ describe('End-to-end game playthrough:', function() {
   describe('Beta 2 joining the game', function() {
     betaJoinGameTest(betaPhone2);
 
-    it('should auto-start the game')
+    it('should auto-start the game', function(done) {
+      var alphaStarted = beta0Started = beta1Started = beta2Started = false;
+      var startOip = gameConfig[storyId].story_start_oip;
+      gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
+        if (!err && doc) {
+          for (var i = 0; i < doc.players_current_status.length; i++) {
+            if (doc.players_current_status[i].opt_in_path == startOip) {
+              var phone = doc.players_current_status[i].phone;
+              var aPhone = gameController.getNormalizedPhone(alphaPhone);
+              var b0Phone = gameController.getNormalizedPhone(betaPhone0);
+              var b1Phone = gameController.getNormalizedPhone(betaPhone1);
+              var b2Phone = gameController.getNormalizedPhone(betaPhone2);
+              if (phone == aPhone)
+                alphaStarted = true;
+              else if (phone == b0Phone)
+                beta0Started = true;
+              else if (phone == b1Phone)
+                beta1Started = true;
+              else if (phone == b2Phone)
+                beta2Started = true;
+            }
+          }
+        }
+
+        assert(alphaStarted && beta0Started && beta1Started && beta2Started);
+        done();
+      })
+    })
+
     it('should send the start message to all players')
   })
 
