@@ -4,7 +4,7 @@ var assert = require('assert')
   , SGCompetitiveStoryController = require('../app/controllers/SGCompetitiveStoryController')
   ;
 
-describe('End-to-end game playthrough:', function() {
+describe('Alpha-Start Game:', function() {
   // Test players' details.
   alphaName = 'alpha';
   alphaPhone = '5555550100';
@@ -154,7 +154,7 @@ describe('End-to-end game playthrough:', function() {
     })
   })
 
-  // Describe test for betas joining the game.
+// Describe test for betas joining the game.
   var betaJoinGameTest = function(_phone) {
     var request;
     var phone = _phone;
@@ -197,47 +197,62 @@ describe('End-to-end game playthrough:', function() {
     it('should send a Mobile Commons opt-in to Alpha')
   };
 
-  describe('Beta 0 joining the game', function() {
-    betaJoinGameTest(betaPhone0);
-  })
-
   describe('Beta 1 joining the game', function() {
     betaJoinGameTest(betaPhone1);
   })
 
-  describe('Beta 2 joining the game', function() {
-    betaJoinGameTest(betaPhone2);
+  describe('Alpha starting the game', function() {
+    var request;
+    before(function() {
+      phone = gameController.getNormalizedPhone(alphaPhone);
+      request = {
+        body: {
+          phone: phone,
+          args: 'Y'
+        }
+      }
+    })
 
-    it('should auto-start the game', function(done) {
-      var alphaStarted = beta0Started = beta1Started = beta2Started = false;
+    it('should emit game-updated event', function(done) {
+      emitter.on('game-updated', function() {
+        done();
+        emitter.removeAllListeners('game-updated');
+      });
+
+      // Alpha force starts the game.
+      gameController.alphaStartGame(request, response);
+    })
+
+    it('should start the game', function(done) {
+      var alphaStarted = beta1Started = false;
       var startOip = gameConfig[storyId].story_start_oip;
       gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
         if (!err && doc) {
           for (var i = 0; i < doc.players_current_status.length; i++) {
-            if (doc.players_current_status[i].opt_in_path == startOip) {
-              var phone = doc.players_current_status[i].phone;
-              var aPhone = gameController.getNormalizedPhone(alphaPhone);
-              var b0Phone = gameController.getNormalizedPhone(betaPhone0);
-              var b1Phone = gameController.getNormalizedPhone(betaPhone1);
-              var b2Phone = gameController.getNormalizedPhone(betaPhone2);
+            var phone = doc.players_current_status[i].phone;
+            var currPath = doc.players_current_status[i].opt_in_path;
+
+            var aPhone = gameController.getNormalizedPhone(alphaPhone);
+            var b0Phone = gameController.getNormalizedPhone(betaPhone0);
+            var b1Phone = gameController.getNormalizedPhone(betaPhone1);
+            var b2Phone = gameController.getNormalizedPhone(betaPhone2);
+
+            if (phone == b0Phone || phone == b2Phone) {
+              assert(false, 'Beta users sent message when they shouldn\'t have received any.');
+            }
+            else if (currPath == startOip) {
               if (phone == aPhone)
                 alphaStarted = true;
-              else if (phone == b0Phone)
-                beta0Started = true;
               else if (phone == b1Phone)
                 beta1Started = true;
-              else if (phone == b2Phone)
-                beta2Started = true;
             }
           }
         }
 
-        assert(alphaStarted && beta0Started && beta1Started && beta2Started);
+        assert(alphaStarted && beta1Started);
         done();
       })
     })
-
-    it('should send the start message to all players')
   })
 
   after(function() {
@@ -249,4 +264,4 @@ describe('End-to-end game playthrough:', function() {
     gameController.gameMappingModel.remove({_id: gameMappingId}, function() {});
     gameController.gameModel.remove({_id: gameId}, function() {});
   })
-});
+})

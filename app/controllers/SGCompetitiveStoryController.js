@@ -327,6 +327,7 @@ SGCompetitiveStoryController.prototype.alphaStartGame = function(request, respon
             console.log(err);
           }
           else {
+            emitter.emit('game-updated');
             console.log(raw);
           }
         }
