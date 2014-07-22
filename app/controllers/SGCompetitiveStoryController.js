@@ -3,6 +3,7 @@
  */
 
 var mobilecommons = require('../../mobilecommons/mobilecommons')
+  , emitter = require('../eventEmitter');
   ;
 
 var CREATE_GAME_MIN_FRIENDS = 3;
@@ -42,13 +43,13 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
       || request.body.friends.length < CREATE_GAME_MIN_FRIENDS
       || request.body.friends.length > CREATE_GAME_MAX_FRIENDS) {
     response.send(406, request.body);
-    return;
+    return false;
   }
 
   var alphaPhone = this.getNormalizedPhone(request.body.person.phone);
   if (!this.isValidPhone(alphaPhone)) {
     response.send(406, 'Invalid alpha phone number.');
-    return;
+    return false;
   }
 
   // Compile a new game document.
@@ -67,7 +68,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     var phone = this.getNormalizedPhone(request.body.friends[i].phone);
     if (!this.isValidPhone(phone)) {
       response.send(406, 'Invalid beta phone number.');
-      return;
+      return false;
     }
 
     gameDoc.betas[i].phone = phone;
@@ -75,9 +76,9 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
   // Save game to the database.
   var game = this.gameModel.create(gameDoc);
-
   var self = this;
   game.then(function(doc) {
+    emitter.emit('game-created', doc);
     var config = self.gameConfig[doc.story_id];
 
     // Create game id to game type mapping.
@@ -87,6 +88,8 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
         if (err) {
           console.log(err);
         }
+
+        emitter.emit('game-mapping-created', doc);
       }
     );
 
@@ -103,6 +106,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
           console.log(err);
         }
         else {
+          emitter.emit('alpha-user-created');
           console.log(raw);
         }
       }
@@ -127,6 +131,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
             console.log(err);
           }
           else {
+            emitter.emit('beta-user-created');
             console.log(raw);
           }
         }
@@ -145,7 +150,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   });
 
   response.send(200);
-
+  return true;
 };
 
 /**
@@ -208,7 +213,7 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
       || typeof request.body.phone === 'undefined'
       || typeof request.body.args === 'undefined') {
     response.send(406, '`phone` and `args` parameters required.');
-    return;
+    return false;
   }
 
   // If beta doesn't respond with 'Y', then just ignore
@@ -266,6 +271,7 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
             console.log(err);
           }
           else {
+            emitter.emit('game-updated');
             console.log(raw);
           }
         }
@@ -281,6 +287,8 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
     // Finds the beta user's game and calls execBetaJoinGame() when found.
     this.findUserGame(self, execBetaJoinGame);
   }
+
+  return true;
 };
 
 /**
@@ -930,6 +938,11 @@ SGCompetitiveStoryController.prototype.scheduleMobileCommonsOptIn = function(arg
   }
 
   setTimeout(function() {
+    // Skip the actual Mobile Commons opt-in in test mode.
+    if (process.env.NODE_ENV == 'test') {
+      return;
+    }
+
     mobilecommons.optin(args);
   }, delay);
 }
