@@ -737,75 +737,6 @@ SGCompetitiveStoryController.prototype.sendWaitMessages = function(gameConfig, g
 };
 
 /**
- * Recursive function to evaluate $and/$or logic objects. These objects are
- * arrays of some combination of strings (which are user answers) and more
- * logic objects.
- *
- *   ie:
- *     "$or": [string | logic object, ...]
- *     "$and": [string | logic object, ...]
- *
- * @param obj
- *   Logic object.
- * @param gameDoc
- *   Document for the current game.
- *
- * @return Boolean
- */
-SGCompetitiveStoryController.prototype.evalObj = function(obj, phone, gameDoc) {
-  var result = false;
-
-  /**
-   * Check if the player has provided a given answer in this game.
-   *
-   * @param answer
-   *   String answer to check against.
-   *
-   * @return Boolean
-   */
-  var checkUserAnswer = function(answer) {
-    for (var i = 0; i < gameDoc.story_results.length; i++) {
-      if (gameDoc.story_results[i].phone == phone &&
-          gameDoc.story_results[i].answer == answer) {
-        return true;
-      }
-    }
-
-    return false;
-  };
-
-  if (obj['$or']) {
-
-    var conditions = obj['$or'];
-    for (var i = 0; i < conditions.length; i++) {
-      // If anything is true, then result is true.
-      if ((typeof conditions[i] === 'string' && checkUserAnswer(conditions[i])) ||
-          (typeof conditions[i] === 'object' && this.evalObj(conditions[i], phone, gameDoc))) {
-        result = true;
-        break;
-      }
-    }
-
-  }
-  else if (obj['$and']) {
-
-    result = true;
-    var conditions = obj['$and'];
-    for (var i = 0; i < conditions.length; i++) {
-      // If anything is false, then result is false.
-      if ((typeof conditions[i] === 'string' && !checkUserAnswer(conditions[i])) ||
-          (typeof conditions[i] === 'object' && !this.evalObj(conditions[i], phone, gameDoc))) {
-        result = false;
-        break;
-      }
-    }
-
-  }
-
-  return result;
-};
-
-/**
  * Get the end-level opt-in path to send to a user based on the user's answers
  * and the defined criteria in the story.
  *
@@ -827,10 +758,77 @@ SGCompetitiveStoryController.prototype.getEndLevelMessage = function(phone, leve
     return null;
   }
 
+  /**
+   * Check if the player has provided a given answer in this game.
+   *
+   * @param answer
+   *   String answer to check against.
+   *
+   * @return Boolean
+   */
+  var checkUserAnswer = function(answer) {
+    for (var i = 0; i < gameDoc.story_results.length; i++) {
+      if (gameDoc.story_results[i].phone == phone &&
+          gameDoc.story_results[i].answer == answer) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  /**
+   * Recursive function to evaluate $and/$or logic objects. These objects are
+   * arrays of some combination of strings (which are user answers) and more
+   * logic objects.
+   *
+   *   ie:
+   *     "$or": [string | logic object, ...]
+   *     "$and": [string | logic object, ...]
+   *
+   * @param obj
+   *   Logic object.
+   *
+   * @return Boolean
+   */
+  var evalObj = function(obj) {
+    var result = false;
+
+    if (obj['$or']) {
+
+      var conditions = obj['$or'];
+      for (var i = 0; i < conditions.length; i++) {
+        // If anything is true, then result is true.
+        if ((typeof conditions[i] === 'string' && checkUserAnswer(conditions[i])) ||
+            (typeof conditions[i] === 'object' && this.evalObj(conditions[i], phone, gameDoc))) {
+          result = true;
+          break;
+        }
+      }
+
+    }
+    else if (obj['$and']) {
+
+      result = true;
+      var conditions = obj['$and'];
+      for (var i = 0; i < conditions.length; i++) {
+        // If anything is false, then result is false.
+        if ((typeof conditions[i] === 'string' && !checkUserAnswer(conditions[i])) ||
+            (typeof conditions[i] === 'object' && !this.evalObj(conditions[i], phone, gameDoc))) {
+          result = false;
+          break;
+        }
+      }
+
+    }
+
+    return result;
+  };
+
   // Determine next opt in path based on player's choices vs conditions.
   var nextOip = null;
   for (var i = 0; i < storyItem.choices.length; i++) {
-    if (this.evalObj(storyItem.choices[i].conditions, phone, gameDoc)) {
+    if (evalObj(storyItem.choices[i].conditions, phone, gameDoc)) {
       nextOip = storyItem.choices[i].next;
       break;
     }
@@ -921,23 +919,14 @@ SGCompetitiveStoryController.prototype.getEndLevelGroupMessage = function(endLev
  * @return Next opt-in path after completing a level.
  */
 SGCompetitiveStoryController.prototype.getNextLevelMessage = function(phone, endLevelGroupKey, storyConfig, gameDoc) {
-
-  var nextPath = storyConfig.story[endLevelGroupKey].next_level;
-  // If not 'END-GAME', then treat as a normal opt-in path.
-  if (nextPath != 'END-GAME') {
-    return nextPath;
+  // Handle the 'END-GAME' scenario. Uses the same logic as end-level messages.
+  if (nextPath == 'END-GAME') {
+    return this.getEndLevelMessage(phone, endLevelGroupKey, storyConfig, gameDoc);
   }
-  // Handle the 'END-GAME' scenario.
+  // Otherwise, next_level should give an opt-in path to go to.
   else {
-    var endGameConfig = storyConfig.story[nextPath];
-    for (var i = 0; i < endGameConfig.choices.length; i++) {
-      if (this.evalObj(endGameConfig.choices[i].conditions, phone, gameDoc)) {
-        return endGameConfig.choices[i].next;
-      }
-    }
+    return storyConfig.story[endLevelGroupKey].next_level;
   }
-
-  return null;
 };
 
 /**
