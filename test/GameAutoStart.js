@@ -240,6 +240,102 @@ describe('Auto-Start Game:', function() {
     it('should send the start message to all players')
   })
 
+  describe('Alpha answers A at Level 1-0', function() {
+    it('should move Alpha to Level 1-1')
+  })
+  describe('Alpha answers A at Level 1-1', function() {
+    it('should move Alpha to Level 1-2')
+  })
+  describe('Alpha answers A at Level 1-2', function() {
+    it('should move Alpha to Level 1-3')
+  })
+  describe('Alpha answers A at Level 1-3', function() {
+    it('should move Alpha to End-Level 1')
+  })
+
+  describe('Beta0 answers A at Level 1-0', function() {
+    it('should move Beta0 to Level 1-1')
+  })
+  describe('Beta0 answers A at Level 1-1', function() {
+    it('should move Beta0 to Level 1-2')
+  })
+  describe('Beta0 answers A at Level 1-2', function() {
+    it('should move Beta0 to Level 1-3')
+  })
+  describe('Beta0 answers A at Level 1-3', function() {
+    it('should move Beta0 to End-Level 1')
+  })
+
+  describe('Beta1 answers A at Level 1-0', function() {
+    it('should move Beta1 to Level 1-1')
+  })
+  describe('Beta1 answers A at Level 1-1', function() {
+    it('should move Beta1 to Level 1-2')
+  })
+  describe('Beta1 answers A at Level 1-2', function() {
+    it('should move Beta1 to Level 1-3')
+  })
+  describe('Beta1 answers A at Level 1-3', function() {
+    it('should move Beta1 to End-Level 1')
+  })
+
+  describe('Beta2 answers A at Level 1-0', function() {
+    it('should move Beta2 to Level 1-1')
+  })
+  describe('Beta2 answers A at Level 1-1', function() {
+    it('should move Beta2 to Level 1-2')
+  })
+  describe('Beta2 answers A at Level 1-2', function() {
+    it('should move Beta2 to Level 1-3')
+  })
+  describe('Beta2 answers A at Level 1-3', function() {
+    it('should move Beta2 to End-Level 1')
+    it('should deliver the end-level group message')
+    it('should move all players to Level 2')
+  })
+
+  describe('Alpha answers A at Level 2-0', function() {
+    it('should move Alpha to Level 2-1')
+  })
+  describe('Alpha answers A at Level 2-1', function() {
+    it('should move Alpha to Level 2-2')
+  })
+  describe('Alpha answers A at Level 2-2', function() {
+    it('should move Alpha to End-Level 2')
+  })
+
+  describe('Beta0 answers A at Level 2-0', function() {
+    it('should move Beta0 to Level 2-1')
+  })
+  describe('Beta0 answers A at Level 2-1', function() {
+    it('should move Beta0 to Level 2-2')
+  })
+  describe('Beta0 answers A at Level 2-2', function() {
+    it('should move Beta0 to End-Level 2')
+  })
+
+  describe('Beta1 answers A at Level 2-0', function() {
+    it('should move Beta1 to Level 2-1')
+  })
+  describe('Beta1 answers A at Level 2-1', function() {
+    it('should move Beta1 to Level 2-2')
+  })
+  describe('Beta1 answers A at Level 2-2', function() {
+    it('should move Beta1 to End-Level 2')
+  })
+
+  describe('Beta2 answers A at Level 2-0', function() {
+    it('should move Beta2 to Level 2-1')
+  })
+  describe('Beta2 answers A at Level 2-1', function() {
+    it('should move Beta2 to Level 2-2')
+  })
+  describe('Beta2 answers A at Level 2-2', function() {
+    it('should move Beta2 to End-Level 2')
+    it('should deliver the end-level group message')
+    it('should deliver to all player the end-game group message')
+  })
+
   after(function() {
     // Remove all test documents
     gameController.userModel.remove({phone: gameController.getNormalizedPhone(alphaPhone)}, function() {});
