@@ -800,7 +800,7 @@ SGCompetitiveStoryController.prototype.getEndLevelMessage = function(phone, leve
       for (var i = 0; i < conditions.length; i++) {
         // If anything is true, then result is true.
         if ((typeof conditions[i] === 'string' && checkUserAnswer(conditions[i])) ||
-            (typeof conditions[i] === 'object' && this.evalObj(conditions[i]))) {
+            (typeof conditions[i] === 'object' && evalObj(conditions[i]))) {
           result = true;
           break;
         }
@@ -814,7 +814,7 @@ SGCompetitiveStoryController.prototype.getEndLevelMessage = function(phone, leve
       for (var i = 0; i < conditions.length; i++) {
         // If anything is false, then result is false.
         if ((typeof conditions[i] === 'string' && !checkUserAnswer(conditions[i])) ||
-            (typeof conditions[i] === 'object' && !this.evalObj(conditions[i]))) {
+            (typeof conditions[i] === 'object' && !evalObj(conditions[i]))) {
           result = false;
           break;
         }
