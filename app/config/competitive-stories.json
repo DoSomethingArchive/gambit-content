@@ -181,18 +181,161 @@
         "__comments": "Level 2-0",
         "choices": [
           {
-            "next": "@todo level 2-1A",
+            "next": 169071,
             "valid_answers": [
               "L21A",
               "A"
             ]
           },
           {
-            "next": "@todo level 2-1B",
+            "next": 169073,
             "valid_answers": [
               "L21B",
               "B"
             ]
+          }
+        ]
+      },
+      "169071": {
+        "__comments": "Level 2-1A",
+        "choices": [
+          {
+            "next": 169075,
+            "valid_answers": [
+              "L22A",
+              "A"
+            ]
+          },
+          {
+            "next": 169077,
+            "valid_answers": [
+              "L22B",
+              "B"
+            ]
+          }
+        ]
+      },
+      "169073": {
+        "__comments": "Level 2-1B",
+        "choices": [
+          {
+            "next": 169077,
+            "valid_answers": [
+              "L22B",
+              "B"
+            ]
+          },
+          {
+            "next": 169079,
+            "valid_answers": [
+              "L22C",
+              "C"
+            ]
+          }
+        ]
+      },
+      "169075": {
+        "__comments": "Level 2-2A",
+        "choices": [
+          {
+            "next": "END-LEVEL2",
+            "valid_answers": [
+              "L23A",
+              "A"
+            ]
+          },
+          {
+            "next": "END-LEVEL2",
+            "valid_answers": [
+              "L23B",
+              "B"
+            ]
+          }
+        ]
+      },
+      "169077": {
+        "__comments": "Level 2-2B",
+        "choices": [
+          {
+            "next": "END-LEVEL2",
+            "valid_answers": [
+              "L23A",
+              "A"
+            ]
+          },
+          {
+            "next": "END-LEVEL2",
+            "valid_answers": [
+              "L23B",
+              "B"
+            ]
+          }
+        ]
+      },
+      "169079": {
+        "__comments": "Level 2-2C",
+        "choices": [
+          {
+            "next": "END-LEVEL2",
+            "valid_answers": [
+              "L23A",
+              "A"
+            ]
+          },
+          {
+            "next": "END-LEVEL2",
+            "valid_answers": [
+              "L23B",
+              "B"
+            ]
+          }
+        ]
+      },
+      "END-LEVEL2": {
+        "__comments": "END-LEVEL2",
+        "choices": [
+          {
+            "next": 169081,
+            "conditions": {
+              "$and": ["L23A"]
+            }
+          },
+          {
+            "next": 169083,
+            "conditions": {
+              "$and": ["L23B"]
+            }
+          }
+        ]
+      },
+      "END-LEVEL2-GROUP": {
+        "__comments": "END-LEVEL2-GROUP",
+        "choices": [
+          {
+            "next": 169085,
+            "majority_players_result": 169081
+          },
+          {
+            "next": 169087,
+            "majority_players_result": "DEFAULT"
+          }
+        ],
+        "next_level": "END-GAME"
+      },
+      "END-GAME": {
+        "__comments": "END-GAME",
+        "choices": [
+          {
+            "next": 169089,
+            "conditions": {
+              "$and": ["L11A", "L21A"]
+            }
+          },
+          {
+            "next": 169091,
+            "conditions": {
+              "$or": ["L11B", {"$or": ["L11A", "L21B"]}]
+            }
           }
         ]
       }

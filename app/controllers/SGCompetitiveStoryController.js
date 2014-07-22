@@ -415,76 +415,71 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
       // Update the game document with player's current status.
       gameDoc = obj.updatePlayerCurrentStatus(gameDoc, userPhone, nextOip);
 
-      if (typeof nextOip === 'string') {
-        // Player has reached the end of a level.
-        if (nextOip.match(/^END-LEVEL/)) {
-          var level = nextOip;
-          nextOip = obj.getEndLevelMessage(userPhone, level, storyConfig, gameDoc);
-          gameDoc = obj.updatePlayerCurrentStatus(gameDoc, userPhone, nextOip);
+      // Player has reached the end of a level.
+      if (typeof nextOip === 'string' && nextOip.match(/^END-LEVEL/)) {
+        var level = nextOip;
+        nextOip = obj.getEndLevelMessage(userPhone, level, storyConfig, gameDoc);
+        gameDoc = obj.updatePlayerCurrentStatus(gameDoc, userPhone, nextOip);
 
-          // Check if all players are waiting in an end-level state.
-          var readyForNextLevel = true;
-          for (var i = 0; i < gameDoc.players_current_status.length; i++) {
-            // Skip this current user.
-            if (gameDoc.players_current_status[i].phone == userPhone)
-              continue;
+        // Check if all players are waiting in an end-level state.
+        var readyForNextLevel = true;
+        for (var i = 0; i < gameDoc.players_current_status.length; i++) {
+          // Skip this current user.
+          if (gameDoc.players_current_status[i].phone == userPhone)
+            continue;
 
-            var playerAtEndLevel = false;
-            var currentStatus = gameDoc.players_current_status[i].opt_in_path;
-            for (var j = 0; j < storyConfig.story[level].choices.length; j++) {
-              if (currentStatus == storyConfig.story[level].choices[j].next) {
-                playerAtEndLevel = true;
-                break;
-              }
-            }
-
-            if (!playerAtEndLevel) {
-              readyForNextLevel = false;
+          var playerAtEndLevel = false;
+          var currentStatus = gameDoc.players_current_status[i].opt_in_path;
+          for (var j = 0; j < storyConfig.story[level].choices.length; j++) {
+            if (currentStatus == storyConfig.story[level].choices[j].next) {
+              playerAtEndLevel = true;
               break;
             }
           }
 
-          // All players have reached the end of the level.
-          if (readyForNextLevel) {
-
-            /**
-             * Note: This probably isn't clear from just glancing at the code. The
-             * following two group messages are sent after a delay. But for this
-             * current user, she'll additionally be receiving the individual end
-             * level message first.
-             */
-
-            // Get messages to send to the entire group.
-            var endLevelGroupKey = level + '-GROUP';
-            var groupOptin = obj.getEndLevelGroupMessage(endLevelGroupKey, storyConfig, gameDoc);
-            var nextLevelOptin = storyConfig.story[endLevelGroupKey].next_level;
-
-            for (var i = 0; i < gameDoc.players_current_status.length; i++) {
-              var playerPhone = gameDoc.players_current_status[i].phone;
-
-              // Send group the end level message.
-              var endLevelGroupArgs = {
-                alphaPhone: playerPhone,
-                alphaOptin: groupOptin
-              };
-
-              obj.scheduleMobileCommonsOptIn(endLevelGroupArgs, END_LEVEL_GROUP_MESSAGE_DELAY);
-
-              // Send group the next level message.
-              var nextLevelArgs = {
-                alphaPhone: playerPhone,
-                alphaOptin: nextLevelOptin
-              };
-
-              obj.scheduleMobileCommonsOptIn(nextLevelArgs, NEXT_LEVEL_START_DELAY);
-
-              // Update player's current status to the starting message for the next level.
-              gameDoc = obj.updatePlayerCurrentStatus(gameDoc, playerPhone, nextLevelOptin);
-            }
+          if (!playerAtEndLevel) {
+            readyForNextLevel = false;
+            break;
           }
         }
-        else if (nextOip.match(/^END-GAME/)) {
-          nextOip = obj.getEndGameMessage();
+
+        // All players have reached the end of the level.
+        if (readyForNextLevel) {
+
+          /**
+           * Note: This probably isn't clear from just glancing at the code. The
+           * following two group messages are sent after a delay. But for this
+           * current user, she'll additionally be receiving the individual end
+           * level message first.
+           */
+
+          // Get messages to send to the entire group.
+          var endLevelGroupKey = level + '-GROUP';
+          var groupOptin = obj.getEndLevelGroupMessage(endLevelGroupKey, storyConfig, gameDoc);
+          var nextLevelOptin = obj.getNextLevelMessage(userPhone, endLevelGroupKey, storyConfig, gameDoc);
+
+          for (var i = 0; i < gameDoc.players_current_status.length; i++) {
+            var playerPhone = gameDoc.players_current_status[i].phone;
+
+            // Send group the end level message.
+            var endLevelGroupArgs = {
+              alphaPhone: playerPhone,
+              alphaOptin: groupOptin
+            };
+
+            obj.scheduleMobileCommonsOptIn(endLevelGroupArgs, END_LEVEL_GROUP_MESSAGE_DELAY);
+
+            // Send group the next level message.
+            var nextLevelArgs = {
+              alphaPhone: playerPhone,
+              alphaOptin: nextLevelOptin
+            };
+
+            obj.scheduleMobileCommonsOptIn(nextLevelArgs, NEXT_LEVEL_START_DELAY);
+
+            // Update player's current status to the starting message for the next level.
+            gameDoc = obj.updatePlayerCurrentStatus(gameDoc, playerPhone, nextLevelOptin);
+          }
         }
       }
 
@@ -919,10 +914,28 @@ SGCompetitiveStoryController.prototype.getEndLevelGroupMessage = function(endLev
 };
 
 /**
- * @todo
+ * Gets the next opt in path for a user after a level's been completed.
+ *
+ * @param phone
+ *   User's phone number.
+ * @param endLevelGroupKey
+ *   String key (ex: "END-LEVEL1-GROUP") to find details on how to evaluate the end level group message.
+ * @param storyConfig
+ *   Object defining details for the current story.
+ * @param gameDoc
+ *   Document for the current game.
+ *
+ * @return Next opt-in path after completing a level.
  */
-SGCompetitiveStoryController.prototype.getEndGameMessage = function(phone, level, storyConfig, gameDoc) {
-  return null;
+SGCompetitiveStoryController.prototype.getNextLevelMessage = function(phone, endLevelGroupKey, storyConfig, gameDoc) {
+  // Handle the 'END-GAME' scenario. Uses the same logic as end-level messages.
+  if (nextPath == 'END-GAME') {
+    return this.getEndLevelMessage(phone, endLevelGroupKey, storyConfig, gameDoc);
+  }
+  // Otherwise, next_level should give an opt-in path to go to.
+  else {
+    return storyConfig.story[endLevelGroupKey].next_level;
+  }
 };
 
 /**
