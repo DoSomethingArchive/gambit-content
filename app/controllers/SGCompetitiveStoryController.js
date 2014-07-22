@@ -800,7 +800,7 @@ SGCompetitiveStoryController.prototype.getEndLevelMessage = function(phone, leve
       for (var i = 0; i < conditions.length; i++) {
         // If anything is true, then result is true.
         if ((typeof conditions[i] === 'string' && checkUserAnswer(conditions[i])) ||
-            (typeof conditions[i] === 'object' && this.evalObj(conditions[i], phone, gameDoc))) {
+            (typeof conditions[i] === 'object' && this.evalObj(conditions[i]))) {
           result = true;
           break;
         }
@@ -814,7 +814,7 @@ SGCompetitiveStoryController.prototype.getEndLevelMessage = function(phone, leve
       for (var i = 0; i < conditions.length; i++) {
         // If anything is false, then result is false.
         if ((typeof conditions[i] === 'string' && !checkUserAnswer(conditions[i])) ||
-            (typeof conditions[i] === 'object' && !this.evalObj(conditions[i], phone, gameDoc))) {
+            (typeof conditions[i] === 'object' && !this.evalObj(conditions[i]))) {
           result = false;
           break;
         }
@@ -828,7 +828,7 @@ SGCompetitiveStoryController.prototype.getEndLevelMessage = function(phone, leve
   // Determine next opt in path based on player's choices vs conditions.
   var nextOip = null;
   for (var i = 0; i < storyItem.choices.length; i++) {
-    if (evalObj(storyItem.choices[i].conditions, phone, gameDoc)) {
+    if (evalObj(storyItem.choices[i].conditions)) {
       nextOip = storyItem.choices[i].next;
       break;
     }
