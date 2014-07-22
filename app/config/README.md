@@ -52,3 +52,24 @@ the start of the report back flow.
   'PROVE': opt in path ID for the start of the report back
 }
 ```
+
+----
+
+## tips-config.json
+This file defines a series of campaign tips that are delivered when a user texts
+in a keyword to Mobile Commons. The keyword is hooked up to an mData ID, and it's
+this ID that we use to determine which opt-in paths to send a user to.
+
+```
+{
+  "tips": {
+    mData ID: {
+      "__comments": "This is ignored.",
+      "name": Arbitrary unique name identifier,
+      "optins": [
+        Array of opt-in path IDs
+      ]
+    }
+  }
+}
+```
