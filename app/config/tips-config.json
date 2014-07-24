@@ -1,6 +1,17 @@
 {
   "modelName": "Tip",
   "tips": {
+    "11351": {
+      "__comments": "Birthday Mail 2014 - KNOW",
+      "name": "birthdaymail2014-know",
+      "optins": [
+        169153,
+        169155,
+        169157,
+        169159,
+        169161
+      ]
+    },
     "9521": {
       "__comments": "Fifth Harmony #ImABoss 2014 - KNOW",
       "name": "imaboss2014-know",
