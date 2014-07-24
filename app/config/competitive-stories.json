@@ -35,14 +35,16 @@
             "next": 168459,
             "valid_answers": [
               "L12A",
-              "A"
+              "A",
+              "TV"
             ]
           },
           {
             "next": 168655,
             "valid_answers": [
               "L12C",
-              "C"
+              "B",
+              "DOOR"
             ]
           }
         ]
@@ -54,14 +56,17 @@
             "next": 168459,
             "valid_answers": [
               "L12A",
-              "A"
+              "A",
+              "TV"
             ]
           },
           {
             "next": 168461,
             "valid_answers": [
               "L12B",
-              "B"
+              "B",
+              "BOOK",
+              "BOOKCASE"
             ]
           }
         ]
@@ -73,7 +78,8 @@
             "next": 168657,
             "valid_answers": [
               "L13A",
-              "A"
+              "A",
+              "HELLO"
             ]
           }
         ]
@@ -85,7 +91,8 @@
             "next": 168659,
             "valid_answers": [
               "L13B",
-              "B"
+              "A",
+              "KEY"
             ]
           }
         ]
@@ -94,10 +101,11 @@
         "__comments": "Level 1-2C",
         "choices": [
           {
-            "next": 168659,
+            "next": 168657,
             "valid_answers": [
-              "L13B",
-              "B"
+              "L13A",
+              "A",
+              "HELLO"
             ]
           }
         ]
@@ -108,15 +116,17 @@
           {
             "next": "END-LEVEL1",
             "valid_answers": [
-              "L14A",
-              "A"
+              "L14B",
+              "A",
+              "KICK"
             ]
           },
           {
             "next": "END-LEVEL1",
             "valid_answers": [
-              "L14B",
-              "B"
+              "L14A",
+              "B",
+              "HIDE"
             ]
           }
         ]
@@ -127,15 +137,17 @@
           {
             "next": "END-LEVEL1",
             "valid_answers": [
-              "L14A",
-              "A"
+              "L14B",
+              "A",
+              "OUT"
             ]
           },
           {
             "next": "END-LEVEL1",
             "valid_answers": [
               "L14C",
-              "C"
+              "B",
+              "WAIT"
             ]
           }
         ]
@@ -146,19 +158,19 @@
           {
             "next": 168825,
             "conditions": {
-              "$or": ["L12B", "L12C"]
+              "$or": ["L14A"]
             }
           },
           {
             "next": 168827,
             "conditions": {
-              "$and": ["L12A", {"$or": ["L14B", "L14C"]}]
+              "$and": ["L14B"]
             }
           },
           {
             "next": 168831,
             "conditions": {
-              "$and": ["L12A", "L14A"]
+              "$and": ["L14C"]
             }
           }
         ]
@@ -357,25 +369,39 @@
           {
             "next": 169089,
             "conditions": {
-              "$and": ["L11A"]
+              "$and": [
+                {"$or": [
+                  {"$and": ["L21B", "L22B"]},
+                  {"$and": ["L22B", "L23A"]},
+                  {"$and": ["L21B", "L23A"]}
+                ]},
+                "L14B"
+              ]
             }
           },
           {
             "next": 169091,
             "conditions": {
-              "$or": ["L11A"]
+              "$and": [
+                {"$or": [
+                  {"$and": ["L21B", "L22B"]},
+                  {"$and": ["L22B", "L23A"]},
+                  {"$and": ["L21B", "L23A"]}
+                ]},
+                {"$or": ["L14A", "L14C"]}
+              ]
             }
           },
           {
             "next": 169195,
             "conditions": {
-              "$or": ["L11A"]
+              "$and": ["L14B"]
             }
           },
           {
             "next": 169197,
             "conditions": {
-              "$or": ["L11A"]
+              "$or": ["L14A", "L14C"]
             }
           }
         ]
