@@ -420,6 +420,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
         var level = nextOip;
         nextOip = obj.getEndLevelMessage(userPhone, level, storyConfig, gameDoc, 'answer');
         gameDoc = obj.updatePlayerCurrentStatus(gameDoc, userPhone, nextOip);
+        gameDoc = obj.addPathToStoryResult(gameDoc, userPhone, nextOip);
 
         // Check if all players are waiting in an end-level state.
         var readyForNextLevel = true;
@@ -453,11 +454,9 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
            * level message first.
            */
 
-          // Get messages to send to the entire group.
+          // Send group the end level message.
           var endLevelGroupKey = level + '-GROUP';
           var groupOptin = obj.getEndLevelGroupMessage(endLevelGroupKey, storyConfig, gameDoc);
-          var nextLevelOptin = obj.getNextLevelMessage(userPhone, endLevelGroupKey, storyConfig, gameDoc);
-
           for (var i = 0; i < gameDoc.players_current_status.length; i++) {
             var playerPhone = gameDoc.players_current_status[i].phone;
 
@@ -469,20 +468,32 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
 
             obj.scheduleMobileCommonsOptIn(endLevelGroupArgs, END_LEVEL_GROUP_MESSAGE_DELAY);
             gameDoc = obj.addPathToStoryResult(gameDoc, playerPhone, groupOptin);
+          }
+
+          // Note: Doing this for loop separately from the end-level message so
+          // that results for all players can be updated before figuring out the
+          // next message.
+          // Send group the next level message
+          var nextLevel = storyConfig.story[endLevelGroupKey].next_level;
+          for (var i = 0; i < gameDoc.players_current_status.length; i++) {
+            var playerPhone = gameDoc.players_current_status[i].phone;
+            var nextPath = nextLevel;
+            // End game message needs to be determined per player
+            if (nextLevel == 'END-GAME') {
+              nextPath = obj.getEndGameMessage(playerPhone, storyConfig, gameDoc);
+            }
 
             // Send group the next level message.
-            var nextLevelArgs = {
+            var optinArgs = {
               alphaPhone: playerPhone,
-              alphaOptin: nextLevelOptin
+              alphaOptin: nextPath
             };
 
-            obj.scheduleMobileCommonsOptIn(nextLevelArgs, NEXT_LEVEL_START_DELAY);
-            gameDoc = obj.addPathToStoryResult(gameDoc, playerPhone, nextLevelOptin);
+            obj.scheduleMobileCommonsOptIn(optinArgs, NEXT_LEVEL_START_DELAY);
+            gameDoc = obj.addPathToStoryResult(gameDoc, playerPhone, nextPath);
 
-            // @todo End game messages sound like they'll be different for each individual user
-
-            // Update player's current status to the starting message for the next level.
-            gameDoc = obj.updatePlayerCurrentStatus(gameDoc, playerPhone, nextLevelOptin);
+            // Update player's current status to the end game or next level message.
+            gameDoc = obj.updatePlayerCurrentStatus(gameDoc, playerPhone, nextPath);
           }
         }
       }
@@ -646,15 +657,16 @@ SGCompetitiveStoryController.prototype.updatePlayerCurrentStatus = function(game
  *   Game document to modify.
  * @param phone
  *   Phone number of the player to add a result for.
- * @param optin
+ * @param oip
  *   Opt in path to add.
  *
  * @return Updated game document.
  */
-SGCompetitiveStoryController.prototype.addPathToStoryResult = function(gameDoc, phone, optin) {
+SGCompetitiveStoryController.prototype.addPathToStoryResult = function(gameDoc, phone, oip) {
   var idx = gameDoc.story_results.length;
+  gameDoc.story_results[idx] = {};
+  gameDoc.story_results[idx].oip = oip;
   gameDoc.story_results[idx].phone = phone;
-  gameDoc.story_results[idx].oip = optin;
 
   return gameDoc;
 }
@@ -944,28 +956,20 @@ SGCompetitiveStoryController.prototype.getEndLevelGroupMessage = function(endLev
 };
 
 /**
- * Gets the next opt in path for a user after a level's been completed.
+ * Gets the end game message for a user
  *
  * @param phone
  *   User's phone number.
- * @param endLevelGroupKey
- *   String key (ex: "END-LEVEL1-GROUP") to find details on how to evaluate the end level group message.
  * @param storyConfig
  *   Object defining details for the current story.
  * @param gameDoc
  *   Document for the current game.
  *
- * @return Next opt-in path after completing a level.
+ * @return End game opt-in path
  */
-SGCompetitiveStoryController.prototype.getNextLevelMessage = function(phone, endLevelGroupKey, storyConfig, gameDoc) {
-  // For mid-game level changes, next_level should give an opt-in path to go to.
-  var nextPath = storyConfig.story[endLevelGroupKey].next_level;
-  // But END-GAME should be handled differently. Uses the same logic as end-level messages.
-  if (nextPath == 'END-GAME') {
-    nextPath = this.getEndLevelMessage(phone, 'END-GAME', storyConfig, gameDoc, 'answer');
-  }
-
-  return nextPath;
+SGCompetitiveStoryController.prototype.getEndGameMessage = function(phone, storyConfig, gameDoc) {
+  // END-GAME scenario uses the same logic as end-level messages.
+  return this.getEndLevelMessage(phone, 'END-GAME', storyConfig, gameDoc, 'answer');
 };
 
 /**
