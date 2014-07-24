@@ -420,7 +420,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
         var level = nextOip;
         nextOip = obj.getEndLevelMessage(userPhone, level, storyConfig, gameDoc, 'answer');
         gameDoc = obj.updatePlayerCurrentStatus(gameDoc, userPhone, nextOip);
-        gameDoc = obj.addPathToStoryResult(gameDoc, userPhone, nextOip);
+        gameDoc = obj.addPathToStoryResults(gameDoc, userPhone, nextOip);
 
         // Check if all players are waiting in an end-level state.
         var readyForNextLevel = true;
@@ -467,7 +467,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
             };
 
             obj.scheduleMobileCommonsOptIn(endLevelGroupArgs, END_LEVEL_GROUP_MESSAGE_DELAY);
-            gameDoc = obj.addPathToStoryResult(gameDoc, playerPhone, groupOptin);
+            gameDoc = obj.addPathToStoryResults(gameDoc, playerPhone, groupOptin);
           }
 
           // Note: Doing this for loop separately from the end-level message so
@@ -490,7 +490,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
             };
 
             obj.scheduleMobileCommonsOptIn(optinArgs, NEXT_LEVEL_START_DELAY);
-            gameDoc = obj.addPathToStoryResult(gameDoc, playerPhone, nextPath);
+            gameDoc = obj.addPathToStoryResults(gameDoc, playerPhone, nextPath);
 
             // Update player's current status to the end game or next level message.
             gameDoc = obj.updatePlayerCurrentStatus(gameDoc, playerPhone, nextPath);
@@ -662,7 +662,7 @@ SGCompetitiveStoryController.prototype.updatePlayerCurrentStatus = function(game
  *
  * @return Updated game document.
  */
-SGCompetitiveStoryController.prototype.addPathToStoryResult = function(gameDoc, phone, oip) {
+SGCompetitiveStoryController.prototype.addPathToStoryResults = function(gameDoc, phone, oip) {
   var idx = gameDoc.story_results.length;
   gameDoc.story_results[idx] = {};
   gameDoc.story_results[idx].oip = oip;
