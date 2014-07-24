@@ -168,7 +168,7 @@
         "choices": [
           {
             "next": 168897,
-            "majority_players_result": 168825
+            "majority_players_result": 168827
           },
           {
             "next": 168899,
@@ -184,14 +184,16 @@
             "next": 169071,
             "valid_answers": [
               "L21A",
-              "A"
+              "A",
+              "PICHU"
             ]
           },
           {
             "next": 169073,
             "valid_answers": [
               "L21B",
-              "B"
+              "B",
+              "RAICHU"
             ]
           }
         ]
@@ -203,14 +205,24 @@
             "next": 169075,
             "valid_answers": [
               "L22A",
-              "A"
+              "A",
+              "1"
             ]
           },
           {
             "next": 169077,
             "valid_answers": [
               "L22B",
-              "B"
+              "B",
+              "6"
+            ]
+          },
+          {
+            "next": 169079,
+            "valid_answers": [
+              "L22C",
+              "C",
+              "9"
             ]
           }
         ]
@@ -219,17 +231,27 @@
         "__comments": "Level 2-1B",
         "choices": [
           {
+            "next": 169075,
+            "valid_answers": [
+              "L22A",
+              "A",
+              "1"
+            ]
+          },
+          {
             "next": 169077,
             "valid_answers": [
               "L22B",
-              "B"
+              "B",
+              "6"
             ]
           },
           {
             "next": 169079,
             "valid_answers": [
               "L22C",
-              "C"
+              "C",
+              "9"
             ]
           }
         ]
@@ -241,7 +263,8 @@
             "next": "END-LEVEL2",
             "valid_answers": [
               "L23A",
-              "A"
+              "A",
+              "FIGHT"
             ]
           },
           {
@@ -260,7 +283,8 @@
             "next": "END-LEVEL2",
             "valid_answers": [
               "L23A",
-              "A"
+              "A",
+              "FIGHT"
             ]
           },
           {
@@ -279,7 +303,8 @@
             "next": "END-LEVEL2",
             "valid_answers": [
               "L23A",
-              "A"
+              "A",
+              "FIGHT"
             ]
           },
           {
@@ -297,13 +322,17 @@
           {
             "next": 169081,
             "conditions": {
-              "$and": ["L23A"]
+              "$or": [
+                {"$and": ["L21B", "L22B"]},
+                {"$and": ["L22B", "L23A"]},
+                {"$and": ["L21B", "L23A"]}
+              ]
             }
           },
           {
             "next": 169083,
             "conditions": {
-              "$and": ["L23B"]
+              "$or": ["L23A", "L23B"]
             }
           }
         ]
@@ -328,13 +357,25 @@
           {
             "next": 169089,
             "conditions": {
-              "$and": ["L11A", "L21A"]
+              "$and": ["L11A"]
             }
           },
           {
             "next": 169091,
             "conditions": {
-              "$or": ["L11B", {"$or": ["L11A", "L21B"]}]
+              "$or": ["L11A"]
+            }
+          },
+          {
+            "next": 169195,
+            "conditions": {
+              "$or": ["L11A"]
+            }
+          },
+          {
+            "next": 169197,
+            "conditions": {
+              "$or": ["L11A"]
             }
           }
         ]
