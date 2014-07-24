@@ -418,7 +418,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
       // Player has reached the end of a level.
       if (typeof nextOip === 'string' && nextOip.match(/^END-LEVEL/)) {
         var level = nextOip;
-        nextOip = obj.getEndLevelMessage(userPhone, level, storyConfig, gameDoc);
+        nextOip = obj.getEndLevelMessage(userPhone, level, storyConfig, gameDoc, 'answer');
         gameDoc = obj.updatePlayerCurrentStatus(gameDoc, userPhone, nextOip);
 
         // Check if all players are waiting in an end-level state.
@@ -468,6 +468,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
             };
 
             obj.scheduleMobileCommonsOptIn(endLevelGroupArgs, END_LEVEL_GROUP_MESSAGE_DELAY);
+            gameDoc = obj.addPathToStoryResult(gameDoc, playerPhone, groupOptin);
 
             // Send group the next level message.
             var nextLevelArgs = {
@@ -476,6 +477,9 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
             };
 
             obj.scheduleMobileCommonsOptIn(nextLevelArgs, NEXT_LEVEL_START_DELAY);
+            gameDoc = obj.addPathToStoryResult(gameDoc, playerPhone, nextLevelOptin);
+
+            // @todo End game messages sound like they'll be different for each individual user
 
             // Update player's current status to the starting message for the next level.
             gameDoc = obj.updatePlayerCurrentStatus(gameDoc, playerPhone, nextLevelOptin);
@@ -636,6 +640,26 @@ SGCompetitiveStoryController.prototype.updatePlayerCurrentStatus = function(game
 };
 
 /**
+ * Add to the story_results array of a game document.
+ *
+ * @param gameDoc
+ *   Game document to modify.
+ * @param phone
+ *   Phone number of the player to add a result for.
+ * @param optin
+ *   Opt in path to add.
+ *
+ * @return Updated game document.
+ */
+SGCompetitiveStoryController.prototype.addPathToStoryResult = function(gameDoc, phone, optin) {
+  var idx = gameDoc.story_results.length;
+  gameDoc.story_results[idx].phone = phone;
+  gameDoc.story_results[idx].oip = optin;
+
+  return gameDoc;
+}
+
+/**
  * Adds a story_results item to the game document.
  *
  * @param gameDoc
@@ -757,10 +781,12 @@ SGCompetitiveStoryController.prototype.sendWaitMessages = function(gameConfig, g
  *   Object defining details for the current story.
  * @param gameDoc
  *   Document for the current game.
+ * @param checkResultType
+ *   What property the conditions are checking against. Either "oip" or "answer".
  *
  * @return Boolean
  */
-SGCompetitiveStoryController.prototype.getEndLevelMessage = function(phone, level, storyConfig, gameDoc) {
+SGCompetitiveStoryController.prototype.getEndLevelMessage = function(phone, level, storyConfig, gameDoc, checkResultType) {
 
   var storyItem = storyConfig.story[level];
   if (typeof storyItem === 'undefined') {
@@ -770,16 +796,20 @@ SGCompetitiveStoryController.prototype.getEndLevelMessage = function(phone, leve
   /**
    * Check if the player has provided a given answer in this game.
    *
-   * @param answer
-   *   String answer to check against.
+   * @param result
+   *   The result to check against.
    *
    * @return Boolean
    */
-  var checkUserAnswer = function(answer) {
+  var checkUserResult = function(result) {
     for (var i = 0; i < gameDoc.story_results.length; i++) {
-      if (gameDoc.story_results[i].phone == phone &&
-          gameDoc.story_results[i].answer == answer) {
-        return true;
+      if (gameDoc.story_results[i].phone == phone) {
+        if (checkResultType == 'oip' && gameDoc.story_results[i].oip == result) {
+          return true;
+        }
+        else if (checkResultType == 'answer' && gameDoc.story_results[i].answer == result) {
+          return true;
+        }
       }
     }
 
@@ -808,7 +838,7 @@ SGCompetitiveStoryController.prototype.getEndLevelMessage = function(phone, leve
       var conditions = obj['$or'];
       for (var i = 0; i < conditions.length; i++) {
         // If anything is true, then result is true.
-        if ((typeof conditions[i] === 'string' && checkUserAnswer(conditions[i])) ||
+        if ((typeof conditions[i] === 'string' && checkUserResult(conditions[i])) ||
             (typeof conditions[i] === 'object' && evalObj(conditions[i]))) {
           result = true;
           break;
@@ -822,7 +852,7 @@ SGCompetitiveStoryController.prototype.getEndLevelMessage = function(phone, leve
       var conditions = obj['$and'];
       for (var i = 0; i < conditions.length; i++) {
         // If anything is false, then result is false.
-        if ((typeof conditions[i] === 'string' && !checkUserAnswer(conditions[i])) ||
+        if ((typeof conditions[i] === 'string' && !checkUserResult(conditions[i])) ||
             (typeof conditions[i] === 'object' && !evalObj(conditions[i]))) {
           result = false;
           break;
@@ -928,14 +958,14 @@ SGCompetitiveStoryController.prototype.getEndLevelGroupMessage = function(endLev
  * @return Next opt-in path after completing a level.
  */
 SGCompetitiveStoryController.prototype.getNextLevelMessage = function(phone, endLevelGroupKey, storyConfig, gameDoc) {
-  // Handle the 'END-GAME' scenario. Uses the same logic as end-level messages.
+  // For mid-game level changes, next_level should give an opt-in path to go to.
+  var nextPath = storyConfig.story[endLevelGroupKey].next_level;
+  // But END-GAME should be handled differently. Uses the same logic as end-level messages.
   if (nextPath == 'END-GAME') {
-    return this.getEndLevelMessage(phone, endLevelGroupKey, storyConfig, gameDoc);
+    nextPath = this.getEndLevelMessage(phone, 'END-GAME', storyConfig, gameDoc, 'answer');
   }
-  // Otherwise, next_level should give an opt-in path to go to.
-  else {
-    return storyConfig.story[endLevelGroupKey].next_level;
-  }
+
+  return nextPath;
 };
 
 /**
