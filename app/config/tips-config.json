@@ -1,6 +1,15 @@
 {
   "modelName": "Tip",
   "tips": {
+    "11355": {
+      "__comments": "Birthday Mail 2014 - DO",
+      "name": "birthdaymail2014-do",
+      "optins": [
+        169225,
+        169227,
+        169235
+      ]
+    },
     "11351": {
       "__comments": "Birthday Mail 2014 - KNOW",
       "name": "birthdaymail2014-know",
