@@ -49,8 +49,50 @@
     {
       "__comments": "The Hunt 2014 - Day 1, School (fruit) MMS Check",
       "incomingPath": 169395,
-      "yes": 169397, 
+      "yes": 169397,
       "no": 169399
+    },
+    {
+      "__comments": "The Hunt 2014 - Day 1, School (fruit) MMS Check",
+      "incomingPath": 169409,
+      "yes": 169411,
+      "no": 169413
+    },
+    {
+      "__comments": "The Hunt 2014 - Day 2, Enviroment (Trash) MMS Check",
+      "incomingPath": 169409,
+      "yes": 169411,
+      "no": 169413
+    },
+    {
+      "__comments": "The Hunt 2014 - Day 3, Health (Book) MMS Check",
+      "incomingPath": 169421,
+      "yes": 169423,
+      "no": 169425
+    },
+    {
+      "__comments": "The Hunt 2014 - Day 4, Able (Focus) MMS Check",
+      "incomingPath": 169433,
+      "yes": 169435,
+      "no": 169437
+    },
+    {
+      "__comments": "The Hunt 2014 - Day 5, Heal (Max) MMS Check",
+      "incomingPath": 169445,
+      "yes": 169447,
+      "no": 169451
+    },
+    {
+      "__comments": "The Hunt 2014 - Day 6, Woof (Pets) MMS Check",
+      "incomingPath": 169461,
+      "yes": 169463,
+      "no": 169465
+    },
+    {
+      "__comments": "The Hunt 2014 - Day 7, Woof (Pets) MMS Check",
+      "incomingPath": 169473,
+      "yes": 169475,
+      "no": 169477
     }
   ]
 }
