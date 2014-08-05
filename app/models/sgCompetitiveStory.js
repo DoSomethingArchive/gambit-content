@@ -28,9 +28,10 @@ var sgCompetitiveStory = function(app) {
 
       // The answer given by the user.
       answer: String
+    }],
 
-      // @TODO add fields for aggregate choice logic and pinch points
-    }]
+    // Whether or not game has started
+    game_started: {type: Boolean, default: false}
   });
 
   return app.getModel(modelName, schema);
