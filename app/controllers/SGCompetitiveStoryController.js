@@ -397,7 +397,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
           // array we might only have listed 'A'. We still want 'A)' to be valid.
           var allowableChars = '[s\\.\\,\\?\\*\\)\\}\\]]*';
           var validAnswer = choice.valid_answers[j];
-          var regex = new RegExp('^' + validAnswer + allowableChars + '$');
+          var regex = new RegExp('^' + validAnswer + allowableChars + '$', 'i');
           if (userFirstWord.match(regex)) {
             choiceIndex = i;
             break;
