@@ -230,6 +230,19 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
      * game if all players are joined.
      */
     var execBetaJoinGame = function(obj, doc) {
+
+      // If the game's already started, notify the user and exit.
+      if (doc.game_started) {
+        var args = {
+          alphaPhone: obj.request.body.phone,
+          alphaOptin: obj.gameConfig[doc.story_id].game_in_progress_oip
+        };
+
+        obj.scheduleMobileCommonsOptIn(args);
+        obj.response.send(200);
+        return;
+      }
+
       // Update game doc marking this beta as having joined the game
       for (var i = 0; i < doc.betas.length; i++) {
         if (doc.betas[i].phone == obj.joiningBetaPhone) {
@@ -250,6 +263,7 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
 
       // If all have joined, then start the game.
       if (allJoined) {
+        doc.game_started = true;
         doc = obj.startGame(obj.gameConfig, doc);
         obj.response.send(200);
       }
@@ -267,6 +281,7 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
         {_id: doc._id},
         {$set: {
           betas: doc.betas,
+          game_started: doc.game_started,
           players_current_status: doc.players_current_status
         }},
         function(err, num, raw) {
@@ -316,6 +331,7 @@ SGCompetitiveStoryController.prototype.alphaStartGame = function(request, respon
      */
     var execAlphaStartGame = function(obj, doc) {
       // Start the game.
+      doc.game_started = true;
       doc = obj.startGame(obj.gameConfig, doc);
       obj.response.send(200);
 
@@ -323,7 +339,8 @@ SGCompetitiveStoryController.prototype.alphaStartGame = function(request, respon
       obj.gameModel.update(
         {_id: doc._id},
         {$set: {
-          players_current_status: doc.players_current_status
+          players_current_status: doc.players_current_status,
+          game_started: doc.game_started
         }},
         function(err, num, raw) {
           if (err) {
