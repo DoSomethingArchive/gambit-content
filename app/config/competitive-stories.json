@@ -408,5 +408,98 @@
         ]
       }
     }
+  },
+  "100": {
+    "__comments": "Bully Text 2014",
+    "alpha_wait_oip": 169841,
+    "alpha_start_ask_oip": 169843,
+    "beta_join_ask_oip": 169845,
+    "beta_wait_oip": 169847,
+    "game_in_progress_oip": 169849,
+    "story_start_oip": 169859,
+    "story": {
+      "169859": {
+        "__comments": "Level 1-0",
+        "choices": [
+          {
+            "key": "L11A",
+            "next": 169861,
+            "valid_answers": ["A"]
+          },
+          {
+            "key": "L11B",
+            "next": 169863,
+            "valid_answers": ["B"]
+          }
+        ]
+      },
+      "169861": {
+        "__comments": "Level 1-1A",
+        "choices": [
+          {
+            "key": "L12C",
+            "next": "END-LEVEL1",
+            "valid_answers": ["C"]
+          },
+          {
+            "key": "L12D",
+            "next": 169863,
+            "valid_answers": ["D"]
+          }
+        ]
+      },
+      "169863": {
+        "__comments": "Level 1-1B",
+        "choices": [
+          {
+            "key": "L12C",
+            "next": "END-LEVEL1",
+            "valid_answers": ["C"]
+          },
+          {
+            "key": "L12D",
+            "next": 169863,
+            "valid_answers": ["D"]
+          }
+        ]
+      },
+      "END-LEVEL1": {
+        "choices": [
+          {
+            "next": 169865,
+            "conditions": {"$and": ["L11A", "L12C"]}
+          },
+          {
+            "next": 169867,
+            "conditions": {"$and": ["L11A", "L12D"]}
+          },
+          {
+            "next": 169869,
+            "conditions": {"$and": ["L11B", "L12C"]}
+          },
+          {
+            "next": 169871,
+            "conditions": {"$and": ["L11B", "L12D"]}
+          }
+        ]
+      },
+      "END-LEVEL1-GROUP": {
+        "choices": [
+          {
+            "next": 169873,
+            "majority_players_result": 169865
+          },
+          {
+            "next": 169873,
+            "majority_players_result": 169871
+          },
+          {
+            "next": 169875,
+            "majority_players_result": "DEFAULT"
+          }
+        ],
+        "next_level": 169877
+      }
+    }
   }
 }
