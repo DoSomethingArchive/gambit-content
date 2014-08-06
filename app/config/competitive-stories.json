@@ -5,7 +5,7 @@
     "alpha_start_ask_oip": 168447,
     "beta_join_ask_oip": 168449,
     "beta_wait_oip": 168451,
-    "beta_joined_game_in_progress": 169809,
+    "game_in_progress_oip": 169809,
     "story_start_oip": 168453,
     "story": {
       "168453": {

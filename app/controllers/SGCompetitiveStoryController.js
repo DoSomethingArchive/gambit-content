@@ -232,7 +232,7 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
       if (doc.game_started) {
         var args = {
           alphaPhone: obj.request.body.phone,
-          alphaOptin: obj.gameConfig[doc.story_id].beta_joined_game_in_progress
+          alphaOptin: obj.gameConfig[doc.story_id].game_in_progress_oip
         };
 
         obj.scheduleMobileCommonsOptIn(args);
