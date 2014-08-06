@@ -387,13 +387,27 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
 
     if (storyItem && storyItem.choices) {
       for (var i = 0; i < storyItem.choices.length; i++) {
+        var choice = storyItem.choices[i];
 
         // Check if user's response is a valid choice.
-        if (storyItem.choices[i].valid_answers.indexOf(userFirstWord) >= 0) {
-          choiceIndex = i;
-          break;
+        for (var j = 0; j < choice.valid_answers.length; j++) {
+
+          // Using regex to allow for some additional characters after a valid
+          // answer. For example, a user might enter 'A)' and in our valid_answers
+          // array we might only have listed 'A'. We still want 'A)' to be valid.
+          var allowableChars = '[s\\.\\,\\?\\*\\)\\}\\]]*';
+          var validAnswer = choice.valid_answers[j];
+          var regex = new RegExp('^' + validAnswer + allowableChars + '$', 'i');
+          if (userFirstWord.match(regex)) {
+            choiceIndex = i;
+            break;
+          }
         }
 
+        // Break the loop if we've got a valid answer
+        if (choiceIndex != -1) {
+          break;
+        }
       }
     }
 
