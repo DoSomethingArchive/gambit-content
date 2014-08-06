@@ -443,7 +443,7 @@
           },
           {
             "key": "L12D",
-            "next": 169863,
+            "next": "END-LEVEL1",
             "valid_answers": ["D"]
           }
         ]
@@ -458,7 +458,7 @@
           },
           {
             "key": "L12D",
-            "next": 169863,
+            "next": "END-LEVEL1",
             "valid_answers": ["D"]
           }
         ]
@@ -499,6 +499,88 @@
           }
         ],
         "next_level": 169877
+      },
+      "169877": {
+        "__comments": "Level 2-0",
+        "choices": [
+          {
+            "key": "L21A",
+            "next": 169879,
+            "valid_answers": ["A"]
+          },
+          {
+            "key": "L21B",
+            "next": 169881,
+            "valid_answers": ["B"]
+          }
+        ]
+      },
+      "169879": {
+        "__comments": "Level 2-1A",
+        "choices": [
+          {
+            "key": "L22C",
+            "next": "END-LEVEL2",
+            "valid_answers": ["C"]
+          },
+          {
+            "key": "L22D",
+            "next": "END-LEVEL2",
+            "valid_answers": ["D"]
+          }
+        ]
+      },
+      "169881": {
+        "__comments": "Level 2-1B",
+        "choices": [
+          {
+            "key": "L22C",
+            "next": "END-LEVEL2",
+            "valid_answers": ["C"]
+          },
+          {
+            "key": "L22D",
+            "next": "END-LEVEL2",
+            "valid_answers": ["D"]
+          }
+        ]
+      },
+      "END-LEVEL2": {
+        "choices": [
+          {
+            "next": 169883,
+            "conditions": {"$and": ["L21A", "L22C"]}
+          },
+          {
+            "next": 169885,
+            "conditions": {"$and": ["L21A", "L22D"]}
+          },
+          {
+            "next": 169887,
+            "conditions": {"$and": ["L21B", "L22C"]}
+          },
+          {
+            "next": 169889,
+            "conditions": {"$and": ["L21B", "L22D"]}
+          }
+        ]
+      },
+      "END-LEVEL2-GROUP": {
+        "choices": [
+          {
+            "next": 169891,
+            "majority_players_result": 169883
+          },
+          {
+            "next": 169891,
+            "majority_players_result": 169887
+          },
+          {
+            "next": 169893,
+            "majority_players_result": "DEFAULT"
+          }
+        ],
+        "next_level": 169895
       }
     }
   }
