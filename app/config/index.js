@@ -32,15 +32,26 @@ module.exports = function(app, express) {
   // Create a single database connection to be used for the lifetime of the app.
   var dbConnection = mongoose.createConnection(app.get('database-uri'));
 
-  // Global stathat reporting wrapper function
-  app.stathatReportCount = function(statname, count) {
-    stathat.trackEZCount(
+
+  /**
+   * Global stathat reporting wrapper function
+   *
+   * @param type
+   *   String type of stathat report (Count or Value)
+   * @param statname
+   *   String statname to track
+   * @param count
+   *   Integer the value or count you want to add
+   */
+  app.stathatReport = function(type, statname, count) {
+    stathat["trackEZ" + type](
       process.env.STATHAT_EZ_KEY,
       statname,
       count,
       function(status, json) {}
     );
   };
+
 
   /**
    * Helper function to retrieve a Mongoose model.

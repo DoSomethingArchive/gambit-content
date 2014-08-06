@@ -151,8 +151,8 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
   response.send(200);
 
-  // Log the create game request to stathat
-  this.app.stathatReportCount('mobilecommons: create game request: success', 1);
+  // Log to stathat... should this be 1 or 1 for each person?
+  this.app.stathatReport('Count', 'mobilecommons: create game request: success', 1);
   return true;
 };
 
@@ -771,7 +771,7 @@ SGCompetitiveStoryController.prototype.startGame = function(gameConfig, gameDoc)
   }
 
   // Log started gamed to stathat.
-  this.app.stathatReportCount('mobilecommons: start game request: success', 1);
+  this.app.stathatReport('Count', 'mobilecommons: start game request: success', 1);
 
   return gameDoc;
 };
@@ -836,7 +836,10 @@ SGCompetitiveStoryController.prototype.sendWaitMessages = function(gameConfig, g
  * @return Boolean
  */
 SGCompetitiveStoryController.prototype.getEndLevelMessage = function(phone, level, storyConfig, gameDoc, checkResultType) {
-
+  // Get the level number from the end.
+  numLevel = level.slice(-1);
+  // Log which level is ending.
+  this.app.stathatReport('Value', 'mobilecommons: end level : success', numLevel);
   var storyItem = storyConfig.story[level];
   if (typeof storyItem === 'undefined') {
     return null;
