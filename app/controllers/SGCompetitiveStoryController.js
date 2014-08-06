@@ -150,6 +150,9 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   });
 
   response.send(200);
+
+  // Log the create game request to stathat
+  this.app.stathatReportCount('mobilecommons: create game request: success', 1);
   return true;
 };
 
@@ -749,6 +752,9 @@ SGCompetitiveStoryController.prototype.startGame = function(gameConfig, gameDoc)
       gameDoc = this.updatePlayerCurrentStatus(gameDoc, gameDoc.betas[i].phone, startMessage);
     }
   }
+
+  // Log started gamed to stathat.
+  this.app.stathatReportCount('mobilecommons: start game request: success', 1);
 
   return gameDoc;
 };

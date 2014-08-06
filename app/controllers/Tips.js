@@ -4,7 +4,6 @@
 
 var mobilecommons = require('../../mobilecommons/mobilecommons');
 var mongoose = require('mongoose');
-var stathat = require('stathat');
 
 var Tips = function(app) {
   this.app = app;
@@ -14,24 +13,6 @@ var Tips = function(app) {
 
 module.exports = Tips;
 
-/**
- * @todo Move this out to its own library ds-stathat when more module need to use it.
- * @TODO Use the stathat NPM module - https://www.npmjs.org/package/stathat
- * Reports a count to StatHat.
- *
- * @param statname
- *   String name of the stat to report on.
- * @param count
- *   Number value of the count to report.
- */
-function stathatReportCount(statname, count) {
-  stathat.trackEZCount(
-    process.env.STATHAT_EZ_KEY,
-    statname,
-    count,
-    function(status, json) {}
-  );
-};
 
 /**
  * Progress a user through a series of tips delivered via Mobile Commons opt-in paths.
@@ -65,8 +46,7 @@ Tips.prototype.deliverTips = function(request, response, mdataOverride) {
   if (typeof(tipConfig) === 'undefined'
       || typeof(tipConfig.name) === 'undefined'
       || typeof(tipConfig.optins) === 'undefined') {
-    stathatReportCount('mobilecommons: tips request: error - config not set', 1);
-
+    this.app.stathatReportCount('mobilecommons: tips request: error - config not set', 1);
     response.send(501);
     return;
   }
@@ -130,7 +110,7 @@ Tips.prototype.deliverTips = function(request, response, mdataOverride) {
         if (request.body.dev !== '1') {
           mobilecommons.optin(args);
 
-          stathatReportCount('mobilecommons: tips request: success', 1);
+          this.app.stathatReportCount('mobilecommons: tips request: success', 1);
         }
 
         // Update the existing doc in the database
@@ -163,7 +143,7 @@ Tips.prototype.deliverTips = function(request, response, mdataOverride) {
         if (request.body.dev !== '1') {
           mobilecommons.optin(args);
 
-          stathatReportCount('mobilecommons: tips request: success', 1);
+          this.app.stathatReportCount('mobilecommons: tips request: success', 1);
         }
 
         // Create a new doc

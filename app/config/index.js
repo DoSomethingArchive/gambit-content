@@ -2,6 +2,7 @@ var path = require('path')
   , fs = require('fs')
   , root_dirname = path.dirname(path.dirname(__dirname))
   , mongoose = require('mongoose')
+  , stathat = require('stathat')
   ;
 
 module.exports = function(app, express) {
@@ -30,6 +31,16 @@ module.exports = function(app, express) {
 
   // Create a single database connection to be used for the lifetime of the app.
   var dbConnection = mongoose.createConnection(app.get('database-uri'));
+
+  // Global stathat reporting wrapper function
+  app.stathatReportCount = function(statname, count) {
+    stathat.trackEZCount(
+      process.env.STATHAT_EZ_KEY,
+      statname,
+      count,
+      function(status, json) {}
+    );
+  };
 
   /**
    * Helper function to retrieve a Mongoose model.
