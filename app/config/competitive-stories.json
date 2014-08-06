@@ -12,17 +12,17 @@
         "__comments": "Level 1-0",
         "choices": [
           {
+            "key": "L11A",
             "next": 168455,
             "valid_answers": [
-              "L11A",
               "A",
               "LOOK"
             ]
           },
           {
+            "key": "L11B",
             "next": 168457,
             "valid_answers": [
-              "L11B",
               "B",
               "DOOR"
             ]
@@ -33,17 +33,17 @@
         "__comments": "Level 1-1A",
         "choices": [
           {
+            "key": "L12A",
             "next": 168459,
             "valid_answers": [
-              "L12A",
               "A",
               "TV"
             ]
           },
           {
+            "key": "L12C",
             "next": 168655,
             "valid_answers": [
-              "L12C",
               "B",
               "DOOR"
             ]
@@ -54,17 +54,17 @@
         "__comments": "Level 1-1B",
         "choices": [
           {
+            "key": "L12A",
             "next": 168459,
             "valid_answers": [
-              "L12A",
               "A",
               "TV"
             ]
           },
           {
+            "key": "L12B",
             "next": 168461,
             "valid_answers": [
-              "L12B",
               "B",
               "BOOK",
               "BOOKCASE"
@@ -76,9 +76,9 @@
         "__comments": "Level 1-2A",
         "choices": [
           {
+            "key": "L13A",
             "next": 168657,
             "valid_answers": [
-              "L13A",
               "A",
               "HELLO"
             ]
@@ -89,9 +89,9 @@
         "__comments": "Level 1-2B",
         "choices": [
           {
+            "key": "L13B",
             "next": 168659,
             "valid_answers": [
-              "L13B",
               "A",
               "KEY"
             ]
@@ -102,9 +102,9 @@
         "__comments": "Level 1-2C",
         "choices": [
           {
+            "key": "L13A",
             "next": 168657,
             "valid_answers": [
-              "L13A",
               "A",
               "HELLO"
             ]
@@ -115,17 +115,17 @@
         "__comments": "Level 1-3A",
         "choices": [
           {
+            "key": "L14B",
             "next": "END-LEVEL1",
             "valid_answers": [
-              "L14B",
               "A",
               "KICK"
             ]
           },
           {
+            "key": "L14A",
             "next": "END-LEVEL1",
             "valid_answers": [
-              "L14A",
               "B",
               "HIDE"
             ]
@@ -136,17 +136,17 @@
         "__comments": "Level 1-3B",
         "choices": [
           {
+            "key": "L14B",
             "next": "END-LEVEL1",
             "valid_answers": [
-              "L14B",
               "A",
               "OUT"
             ]
           },
           {
+            "key": "L14C",
             "next": "END-LEVEL1",
             "valid_answers": [
-              "L14C",
               "B",
               "WAIT"
             ]
@@ -194,17 +194,17 @@
         "__comments": "Level 2-0",
         "choices": [
           {
+            "key": "L21A",
             "next": 169071,
             "valid_answers": [
-              "L21A",
               "A",
               "PICHU"
             ]
           },
           {
+            "key": "L21B",
             "next": 169073,
             "valid_answers": [
-              "L21B",
               "B",
               "RAICHU"
             ]
@@ -215,25 +215,25 @@
         "__comments": "Level 2-1A",
         "choices": [
           {
+            "key": "L22A",
             "next": 169075,
             "valid_answers": [
-              "L22A",
               "A",
               "1"
             ]
           },
           {
+            "key": "L22B",
             "next": 169077,
             "valid_answers": [
-              "L22B",
               "B",
               "6"
             ]
           },
           {
+            "key": "L22C",
             "next": 169079,
             "valid_answers": [
-              "L22C",
               "C",
               "9"
             ]
@@ -244,25 +244,25 @@
         "__comments": "Level 2-1B",
         "choices": [
           {
+            "key": "L22A",
             "next": 169075,
             "valid_answers": [
-              "L22A",
               "A",
               "1"
             ]
           },
           {
+            "key": "L22B",
             "next": 169077,
             "valid_answers": [
-              "L22B",
               "B",
               "6"
             ]
           },
           {
+            "key": "L22C",
             "next": 169079,
             "valid_answers": [
-              "L22C",
               "C",
               "9"
             ]
@@ -273,17 +273,17 @@
         "__comments": "Level 2-2A",
         "choices": [
           {
+            "key": "L23A",
             "next": "END-LEVEL2",
             "valid_answers": [
-              "L23A",
               "A",
               "FIGHT"
             ]
           },
           {
+            "key": "L23B",
             "next": "END-LEVEL2",
             "valid_answers": [
-              "L23B",
               "B"
             ]
           }
@@ -293,17 +293,17 @@
         "__comments": "Level 2-2B",
         "choices": [
           {
+            "key": "L23A",
             "next": "END-LEVEL2",
             "valid_answers": [
-              "L23A",
               "A",
               "FIGHT"
             ]
           },
           {
+            "key": "L23B",
             "next": "END-LEVEL2",
             "valid_answers": [
-              "L23B",
               "B"
             ]
           }
@@ -313,17 +313,17 @@
         "__comments": "Level 2-2C",
         "choices": [
           {
+            "key": "L23A",
             "next": "END-LEVEL2",
             "valid_answers": [
-              "L23A",
               "A",
               "FIGHT"
             ]
           },
           {
+            "key": "L23B",
             "next": "END-LEVEL2",
             "valid_answers": [
-              "L23B",
               "B"
             ]
           }

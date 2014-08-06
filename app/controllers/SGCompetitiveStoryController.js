@@ -434,15 +434,15 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
     var nextOip = 0;
     // We have a valid answer if choiceIndex is >= 0
     if (choiceIndex >= 0) {
-      // Save the first answer in the valid_answers array to the database.
-      var answerToSave = storyItem.choices[choiceIndex].valid_answers[0];
+      // Use the choice key as the answer to save in the database.
+      var choiceKey = storyItem.choices[choiceIndex].key;
 
       // Update the results of the player's progression through a story.
       // Note: Sort of hacky, this needs to be called before getEndLevelMessage()
       // and getEndGameMessage() because they use the story_results array in the
       // game document to determine what the next message should be.
       var gameDoc = doc;
-      gameDoc = obj.updateStoryResults(gameDoc, userPhone, currentOip, answerToSave);
+      gameDoc = obj.updateStoryResults(gameDoc, userPhone, currentOip, choiceKey);
 
       // Progress player to the next message.
       nextOip = storyItem.choices[choiceIndex].next;
