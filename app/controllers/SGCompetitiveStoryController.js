@@ -773,12 +773,16 @@ SGCompetitiveStoryController.prototype.startGame = function(gameConfig, gameDoc)
 
       // Update the beta's current status.
       gameDoc = this.updatePlayerCurrentStatus(gameDoc, gameDoc.betas[i].phone, startMessage);
+
+      // 'i' is one less than the current player + you need to add the alpha.
+      var numPlayers = i + 1 + 1;
+      // Log for each player that has accepted the invite.
+      this.app.stathatReport('Value', 'mobilecommons: number of players', numPlayers);
     }
   }
 
   // Log started gamed to stathat.
   this.app.stathatReport('Count', 'mobilecommons: start game request: success', 1);
-
   return gameDoc;
 };
 
