@@ -939,7 +939,7 @@
           },
           {
             "next": 169985,
-            "conditions": { "$and": ["L61A", "L61B", "L62C", "L62D"] }
+            "conditions": { "$or": ["L61A", "L61B", "L62C", "L62D"] }
           }
         ]
       }
