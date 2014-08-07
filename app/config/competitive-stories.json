@@ -909,6 +909,35 @@
           }
         ],
         "next_level": "END-GAME"
+      },
+      "END-GAME": {
+        "__comments": "Bully Text end-game superlatives",
+        "choices": [
+          {
+            "next": 169969,
+            "conditions": { "$and": ["L12D", "L22C", "L31A", "L41B", "L51A", "L62C"] }
+          },
+          {
+            "next": 169971,
+            "conditions": { "$and": ["L12C", "L22C", "L41B"] }
+          },
+          {
+            "next": 169973,
+            "conditions": { "$and": ["L22D", "L31A", "L42D", "L51B"] }
+          },
+          {
+            "next": 169975,
+            "conditions": { "$and": ["L11B", "L52C", "L61A"] }
+          },
+          {
+            "next": 169977,
+            "conditions": { "$and": ["L12D", "L51B", {"$or": ["L41A", "L42C"]}] }
+          },
+          {
+            "next": 169983,
+            "conditions": { "$or": ["L61A", "L61B", "L62C", "L62D"] }
+          }
+        ]
       }
     }
   }
