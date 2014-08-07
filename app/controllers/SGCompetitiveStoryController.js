@@ -207,6 +207,96 @@ function createCallback(obj, delegate)
 };
 
 /**
+ * Evalutes whether or not a player's story results match a given condition.
+ *
+ * @param condition
+ *   Logic object
+ * @param phone
+ *   Phone number of player to check
+ * @param gameDoc
+ *   Document for the current game.
+ * @param checkResultType
+ *   What property the conditions are checking against. Either "oip" or "answer".
+ *
+ * @return Boolean
+ */
+function evaluateCondition(condition, phone, gameDoc, checkResultType) {
+
+  /**
+   * Check if the player has provided a given answer in this game.
+   *
+   * @param result
+   *   The result to check against.
+   *
+   * @return Boolean
+   */
+  var checkUserResult = function(result) {
+    for (var i = 0; i < gameDoc.story_results.length; i++) {
+      if (gameDoc.story_results[i].phone == phone) {
+        if (checkResultType == 'oip' && gameDoc.story_results[i].oip == result) {
+          return true;
+        }
+        else if (checkResultType == 'answer' && gameDoc.story_results[i].answer == result) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  };
+
+  /**
+   * Recursive function to evaluate $and/$or logic objects. These objects are
+   * arrays of some combination of strings (which are user answers) and more
+   * logic objects.
+   *
+   *   ie:
+   *     "$or": [string | logic object, ...]
+   *     "$and": [string | logic object, ...]
+   *
+   * @param obj
+   *   Logic object.
+   *
+   * @return Boolean
+   */
+  var evalObj = function(obj) {
+    var result = false;
+
+    if (obj['$or']) {
+
+      var conditions = obj['$or'];
+      for (var i = 0; i < conditions.length; i++) {
+        // If anything is true, then result is true.
+        if ((typeof conditions[i] === 'string' && checkUserResult(conditions[i])) ||
+            (typeof conditions[i] === 'object' && evalObj(conditions[i]))) {
+          result = true;
+          break;
+        }
+      }
+
+    }
+    else if (obj['$and']) {
+
+      result = true;
+      var conditions = obj['$and'];
+      for (var i = 0; i < conditions.length; i++) {
+        // If anything is false, then result is false.
+        if ((typeof conditions[i] === 'string' && !checkUserResult(conditions[i])) ||
+            (typeof conditions[i] === 'object' && !evalObj(conditions[i]))) {
+          result = false;
+          break;
+        }
+      }
+
+    }
+
+    return result;
+  };
+
+  return evalObj(condition);
+}
+
+/**
  * @todo consider moving all of the join game behavior to a parent class SGGameController
  *
  * Joins a beta to the game she's been invited to.
@@ -842,81 +932,10 @@ SGCompetitiveStoryController.prototype.getEndLevelMessage = function(phone, leve
     return null;
   }
 
-  /**
-   * Check if the player has provided a given answer in this game.
-   *
-   * @param result
-   *   The result to check against.
-   *
-   * @return Boolean
-   */
-  var checkUserResult = function(result) {
-    for (var i = 0; i < gameDoc.story_results.length; i++) {
-      if (gameDoc.story_results[i].phone == phone) {
-        if (checkResultType == 'oip' && gameDoc.story_results[i].oip == result) {
-          return true;
-        }
-        else if (checkResultType == 'answer' && gameDoc.story_results[i].answer == result) {
-          return true;
-        }
-      }
-    }
-
-    return false;
-  };
-
-  /**
-   * Recursive function to evaluate $and/$or logic objects. These objects are
-   * arrays of some combination of strings (which are user answers) and more
-   * logic objects.
-   *
-   *   ie:
-   *     "$or": [string | logic object, ...]
-   *     "$and": [string | logic object, ...]
-   *
-   * @param obj
-   *   Logic object.
-   *
-   * @return Boolean
-   */
-  var evalObj = function(obj) {
-    var result = false;
-
-    if (obj['$or']) {
-
-      var conditions = obj['$or'];
-      for (var i = 0; i < conditions.length; i++) {
-        // If anything is true, then result is true.
-        if ((typeof conditions[i] === 'string' && checkUserResult(conditions[i])) ||
-            (typeof conditions[i] === 'object' && evalObj(conditions[i]))) {
-          result = true;
-          break;
-        }
-      }
-
-    }
-    else if (obj['$and']) {
-
-      result = true;
-      var conditions = obj['$and'];
-      for (var i = 0; i < conditions.length; i++) {
-        // If anything is false, then result is false.
-        if ((typeof conditions[i] === 'string' && !checkUserResult(conditions[i])) ||
-            (typeof conditions[i] === 'object' && !evalObj(conditions[i]))) {
-          result = false;
-          break;
-        }
-      }
-
-    }
-
-    return result;
-  };
-
   // Determine next opt in path based on player's choices vs conditions.
   var nextOip = null;
   for (var i = 0; i < storyItem.choices.length; i++) {
-    if (evalObj(storyItem.choices[i].conditions)) {
+    if (evaluateCondition(storyItem.choices[i].conditions, phone, gameDoc, checkResultType)) {
       nextOip = storyItem.choices[i].next;
       break;
     }
@@ -939,57 +958,38 @@ SGCompetitiveStoryController.prototype.getEndLevelMessage = function(phone, leve
  * @return End level group message opt-in path.
  */
 SGCompetitiveStoryController.prototype.getEndLevelGroupMessage = function(endLevelGroupKey, storyConfig, gameDoc) {
-  // Figure out what the majority end-level result was for all players.
-  var playerResults = {};
-  for (var i = 0; i < gameDoc.players_current_status.length; i++) {
-    var oip = gameDoc.players_current_status[i].opt_in_path;
-    if (playerResults[oip]) {
-      playerResults[oip]++;
-    }
-    else {
-      playerResults[oip] = 1;
-    }
-  }
 
   var storyItem = storyConfig.story[endLevelGroupKey];
 
-  /**
-   * Determine if path1 is listed before path2 in the array of END-LEVEL*-GROUP choices.
-   */
-  var isHigherPriorityPath = function(path1, path2) {
-    for (var i = 0; i < storyItem.choices.length; i++) {
-      if (storyItem.choices[i].next == path1)
-        return true;
-      else if (storyItem.choices[i].next == path2)
-        return false;
-    }
-
-    return true;
-  };
-
-  var majorityResult = 0;
-  var maxCount = 0;
-  var keys = Object.keys(playerResults);
-  for (var i = 0; i < keys.length; i++) {
-    // Set new majority if count is higher or path is higher priority
-    var countIsGreater = playerResults[keys[i]] > maxCount;
-    var isHigherPriority = playerResults[keys[i]] == maxCount && isHigherPriorityPath(keys[i], majorityResult);
-    if (countIsGreater || isHigherPriority) {
-      majorityResult = keys[i];
-    }
-  }
-
-  // Return the end level group message based on majority found.
+  // Initializing values to 0
+  var choiceCounter = [];
   for (var i = 0; i < storyItem.choices.length; i++) {
-    if (storyItem.choices[i].majority_players_result == 'DEFAULT') {
-      return storyItem.choices[i].next;
-    }
-    else if (storyItem.choices[i].majority_players_result == majorityResult) {
-      return storyItem.choices[i].next;
+    choiceCounter[i] = 0;
+  }
+
+  // Evaluate which condition players match
+  for (var i = 0; i < gameDoc.players_current_status.length; i++) {
+    var phone = gameDoc.players_current_status[i].phone;
+
+    for (var j = 0; j < storyItem.choices.length; j++) {
+      var conditions = storyItem.choices[j].conditions;
+      if (evaluateCondition(conditions, phone, gameDoc, 'answer')) {
+        choiceCounter[j]++;
+      }
     }
   }
 
-  return null;
+  // Find out which condition was matched the most
+  var selectChoice = -1;
+  var maxCount = -1;
+  for (var i = 0; i < choiceCounter.length; i++) {
+    if (choiceCounter[i] > maxCount) {
+      selectChoice = i;
+      maxCount = choiceCounter[i];
+    }
+  }
+
+  return storyItem.choices[selectChoice].next;
 };
 
 /**
