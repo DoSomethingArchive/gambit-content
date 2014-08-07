@@ -181,11 +181,11 @@
         "choices": [
           {
             "next": 168897,
-            "majority_players_result": 168827
+            "conditions": { "$or": ["L14A", "L14B"] }
           },
           {
             "next": 168899,
-            "majority_players_result": "DEFAULT"
+            "conditions": { "$or": ["L14C"] }
           }
         ],
         "next_level": 168901
@@ -355,11 +355,17 @@
         "choices": [
           {
             "next": 169085,
-            "majority_players_result": 169081
+            "conditions": {
+              "$or": [
+                {"$and": ["L21B", "L22B"]},
+                {"$and": ["L22B", "L23A"]},
+                {"$and": ["L21B", "L23A"]}
+              ]
+            }
           },
           {
             "next": 169087,
-            "majority_players_result": "DEFAULT"
+            "conditions": { "$or": ["L23A", "L23B"] }
           }
         ],
         "next_level": "END-GAME"
@@ -487,15 +493,11 @@
         "choices": [
           {
             "next": 169873,
-            "majority_players_result": 169865
-          },
-          {
-            "next": 169873,
-            "majority_players_result": 169871
+            "conditions": { "$and": ["L12D"] }
           },
           {
             "next": 169875,
-            "majority_players_result": "DEFAULT"
+            "conditions": { "$or": ["L11A", "L11B", "L12C"] }
           }
         ],
         "next_level": 169877
@@ -569,15 +571,11 @@
         "choices": [
           {
             "next": 169891,
-            "majority_players_result": 169883
-          },
-          {
-            "next": 169891,
-            "majority_players_result": 169887
+            "conditions": { "$and": ["L22C"] }
           },
           {
             "next": 169893,
-            "majority_players_result": "DEFAULT"
+            "conditions": { "$or": ["L21A", "L21B", "L22D"] }
           }
         ],
         "next_level": 169895
@@ -651,15 +649,11 @@
         "choices": [
           {
             "next": 169909,
-            "majority_players_result": 169901
-          },
-          {
-            "next": 169909,
-            "majority_players_result": 169903
+            "conditions": { "$and": ["L31A"] }
           },
           {
             "next": 169913,
-            "majority_players_result": "DEFAULT"
+            "conditions": { "$or": ["L31B", "L32C", "L32D"] }
           }
         ],
         "next_level": 169915
@@ -733,15 +727,11 @@
         "choices": [
           {
             "next": 169929,
-            "majority_players_result": 169925
+            "conditions": { "$and": ["L41B"] }
           },
           {
             "next": 169929,
-            "majority_players_result": 169927
-          },
-          {
-            "next": 169931,
-            "majority_players_result": "DEFAULT"
+            "conditions": { "$or": ["L41A", "L42C", "L42D"] }
           }
         ],
         "next_level": 169933
@@ -815,15 +805,11 @@
         "choices": [
           {
             "next": 169947,
-            "majority_players_result": 169939
-          },
-          {
-            "next": 169947,
-            "majority_players_result": 169941
+            "conditions": { "$and": ["L51A"] }
           },
           {
             "next": 169949,
-            "majority_players_result": "DEFAULT"
+            "conditions": { "$or": ["L51B", "L52C", "L52D"] }
           }
         ],
         "next_level": 169951
@@ -897,15 +883,11 @@
         "choices": [
           {
             "next": 169965,
-            "majority_players_result": 169957
-          },
-          {
-            "next": 169965,
-            "majority_players_result": 169961
+            "conditions": { "$and": ["L62C"] }
           },
           {
             "next": 169967,
-            "majority_players_result": "DEFAULT"
+            "conditions": { "$or": ["L61A", "L61B", "L62D"] }
           }
         ],
         "next_level": "END-GAME"
