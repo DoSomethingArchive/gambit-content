@@ -149,7 +149,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     self.scheduleMobileCommonsOptIn(optinArgs);
   });
 
-  response.send(200);
+  response.send();
 
   // Log the create game request to stathat
   this.app.stathatReportCount('mobilecommons: create game request: success', 1);
@@ -239,7 +239,7 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
         };
 
         obj.scheduleMobileCommonsOptIn(args);
-        obj.response.send(200);
+        obj.response.send();
         return;
       }
 
@@ -265,7 +265,7 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
       if (allJoined) {
         doc.game_started = true;
         doc = obj.startGame(obj.gameConfig, doc);
-        obj.response.send(200);
+        obj.response.send();
       }
       // If we're still waiting on people, send appropriate messages to the recently
       // joined beta and alpha users.
@@ -273,7 +273,7 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
         console.log('Waiting on ' + numWaitingOn + ' people to join.');
 
         doc = obj.sendWaitMessages(obj.gameConfig, doc, obj.joiningBetaPhone);
-        obj.response.send(200);
+        obj.response.send();
       }
 
       // Save the doc in the database with the betas and current status updates.
@@ -333,7 +333,7 @@ SGCompetitiveStoryController.prototype.alphaStartGame = function(request, respon
       // Start the game.
       doc.game_started = true;
       doc = obj.startGame(obj.gameConfig, doc);
-      obj.response.send(200);
+      obj.response.send();
 
       // Save the doc in the database with the current status updates.
       obj.gameModel.update(
@@ -563,7 +563,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
 
       obj.scheduleMobileCommonsOptIn(optinArgs);
 
-      obj.response.send(200);
+      obj.response.send();
     }
     else {
       obj.response.send(500, 'Story configuration invalid.');
