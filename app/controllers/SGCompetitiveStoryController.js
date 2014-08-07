@@ -508,12 +508,14 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
           // that results for all players can be updated before figuring out the
           // next message.
           // Send group the next level message
+          var gameEnded = false;
           var nextLevel = storyConfig.story[endLevelGroupKey].next_level;
           for (var i = 0; i < gameDoc.players_current_status.length; i++) {
             var playerPhone = gameDoc.players_current_status[i].phone;
             var nextPath = nextLevel;
             // End game message needs to be determined per player
             if (nextLevel == 'END-GAME') {
+              gameEnded = true;
               nextPath = obj.getEndGameMessage(playerPhone, storyConfig, gameDoc);
             }
 
@@ -530,6 +532,10 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
             gameDoc = obj.updatePlayerCurrentStatus(gameDoc, playerPhone, nextPath);
           }
         }
+      }
+      // If the game is over, log it to stathat.
+      if (gameEnded == true) {
+        obj.app.stathatReport('Count', 'mobilecommons: end game: success', 1);
       }
 
       // Update the player's current status in the database.
