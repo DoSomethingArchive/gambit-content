@@ -761,6 +761,8 @@ SGCompetitiveStoryController.prototype.startGame = function(gameConfig, gameDoc)
   // Update the alpha's current status.
   gameDoc = this.updatePlayerCurrentStatus(gameDoc, gameDoc.alpha_phone, startMessage);
 
+  // Alpha
+  var numPlayers = 1;
   // Opt in the beta users who have joined.
   for (var i = 0; i < gameDoc.betas.length; i++) {
     if (gameDoc.betas[i].invite_accepted == true) {
@@ -774,12 +776,13 @@ SGCompetitiveStoryController.prototype.startGame = function(gameConfig, gameDoc)
       // Update the beta's current status.
       gameDoc = this.updatePlayerCurrentStatus(gameDoc, gameDoc.betas[i].phone, startMessage);
 
-      // 'i' is one less than the current player + you need to add the alpha.
-      var numPlayers = i + 1 + 1;
-      // Log for each player that has accepted the invite.
-      this.app.stathatReport('Value', 'mobilecommons: number of players', numPlayers);
+      // 'i' is one less than the current player.
+      numPlayers = i + 1;
     }
   }
+
+  // Log for each player that has accepted the invite.
+  this.app.stathatReport('Value', 'mobilecommons: number of players', numPlayers);
 
   // Log started gamed to stathat.
   this.app.stathatReport('Count', 'mobilecommons: start game request: success', 1);
