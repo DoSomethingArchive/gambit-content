@@ -151,8 +151,8 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
   response.send();
 
-  // Log the create game request to stathat
-  this.app.stathatReportCount('mobilecommons: create game request: success', 1);
+  // Log to stathat... should this be 1 or 1 for each person?
+  this.app.stathatReport('Count', 'mobilecommons: create game request: success', 1);
   return true;
 };
 
@@ -508,12 +508,14 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
           // that results for all players can be updated before figuring out the
           // next message.
           // Send group the next level message
+          var gameEnded = false;
           var nextLevel = storyConfig.story[endLevelGroupKey].next_level;
           for (var i = 0; i < gameDoc.players_current_status.length; i++) {
             var playerPhone = gameDoc.players_current_status[i].phone;
             var nextPath = nextLevel;
             // End game message needs to be determined per player
             if (nextLevel == 'END-GAME') {
+              gameEnded = true;
               nextPath = obj.getEndGameMessage(playerPhone, storyConfig, gameDoc);
             }
 
@@ -530,6 +532,10 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
             gameDoc = obj.updatePlayerCurrentStatus(gameDoc, playerPhone, nextPath);
           }
         }
+      }
+      // If the game is over, log it to stathat.
+      if (gameEnded == true) {
+        obj.app.stathatReport('Count', 'mobilecommons: end game: success', 1);
       }
 
       // Update the player's current status in the database.
@@ -755,6 +761,8 @@ SGCompetitiveStoryController.prototype.startGame = function(gameConfig, gameDoc)
   // Update the alpha's current status.
   gameDoc = this.updatePlayerCurrentStatus(gameDoc, gameDoc.alpha_phone, startMessage);
 
+  // Alpha
+  var numPlayers = 1;
   // Opt in the beta users who have joined.
   for (var i = 0; i < gameDoc.betas.length; i++) {
     if (gameDoc.betas[i].invite_accepted == true) {
@@ -767,12 +775,17 @@ SGCompetitiveStoryController.prototype.startGame = function(gameConfig, gameDoc)
 
       // Update the beta's current status.
       gameDoc = this.updatePlayerCurrentStatus(gameDoc, gameDoc.betas[i].phone, startMessage);
+
+      // 'i' is one less than the current player.
+      numPlayers = i + 1;
     }
   }
 
-  // Log started gamed to stathat.
-  this.app.stathatReportCount('mobilecommons: start game request: success', 1);
+  // Log for each player that has accepted the invite.
+  this.app.stathatReport('Value', 'mobilecommons: number of players', numPlayers);
 
+  // Log started gamed to stathat.
+  this.app.stathatReport('Count', 'mobilecommons: start game request: success', 1);
   return gameDoc;
 };
 
@@ -836,7 +849,10 @@ SGCompetitiveStoryController.prototype.sendWaitMessages = function(gameConfig, g
  * @return Boolean
  */
 SGCompetitiveStoryController.prototype.getEndLevelMessage = function(phone, level, storyConfig, gameDoc, checkResultType) {
-
+  // Get the level number from the end.
+  numLevel = level.slice(-1);
+  // Log which level is ending.
+  this.app.stathatReport('Value', 'mobilecommons: end level : success', numLevel);
   var storyItem = storyConfig.story[level];
   if (typeof storyItem === 'undefined') {
     return null;
