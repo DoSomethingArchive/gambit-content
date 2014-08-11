@@ -6,9 +6,6 @@ var mobilecommons = require('../../mobilecommons/mobilecommons')
   , emitter = require('../eventEmitter');
   ;
 
-var CREATE_GAME_MIN_FRIENDS = 3;
-var CREATE_GAME_MAX_FRIENDS = 3;
-
 // Delay (in milliseconds) for end level group messages to be sent.
 var END_LEVEL_GROUP_MESSAGE_DELAY = 15000;
 
@@ -33,20 +30,20 @@ var SGCompetitiveStoryController = function(app) {
  */
 SGCompetitiveStoryController.prototype.createGame = function(request, response) {
 
-  // Return a 406 if some data is missing, or there are too many friends.
+  // Return a 406 if some data is missing.
   if (typeof request.body === 'undefined'
       || typeof request.body.story_id === 'undefined'
       || typeof this.gameConfig[request.body.story_id] === 'undefined'
-      || typeof request.body.person === 'undefined'
-      || typeof request.body.person.first_name === 'undefined'
-      || typeof request.body.friends === 'undefined'
-      || request.body.friends.length < CREATE_GAME_MIN_FRIENDS
-      || request.body.friends.length > CREATE_GAME_MAX_FRIENDS) {
+      || typeof request.body.alpha_mobile === 'undefined'
+      || typeof request.body.alpha_first_name === 'undefined'
+      || typeof request.body.beta_mobile_0 === 'undefined'
+      || typeof request.body.beta_mobile_1 === 'undefined'
+      || typeof request.body.beta_mobile_2 === 'undefined') {
     response.send(406, request.body);
     return false;
   }
 
-  var alphaPhone = this.getNormalizedPhone(request.body.person.phone);
+  var alphaPhone = this.getNormalizedPhone(request.body.alpha_mobile);
   if (!this.isValidPhone(alphaPhone)) {
     response.send(406, 'Invalid alpha phone number.');
     return false;
@@ -55,17 +52,16 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   // Compile a new game document.
   var gameDoc = {
     story_id: request.body.story_id,
-    alpha_name: request.body.person.first_name,
+    alpha_name: request.body.alpha_first_name,
     alpha_phone: alphaPhone,
     betas: []
   };
 
-  for (var i = 0; i < request.body.friends.length; i++) {
+  for (var i = 0; i < 3; i++) {
     gameDoc.betas[i] = {};
     gameDoc.betas[i].invite_accepted = false;
-    gameDoc.betas[i].name = request.body.friends[i].first_name;
 
-    var phone = this.getNormalizedPhone(request.body.friends[i].phone);
+    var phone = this.getNormalizedPhone(request.body['beta_mobile_' + i]);
     if (!this.isValidPhone(phone)) {
       response.send(406, 'Invalid beta phone number.');
       return false;

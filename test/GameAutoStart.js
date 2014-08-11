@@ -50,24 +50,11 @@ describe('Auto-Start Game:', function() {
       request = {
         body: {
           story_id: storyId,
-          person: {
-            first_name: alphaName,
-            phone: alphaPhone
-          },
-          friends: [
-            {
-              first_name: betaName0,
-              phone: betaPhone0
-            },
-            {
-              first_name: betaName1,
-              phone: betaPhone1
-            },
-            {
-              first_name: betaName2,
-              phone: betaPhone2
-            }
-          ]
+          alpha_first_name: alphaName,
+          alpha_mobile: alphaPhone,
+          beta_mobile_0: betaPhone0,
+          beta_mobile_1: betaPhone1,
+          beta_mobile_2: betaPhone2
         }
       };
     })
