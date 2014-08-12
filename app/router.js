@@ -74,11 +74,11 @@ module.exports = function(app) {
   function getGameController(request) {
     // Game type could be in either GET or POST param.
     var gameType = '';
-    if (typeof request.query.sms_game_mp_story_type !== 'undefined') {
-      gameType = request.query.sms_game_mp_story_type;
+    if (typeof request.query.story_type !== 'undefined') {
+      gameType = request.query.story_type;
     }
-    else if (typeof request.body.sms_game_mp_story_type !== 'undefined') {
-      gameType = request.body.sms_game_mp_story_type;
+    else if (typeof request.body.story_type !== 'undefined') {
+      gameType = request.body.story_type;
     }
 
     if (gameType === 'collaborative-story') {

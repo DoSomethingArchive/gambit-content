@@ -32,8 +32,8 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
   // Return a 406 if some data is missing.
   if (typeof request.body === 'undefined'
-      || (typeof request.body.sms_game_mp_story_id === 'undefined'
-          && typeof request.query.sms_game_mp_story_id === 'undefined')
+      || (typeof request.body.story_id === 'undefined'
+          && typeof request.query.story_id === 'undefined')
       || typeof request.body.alpha_mobile === 'undefined'
       || typeof request.body.alpha_first_name === 'undefined'
       || typeof request.body.beta_mobile_0 === 'undefined'
@@ -45,11 +45,11 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
   // Story ID could be in either POST or GET param.
   var storyId = null;
-  if (typeof request.body.sms_game_mp_story_id !== 'undefined') {
-    storyId = request.body.sms_game_mp_story_id;
+  if (typeof request.body.story_id !== 'undefined') {
+    storyId = request.body.story_id;
   }
-  else if (typeof request.query.sms_game_mp_story_id !== 'undefined') {
-    storyId = request.query.sms_game_mp_story_id;
+  else if (typeof request.query.story_id !== 'undefined') {
+    storyId = request.query.story_id;
   }
 
   if (typeof this.gameConfig[storyId] === 'undefined') {

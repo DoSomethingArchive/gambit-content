@@ -49,7 +49,7 @@ describe('Alpha-Start Game:', function() {
       // Test request object to create the game.
       request = {
         body: {
-          sms_game_mp_story_id: storyId,
+          story_id: storyId,
           alpha_first_name: alphaName,
           alpha_mobile: alphaPhone,
           beta_mobile_0: betaPhone0,
