@@ -32,14 +32,28 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
   // Return a 406 if some data is missing.
   if (typeof request.body === 'undefined'
-      || typeof request.body.story_id === 'undefined'
-      || typeof this.gameConfig[request.body.story_id] === 'undefined'
+      || (typeof request.body.story_id === 'undefined'
+          && typeof request.query.story_id === 'undefined')
       || typeof request.body.alpha_mobile === 'undefined'
       || typeof request.body.alpha_first_name === 'undefined'
       || typeof request.body.beta_mobile_0 === 'undefined'
       || typeof request.body.beta_mobile_1 === 'undefined'
       || typeof request.body.beta_mobile_2 === 'undefined') {
     response.send(406, request.body);
+    return false;
+  }
+
+  // Story ID could be in either POST or GET param.
+  var storyId = null;
+  if (typeof request.body.story_id !== 'undefined') {
+    storyId = request.body.story_id;
+  }
+  else if (typeof request.query.story_id !== 'undefined') {
+    storyId = request.query.story_id;
+  }
+
+  if (typeof this.gameConfig[storyId] === 'undefined') {
+    response.send(406, 'Game config not setup for story ID: ' + storyId);
     return false;
   }
 
@@ -51,7 +65,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
   // Compile a new game document.
   var gameDoc = {
-    story_id: request.body.story_id,
+    story_id: storyId,
     alpha_name: request.body.alpha_first_name,
     alpha_phone: alphaPhone,
     betas: []

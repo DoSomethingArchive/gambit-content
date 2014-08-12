@@ -67,11 +67,20 @@ module.exports = function(app) {
   /**
    * Gets a game controller.
    *
-   * @param String gameType
+   * @param request Express request object
    *
    * @return Instance of the appropriate game controller for the game type
    */
-  function getGameController(gameType) {
+  function getGameController(request) {
+    // Game type could be in either GET or POST param.
+    var gameType = '';
+    if (typeof request.query.story_type !== 'undefined') {
+      gameType = request.query.story_type;
+    }
+    else if (typeof request.body.story_type !== 'undefined') {
+      gameType = request.body.story_type;
+    }
+
     if (gameType === 'collaborative-story') {
       return new SGCollaborativeStoryController(app);
     }
@@ -88,8 +97,8 @@ module.exports = function(app) {
   /**
    * Create a team SMS game.
    */
-  app.post('/game/create', function(request, response) {
-    var gameController = getGameController(request.query.type);
+  app.post('/sms-multiplayer-game/create', function(request, response) {
+    var gameController = getGameController(request);
     if (gameController == null) {
       response.send(406, 'Invalid `type` parameter.');
     }
@@ -101,8 +110,8 @@ module.exports = function(app) {
   /**
    * Beta accepts the invite to a game request.
    */
-  app.post('/game/beta-join', function(request, response) {
-    var gameController = getGameController(request.query.type);
+  app.post('/sms-multiplayer-game/beta-join', function(request, response) {
+    var gameController = getGameController(request);
     if (gameController == null) {
       response.send(406, 'Invalid `type` parameter.');
     }
@@ -114,8 +123,8 @@ module.exports = function(app) {
   /**
    * Alpha manually chooses to start a game.
    */
-  app.post('/game/alpha-start', function(request, response) {
-    var gameController = getGameController(request.query.type);
+  app.post('/sms-multiplayer-game/alpha-start', function(request, response) {
+    var gameController = getGameController(request);
     if (gameController == null) {
       response.send(406, 'Invalid `type` parameter.');
     }
@@ -127,8 +136,8 @@ module.exports = function(app) {
   /**
    * A user in a game texts back an action.
    */
-  app.post('/game/user-action', function(request, response) {
-    var gameController = getGameController(request.query.type);
+  app.post('/sms-multiplayer-game/user-action', function(request, response) {
+    var gameController = getGameController(request);
     if (gameController == null) {
       response.send(406, 'Invalid `type` parameter.');
     }
