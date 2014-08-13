@@ -445,12 +445,12 @@
           {
             "key": "L12C",
             "next": "END-LEVEL1",
-            "valid_answers": ["C"]
+            "valid_answers": ["A"]
           },
           {
             "key": "L12D",
             "next": "END-LEVEL1",
-            "valid_answers": ["D"]
+            "valid_answers": ["B"]
           }
         ]
       },
@@ -460,12 +460,12 @@
           {
             "key": "L12C",
             "next": "END-LEVEL1",
-            "valid_answers": ["C"]
+            "valid_answers": ["A"]
           },
           {
             "key": "L12D",
             "next": "END-LEVEL1",
-            "valid_answers": ["D"]
+            "valid_answers": ["B"]
           }
         ]
       },
@@ -523,12 +523,12 @@
           {
             "key": "L22C",
             "next": "END-LEVEL2",
-            "valid_answers": ["C"]
+            "valid_answers": ["A"]
           },
           {
             "key": "L22D",
             "next": "END-LEVEL2",
-            "valid_answers": ["D"]
+            "valid_answers": ["B"]
           }
         ]
       },
@@ -538,12 +538,12 @@
           {
             "key": "L22C",
             "next": "END-LEVEL2",
-            "valid_answers": ["C"]
+            "valid_answers": ["A"]
           },
           {
             "key": "L22D",
             "next": "END-LEVEL2",
-            "valid_answers": ["D"]
+            "valid_answers": ["B"]
           }
         ]
       },
@@ -601,12 +601,12 @@
           {
             "key": "L32C",
             "next": "END-LEVEL3",
-            "valid_answers": ["C"]
+            "valid_answers": ["A"]
           },
           {
             "key": "L32D",
             "next": "END-LEVEL3",
-            "valid_answers": ["D"]
+            "valid_answers": ["B"]
           }
         ]
       },
@@ -616,12 +616,12 @@
           {
             "key": "L32C",
             "next": "END-LEVEL3",
-            "valid_answers": ["C"]
+            "valid_answers": ["A"]
           },
           {
             "key": "L32D",
             "next": "END-LEVEL3",
-            "valid_answers": ["D"]
+            "valid_answers": ["B"]
           }
         ]
       },
@@ -679,12 +679,12 @@
           {
             "key": "L42C",
             "next": "END-LEVEL4",
-            "valid_answers": ["C"]
+            "valid_answers": ["A"]
           },
           {
             "key": "L42D",
             "next": "END-LEVEL4",
-            "valid_answers": ["D"]
+            "valid_answers": ["B"]
           }
         ]
       },
@@ -694,12 +694,12 @@
           {
             "key": "L42C",
             "next": "END-LEVEL4",
-            "valid_answers": ["C"]
+            "valid_answers": ["A"]
           },
           {
             "key": "L42D",
             "next": "END-LEVEL4",
-            "valid_answers": ["D"]
+            "valid_answers": ["B"]
           }
         ]
       },
@@ -757,12 +757,12 @@
           {
             "key": "L52C",
             "next": "END-LEVEL5",
-            "valid_answers": ["C"]
+            "valid_answers": ["A"]
           },
           {
             "key": "L52D",
             "next": "END-LEVEL5",
-            "valid_answers": ["D"]
+            "valid_answers": ["B"]
           }
         ]
       },
@@ -772,12 +772,12 @@
           {
             "key": "L52C",
             "next": "END-LEVEL5",
-            "valid_answers": ["C"]
+            "valid_answers": ["A"]
           },
           {
             "key": "L52D",
             "next": "END-LEVEL5",
-            "valid_answers": ["D"]
+            "valid_answers": ["B"]
           }
         ]
       },
@@ -835,12 +835,12 @@
           {
             "key": "L62C",
             "next": "END-LEVEL6",
-            "valid_answers": ["C"]
+            "valid_answers": ["A"]
           },
           {
             "key": "L62D",
             "next": "END-LEVEL6",
-            "valid_answers": ["D"]
+            "valid_answers": ["B"]
           }
         ]
       },
@@ -850,12 +850,12 @@
           {
             "key": "L62C",
             "next": "END-LEVEL6",
-            "valid_answers": ["C"]
+            "valid_answers": ["A"]
           },
           {
             "key": "L62D",
             "next": "END-LEVEL6",
-            "valid_answers": ["D"]
+            "valid_answers": ["B"]
           }
         ]
       },
