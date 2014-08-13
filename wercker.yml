@@ -1,0 +1,7 @@
+box: wercker/nodejs
+services:
+    - wercker/mongodb
+build:
+  steps:
+    - npm-install
+    - npm-test
