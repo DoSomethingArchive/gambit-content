@@ -5,3 +5,8 @@ build:
   steps:
     - npm-install
     - npm-test
+deploy:
+  steps:
+    - desmondmorris/jitsu-deploy@1.0.0:
+        username: $NODEJITSU_USERNAME
+        password: $NODEJITSU_PASSWORD
