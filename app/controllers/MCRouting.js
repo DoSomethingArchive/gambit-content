@@ -18,13 +18,13 @@ module.exports = MCRouting;
  * Opt user into one of two paths depending on whether the response is yes or no.
  */
 MCRouting.prototype.yesNoGateway = function(request, response) {
-  if (request.query.args === undefined || request.query.opt_in_path_id === undefined) {
+  if (request.body.args === undefined || request.body.opt_in_path_id === undefined) {
     response.send(204);
     return;
   }
 
-  var args = request.query.args.trim().toLowerCase();
-  var incomingOptIn = parseInt(request.query.opt_in_path_id);
+  var args = request.body.args.trim().toLowerCase();
+  var incomingOptIn = parseInt(request.body.opt_in_path_id);
   var paths = this.routing_config.yesNoPaths;
 
   // Find a path configured for the opt-in this request came from.
@@ -59,11 +59,10 @@ MCRouting.prototype.yesNoGateway = function(request, response) {
 
   // Execute the opt-in.
   var args = {
-    alphaPhone: request.query.phone,
+    alphaPhone: request.body.phone,
     alphaOptin: optin
   };
   mobilecommons.optin(args);
-
   response.send();
 };
 

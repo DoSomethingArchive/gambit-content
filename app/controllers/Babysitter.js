@@ -5,7 +5,7 @@ var mobilecommons = require('../../mobilecommons/mobilecommons');
  */
 var Babysitter = function(app) {
   this.app = app;
-  this.config = app.get('babysitter-config');
+  this.config = app.get('babysitter-config'); //'babysitter-config' JSON object exists in memory, app.get can also get the value stored in memory
 
   /**
    * The Mobile Commons opt-in path a parent gets pushed to when he sends a
