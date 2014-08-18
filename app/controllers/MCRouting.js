@@ -120,10 +120,10 @@ MCRouting.prototype.handleStartCampaignResponse = function(request, response) {
   // Get the config set that matches this opt_in_path_id.
   // Error out if there's no matching config.
   if (typeof(this.campaign_start_config[optinPathId]) === 'undefined'
-      || typeof(this.campaign_start_config[optinPathId].KNOW) === 'undefined'
-      || typeof(this.campaign_start_config[optinPathId].PLAN) === 'undefined'
-      || typeof(this.campaign_start_config[optinPathId].DO) === 'undefined'
-      || typeof(this.campaign_start_config[optinPathId].PROVE) === 'undefined') {
+      || typeof(this.campaign_start_config[optinPathId].know) === 'undefined'
+      || typeof(this.campaign_start_config[optinPathId].plan) === 'undefined'
+      || typeof(this.campaign_start_config[optinPathId].do) === 'undefined'
+      || typeof(this.campaign_start_config[optinPathId].prove) === 'undefined') {
     response.send(501);
     return;
   }
@@ -135,19 +135,19 @@ MCRouting.prototype.handleStartCampaignResponse = function(request, response) {
 
   // For KNOW, PLAN, and DO, use the tips lib to handle the delivery.
   if (firstWord === '1' || firstWord === 'KNOW' ) {
-    this.tips_api.deliverTips(request, response, this.campaign_start_config[optinPathId].KNOW);
+    this.tips_api.deliverTips(request, response, this.campaign_start_config[optinPathId].know);
   }
   else if (firstWord === '2' || firstWord === 'PLAN' ) {
-    this.tips_api.deliverTips(request, response, this.campaign_start_config[optinPathId].PLAN);
+    this.tips_api.deliverTips(request, response, this.campaign_start_config[optinPathId].plan);
   }
   else if (firstWord === '3' || firstWord === 'DO' ) {
-    this.tips_api.deliverTips(request, response, this.campaign_start_config[optinPathId].DO);
+    this.tips_api.deliverTips(request, response, this.campaign_start_config[optinPathId].do);
   }
   // But for the PROVE option, we can just push straight to the opt in path.
   else if (firstWord === '4' || firstWord === 'PROVE' ) {
     var args = {
       alphaPhone: request.body.phone,
-      alphaOptin: this.campaign_start_config[optinPathId].PROVE
+      alphaOptin: this.campaign_start_config[optinPathId].prove
     };
 
     if (request.body.dev !== '1') {
