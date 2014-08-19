@@ -8,7 +8,7 @@ With this transition, the user is both opted into a path that will deliver the n
 ```
 {
   ...
-  'startCampaingTransitions': {
+  'startCampaignTransitions': {
     'mData ID to trigger this transition': {
       '__comments': 'This is ignored.',
       'optin': opt in path ID with the next message user should receive,
