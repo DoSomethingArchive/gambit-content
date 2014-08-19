@@ -53,10 +53,14 @@ Tips.prototype.deliverTips = function(request, response, mdataOverride) {
 
   var tipModel = this.tipModel;
 
+
+  var self = this; //fixes scoping issue, 'this' changes in callback of MongoDB query
+
   // Find an existing document for a user with the requesting phone number
   tipModel.findOne(
     {phone: request.body.phone},
     function(err, doc) {
+
       if (err) return console.log(err);
 
       // An existing doc for this phone number has been found
@@ -110,7 +114,7 @@ Tips.prototype.deliverTips = function(request, response, mdataOverride) {
         if (request.body.dev !== '1') {
           mobilecommons.optin(args);
 
-          this.app.stathatReport('Count', 'mobilecommons: tips request: success', 1);
+          self.app.stathatReport('Count', 'mobilecommons: tips request: success', 1);
         }
 
         // Update the existing doc in the database
@@ -143,7 +147,7 @@ Tips.prototype.deliverTips = function(request, response, mdataOverride) {
         if (request.body.dev !== '1') {
           mobilecommons.optin(args);
 
-          this.app.stathatReport('Count', 'mobilecommons: tips request: success', 1);
+          self.app.stathatReport('Count', 'mobilecommons: tips request: success', 1);
         }
 
         // Create a new doc

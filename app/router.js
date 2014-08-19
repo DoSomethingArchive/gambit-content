@@ -37,8 +37,8 @@ module.exports = function(app) {
   /**
    * Route user to appropriate opt-in path based on their answer to a Y/N question.
    */
-  app.get('/ds-routing/yes-no-gateway', function(req, res) {
-    mcRouting.yesNoGateway(req, res);
+  app.post('/ds-routing/yes-no-gateway', function(req, res) {
+    mcRouting.yesNoGateway(req, res); 
   });
 
   /**
