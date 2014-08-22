@@ -6,16 +6,46 @@
 
 var mobilecommons = require('../../mobilecommons/mobilecommons')
   , messageHelper = require('../lib/userMessageHelpers')
+  , requestHttp = require('request')
   ;
 
-var SGCreateFromMobileController = function(app) {
+var SGCreateFromMobileController = function(app, host) {
   this.app = app;
+  this.host = host;
   this.configModel = require('../models/sgGameCreateConfig')(app);
 };
 
-function createGame(gameConfig) {
-  // @todo POST to /sms-multiplayer-game/create
-  console.log('create the game!');
+/**
+ * Create game by POSTing to the create game endpoint.
+ *
+ * @param gameConfig
+ *   Config model with game creation data.
+ * @param host
+ *   Hostname of this app.
+ */
+function createGame(gameConfig, host) {
+  var url = 'http://' + host + '/sms-multiplayer-game/create';
+  var payload = {
+    form: {
+      alpha_mobile: gameConfig.alpha_mobile,
+      alpha_first_name: gameConfig.alpha_first_name,
+      beta_mobile_0: gameConfig.beta_mobile_0,
+      beta_mobile_1: gameConfig.beta_mobile_1 ? gameConfig.beta_mobile_1 : '',
+      beta_mobile_2: gameConfig.beta_mobile_2 ? gameConfig.beta_mobile_2 : '',
+      story_id: gameConfig.story_id,
+      story_type: gameConfig.story_type
+    }
+  };
+
+  requestHttp.post(url, payload, function(err, response, body) {
+    if (err) {
+      console.log(err);
+    }
+
+    if (response && response.statusCode) {
+      console.log('POST to ' + url + ' returned status code: ' + response.statusCode);
+    }
+  });
 };
 
 /**
@@ -116,7 +146,8 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
       // Create the game if we have at least one beta number
       if (messageHelper.isYesResponse(message)) {
         if (configDoc.beta_mobile_0 && messageHelper.isValidPhone(configDoc.beta_mobile_0)) {
-          createGame(configDoc);
+          createGame(configDoc, self.host);
+          self._removeDocument(configDoc.alpha_mobile);
         }
         else {
           // Send the "not enough players" message.
@@ -145,7 +176,8 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
         // At this point, this is the last number we need. So, create the game.
         else {
           configDoc.beta_mobile_2 = betaMobile;
-          createGame(configDoc);
+          createGame(configDoc, self.host);
+          self._removeDocument(configDoc.alpha_mobile);
         }
       }
       else {
@@ -202,6 +234,26 @@ SGCreateFromMobileController.prototype._updateDocument = function(configDoc) {
       beta_mobile_1: configDoc.beta_mobile_1 ? configDoc.beta_mobile_1 : null,
       beta_mobile_2: configDoc.beta_mobile_2 ? configDoc.beta_mobile_2 : null,
     }},
+    function(err, num, raw) {
+      if (err) {
+        console.log(err);
+      }
+      else {
+        console.log(raw);
+      }
+    }
+  );
+};
+
+/**
+ * Remove game creation config doc.
+ *
+ * @param phone
+ *   Alpha mobile number.
+ */
+SGCreateFromMobileController.prototype._removeDocument = function(phone) {
+  this.configModel.remove(
+    {alpha_mobile: phone},
     function(err, num, raw) {
       if (err) {
         console.log(err);
