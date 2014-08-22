@@ -423,6 +423,12 @@
     "beta_wait_oip": 169847,
     "game_in_progress_oip": 169849,
     "story_start_oip": 169859,
+    "mobile_create": {
+      "ask_beta_0_oip": 170431,
+      "ask_beta_1_oip": 170433,
+      "ask_beta_2_oip": 170435,
+      "invalid_mobile_oip": 170439
+    },
     "story": {
       "169859": {
         "__comments": "Level 1-0",
