@@ -1001,6 +1001,7 @@ SGCompetitiveStoryController.prototype.getEndLevelGroupMessage = function(endLev
       var conditions = storyItem.choices[j].conditions;
       if (evaluateCondition(conditions, phone, gameDoc, 'answer')) {
         choiceCounter[j]++;
+        break;
       }
     }
   }
@@ -1009,12 +1010,18 @@ SGCompetitiveStoryController.prototype.getEndLevelGroupMessage = function(endLev
   var selectChoice = -1;
   var maxCount = -1;
   for (var i = 0; i < choiceCounter.length; i++) {
-    if (choiceCounter[i] > maxCount) {
+    /* Covers edge case --> if only 1 out of 2 users select the impact choice-set, 
+    the group will now receive the non-impact level ending message.
+    (This is purely because the non-impact choice-set is always second in the array of choices.) */
+
+    var isTwoPlayerGame = (gameDoc.players_current_status.length === 2);
+    var countEqualsMax = (choiceCounter[i] === maxCount);
+    var isNewMax = (choiceCounter[i] > maxCount);
+    if ((isTwoPlayerGame && countEqualsMax) || isNewMax){
       selectChoice = i;
       maxCount = choiceCounter[i];
     }
   }
-
   return storyItem.choices[selectChoice].next;
 };
 
