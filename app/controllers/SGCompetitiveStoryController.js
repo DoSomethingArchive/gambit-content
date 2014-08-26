@@ -3,6 +3,7 @@
  */
 
 var mobilecommons = require('../../mobilecommons/mobilecommons')
+  , messageHelper = require('../lib/userMessageHelpers')
   , emitter = require('../eventEmitter');
   ;
 
@@ -12,7 +13,7 @@ var END_LEVEL_GROUP_MESSAGE_DELAY = 15000;
 // Delay (in milliseconds) for next level start messages to be sent.
 var NEXT_LEVEL_START_DELAY = 30000;
 
-// Delay (in milliseconds) for end game universal group messages to be sent. 
+// Delay (in milliseconds) for end game universal group messages to be sent.
 var UNIVERSAL_GROUP_ENDGAME_MESSAGE_DELAY = 23000;
 
 var SGCompetitiveStoryController = function(app) {
@@ -62,8 +63,8 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     return false;
   }
 
-  var alphaPhone = this.getNormalizedPhone(request.body.alpha_mobile);
-  if (!this.isValidPhone(alphaPhone)) {
+  var alphaPhone = messageHelper.getNormalizedPhone(request.body.alpha_mobile);
+  if (!messageHelper.isValidPhone(alphaPhone)) {
     response.send(406, 'Invalid alpha phone number.');
     return false;
   }
@@ -80,8 +81,8 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     gameDoc.betas[i] = {};
     gameDoc.betas[i].invite_accepted = false;
 
-    var phone = this.getNormalizedPhone(request.body['beta_mobile_' + i]);
-    if (!this.isValidPhone(phone)) {
+    var phone = messageHelper.getNormalizedPhone(request.body['beta_mobile_' + i]);
+    if (!messageHelper.isValidPhone(phone)) {
       response.send(406, 'Invalid beta phone number.');
       return false;
     }
@@ -169,41 +170,6 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   // Log to stathat... should this be 1 or 1 for each person?
   this.app.stathatReport('Count', 'mobilecommons: create game request: success', 1);
   return true;
-};
-
-/**
- * Normalizes a phone number for processing. Prepends the '1' US international
- * code to the phone number if it doesn't have it.
- *
- * @param phone
- *   Phone number to normalize.
- *
- * @return Normalized phone number string.
- */
-SGCompetitiveStoryController.prototype.getNormalizedPhone = function(phone) {
-  var newPhone = phone.replace(/\D/g, '');
-  if (newPhone.length === 10) {
-    newPhone = '1' + newPhone;
-  }
-
-  return newPhone;
-}
-
-/**
- * Checks if a phone number is valid.
- *
- * @param phone
- *   Phone number to check.
- *
- * @return true if valid. false, otherwise.
- */
-SGCompetitiveStoryController.prototype.isValidPhone = function(phone) {
-  if (phone.length === 11) {
-    return true;
-  }
-  else {
-    return false;
-  }
 };
 
 /**
@@ -325,7 +291,7 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
   }
 
   // If beta doesn't respond with 'Y', then just ignore
-  if (request.body.args.toUpperCase() !== 'Y') {
+  if (!messageHelper.isYesResponse(messageHelper.getFirstWord(request.body.args))) {
     response.send();
   }
   else {
@@ -426,7 +392,7 @@ SGCompetitiveStoryController.prototype.alphaStartGame = function(request, respon
   }
 
   // If alpha doesn't respond with 'Y', then just ignore
-  if (request.body.args.toUpperCase() !== 'Y') {
+  if (!messageHelper.isYesResponse(messageHelper.getFirstWord(request.body.args))) {
     response.send();
   }
   else {
@@ -486,15 +452,11 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
    */
   var execUserAction = function(obj, doc) {
 
-    // Uppercase, trim and only get first word of user's response.
-    var userArgs = obj.request.body.args.toUpperCase().trim();
-    var userFirstWord = userArgs;
-    if (userArgs.indexOf(' ') >= 0) {
-      userFirstWord = userArgs.substr(0, userArgs.indexOf(' '));
-    }
+    // Uppercase and only get first word of user's response.
+    var userFirstWord = messageHelper.getFirstWord(obj.request.body.args.toUpperCase());
 
     // Find player's current status.
-    var userPhone = obj.getNormalizedPhone(obj.request.body.phone);
+    var userPhone = messageHelper.getNormalizedPhone(obj.request.body.phone);
     var currentOip = 0;
     for (var i = 0; i < doc.players_current_status.length; i++) {
       if (doc.players_current_status[i].phone == userPhone) {
@@ -607,7 +569,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
             };
 
             // The end level group message is sent SECOND of all the messages
-            // in the execUserAction() function call. 
+            // in the execUserAction() function call.
             obj.scheduleMobileCommonsOptIn(endLevelGroupArgs, END_LEVEL_GROUP_MESSAGE_DELAY);
             gameDoc = obj.addPathToStoryResults(gameDoc, playerPhone, groupOptin);
           }
@@ -623,16 +585,16 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
             var nextPath = nextLevel;
             // End game message needs to be determined per player
             if (nextLevel == 'END-GAME') {
-              // If gameEnded is true; if this is the first player we're 
+              // If gameEnded is true; if this is the first player we're
               // running endGame calculations on.
               if (!gameEnded){
-                // Sends universal GROUP endgame message (sent THIRD, 
-                // or second-last); updates gamedoc. 
+                // Sends universal GROUP endgame message (sent THIRD,
+                // or second-last); updates gamedoc.
                 gameDoc = obj.handleGroupEndGameMessage(storyConfig, gameDoc);
               }
               gameEnded = true;
               // This is setting the next OIP to the INDIVIDUAL end-game message.
-              nextPath = obj.getUniqueIndivEndGameMessage(playerPhone, storyConfig, gameDoc); 
+              nextPath = obj.getUniqueIndivEndGameMessage(playerPhone, storyConfig, gameDoc);
             }
 
             // Sends individual user the next level message.
@@ -641,8 +603,8 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
               alphaOptin: nextPath
             };
 
-            // The next level message (or if at end-game, end-game unique individual message) 
-            // is sent LAST in the execUserAction() function call. 
+            // The next level message (or if at end-game, end-game unique individual message)
+            // is sent LAST in the execUserAction() function call.
             obj.scheduleMobileCommonsOptIn(optinArgs, NEXT_LEVEL_START_DELAY);
             gameDoc = obj.addPathToStoryResults(gameDoc, playerPhone, nextPath);
 
@@ -685,8 +647,8 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
         alphaOptin: nextOip,
       };
 
-      // The individual response message is sent FIRST 
-      // in the execUserAction() function call. 
+      // The individual response message is sent FIRST
+      // in the execUserAction() function call.
       obj.scheduleMobileCommonsOptIn(optinArgs);
 
       obj.response.send();
@@ -774,7 +736,7 @@ SGCompetitiveStoryController.prototype.findUserGame = function(obj, onUserGameFo
    * 1) First step in the process of finding the user's game - find the user document.
    */
   obj.userModel.findOne(
-    {phone: this.getNormalizedPhone(obj.request.body.phone)},
+    {phone: messageHelper.getNormalizedPhone(obj.request.body.phone)},
     onUserFound
   );
 };
@@ -1030,7 +992,7 @@ SGCompetitiveStoryController.prototype.getEndLevelGroupMessage = function(endLev
   var selectChoice = -1;
   var maxCount = -1;
   for (var i = 0; i < choiceCounter.length; i++) {
-    // Covers edge case --> if only 1 out of 2 users select the impact choice-set, 
+    // Covers edge case --> if only 1 out of 2 users select the impact choice-set,
     // the group will now receive the non-impact level ending message.
     // (This is purely because the non-impact choice-set is always second in the array of choices.)
 
@@ -1064,7 +1026,7 @@ SGCompetitiveStoryController.prototype.getUniqueIndivEndGameMessage = function(p
   }
   else if (indivMessageEndGameFormat == 'rankings-within-group-based') {
     // Accounting for possible future game logic.
-    console.log('This rankings-within-group-based endgame logic hasn\'t been developed yet.'); 
+    console.log('This rankings-within-group-based endgame logic hasn\'t been developed yet.');
   }
   else {
     console.log('This story has an indeterminate endgame format.');
@@ -1073,13 +1035,13 @@ SGCompetitiveStoryController.prototype.getUniqueIndivEndGameMessage = function(p
 
 /**
  * 1) Checks the group endgame format of a game, on based on that:
- * 2) Retrieves the group endgame message, 
+ * 2) Retrieves the group endgame message,
  * 3) Sends that message to all game players,
  * 4) Updates the gamedoc's storyResults and players' current status
- * 5) Returns the updated gamedoc. 
- * 
+ * 5) Returns the updated gamedoc.
+ *
  * @param storyConfig
- *   JSON object defining details for the current story. 
+ *   JSON object defining details for the current story.
  * @param gameDoc
  *  document for the current game
  *
@@ -1094,8 +1056,8 @@ SGCompetitiveStoryController.prototype.handleGroupEndGameMessage = function(stor
         alphaPhone: gameDoc.players_current_status[j].phone,
         alphaOptin: nextPathForAllPlayers
       }
-      // If the game has ended, the universal group endgame message is 
-      // sent THIRD (or second-last) of all the messages in execUserAction(). 
+      // If the game has ended, the universal group endgame message is
+      // sent THIRD (or second-last) of all the messages in execUserAction().
       this.scheduleMobileCommonsOptIn(groupOptInArgs, UNIVERSAL_GROUP_ENDGAME_MESSAGE_DELAY);
       gameDoc = this.updatePlayerCurrentStatus(gameDoc, gameDoc.players_current_status[j].phone, nextPathForAllPlayers);
       gameDoc = this.addPathToStoryResults(gameDoc, gameDoc.players_current_status[j].phone, nextPathForAllPlayers);
@@ -1105,22 +1067,22 @@ SGCompetitiveStoryController.prototype.handleGroupEndGameMessage = function(stor
 }
 
 /**
- * Gets the universal end game message to be sent to a group. 
- * 
+ * Gets the universal end game message to be sent to a group.
+ *
  * @param storyConfig
- *   JSON object defining details for the current story. 
+ *   JSON object defining details for the current story.
  * @param gameDoc
  *  document for the current game
  *
  * @return The oip of the final group message.
  */
 SGCompetitiveStoryController.prototype.getUniversalGroupEndGameMessage = function(storyConfig, gameDoc) {
-  // An array of oips which represent group end-level impact paths. 
+  // An array of oips which represent group end-level impact paths.
   var groupLevelSuccessOips = storyConfig.story['END-GAME']['group-level-success-oips'];
 
-  // A hash. Key --> number of levels where group successfully received 
-  // impact condition; value --> end-level oip that number of levels unlocks, 
-  // which is sent to all players. 
+  // A hash. Key --> number of levels where group successfully received
+  // impact condition; value --> end-level oip that number of levels unlocks,
+  // which is sent to all players.
   var groupSuccessFailureOips = storyConfig.story['END-GAME']['group-success-failure-oips'];
   var levelSuccessCounter = 0;
 
