@@ -577,11 +577,11 @@
         "choices": [
           {
             "next": 169891,
-            "conditions": { "$and": ["L22C"] }
+            "conditions": { "$and": ["L22D"] }
           },
           {
             "next": 169893,
-            "conditions": { "$or": ["L21A", "L21B", "L22D"] }
+            "conditions": { "$or": ["L21A", "L21B", "L22C"] }
           }
         ],
         "next_level": 169895
