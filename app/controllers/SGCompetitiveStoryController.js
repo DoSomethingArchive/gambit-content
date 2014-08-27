@@ -96,7 +96,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   // If number of betas invited doesn't meet the minimum number, then error.
   if (gameDoc.betas.length < MIN_PLAYERS_TO_INVITE) {
     response.send(406, 'Not enough players. You need to invite at least %d to start.', MIN_PLAYERS_TO_INVITE);
-    return null;
+    return false;
   }
 
   // Save game to the database.
