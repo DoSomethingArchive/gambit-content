@@ -1,6 +1,7 @@
 var Babysitter = require('./controllers/Babysitter')
   , MCRouting = require('./controllers/MCRouting')
   , Tips = require('./controllers/Tips')
+  , SGCreateFromMobileController = require('./controllers/SGCreateFromMobileController')
   , SGCollaborativeStoryController = require('./controllers/SGCollaborativeStoryController')
   , SGCompetitiveStoryController = require('./controllers/SGCompetitiveStoryController')
   , SGMostLikelyToController = require('./controllers/SGMostLikelyToController')
@@ -25,10 +26,12 @@ module.exports = function(app) {
       babysitter.campaignIdParentNoBsBeta);
   });
 
-  // For players who accidentally opt-out, we give them the option to get back into
-  // the game through an opt-in in a different campaign that continues the drip
-  // messages on the same day. For babysitter invites sent from this campaign,
-  // we'll push the players to the Beta w/ Babysitter campaign.
+  /**
+   * For players who accidentally opt-out, we give them the option to get back into
+   * the game through an opt-in in a different campaign that continues the drip
+   * messages on the same day. For babysitter invites sent from this campaign,
+   * we'll push the players to the Beta w/ Babysitter campaign.
+   */
   app.post('/pregnancy-text/send-babysitter-invite-resurrected', function(req, res) {
     babysitter.onSendBabysitterInvite(req, res, babysitter.optinParentOnInviteBeta,
       babysitter.campaignIdParentNoBsResurrected);
@@ -38,7 +41,7 @@ module.exports = function(app) {
    * Route user to appropriate opt-in path based on their answer to a Y/N question.
    */
   app.post('/ds-routing/yes-no-gateway', function(req, res) {
-    mcRouting.yesNoGateway(req, res); 
+    mcRouting.yesNoGateway(req, res);
   });
 
   /**
@@ -62,6 +65,15 @@ module.exports = function(app) {
    */
   app.post('/ds/tips', function(req, res) {
     tips.deliverTips(req, res);
+  });
+
+  /**
+   * Guides users through creating an SMS multiplayer game from mobile.
+   */
+  app.post('/sms-multiplayer-game/mobile-create', function(request, response) {
+    var host = request.get('host');
+    var controller = new SGCreateFromMobileController(app, host);
+    controller.processRequest(request, response);
   });
 
   /**
