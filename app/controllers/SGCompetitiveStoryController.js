@@ -16,6 +16,12 @@ var NEXT_LEVEL_START_DELAY = 30000;
 // Delay (in milliseconds) for end game universal group messages to be sent.
 var UNIVERSAL_GROUP_ENDGAME_MESSAGE_DELAY = 23000;
 
+// Maximum number of players that can be invited into a game.
+var MAX_PLAYERS_TO_INVITE = 3;
+
+// Minimum number of players required to create and/or start a game.
+var MIN_PLAYERS_TO_INVITE = 1;
+
 var SGCompetitiveStoryController = function(app) {
   this.app = app;
   this.gameMappingModel = require('../models/sgGameMapping')(app);
@@ -77,17 +83,20 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     betas: []
   };
 
-  for (var i = 0; i < 3; i++) {
-    gameDoc.betas[i] = {};
-    gameDoc.betas[i].invite_accepted = false;
-
+  for (var i = 0; i < MAX_PLAYERS_TO_INVITE; i++) {
     var phone = messageHelper.getNormalizedPhone(request.body['beta_mobile_' + i]);
-    if (!messageHelper.isValidPhone(phone)) {
-      response.send(406, 'Invalid beta phone number.');
-      return false;
+    if (messageHelper.isValidPhone(phone)) {
+      var idx = gameDoc.betas.length;
+      gameDoc.betas[idx] = {};
+      gameDoc.betas[idx].invite_accepted = false;
+      gameDoc.betas[idx].phone = phone;
     }
+  }
 
-    gameDoc.betas[i].phone = phone;
+  // If number of betas invited doesn't meet the minimum number, then error.
+  if (gameDoc.betas.length < MIN_PLAYERS_TO_INVITE) {
+    response.send(406, 'Not enough players. You need to invite at least %d to start.', MIN_PLAYERS_TO_INVITE);
+    return false;
   }
 
   // Save game to the database.

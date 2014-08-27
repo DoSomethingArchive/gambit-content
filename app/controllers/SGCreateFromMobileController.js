@@ -254,12 +254,12 @@ SGCreateFromMobileController.prototype._updateDocument = function(configDoc) {
 SGCreateFromMobileController.prototype._removeDocument = function(phone) {
   this.configModel.remove(
     {alpha_mobile: phone},
-    function(err, num, raw) {
+    function(err, num) {
       if (err) {
         console.log(err);
       }
       else {
-        console.log(raw);
+        console.log('Number of create config documents removed: ' + num);
       }
     }
   );
