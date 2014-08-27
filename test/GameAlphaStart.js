@@ -1,6 +1,7 @@
 var assert = require('assert')
   , express = require('express')
   , emitter = require('../app/eventEmitter')
+  , messageHelper = require('../app/lib/userMessageHelpers')
   , SGCompetitiveStoryController = require('../app/controllers/SGCompetitiveStoryController')
   ;
 
@@ -95,7 +96,7 @@ describe('Alpha-Start Game:', function() {
     })
 
     it('should add sg_user doc for alpha user', function(done) {
-      var phone = gameController.getNormalizedPhone(alphaPhone);
+      var phone = messageHelper.getNormalizedPhone(alphaPhone);
       gameController.userModel.find({phone: phone}, function(err, docs) {
         if (!err && docs.length > 0) done();
         else assert(false);
@@ -103,7 +104,7 @@ describe('Alpha-Start Game:', function() {
     })
 
     it('should add sg_user doc for beta0 user', function(done) {
-      var phone = gameController.getNormalizedPhone(betaPhone0);
+      var phone = messageHelper.getNormalizedPhone(betaPhone0);
       gameController.userModel.find({phone: phone}, function(err, docs) {
         if (!err && docs.length > 0) done();
         else assert(false);
@@ -111,7 +112,7 @@ describe('Alpha-Start Game:', function() {
     })
 
     it('should add sg_user doc for beta1 user', function(done) {
-      var phone = gameController.getNormalizedPhone(betaPhone1);
+      var phone = messageHelper.getNormalizedPhone(betaPhone1);
       gameController.userModel.find({phone: phone}, function(err, docs) {
         if (!err && docs.length > 0) done();
         else assert(false);
@@ -119,7 +120,7 @@ describe('Alpha-Start Game:', function() {
     })
 
     it('should add sg_user doc for beta2 user', function(done) {
-      var phone = gameController.getNormalizedPhone(betaPhone2);
+      var phone = messageHelper.getNormalizedPhone(betaPhone2);
       gameController.userModel.find({phone: phone}, function(err, docs) {
         if (!err && docs.length > 0) done();
         else assert(false);
@@ -146,7 +147,7 @@ describe('Alpha-Start Game:', function() {
     var request;
     var phone = _phone;
     before(function() {
-      phone = gameController.getNormalizedPhone(phone);
+      phone = messageHelper.getNormalizedPhone(phone);
       request = {
         body: {
           phone: phone,
@@ -191,7 +192,7 @@ describe('Alpha-Start Game:', function() {
   describe('Alpha starting the game', function() {
     var request;
     before(function() {
-      phone = gameController.getNormalizedPhone(alphaPhone);
+      phone = messageHelper.getNormalizedPhone(alphaPhone);
       request = {
         body: {
           phone: phone,
@@ -219,10 +220,10 @@ describe('Alpha-Start Game:', function() {
             var phone = doc.players_current_status[i].phone;
             var currPath = doc.players_current_status[i].opt_in_path;
 
-            var aPhone = gameController.getNormalizedPhone(alphaPhone);
-            var b0Phone = gameController.getNormalizedPhone(betaPhone0);
-            var b1Phone = gameController.getNormalizedPhone(betaPhone1);
-            var b2Phone = gameController.getNormalizedPhone(betaPhone2);
+            var aPhone = messageHelper.getNormalizedPhone(alphaPhone);
+            var b0Phone = messageHelper.getNormalizedPhone(betaPhone0);
+            var b1Phone = messageHelper.getNormalizedPhone(betaPhone1);
+            var b2Phone = messageHelper.getNormalizedPhone(betaPhone2);
 
             if (phone == b0Phone || phone == b2Phone) {
               assert(false, 'Beta users sent message when they shouldn\'t have received any.');
@@ -244,10 +245,10 @@ describe('Alpha-Start Game:', function() {
 
   after(function() {
     // Remove all test documents
-    gameController.userModel.remove({phone: gameController.getNormalizedPhone(alphaPhone)}, function() {});
-    gameController.userModel.remove({phone: gameController.getNormalizedPhone(betaPhone0)}, function() {});
-    gameController.userModel.remove({phone: gameController.getNormalizedPhone(betaPhone1)}, function() {});
-    gameController.userModel.remove({phone: gameController.getNormalizedPhone(betaPhone2)}, function() {});
+    gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(alphaPhone)}, function() {});
+    gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone0)}, function() {});
+    gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone1)}, function() {});
+    gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone2)}, function() {});
     gameController.gameMappingModel.remove({_id: gameMappingId}, function() {});
     gameController.gameModel.remove({_id: gameId}, function() {});
   })
