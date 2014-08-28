@@ -5,6 +5,8 @@
  *   string resourceName
  *   function findProject(POST body, response)
  *   function retrieveEmail(POST body, response)
+ *   function retrieveFirstName(POST body, response)
+ *   function retrieveLocation(POST body, response)
  *   function submitDonation(POST body, response)
  * }
  */
@@ -36,7 +38,7 @@ module.exports = function(app) {
    * Checks if controller implements the donations interface.
    *
    * @param controller
-   *   Controller object.
+   *   Controller class.
    *
    * @return boolean
    */
@@ -44,6 +46,8 @@ module.exports = function(app) {
     if (typeof controller.resourceName === 'string' &&
         typeof controller.findProject === 'function' &&
         typeof controller.retrieveEmail === 'function' &&
+        typeof controller.retrieveFirstName === 'function' &&
+        typeof controller.retrieveLocation === 'function' &&
         typeof controller.submitDonation === 'function') {
       return true;
     }
@@ -66,6 +70,26 @@ module.exports = function(app) {
     var controller = loadController(request.params.controller);
     if (controller) {
       controller.retrieveEmail(request.body, response);
+    }
+    else {
+      response.send(404, 'Request not available for: ' + request.params.controller);
+    }
+  });
+
+  app.post('/donations/:controller/retrieve-firstname', function(request, response) {
+    var controller = loadController(request.params.controller);
+    if (controller) {
+      controller.retrieveFirstName(request.body, response);
+    }
+    else {
+      response.send(404, 'Request not available for: ' + request.params.controller);
+    }
+  });
+
+  app.post('/donations/:controller/retrieve-location', function(request, response) {
+    var controller = loadController(request.params.controller);
+    if (controller) {
+      controller.retrieveLocation(request.body, response);
     }
     else {
       response.send(404, 'Request not available for: ' + request.params.controller);

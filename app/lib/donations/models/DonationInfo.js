@@ -16,6 +16,12 @@ function DonationInfo(app) {
     // User's email
     email: String,
 
+    // User's first name
+    first_name: String,
+
+    // User's state or zipcode - depends on campaign
+    location: String,
+
     // Project ID
     project_id: Number,
 
