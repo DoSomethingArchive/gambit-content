@@ -1,0 +1,4 @@
+{
+  "name" : "ds-donations",
+  "main" : "./donations.js"
+}
