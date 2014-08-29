@@ -7,6 +7,8 @@ build:
     - npm-test
 deploy:
   steps:
+    - heroku-deploy:
+        key-name: HEROKU_DEV_DEPLOY_KEY
     - desmondmorris/jitsu-deploy@1.0.0:
         username: $NODEJITSU_USERNAME
         password: $NODEJITSU_PASSWORD
