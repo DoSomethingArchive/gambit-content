@@ -1034,13 +1034,104 @@ SGCompetitiveStoryController.prototype.getUniqueIndivEndGameMessage = function(p
     return this.getEndLevelMessage(phone, 'END-GAME', storyConfig, gameDoc, 'answer');
   }
   else if (indivMessageEndGameFormat == 'rankings-within-group-based') {
-    // Accounting for possible future game logic.
-    console.log('This rankings-within-group-based endgame logic hasn\'t been developed yet.');
+    return this.getIndivRankEndGameMessage(phone, storyConfig, gameDoc);
   }
   else {
     console.log('This story has an indeterminate endgame format.');
   }
 };
+
+/**
+* Calculates the ranking of all players; returns appropriate ranking oip.
+* 
+* @param phone
+*   User's phone number.
+* @param storyConfig
+*   Object defining details for the current story.
+* @param gameDoc
+*   Document for the current game.
+* 
+* @return End game individual ranking opt-in-path. 
+*/
+
+SGCompetitiveStoryController.prototype.getIndivRankEndGameMessage = function(phone, storyConfig, gameDoc) {
+  // If we haven't run the ranking calculation before. 
+  if (!gameDoc.players_current_status[0].rank) {
+    var tempPlayerSuccessObject = {};
+    var indivLevelSuccessOips = storyConfig.story['END-GAME']['indiv-level-success-oips'];
+    // Counts the number of levels each user has successfully passed.
+    for (var i = 0; i < indivLevelSuccessOips.length; i++) {
+      for (var j = 0; j < gameDoc.story_results.length; j++) {
+        if (indivLevelSuccessOips[i] === gameDoc.story_results[j].oip) {
+          if (tempPlayerSuccessObject[gameDoc.story_results[j].phone]) {
+            tempPlayerSuccessObject[gameDoc.story_results[j].phone]++;
+          } 
+          else {
+            tempPlayerSuccessObject[gameDoc.story_results[j].phone] = 1;
+          }
+        }
+      }
+    }
+
+    // Converts success count into an array. 
+    var playerRankArray = [];
+    for (var playerPhoneNumber in tempPlayerSuccessObject) {
+      if (tempPlayerSuccessObject.hasOwnProperty(playerPhoneNumber)) {
+        var playerSuccessObject = {'phone': playerPhoneNumber, 'levelSuccesses': tempPlayerSuccessObject[playerPhoneNumber]};
+        playerRankArray.push(playerSuccessObject);
+      }
+    }
+
+    // Sorts players by number of levels successfully completed,
+    // least number of levels completed to most number of levels.
+    playerRankArray.sort(function(playerA, playerB){
+      if (playerA.levelSuccesses > playerB.levelSuccesses) {
+        return 1;
+      } 
+      else if (playerA.levelSuccesses < playerB.levelSuccesses) {
+        return -1;
+      } 
+      else {
+        return 0;
+      }
+    })
+
+    // Adds each user's rank to the gameDoc,
+    // indicating ties for first and second place.
+    for (var i = 1; i <= 4; i++) {
+      var nextRank = [];
+      nextRank.push(playerRankArray.pop());
+      // If there's a tie.
+      while ((playerRankArray.length) && (nextRank[0].levelSuccesses == playerRankArray.slice(-1)[0].levelSuccesses)) {
+        nextRank.push(playerRankArray.pop());
+      }
+      for (var j = 0; j < nextRank.length; j++) {
+        for (var k = 0; k < gameDoc.players_current_status.length; k++) {
+          if (gameDoc.players_current_status[k].phone == nextRank[j].phone) {
+            // We only record and signify ties for first and second place.
+            if (nextRank.length > 1 && (i === 1||i === 2)) {
+              gameDoc.players_current_status[k].rank = i + '-tied';
+            } 
+            else {
+              gameDoc.players_current_status[k].rank = i;  
+            }
+          }
+        }
+      }
+      if (!playerRankArray.length) {
+        break;
+      }
+    }
+  }
+  
+  // Returns the opt in path for the indicated user's ranking. 
+  for (var i = 0; i < gameDoc.players_current_status.length; i++) {
+    if (gameDoc.players_current_status[i].phone === phone) {
+      var playerRanking = gameDoc.players_current_status[i].rank;
+      return storyConfig.story['END-GAME']['indiv-rank-oips'][playerRanking];
+    }
+  } 
+}
 
 /**
  * 1) Checks the group endgame format of a game, on based on that:
