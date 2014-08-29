@@ -14,6 +14,11 @@ module.exports = function(app) {
   var tips = new Tips(app);
 
   /**
+   * Internal module for handling SMS donations.
+   */
+  require('./lib/donations')(app);
+
+  /**
    * Pregnancy Text 2014
    */
   app.post('/pregnancy-text/send-babysitter-invite-alpha', function(req, res) {
