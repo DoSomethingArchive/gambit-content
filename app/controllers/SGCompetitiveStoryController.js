@@ -122,9 +122,11 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     );
 
     // Build the condition to find existing documents for all invited players.
-    var findCondition = {$or: [{phone: doc.alpha_phone}]};
+    var alphaPhone = messageHelper.getNormalizedPhone(doc.alpha_phone);
+    var findCondition = {$or: [{phone: alphaPhone}]};
     for (var i = 0; i < doc.betas.length; i++) {
-      findCondition['$or'][i+1] = {phone:doc.betas[i].phone};
+      var betaPhone = messageHelper.getNormalizedPhone(doc.betas[i].phone);
+      findCondition['$or'][i+1] = {phone: betaPhone};
     }
 
     self.createdGameDoc = doc;
@@ -635,6 +637,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
       }
       // If the game is over, log it to stathat.
       if (gameEnded == true) {
+        gameDoc.game_ended = true;
         obj.app.stathatReport('Count', 'mobilecommons: end game: success', 1);
       }
 
@@ -643,7 +646,8 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
         {_id: doc._id},
         {$set: {
           players_current_status: gameDoc.players_current_status,
-          story_results: gameDoc.story_results
+          story_results: gameDoc.story_results,
+          game_ended: gameDoc.game_ended
         }},
         function(err, num, raw) {
           if (err) {
@@ -1125,17 +1129,84 @@ SGCompetitiveStoryController.prototype.getUniversalGroupEndGameMessage = functio
  *   Player documents for players leaving a game.
  */
 SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerDocs) {
-  // Find all games the players were previously in.
-  var findCondition = {$or: []};
-  for (var i = 0; i < playerDocs.length; i++) {
-    findCondition['$or'][i] = {_id: playerDocs.current_game_id};
+  if (playerDocs.length == 0) {
+    return;
   }
 
-  var promise = self.gameModel.find(findCondition).exec();
+  // Find all games the players were previously in.
+  var findCondition = {};
+  for (var i = 0; i < playerDocs.length; i++) {
+    if (typeof findCondition['$or'] === 'undefined') {
+      findCondition['$or'] = [];
+    }
+
+    findCondition['$or'][i] = {_id: playerDocs[i].current_game_id};
+  }
+
+  var self = this;
+  var promise = this.gameModel.find(findCondition).exec();
   promise.then(function(docs) {
-    // For each game still in-progress, message the users that the game has ended.
-    // Update game documents as having ended.
-    // Remove current_game_id for player who were in the ended games.
+
+    // For each game still in progress...
+    for (var i = 0; i < docs.length; i++) {
+
+      // Skip games that have already ended.
+      var gameDoc = docs[i];
+      if (gameDoc.game_ended) {
+        continue;
+      }
+
+      // Find users to message that the game has ended.
+      var players = [];
+      for (var j = 0; j < gameDoc.players_current_status.length; j++) {
+
+        // Do not send this message to the users who've been invited out of their game.
+        var doNotMessage = false;
+        for (var k = 0; k < playerDocs.length; k++) {
+          if (gameDoc.players_current_status[j].phone == playerDocs[k].phone) {
+            doNotMessage = true;
+            break;
+          }
+        }
+
+        if (!doNotMessage) {
+          players[players.length] = gameDoc.players_current_status[j].phone;
+        }
+      }
+
+      // Update game documents as having ended.
+      self.gameModel.update(
+        {_id: gameDoc._id},
+        {$set: {game_ended: true}},
+        function(err, num, raw) {
+          if (err) {
+            console.log(err);
+          }
+        }
+      );
+
+      // For players who were in ended games...
+      for (var playerIdx = 0; playerIdx < players.length; playerIdx++) {
+        // Remove the current_game_id from their document.
+        self.userModel.update(
+          {phone: players[playerIdx]},
+          {$unset: {current_game_id: 1}},
+          function(err, num, raw) {
+            if (err) {
+              console.log(err);
+            }
+          }
+        );
+
+        // Message them that the game has ended.
+        var args = {
+          alphaPhone: players[i],
+          alphaOptin: self.gameConfig[gameDoc.story_id].game_ended_from_exit_oip
+        };
+        self.scheduleMobileCommonsOptIn(args);
+      }
+    }
+
   });
 };
 
