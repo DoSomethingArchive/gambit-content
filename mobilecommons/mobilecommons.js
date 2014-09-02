@@ -88,6 +88,13 @@ exports.optout = function(args) {
     return;
   }
 
+  // Logs to debug opt-out on production deploy. Remove when resolved.
+  console.log('auth email: ' + authEmail);
+  console.log('auth pass: ' + authPass);
+  console.log('company key: ' + companyKey);
+  console.log('campaign id: ' + campaignId);
+  console.log('phone: ' + phone);
+
   // Send opt-out request
   request.post(
     url,
