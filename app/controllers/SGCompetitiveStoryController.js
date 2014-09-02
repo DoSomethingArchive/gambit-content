@@ -987,7 +987,6 @@ SGCompetitiveStoryController.prototype.getEndLevelGroupMessage = function(endLev
   // Evaluate which condition players match
   for (var i = 0; i < gameDoc.players_current_status.length; i++) {
     var phone = gameDoc.players_current_status[i].phone;
-
     for (var j = 0; j < storyItem.choices.length; j++) {
       var conditions = storyItem.choices[j].conditions;
       if (evaluateCondition(conditions, phone, gameDoc, 'answer')) {
@@ -1055,6 +1054,7 @@ SGCompetitiveStoryController.prototype.getUniqueIndivEndGameMessage = function(p
 */
 
 SGCompetitiveStoryController.prototype.getIndivRankEndGameMessage = function(phone, storyConfig, gameDoc) {
+  var gameDoc = gameDoc;
   // If we haven't run the ranking calculation before. 
   if (!gameDoc.players_current_status[0].rank) {
     var tempPlayerSuccessObject = {};
@@ -1065,7 +1065,7 @@ SGCompetitiveStoryController.prototype.getIndivRankEndGameMessage = function(pho
         if (indivLevelSuccessOips[i] === gameDoc.story_results[j].oip) {
           if (tempPlayerSuccessObject[gameDoc.story_results[j].phone]) {
             tempPlayerSuccessObject[gameDoc.story_results[j].phone]++;
-          } 
+          }
           else {
             tempPlayerSuccessObject[gameDoc.story_results[j].phone] = 1;
           }
@@ -1098,7 +1098,9 @@ SGCompetitiveStoryController.prototype.getIndivRankEndGameMessage = function(pho
 
     // Adds each user's rank to the gameDoc,
     // indicating ties for first and second place.
-    for (var i = 1; i <= 4; i++) {
+    var FIRST_PLACE_NUMERAL = 1;
+    var LAST_PLACE_NUMERAL = 4;
+    for (var i = FIRST_PLACE_NUMERAL; i <= LAST_PLACE_NUMERAL; i++) {
       var nextRank = [];
       nextRank.push(playerRankArray.pop());
       // If there's a tie.
@@ -1130,7 +1132,8 @@ SGCompetitiveStoryController.prototype.getIndivRankEndGameMessage = function(pho
       var playerRanking = gameDoc.players_current_status[i].rank;
       return storyConfig.story['END-GAME']['indiv-rank-oips'][playerRanking];
     }
-  } 
+  }
+  return false;
 }
 
 /**
