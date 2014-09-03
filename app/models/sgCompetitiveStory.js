@@ -15,7 +15,10 @@ var sgCompetitiveStory = function(app) {
       phone: String,
 
       // Last Mobile Commons opt in path delivered to the player
-      opt_in_path: Number
+      opt_in_path: Number,
+
+      // Player's rank, relevant for a ranked game
+      rank: {type: String, default: ''}
     }],
 
     // Tracks the results of the story as it gets played out
