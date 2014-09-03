@@ -40,6 +40,16 @@ DonorsChooseDonationController.prototype.resourceName = 'donors-choose';
  *   Express Response object
  */
 DonorsChooseDonationController.prototype.findProject = function(request, response) {
+  if (typeof request.query.id === 'undefined'
+      || typeof request.body.mobile === 'undefined'
+      || typeof request.body.location === 'undefined') {
+    response.send(406, 'Missing required params.');
+    return false;
+  }
+
+  // @todo Find Donor's Choose project based on the location given and other attributes.
+  // @todo Compose and send SMS message back to user with project details
+
   response.send();
 };
 
