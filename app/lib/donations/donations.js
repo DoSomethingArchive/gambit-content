@@ -3,11 +3,11 @@
  *
  * @interface {
  *   string resourceName
- *   function findProject(POST body, response)
- *   function retrieveEmail(POST body, response)
- *   function retrieveFirstName(POST body, response)
+ *   function findProject(request, response)
+ *   function retrieveEmail(request, response)
+ *   function retrieveFirstName(request, response)
  *   function retrieveLocation(request, response)
- *   function submitDonation(POST body, response)
+ *   function submitDonation(request, response)
  *   function setHost(hostname)
  * }
  */
@@ -62,7 +62,7 @@ module.exports = function(app) {
     var controller = loadController(request.params.controller);
     if (controller) {
       controller.setHost(request.get('host'));
-      controller.findProject(request.body, response);
+      controller.findProject(request, response);
     }
     else {
       response.send(404, 'Request not available for: ' + request.params.controller);
@@ -73,7 +73,7 @@ module.exports = function(app) {
     var controller = loadController(request.params.controller);
     if (controller) {
       controller.setHost(request.get('host'));
-      controller.retrieveEmail(request.body, response);
+      controller.retrieveEmail(request, response);
     }
     else {
       response.send(404, 'Request not available for: ' + request.params.controller);
@@ -84,7 +84,7 @@ module.exports = function(app) {
     var controller = loadController(request.params.controller);
     if (controller) {
       controller.setHost(request.get('host'));
-      controller.retrieveFirstName(request.body, response);
+      controller.retrieveFirstName(request, response);
     }
     else {
       response.send(404, 'Request not available for: ' + request.params.controller);
@@ -106,7 +106,7 @@ module.exports = function(app) {
     var controller = loadController(request.params.controller);
     if (controller) {
       controller.setHost(request.get('host'));
-      controller.submitDonation(request.body, response);
+      controller.submitDonation(request, response);
     }
     else {
       response.send(404, 'Request not available for: ' + request.params.controller);
