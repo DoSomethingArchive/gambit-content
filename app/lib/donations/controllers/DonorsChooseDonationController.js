@@ -34,12 +34,12 @@ DonorsChooseDonationController.prototype.resourceName = 'donors-choose';
  * Finds a project based on user input. Also responsible for sending the
  * project details back to the user.
  *
- * @param requestBody
- *   Params received through a POST request
+ * @param request
+ *   Express Request object
  * @param response
  *   Express Response object
  */
-DonorsChooseDonationController.prototype.findProject = function(requestBody, response) {
+DonorsChooseDonationController.prototype.findProject = function(request, response) {
   response.send();
 };
 
@@ -47,24 +47,24 @@ DonorsChooseDonationController.prototype.findProject = function(requestBody, res
  * Retrieves an email from the user to submit with the donation transaction. For
  * a Donors Choose donation, this is optional.
  *
- * @param requestBody
- *   Params received through a POST request
+ * @param request
+ *   Express Request object
  * @param response
  *   Express Response object
  */
-DonorsChooseDonationController.prototype.retrieveEmail = function(requestBody, response) {
+DonorsChooseDonationController.prototype.retrieveEmail = function(request, response) {
   response.send();
 };
 
 /**
  * Retrieves the users first name to submit with the donation transaction.
  *
- * @param requestBody
- *   Params received through a POST request
+ * @param request
+ *   Express Request object
  * @param response
  *   Express Response object
  */
-DonorsChooseDonationController.prototype.retrieveFirstName = function(requestBody, response) {
+DonorsChooseDonationController.prototype.retrieveFirstName = function(request, response) {
   response.send();
 };
 
@@ -73,7 +73,7 @@ DonorsChooseDonationController.prototype.retrieveFirstName = function(requestBod
  * this will be the user's state.
  *
  * @param request
- *   Express request object
+ *   Express Request object
  * @param response
  *   Express Response object
  */
@@ -104,19 +104,19 @@ DonorsChooseDonationController.prototype.retrieveLocation = function(request, re
   });
 
   // POST same data to find-project endpoint
-  this._post('find-project', info);
+  this._post('find-project?id=' + request.query.id, info);
   response.send();
 };
 
 /**
  * Submits a donation transaction to Donors Choose.
  *
- * @param requestBody
- *   Params received through a POST request
+ * @param request
+ *   Express Request object
  * @param response
  *   Express Response object
  */
-DonorsChooseDonationController.prototype.submitDonation = function(requestBody, response) {
+DonorsChooseDonationController.prototype.submitDonation = function(request, response) {
   response.send();
 };
 
