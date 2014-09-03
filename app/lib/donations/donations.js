@@ -6,8 +6,9 @@
  *   function findProject(POST body, response)
  *   function retrieveEmail(POST body, response)
  *   function retrieveFirstName(POST body, response)
- *   function retrieveLocation(POST body, response)
+ *   function retrieveLocation(request, response)
  *   function submitDonation(POST body, response)
+ *   function setHost(hostname)
  * }
  */
 var DonorsChoose = require('./controllers/DonorsChooseDonationController')
@@ -48,7 +49,8 @@ module.exports = function(app) {
         typeof controller.retrieveEmail === 'function' &&
         typeof controller.retrieveFirstName === 'function' &&
         typeof controller.retrieveLocation === 'function' &&
-        typeof controller.submitDonation === 'function') {
+        typeof controller.submitDonation === 'function' &&
+        typeof controller.setHost === 'function') {
       return true;
     }
     else {
@@ -59,6 +61,7 @@ module.exports = function(app) {
   app.post('/donations/:controller/find-project', function(request, response) {
     var controller = loadController(request.params.controller);
     if (controller) {
+      controller.setHost(request.get('host'));
       controller.findProject(request.body, response);
     }
     else {
@@ -69,6 +72,7 @@ module.exports = function(app) {
   app.post('/donations/:controller/retrieve-email', function(request, response) {
     var controller = loadController(request.params.controller);
     if (controller) {
+      controller.setHost(request.get('host'));
       controller.retrieveEmail(request.body, response);
     }
     else {
@@ -79,6 +83,7 @@ module.exports = function(app) {
   app.post('/donations/:controller/retrieve-firstname', function(request, response) {
     var controller = loadController(request.params.controller);
     if (controller) {
+      controller.setHost(request.get('host'));
       controller.retrieveFirstName(request.body, response);
     }
     else {
@@ -89,7 +94,8 @@ module.exports = function(app) {
   app.post('/donations/:controller/retrieve-location', function(request, response) {
     var controller = loadController(request.params.controller);
     if (controller) {
-      controller.retrieveLocation(request.body, response);
+      controller.setHost(request.get('host'));
+      controller.retrieveLocation(request, response);
     }
     else {
       response.send(404, 'Request not available for: ' + request.params.controller);
@@ -99,6 +105,7 @@ module.exports = function(app) {
   app.post('/donations/:controller/submit-donation', function(request, response) {
     var controller = loadController(request.params.controller);
     if (controller) {
+      controller.setHost(request.get('host'));
       controller.submitDonation(request.body, response);
     }
     else {
