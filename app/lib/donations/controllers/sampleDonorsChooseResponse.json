@@ -1,0 +1,870 @@
+// REQUEST TO TEST TRANSACTIONS URL:
+// https://apiqasecure.donorschoose.org/common/json_api.html?
+
+{APIKey: 'DONORSCHOOSE',
+apipassword: 'helpClassrooms!',
+action: 'token'}
+
+RESPONSE FROM TEST TRANSACTIONS URL:
+{
+    "statusCode": "0",
+    "statusDescription": "success",
+    "token": "b0081108-f484-4342-997c-39a338181ec2"
+}
+
+REQUEST: 
+
+http://api.donorschoose.org/common/json_feed.html?state=NC&subject4=-4&sortBy=0&APIKey=DONORSCHOOSE
+
+JSON RESPONSE:
+
+HTTP/1.1 200 OK
+Content-Language:en-US
+Date:Wed, 03 Sep 2014 18:55:28 GMT
+Vary:X-Forwarded-For
+Content-Length:29609
+Expires:Wed, 03 Sep 2014 19:05:28 GMT
+Last-Modified:Wed, 03 Sep 2014 18:55:28 GMT
+Content-Type:text/plain;charset=UTF-8
+Server:nginx
+Cache-Control:private, max-age=600
+
+{
+  "searchTerms": "Math &amp; Science &gt; NC",
+  "searchURL": "http://www.donorschoose.org/donors/search.html?sortBy=0&state=NC&subject4=-4&utm_source=api&utm_medium=feed&utm_content=searchlink&utm_campaign=DONORSCHOOSE",
+  "totalProposals": "424",
+  "index": "0",
+  "max": "10",
+  "breadcrumb": [
+    [
+      "state",
+      "NC",
+      "North Carolina"
+    ],
+    [
+      "subject4",
+      "-4",
+      "Math &amp; Science"
+    ],
+    [
+      "sortBy",
+      "0",
+      ""
+    ]
+  ],
+  "proposals": [
+    {
+      "id": "1274755",
+      "proposalURL": "http://www.donorschoose.org/project/we-are-sinking-without-a-sink/1274755/?utm_source=api&utm_medium=feed&utm_content=bodylink&utm_campaign=DONORSCHOOSE",
+      "fundURL": "https://secure.donorschoose.org/donors/givingCart.html?proposalid=1274755&donationAmount=45&utm_source=api&utm_medium=feed&utm_content=fundlink&utm_campaign=DONORSCHOOSE",
+      "imageURL": "http://s3.donorschoose.net/donorschoose-storage/dc_prod/images/user/small/u1160618_sm.jpg?timestamp=1407258336311",
+      "thumbImageURL": "http://s3.donorschoose.net/donorschoose-storage/dc_prod/images/user/thumbnail/u1160618_thmb.jpg?timestamp=1407258336311",
+      "title": "We are Sinking Without a Sink!",
+      "shortDescription": "My philosophy on education involves a lot of guided inquiry based learning. I love when students come up with their own questions and design their own experiments. Lack of readily accessible water...",
+      "fulfillmentTrailer": "My students need a sink in the science classroom with access to hot and cold water.",
+      "snippets": [],
+      "percentFunded": "94",
+      "numDonors": "38",
+      "costToComplete": "104.78",
+      "matchingFund": {
+        "matchingKey": "",
+        "name": "",
+        "type": "",
+        "logoURL": "",
+        "faqURL": "",
+        "amount": "0.00",
+        "description": ""
+      },
+      "totalPrice": "1741.28",
+      "freeShipping": "false",
+      "teacherId": "1160618",
+      "teacherName": "Mrs. Clemmons",
+      "gradeLevel": {
+        "id": "3",
+        "name": "Grades 6-8"
+      },
+      "povertyLevel": "&#034;&#034;",
+      "teacherTypes": [],
+      "schoolTypes": [
+        {
+          "id": 12,
+          "name": "Horace Mann (partner)"
+        },
+        {
+          "id": 15,
+          "name": "Kia (partner)"
+        },
+        {
+          "id": 1,
+          "name": "Charter"
+        }
+      ],
+      "schoolName": "Endeavor Charter School",
+      "schoolUrl": "http://www.donorschoose.org/school/endeavor-charter-school/95468/",
+      "city": "Raleigh",
+      "zip": "27615-2971",
+      "state": "NC",
+      "stateFullName": "North Carolina",
+      "latitude": "35.897274000000000",
+      "longitude": "-78.653245000000000",
+      "zone": {
+        "id": "301",
+        "name": "North Carolina"
+      },
+      "subject": {
+        "id": "6",
+        "name": "Applied Sciences",
+        "groupId": "4"
+      },
+      "additionalSubjects": [
+        {
+          "id": "7",
+          "name": "Environmental Science",
+          "groupId": "4"
+        }
+      ],
+      "resource": {
+        "id": "3",
+        "name": "Supplies"
+      },
+      "expirationDate": "2014-12-05",
+      "fundingStatus": "needs funding"
+    },
+    {
+      "id": "1308644",
+      "proposalURL": "http://www.donorschoose.org/project/references-for-budding-naturalists/1308644/?utm_source=api&utm_medium=feed&utm_content=bodylink&utm_campaign=DONORSCHOOSE",
+      "fundURL": "https://secure.donorschoose.org/donors/givingCart.html?proposalid=1308644&donationAmount=45&utm_source=api&utm_medium=feed&utm_content=fundlink&utm_campaign=DONORSCHOOSE",
+      "imageURL": "http://s3.donorschoose.net/donorschoose-storage/dc_prod/images/user/small/u308036_sm.jpg?timestamp=1254002060000",
+      "thumbImageURL": "http://s3.donorschoose.net/donorschoose-storage/dc_prod/images/user/thumbnail/u308036_thmb.jpg?timestamp=1254002060000",
+      "title": "References for Budding Naturalists",
+      "shortDescription": "Science is something that happens in the world around us. At our school, we love to explore the outdoors and make observations in the natural world. Then, we research our discoveries and share...",
+      "fulfillmentTrailer": "My students need a reference collection to help us identify insects, birds (feathers, nests), mammals (tracks, skulls, sign), plants, fungi, and other specimens we find.",
+      "snippets": [],
+      "percentFunded": "85",
+      "numDonors": "15",
+      "costToComplete": "106.02",
+      "matchingFund": {
+        "matchingKey": "",
+        "name": "",
+        "type": "",
+        "logoURL": "",
+        "faqURL": "",
+        "amount": "0.00",
+        "description": ""
+      },
+      "teacherFFPromoCodeFund": {
+        "eligible": "true",
+        "deadline": "September 2",
+        "code": "INSPIRE",
+        "matchingKey": "teacherProm5",
+        "name": "Matching Donor",
+        "type": "PROMO",
+        "logoURL": "",
+        "description": ""
+      },
+      "totalPrice": "685.11",
+      "freeShipping": "true",
+      "teacherId": "308036",
+      "teacherName": "Ms. Tugurian",
+      "gradeLevel": {
+        "id": "2",
+        "name": "Grades 3-5"
+      },
+      "povertyLevel": "High Poverty",
+      "teacherTypes": [],
+      "schoolTypes": [
+        {
+          "id": 14,
+          "name": "Kia (partner)"
+        },
+        {
+          "id": 12,
+          "name": "Horace Mann (partner)"
+        },
+        {
+          "id": 3,
+          "name": "Special Education"
+        }
+      ],
+      "schoolName": "Forest View Elementary School",
+      "schoolUrl": "http://www.donorschoose.org/school/forest-view-elementary-school/1442/",
+      "city": "Durham",
+      "zip": "27705-7906",
+      "state": "NC",
+      "stateFullName": "North Carolina",
+      "latitude": "35.989339000000000",
+      "longitude": "-78.988647000000000",
+      "zone": {
+        "id": "301",
+        "name": "North Carolina"
+      },
+      "subject": {
+        "id": "7",
+        "name": "Environmental Science",
+        "groupId": "4"
+      },
+      "additionalSubjects": [
+        {
+          "id": "6",
+          "name": "Applied Sciences",
+          "groupId": "4"
+        }
+      ],
+      "resource": {
+        "id": "1",
+        "name": "Books"
+      },
+      "expirationDate": "2014-12-24",
+      "fundingStatus": "needs funding"
+    },
+    {
+      "id": "1247768",
+      "proposalURL": "http://www.donorschoose.org/project/abc-rug-for-readers/1247768/?utm_source=api&utm_medium=feed&utm_content=bodylink&utm_campaign=DONORSCHOOSE",
+      "fundURL": "https://secure.donorschoose.org/donors/givingCart.html?proposalid=1247768&donationAmount=45&utm_source=api&utm_medium=feed&utm_content=fundlink&utm_campaign=DONORSCHOOSE",
+      "imageURL": "http://s3.donorschoose.net/donorschoose-storage/dc_prod/images/user/small/u2063195_sm.jpg?timestamp=1394744560406",
+      "thumbImageURL": "http://s3.donorschoose.net/donorschoose-storage/dc_prod/images/user/thumbnail/u2063195_thmb.jpg?timestamp=1394744560406",
+      "title": "ABC Rug for Readers",
+      "shortDescription": "Can you imagine listening to a teacher read a story and sitting on the tile floor? Kindergartners need a place to gather for calendar, instruction, reading and sharing. This is a home away from...",
+      "fulfillmentTrailer": "My students need a classroom rug so they can feel comfortable as they gather during instruction.",
+      "snippets": [],
+      "percentFunded": "68",
+      "numDonors": "12",
+      "costToComplete": "175.89",
+      "matchingFund": {
+        "matchingKey": "",
+        "name": "",
+        "type": "",
+        "logoURL": "",
+        "faqURL": "",
+        "amount": "0.00",
+        "description": ""
+      },
+      "totalPrice": "548.95",
+      "freeShipping": "true",
+      "teacherId": "2063195",
+      "teacherName": "Mrs. McIntyre",
+      "gradeLevel": {
+        "id": "1",
+        "name": "Grades PreK-2"
+      },
+      "povertyLevel": "Highest Poverty",
+      "teacherTypes": [],
+      "schoolTypes": [
+        {
+          "id": 14,
+          "name": "Kia (partner)"
+        },
+        {
+          "id": 15,
+          "name": "Kia (partner)"
+        }
+      ],
+      "schoolName": "Hampton Leadership Academy",
+      "schoolUrl": "http://www.donorschoose.org/school/hampton-leadership-academy/20777/",
+      "city": "Greensboro",
+      "zip": "27401",
+      "state": "NC",
+      "stateFullName": "North Carolina",
+      "latitude": "36.066067000000000",
+      "longitude": "-79.754463000000000",
+      "zone": {
+        "id": "301",
+        "name": "North Carolina"
+      },
+      "subject": {
+        "id": "10",
+        "name": "Literacy",
+        "groupId": "6"
+      },
+      "additionalSubjects": [
+        {
+          "id": "8",
+          "name": "Mathematics",
+          "groupId": "4"
+        }
+      ],
+      "resource": {
+        "id": "6",
+        "name": "Other"
+      },
+      "expirationDate": "2014-10-21",
+      "fundingStatus": "needs funding"
+    },
+    {
+      "id": "1245683",
+      "proposalURL": "http://www.donorschoose.org/project/easeling-our-way-into-1st-grade/1245683/?utm_source=api&utm_medium=feed&utm_content=bodylink&utm_campaign=DONORSCHOOSE",
+      "fundURL": "https://secure.donorschoose.org/donors/givingCart.html?proposalid=1245683&donationAmount=45&utm_source=api&utm_medium=feed&utm_content=fundlink&utm_campaign=DONORSCHOOSE",
+      "imageURL": "http://s3.donorschoose.net/donorschoose-storage/dc_prod/images/user/small/u2364881_sm.jpg?timestamp=1403056199591",
+      "thumbImageURL": "http://s3.donorschoose.net/donorschoose-storage/dc_prod/images/user/thumbnail/u2364881_thmb.jpg?timestamp=1403056199591",
+      "title": "&#034;Easel&#034;ing&#034; Our Way Into 1st Grade",
+      "shortDescription": "Remember the thrill of learning to read for the very first time? Both scary and exciting, first graders come in ready and eager to learn how to tackle books! My job as their teacher is to give...",
+      "fulfillmentTrailer": "My students need a small easel for reading groups, vowel tubs for short/long vowel practice and foam dice for different math and word work games.",
+      "snippets": [],
+      "percentFunded": "65",
+      "numDonors": "5",
+      "costToComplete": "59.85",
+      "matchingFund": {
+        "matchingKey": "",
+        "name": "",
+        "type": "",
+        "logoURL": "",
+        "faqURL": "",
+        "amount": "0.00",
+        "description": ""
+      },
+      "totalPrice": "169.85",
+      "freeShipping": "true",
+      "teacherId": "2364881",
+      "teacherName": "Mrs. Langford",
+      "gradeLevel": {
+        "id": "1",
+        "name": "Grades PreK-2"
+      },
+      "povertyLevel": "&#034;&#034;",
+      "teacherTypes": [],
+      "schoolTypes": [
+        {
+          "id": 12,
+          "name": "Horace Mann (partner)"
+        }
+      ],
+      "schoolName": "Cameron Park Elementary School",
+      "schoolUrl": "http://www.donorschoose.org/school/cameron-park-elementary-school/3177/",
+      "city": "Hillsborough",
+      "zip": "27278-2571",
+      "state": "NC",
+      "stateFullName": "North Carolina",
+      "latitude": "36.077386000000000",
+      "longitude": "-79.094613000000000",
+      "zone": {
+        "id": "301",
+        "name": "North Carolina"
+      },
+      "subject": {
+        "id": "10",
+        "name": "Literacy",
+        "groupId": "6"
+      },
+      "additionalSubjects": [
+        {
+          "id": "8",
+          "name": "Mathematics",
+          "groupId": "4"
+        }
+      ],
+      "resource": {
+        "id": "3",
+        "name": "Supplies"
+      },
+      "expirationDate": "2014-10-17",
+      "fundingStatus": "needs funding"
+    },
+    {
+      "id": "1255301",
+      "proposalURL": "http://www.donorschoose.org/project/cozy-place-to-snuggle-with-a-book/1255301/?utm_source=api&utm_medium=feed&utm_content=bodylink&utm_campaign=DONORSCHOOSE",
+      "fundURL": "https://secure.donorschoose.org/donors/givingCart.html?proposalid=1255301&donationAmount=45&utm_source=api&utm_medium=feed&utm_content=fundlink&utm_campaign=DONORSCHOOSE",
+      "imageURL": "http://s3.donorschoose.net/donorschoose-storage/dc_prod/images/user/small/u299792_sm.jpg?timestamp=1364261153013",
+      "thumbImageURL": "http://s3.donorschoose.net/donorschoose-storage/dc_prod/images/user/thumbnail/u299792_thmb.jpg?timestamp=1364261153013",
+      "title": "Cozy Place To Snuggle With A Book",
+      "shortDescription": "Think about this... Your teacher asks the class to join him/her in the meeting area for a lesson. The only problem is that the meeting area is on the hard tile and very uncomfortable. How can you...",
+      "fulfillmentTrailer": "My students need a rug so they can sit comfortably on the floor.",
+      "snippets": [],
+      "percentFunded": "85",
+      "numDonors": "7",
+      "costToComplete": "74.14",
+      "matchingFund": {
+        "matchingKey": "",
+        "name": "",
+        "type": "",
+        "logoURL": "",
+        "faqURL": "",
+        "amount": "0.00",
+        "description": ""
+      },
+      "totalPrice": "509.79",
+      "freeShipping": "true",
+      "teacherId": "299792",
+      "teacherName": "Mrs. Wall",
+      "gradeLevel": {
+        "id": "2",
+        "name": "Grades 3-5"
+      },
+      "povertyLevel": "&#034;&#034;",
+      "teacherTypes": [
+        {
+          "id": 5,
+          "name": "SONIC Teacher"
+        }
+      ],
+      "schoolTypes": [
+        {
+          "id": 12,
+          "name": "Horace Mann (partner)"
+        },
+        {
+          "id": 15,
+          "name": "Kia (partner)"
+        },
+        {
+          "id": 1,
+          "name": "Charter"
+        }
+      ],
+      "schoolName": "Orange Charter School",
+      "schoolUrl": "http://www.donorschoose.org/school/orange-charter-school/28868/",
+      "city": "Hillsborough",
+      "zip": "27278-8557",
+      "state": "NC",
+      "stateFullName": "North Carolina",
+      "latitude": "36.063036817641311",
+      "longitude": "-79.080299040622800",
+      "zone": {
+        "id": "301",
+        "name": "North Carolina"
+      },
+      "subject": {
+        "id": "10",
+        "name": "Literacy",
+        "groupId": "6"
+      },
+      "additionalSubjects": [
+        {
+          "id": "8",
+          "name": "Mathematics",
+          "groupId": "4"
+        }
+      ],
+      "resource": {
+        "id": "6",
+        "name": "Other"
+      },
+      "expirationDate": "2014-11-08",
+      "fundingStatus": "needs funding"
+    },
+    {
+      "id": "1286181",
+      "proposalURL": "http://www.donorschoose.org/project/rolling-out-a-new-year-with-play-doh/1286181/?utm_source=api&utm_medium=feed&utm_content=bodylink&utm_campaign=DONORSCHOOSE",
+      "fundURL": "https://secure.donorschoose.org/donors/givingCart.html?proposalid=1286181&donationAmount=45&utm_source=api&utm_medium=feed&utm_content=fundlink&utm_campaign=DONORSCHOOSE",
+      "imageURL": "http://s3.donorschoose.net/donorschoose-storage/dc_prod/images/user/small/u5036_sm.jpg?timestamp=1288267216000",
+      "thumbImageURL": "http://s3.donorschoose.net/donorschoose-storage/dc_prod/images/user/thumbnail/u5036_thmb.jpg?timestamp=1288267216000",
+      "title": "Rolling Out a New Year With Play-Doh",
+      "shortDescription": "Happy new year! My students are beginning a new year in school and for most their first year in school. I teach a marvelously diverse kindergarten class in a title I school. Our school serves only...",
+      "fulfillmentTrailer": "My students need packs of Play-Doh, alphabet and number stampers, Play-Doh letters N fun art toy, and Play-Doh learn about shapes and numbers.",
+      "snippets": [],
+      "percentFunded": "63",
+      "numDonors": "2",
+      "costToComplete": "71.22",
+      "matchingFund": {
+        "matchingKey": "HASBRO15",
+        "name": "Play-Doh",
+        "type": "DYI",
+        "logoURL": "http://cdn.donorschoose.net/images/logos/hasbro_135.gif",
+        "faqURL": "http://www.donorschoose.org/donors/matching_grant_popup.html?matchingKey=HASBRO15",
+        "amount": "97.22",
+        "description": "<p align=\"center\"><img src=\"http://cdn.donorschoose.net/images/logos/hasbro_250.gif\"></p>\r\n\r\n<p>You can bring this project to life at half the cost.</p>\r\n\r\n<p>The PLAY-DOH Brand will fund 50% of this project when generous individuals like you fund the rest. It's a great way to double the impact of your donation.</p>\r\n\r\n<p>At Hasbro, we know that imaginative play is an excellent way to improve basic skills in math, science and language arts.</p>\r\n\r\n<p>In fact, we think play that stimulates the imagination is the best kind of play and encourage it whenever possible. Which is why we're happy to support projects requesting PLAY-DOH Brand modeling compound on DonorsChoose.org.</p>\r\n\r\n<p><a target=\"_blank\" href=\"../donors/search.html?matchingId=766\">See all projects eligible for this match offer.</a></p>\r\n\r\n<p>PLAY-DOH is a trademark of Hasbro, Inc. Used with permission. Â©2014 Hasbro.</p>"
+      },
+      "totalPrice": "194.44",
+      "freeShipping": "false",
+      "teacherId": "5036",
+      "teacherName": "Mrs. Wilson",
+      "gradeLevel": {
+        "id": "1",
+        "name": "Grades PreK-2"
+      },
+      "povertyLevel": "Highest Poverty",
+      "teacherTypes": [
+        {
+          "id": 5,
+          "name": "SONIC Teacher"
+        },
+        {
+          "id": 7,
+          "name": "U.S. Cellular Teacher"
+        }
+      ],
+      "schoolTypes": [
+        {
+          "id": 12,
+          "name": "Horace Mann (partner)"
+        }
+      ],
+      "schoolName": "South Lexington School",
+      "schoolUrl": "http://www.donorschoose.org/school/south-lexington-school/2623/",
+      "city": "Lexington",
+      "zip": "27292-5299",
+      "state": "NC",
+      "stateFullName": "North Carolina",
+      "latitude": "35.797655000000000",
+      "longitude": "-80.262316000000000",
+      "zone": {
+        "id": "301",
+        "name": "North Carolina"
+      },
+      "subject": {
+        "id": "10",
+        "name": "Literacy",
+        "groupId": "6"
+      },
+      "additionalSubjects": [
+        {
+          "id": "8",
+          "name": "Mathematics",
+          "groupId": "4"
+        }
+      ],
+      "resource": {
+        "id": "6",
+        "name": "Other"
+      },
+      "expirationDate": "2014-12-14",
+      "fundingStatus": "needs funding"
+    },
+    {
+      "id": "1273588",
+      "proposalURL": "http://www.donorschoose.org/project/stools-you-can-use/1273588/?utm_source=api&utm_medium=feed&utm_content=bodylink&utm_campaign=DONORSCHOOSE",
+      "fundURL": "https://secure.donorschoose.org/donors/givingCart.html?proposalid=1273588&donationAmount=45&utm_source=api&utm_medium=feed&utm_content=fundlink&utm_campaign=DONORSCHOOSE",
+      "imageURL": "http://s3.donorschoose.net/donorschoose-storage/dc_prod/images/user/small/u1818736_sm.jpg?timestamp=1407175498067",
+      "thumbImageURL": "http://s3.donorschoose.net/donorschoose-storage/dc_prod/images/user/thumbnail/u1818736_thmb.jpg?timestamp=1407175498067",
+      "title": "Stools You Can Use!",
+      "shortDescription": "My students work hard to collaborate in a 1:1 technology setting. Despite being a physically small school, we are seeing an incredible amount of growth in our community. The students in our area...",
+      "fulfillmentTrailer": "My students need six stools.",
+      "snippets": [],
+      "percentFunded": "62",
+      "numDonors": "4",
+      "costToComplete": "130.91",
+      "matchingFund": {
+        "matchingKey": "",
+        "name": "",
+        "type": "",
+        "logoURL": "",
+        "faqURL": "",
+        "amount": "0.00",
+        "description": ""
+      },
+      "totalPrice": "340.91",
+      "freeShipping": "false",
+      "teacherId": "1818736",
+      "teacherName": "Mr. J.",
+      "gradeLevel": {
+        "id": "4",
+        "name": "Grades 9-12"
+      },
+      "povertyLevel": "High Poverty",
+      "teacherTypes": [
+        {
+          "id": 5,
+          "name": "SONIC Teacher"
+        }
+      ],
+      "schoolTypes": [
+        {
+          "id": 14,
+          "name": "Kia (partner)"
+        },
+        {
+          "id": 12,
+          "name": "Horace Mann (partner)"
+        },
+        {
+          "id": 15,
+          "name": "Kia (partner)"
+        },
+        {
+          "id": 13,
+          "name": "CenturyLink"
+        },
+        {
+          "id": 6,
+          "name": "Vocational Education"
+        },
+        {
+          "id": 3,
+          "name": "Special Education"
+        },
+        {
+          "id": 2,
+          "name": "Adult Education"
+        }
+      ],
+      "schoolName": "Dixon High School",
+      "schoolUrl": "http://www.donorschoose.org/school/dixon-high-school/1738/",
+      "city": "Holly Ridge",
+      "zip": "28445-7759",
+      "state": "NC",
+      "stateFullName": "North Carolina",
+      "latitude": "34.587378000000000",
+      "longitude": "-77.479119000000000",
+      "zone": {
+        "id": "301",
+        "name": "North Carolina"
+      },
+      "subject": {
+        "id": "7",
+        "name": "Environmental Science",
+        "groupId": "4"
+      },
+      "additionalSubjects": [
+        {
+          "id": "16",
+          "name": "College &amp; Career Prep",
+          "groupId": "5"
+        }
+      ],
+      "resource": {
+        "id": "3",
+        "name": "Supplies"
+      },
+      "expirationDate": "2014-12-04",
+      "fundingStatus": "needs funding"
+    },
+    {
+      "id": "1291864",
+      "proposalURL": "http://www.donorschoose.org/project/let-me-mimio-teach/1291864/?utm_source=api&utm_medium=feed&utm_content=bodylink&utm_campaign=DONORSCHOOSE",
+      "fundURL": "https://secure.donorschoose.org/donors/givingCart.html?proposalid=1291864&donationAmount=45&utm_source=api&utm_medium=feed&utm_content=fundlink&utm_campaign=DONORSCHOOSE",
+      "imageURL": "http://s3.donorschoose.net/donorschoose-storage/dc_prod/images/user/small/u486890_sm.jpg?timestamp=1408415126374",
+      "thumbImageURL": "http://s3.donorschoose.net/donorschoose-storage/dc_prod/images/user/thumbnail/u486890_thmb.jpg?timestamp=1408415126374",
+      "title": "Let Me &#034;Mimio&#034; Teach",
+      "shortDescription": "My students want to learn but mostly through technology that is interactive. Dr. Seuss wrote \"Oh the Places You''ll Go\" and he gave us a sense of \"dreams\" and \"imagination\". As we embrace this as...",
+      "fulfillmentTrailer": "My students need a Mimio Teach interactive whiteboard for many reasons including expanding, creating, and inspiring learning.",
+      "snippets": [],
+      "percentFunded": "82",
+      "numDonors": "11",
+      "costToComplete": "303.14",
+      "matchingFund": {
+        "matchingKey": "",
+        "name": "",
+        "type": "",
+        "logoURL": "",
+        "faqURL": "",
+        "amount": "0.00",
+        "description": ""
+      },
+      "totalPrice": "1651.55",
+      "freeShipping": "false",
+      "teacherId": "486890",
+      "teacherName": "Mrs. Bryan",
+      "gradeLevel": {
+        "id": "2",
+        "name": "Grades 3-5"
+      },
+      "povertyLevel": "High Poverty",
+      "teacherTypes": [
+        {
+          "id": 9,
+          "name": "NEA Member"
+        }
+      ],
+      "schoolTypes": [
+        {
+          "id": 14,
+          "name": "Kia (partner)"
+        },
+        {
+          "id": 12,
+          "name": "Horace Mann (partner)"
+        },
+        {
+          "id": 15,
+          "name": "Kia (partner)"
+        },
+        {
+          "id": 3,
+          "name": "Special Education"
+        }
+      ],
+      "schoolName": "Startown Elementary School",
+      "schoolUrl": "http://www.donorschoose.org/school/startown-elementary-school/2446/",
+      "city": "Newton",
+      "zip": "28658-8603",
+      "state": "NC",
+      "stateFullName": "North Carolina",
+      "latitude": "35.638893000000000",
+      "longitude": "-81.269791000000000",
+      "zone": {
+        "id": "301",
+        "name": "North Carolina"
+      },
+      "subject": {
+        "id": "8",
+        "name": "Mathematics",
+        "groupId": "4"
+      },
+      "additionalSubjects": [
+        {
+          "id": "10",
+          "name": "Literacy",
+          "groupId": "6"
+        }
+      ],
+      "resource": {
+        "id": "2",
+        "name": "Technology"
+      },
+      "expirationDate": "2014-12-18",
+      "fundingStatus": "needs funding"
+    },
+    {
+      "id": "1265312",
+      "proposalURL": "http://www.donorschoose.org/project/hands-on-science-specimen-center/1265312/?utm_source=api&utm_medium=feed&utm_content=bodylink&utm_campaign=DONORSCHOOSE",
+      "fundURL": "https://secure.donorschoose.org/donors/givingCart.html?proposalid=1265312&donationAmount=45&utm_source=api&utm_medium=feed&utm_content=fundlink&utm_campaign=DONORSCHOOSE",
+      "imageURL": "http://s3.donorschoose.net/donorschoose-storage/dc_prod/images/user/small/u840763_sm.jpg?timestamp=1372694985721",
+      "thumbImageURL": "http://s3.donorschoose.net/donorschoose-storage/dc_prod/images/user/thumbnail/u840763_thmb.jpg?timestamp=1372694985721",
+      "title": "Hands-On Science Specimen Center",
+      "shortDescription": "\"Every kid starts out as a natural-scientist, then we beat it out of them. A few trickle through the system with their wonder and enthusiasm for science intact\", said Carl Sagan. Science isn't a...",
+      "fulfillmentTrailer": "My students need hands-on Science Specimen Centers to learn about different animals.",
+      "snippets": [],
+      "percentFunded": "60",
+      "numDonors": "51",
+      "costToComplete": "106.68",
+      "matchingFund": {
+        "matchingKey": "",
+        "name": "",
+        "type": "",
+        "logoURL": "",
+        "faqURL": "",
+        "amount": "0.00",
+        "description": ""
+      },
+      "totalPrice": "265.45",
+      "freeShipping": "true",
+      "teacherId": "840763",
+      "teacherName": "Mrs. Craven",
+      "gradeLevel": {
+        "id": "1",
+        "name": "Grades PreK-2"
+      },
+      "povertyLevel": "High Poverty",
+      "teacherTypes": [
+        {
+          "id": 5,
+          "name": "SONIC Teacher"
+        }
+      ],
+      "schoolTypes": [
+        {
+          "id": 12,
+          "name": "Horace Mann (partner)"
+        },
+        {
+          "id": 3,
+          "name": "Special Education"
+        }
+      ],
+      "schoolName": "Southwood Elementary School",
+      "schoolUrl": "http://www.donorschoose.org/school/southwood-elementary-school/2613/",
+      "city": "Lexington",
+      "zip": "27292-6253",
+      "state": "NC",
+      "stateFullName": "North Carolina",
+      "latitude": "35.731680000000000",
+      "longitude": "-80.265867000000000",
+      "zone": {
+        "id": "301",
+        "name": "North Carolina"
+      },
+      "subject": {
+        "id": "7",
+        "name": "Environmental Science",
+        "groupId": "4"
+      },
+      "additionalSubjects": [
+        {
+          "id": "10",
+          "name": "Literacy",
+          "groupId": "6"
+        }
+      ],
+      "resource": {
+        "id": "3",
+        "name": "Supplies"
+      },
+      "expirationDate": "2014-11-29",
+      "fundingStatus": "needs funding"
+    },
+    {
+      "id": "1258764",
+      "proposalURL": "http://www.donorschoose.org/project/technology-to-personalize-our-learning/1258764/?utm_source=api&utm_medium=feed&utm_content=bodylink&utm_campaign=DONORSCHOOSE",
+      "fundURL": "https://secure.donorschoose.org/donors/givingCart.html?proposalid=1258764&donationAmount=45&utm_source=api&utm_medium=feed&utm_content=fundlink&utm_campaign=DONORSCHOOSE",
+      "imageURL": "http://s3.donorschoose.net/donorschoose-storage/dc_prod/images/user/small/u1873012_sm.jpg?timestamp=1405444573865",
+      "thumbImageURL": "http://s3.donorschoose.net/donorschoose-storage/dc_prod/images/user/thumbnail/u1873012_thmb.jpg?timestamp=1405444573865",
+      "title": "Technology to Personalize our Learning",
+      "shortDescription": "My students deserve to have the opportunity to access, engage, and express themselves through the use of technology. Through personalized learning they will be motivated to learn and explore....",
+      "fulfillmentTrailer": "My students need access to laptops in order to collaborate and conduct research in pairs or small groups. As of now we only have two desktops for 24 students.",
+      "snippets": [],
+      "percentFunded": "62",
+      "numDonors": "7",
+      "costToComplete": "288.87",
+      "matchingFund": {
+        "matchingKey": "",
+        "name": "",
+        "type": "",
+        "logoURL": "",
+        "faqURL": "",
+        "amount": "0.00",
+        "description": ""
+      },
+      "totalPrice": "755.05",
+      "freeShipping": "false",
+      "teacherId": "1873012",
+      "teacherName": "Ms. DaSilva",
+      "gradeLevel": {
+        "id": "2",
+        "name": "Grades 3-5"
+      },
+      "povertyLevel": "Highest Poverty",
+      "teacherTypes": [],
+      "schoolTypes": [
+        {
+          "id": 14,
+          "name": "Kia (partner)"
+        },
+        {
+          "id": 12,
+          "name": "Horace Mann (partner)"
+        },
+        {
+          "id": 15,
+          "name": "Kia (partner)"
+        },
+        {
+          "id": 4,
+          "name": "Magnet"
+        },
+        {
+          "id": 3,
+          "name": "Special Education"
+        }
+      ],
+      "schoolName": "Tuckaseegee Elementary School",
+      "schoolUrl": "http://www.donorschoose.org/school/tuckaseegee-elementary-school/1690/",
+      "city": "Charlotte",
+      "zip": "28214-2756",
+      "state": "NC",
+      "stateFullName": "North Carolina",
+      "latitude": "35.250130000000000",
+      "longitude": "-80.944046000000000",
+      "zone": {
+        "id": "301",
+        "name": "North Carolina"
+      },
+      "subject": {
+        "id": "8",
+        "name": "Mathematics",
+        "groupId": "4"
+      },
+      "additionalSubjects": [
+        {
+          "id": "16",
+          "name": "College &amp; Career Prep",
+          "groupId": "5"
+        }
+      ],
+      "resource": {
+        "id": "2",
+        "name": "Technology"
+      },
+      "expirationDate": "2014-11-21",
+      "fundingStatus": "needs funding"
+    }
+  ]
+}

@@ -18,7 +18,12 @@ var mobilecommons = require('../../../../mobilecommons/mobilecommons')
   , messageHelper = require('../../userMessageHelpers')
   , requestHttp = require('request')
   , dc_config = require('../config/donorschoose')
-  ;
+  , Q = require('q');
+
+var donorsChooseApiKey = (process.env.DONORSCHOOSE_API_KEY || null),
+    donorsChooseApiPassword = (process.env.DONORSCHOOSE_API_PASSWORD || null),
+    testDonorsChooseApiKey = 'DONORSCHOOSE',
+    testDonorsChooseApiPassword = 'helpClassrooms!';
 
 function DonorsChooseDonationController(app) {
   this.app = app;
@@ -49,8 +54,49 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
 
   // @todo Find Donor's Choose project based on the location given and other attributes.
   // @todo Compose and send SMS message back to user with project details
+  // @todo ask for the first name of the user, calling the retrieveFirstName() function
 
-  response.send();
+  var subjectFilter = 'subject4=-4'; // Subject code for all Math & Science subjects.
+  var stateFilter = 'state=' + request.body.location; // Code for state location filter. 
+  var urgencySort = 'sortBy=0'; // Search returns results ordered by urgency algorithm. 
+  var filterParams = stateFilter + '&' + subjectFilter + '&' + urgencySort + '&';
+  var requestUrlString = 'http://api.donorschoose.org/common/json_feed.html?' + filterParams + 'APIKey=' + donorsChooseApiKey;
+  var testRequestUrlString = 'http://api.donorschoose.org/common/json_feed.html?' + filterParams + 'APIKey=DONORSCHOOSE';
+
+  requestHttp.get(requestUrlString, function(error, response, data) {
+    if (!error) {
+      var donorsChooseResponse = JSON.parse(data);
+      var proposals = donorsChooseResponse.proposals;
+
+      // Making sure that the project funded has a costToComplete >= $10.
+      // If none of the projects returned satisfy this condition;
+      // we'll select the project with the greatest cost to complete. 
+      for (var i = 0; i < proposals.length; i++) {
+        if (parseInt(proposals[i].costToComplete) >= 10) {
+          var selectedProposal = proposal[i];
+          break;
+        }
+        else if ((!selectedProposal)|| (proposals[i].costToComplete > selectedProposal.costToComplete)) {
+          var selectedProposal = proposal[i];
+        }
+      }
+
+      var proposalId = selectedProposal.id;
+      var teacherName = selectedProposal.teacherName;
+      var schoolName = selectedProposal.schoolName;
+      var schoolCity = selectedProposal.city;
+      var summary = selectedProposal.fulfillmentTrailer;
+
+      //here, we want to use the mobilecommons.profile_update() function here to update the profile
+
+      var responseText = 'Hi!' + teacherName + ' from ' + schoolName + ' in ' + schoolCity + 'needs to buy equipment to help teach science, technology, engineering and mathematics! Wanna spend 3M\'s money to help? Text back INFO to hear from' + teacherName '  about the project.'; // Subject to change.
+      response.send(responseText);
+    }
+    else {
+      response.send(404, 'Was unable to retrieve a response from DonorsChoose.org.');
+      return false;
+    }
+  });
 };
 
 /**
@@ -63,6 +109,8 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
  *   Express Response object
  */
 DonorsChooseDonationController.prototype.retrieveEmail = function(request, response) {
+
+  // Calls the submitDonation() function. Should 
   response.send();
 };
 
@@ -121,13 +169,58 @@ DonorsChooseDonationController.prototype.retrieveLocation = function(request, re
 /**
  * Submits a donation transaction to Donors Choose.
  *
- * @param request
+ * @param proposalId
  *   Express Request object
  * @param response
  *   Express Response object
  */
-DonorsChooseDonationController.prototype.submitDonation = function(request, response) {
-  response.send();
+DonorsChooseDonationController.prototype.submitDonation = function(apiKey, apiPassword, apiUrl, proposalId, donationAmount, donorEmail, donorFirstName, donorLastName) {
+
+  var productionDonateUrlString = 'https://apisecure.donorschoose.org/common/json_api.html?';
+  var testDonateUrlString = 'https://apiqasecure.donorschoose.org/common/json_api.html?';
+
+  // requestToken().then(requestTransaction(token), function(reason){});
+
+  // First request: obtains a unique token for the donation. 
+  var requestToken = function(){
+    // Creates promise-storing object.
+    var deferred = Q.defer();
+    var retrieveTokenParams = {
+      'APIKey': apiKey,
+      'apipassword': apiPassword, 
+      'action': 'token'
+    }
+    requestHttp.post(apiUrl, retrieveTokenParams, function(err, response, body) {
+      if (!err) {
+        deferred.resolve(body.token);
+      }
+      else {
+        deferred.reject('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, error: ', err);
+      }
+    });
+    return deferred.promise;
+  }
+
+  // Second request: donation transaction. 
+  var requestTransaction = function(token){
+    var donateParams = {
+      'APIKey': apikey,
+      'apipassword': apiPassword, 
+      'action': 'donate',
+      'token': token
+    }
+    requestHttp.post(apiUrl, donateParams, function(err, response, body) {
+      if (!err) {
+        console.log('Donation to proposal ' + proposalId + ' was successful! Response: ', response, 'Body: ', body);
+      }
+      else {
+        console.log('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, error: ', err);
+        return false;
+      }
+    })
+  }
+
+  requestToken().then(requestTransaction(token)); 
 };
 
 /**
