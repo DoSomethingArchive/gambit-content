@@ -99,10 +99,13 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     return false;
   }
 
+  // Closure variable to use through chanined callbacks.
+  var self = this;
+
   // Save game to the database.
   var game = this.gameModel.create(gameDoc);
-  var self = this;
   game.then(function(doc) {
+
     emitter.emit('game-created', doc);
     var config = self.gameConfig[doc.story_id];
 
@@ -118,13 +121,26 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
       }
     );
 
+    // Build the condition to find existing documents for all invited players.
+    var alphaPhone = messageHelper.getNormalizedPhone(doc.alpha_phone);
+    var findCondition = {$or: [{phone: alphaPhone}]};
+    for (var i = 0; i < doc.betas.length; i++) {
+      var betaPhone = messageHelper.getNormalizedPhone(doc.betas[i].phone);
+      findCondition['$or'][i+1] = {phone: betaPhone};
+    }
+
+    self.createdGameDoc = doc;
+    return self.userModel.find(findCondition).exec();
+
+  }).then(function(playerDocs) {
+
+    // End games that these players were previously in.
+    self._endGameFromPlayerExit(playerDocs);
+
     // Upsert the document for the alpha user.
     self.userModel.update(
-      {phone: doc.alpha_phone},
-      {$set: {
-        phone: doc.alpha_phone,
-        current_game_id: doc._id
-      }},
+      {phone: self.createdGameDoc.alpha_phone},
+      {$set: {phone: self.createdGameDoc.alpha_phone, current_game_id: self.createdGameDoc._id}},
       {upsert: true},
       function(err, num, raw) {
         if (err) {
@@ -134,22 +150,18 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
           emitter.emit('alpha-user-created');
           console.log(raw);
         }
-      }
-    );
+      });
 
     // Upsert documents for the beta users.
     var betaPhones = [];
-    doc.betas.forEach(function(value, index, set) {
+    self.createdGameDoc.betas.forEach(function(value, index, set) {
       // Extract phone number for Mobile Commons opt in.
       betaPhones[betaPhones.length] = value.phone;
 
       // Upsert user document for the beta.
       self.userModel.update(
         {phone: value.phone},
-        {$set: {
-          phone: value.phone,
-          current_game_id: doc._id
-        }},
+        {$set: {phone: value.phone, current_game_id: self.createdGameDoc._id}},
         {upsert: true},
         function(err, num, raw) {
           if (err) {
@@ -172,6 +184,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     };
 
     self.scheduleMobileCommonsOptIn(optinArgs);
+
   });
 
   response.send();
@@ -624,6 +637,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
       }
       // If the game is over, log it to stathat.
       if (gameEnded == true) {
+        gameDoc.game_ended = true;
         obj.app.stathatReport('Count', 'mobilecommons: end game: success', 1);
       }
 
@@ -632,7 +646,8 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
         {_id: doc._id},
         {$set: {
           players_current_status: gameDoc.players_current_status,
-          story_results: gameDoc.story_results
+          story_results: gameDoc.story_results,
+          game_ended: gameDoc.game_ended
         }},
         function(err, num, raw) {
           if (err) {
@@ -1199,7 +1214,95 @@ SGCompetitiveStoryController.prototype.getUniversalGroupEndGameMessage = functio
     }
   }
   return groupSuccessFailureOips[levelSuccessCounter];
-}
+};
+
+/**
+ * End a game due to a player exiting it.
+ *
+ * @param playerDocs
+ *   Player documents for players leaving a game.
+ */
+SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerDocs) {
+  if (playerDocs.length == 0) {
+    return;
+  }
+
+  // Find all games the players were previously in.
+  var findCondition = {};
+  for (var i = 0; i < playerDocs.length; i++) {
+    if (typeof findCondition['$or'] === 'undefined') {
+      findCondition['$or'] = [];
+    }
+
+    findCondition['$or'][i] = {_id: playerDocs[i].current_game_id};
+  }
+
+  var self = this;
+  var promise = this.gameModel.find(findCondition).exec();
+  promise.then(function(docs) {
+
+    // For each game still in progress...
+    for (var i = 0; i < docs.length; i++) {
+
+      // Skip games that have already ended.
+      var gameDoc = docs[i];
+      if (gameDoc.game_ended) {
+        continue;
+      }
+
+      // Find users to message that the game has ended.
+      var players = [];
+      for (var j = 0; j < gameDoc.players_current_status.length; j++) {
+
+        // Do not send this message to the users who've been invited out of their game.
+        var doNotMessage = false;
+        for (var k = 0; k < playerDocs.length; k++) {
+          if (gameDoc.players_current_status[j].phone == playerDocs[k].phone) {
+            doNotMessage = true;
+            break;
+          }
+        }
+
+        if (!doNotMessage) {
+          players[players.length] = gameDoc.players_current_status[j].phone;
+        }
+      }
+
+      // Update game documents as having ended.
+      self.gameModel.update(
+        {_id: gameDoc._id},
+        {$set: {game_ended: true}},
+        function(err, num, raw) {
+          if (err) {
+            console.log(err);
+          }
+        }
+      );
+
+      // For players who were in ended games...
+      for (var playerIdx = 0; playerIdx < players.length; playerIdx++) {
+        // Remove the current_game_id from their document.
+        self.userModel.update(
+          {phone: players[playerIdx]},
+          {$unset: {current_game_id: 1}},
+          function(err, num, raw) {
+            if (err) {
+              console.log(err);
+            }
+          }
+        );
+
+        // Message them that the game has ended.
+        var args = {
+          alphaPhone: players[i],
+          alphaOptin: self.gameConfig[gameDoc.story_id].game_ended_from_exit_oip
+        };
+        self.scheduleMobileCommonsOptIn(args);
+      }
+    }
+
+  });
+};
 
 /**
  * Schedule a message to be sent via a Mobile Commons opt in.
