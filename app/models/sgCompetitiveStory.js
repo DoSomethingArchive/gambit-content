@@ -15,7 +15,10 @@ var sgCompetitiveStory = function(app) {
       phone: String,
 
       // Last Mobile Commons opt in path delivered to the player
-      opt_in_path: Number
+      opt_in_path: Number,
+
+      // Player's rank, relevant for a ranked game
+      rank: {type: String, default: ''}
     }],
 
     // Tracks the results of the story as it gets played out
@@ -31,7 +34,10 @@ var sgCompetitiveStory = function(app) {
     }],
 
     // Whether or not game has started
-    game_started: {type: Boolean, default: false}
+    game_started: {type: Boolean, default: false},
+
+    // Whether or not game has ended
+    game_ended: {type: Boolean, default: false}
   });
 
   return app.getModel(modelName, schema);

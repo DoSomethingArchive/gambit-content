@@ -422,6 +422,7 @@
     "beta_join_ask_oip": 169845,
     "beta_wait_oip": 169847,
     "game_in_progress_oip": 169849,
+    "game_ended_from_exit_oip": 170805,
     "story_start_oip": 169859,
     "mobile_create": {
       "ask_beta_1_oip": 170433,

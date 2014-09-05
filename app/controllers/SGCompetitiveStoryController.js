@@ -99,10 +99,13 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     return false;
   }
 
+  // Closure variable to use through chanined callbacks.
+  var self = this;
+
   // Save game to the database.
   var game = this.gameModel.create(gameDoc);
-  var self = this;
   game.then(function(doc) {
+
     emitter.emit('game-created', doc);
     var config = self.gameConfig[doc.story_id];
 
@@ -118,13 +121,26 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
       }
     );
 
+    // Build the condition to find existing documents for all invited players.
+    var alphaPhone = messageHelper.getNormalizedPhone(doc.alpha_phone);
+    var findCondition = {$or: [{phone: alphaPhone}]};
+    for (var i = 0; i < doc.betas.length; i++) {
+      var betaPhone = messageHelper.getNormalizedPhone(doc.betas[i].phone);
+      findCondition['$or'][i+1] = {phone: betaPhone};
+    }
+
+    self.createdGameDoc = doc;
+    return self.userModel.find(findCondition).exec();
+
+  }).then(function(playerDocs) {
+
+    // End games that these players were previously in.
+    self._endGameFromPlayerExit(playerDocs);
+
     // Upsert the document for the alpha user.
     self.userModel.update(
-      {phone: doc.alpha_phone},
-      {$set: {
-        phone: doc.alpha_phone,
-        current_game_id: doc._id
-      }},
+      {phone: self.createdGameDoc.alpha_phone},
+      {$set: {phone: self.createdGameDoc.alpha_phone, current_game_id: self.createdGameDoc._id}},
       {upsert: true},
       function(err, num, raw) {
         if (err) {
@@ -134,22 +150,18 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
           emitter.emit('alpha-user-created');
           console.log(raw);
         }
-      }
-    );
+      });
 
     // Upsert documents for the beta users.
     var betaPhones = [];
-    doc.betas.forEach(function(value, index, set) {
+    self.createdGameDoc.betas.forEach(function(value, index, set) {
       // Extract phone number for Mobile Commons opt in.
       betaPhones[betaPhones.length] = value.phone;
 
       // Upsert user document for the beta.
       self.userModel.update(
         {phone: value.phone},
-        {$set: {
-          phone: value.phone,
-          current_game_id: doc._id
-        }},
+        {$set: {phone: value.phone, current_game_id: self.createdGameDoc._id}},
         {upsert: true},
         function(err, num, raw) {
           if (err) {
@@ -172,6 +184,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     };
 
     self.scheduleMobileCommonsOptIn(optinArgs);
+
   });
 
   response.send();
@@ -624,6 +637,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
       }
       // If the game is over, log it to stathat.
       if (gameEnded == true) {
+        gameDoc.game_ended = true;
         obj.app.stathatReport('Count', 'mobilecommons: end game: success', 1);
       }
 
@@ -632,7 +646,8 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
         {_id: doc._id},
         {$set: {
           players_current_status: gameDoc.players_current_status,
-          story_results: gameDoc.story_results
+          story_results: gameDoc.story_results,
+          game_ended: gameDoc.game_ended
         }},
         function(err, num, raw) {
           if (err) {
@@ -987,7 +1002,6 @@ SGCompetitiveStoryController.prototype.getEndLevelGroupMessage = function(endLev
   // Evaluate which condition players match
   for (var i = 0; i < gameDoc.players_current_status.length; i++) {
     var phone = gameDoc.players_current_status[i].phone;
-
     for (var j = 0; j < storyItem.choices.length; j++) {
       var conditions = storyItem.choices[j].conditions;
       if (evaluateCondition(conditions, phone, gameDoc, 'answer')) {
@@ -1034,13 +1048,108 @@ SGCompetitiveStoryController.prototype.getUniqueIndivEndGameMessage = function(p
     return this.getEndLevelMessage(phone, 'END-GAME', storyConfig, gameDoc, 'answer');
   }
   else if (indivMessageEndGameFormat == 'rankings-within-group-based') {
-    // Accounting for possible future game logic.
-    console.log('This rankings-within-group-based endgame logic hasn\'t been developed yet.');
+    return this.getIndivRankEndGameMessage(phone, storyConfig, gameDoc);
   }
   else {
     console.log('This story has an indeterminate endgame format.');
   }
 };
+
+/**
+* Calculates the ranking of all players; returns appropriate ranking oip.
+* 
+* @param phone
+*   User's phone number.
+* @param storyConfig
+*   Object defining details for the current story.
+* @param gameDoc
+*   Document for the current game.
+* 
+* @return End game individual ranking opt-in-path. 
+*/
+
+SGCompetitiveStoryController.prototype.getIndivRankEndGameMessage = function(phone, storyConfig, gameDoc) {
+  var gameDoc = gameDoc;
+  // If we haven't run the ranking calculation before. 
+  if (!gameDoc.players_current_status[0].rank) {
+    var tempPlayerSuccessObject = {};
+    var indivLevelSuccessOips = storyConfig.story['END-GAME']['indiv-level-success-oips'];
+    // Counts the number of levels each user has successfully passed.
+    for (var i = 0; i < indivLevelSuccessOips.length; i++) {
+      for (var j = 0; j < gameDoc.story_results.length; j++) {
+        if (indivLevelSuccessOips[i] === gameDoc.story_results[j].oip) {
+          if (tempPlayerSuccessObject[gameDoc.story_results[j].phone]) {
+            tempPlayerSuccessObject[gameDoc.story_results[j].phone]++;
+          }
+          else {
+            tempPlayerSuccessObject[gameDoc.story_results[j].phone] = 1;
+          }
+        }
+      }
+    }
+
+    // Converts success count into an array. 
+    var playerRankArray = [];
+    for (var playerPhoneNumber in tempPlayerSuccessObject) {
+      if (tempPlayerSuccessObject.hasOwnProperty(playerPhoneNumber)) {
+        var playerSuccessObject = {'phone': playerPhoneNumber, 'levelSuccesses': tempPlayerSuccessObject[playerPhoneNumber]};
+        playerRankArray.push(playerSuccessObject);
+      }
+    }
+
+    // Sorts players by number of levels successfully completed,
+    // least number of levels completed to most number of levels.
+    playerRankArray.sort(function(playerA, playerB){
+      if (playerA.levelSuccesses > playerB.levelSuccesses) {
+        return 1;
+      } 
+      else if (playerA.levelSuccesses < playerB.levelSuccesses) {
+        return -1;
+      } 
+      else {
+        return 0;
+      }
+    })
+
+    // Adds each user's rank to the gameDoc,
+    // indicating ties for first and second place.
+    var FIRST_PLACE_NUMERAL = 1;
+    var LAST_PLACE_NUMERAL = 4;
+    for (var i = FIRST_PLACE_NUMERAL; i <= LAST_PLACE_NUMERAL; i++) {
+      var nextRank = [];
+      nextRank.push(playerRankArray.pop());
+      // If there's a tie.
+      while ((playerRankArray.length) && (nextRank[0].levelSuccesses == playerRankArray.slice(-1)[0].levelSuccesses)) {
+        nextRank.push(playerRankArray.pop());
+      }
+      for (var j = 0; j < nextRank.length; j++) {
+        for (var k = 0; k < gameDoc.players_current_status.length; k++) {
+          if (gameDoc.players_current_status[k].phone == nextRank[j].phone) {
+            // We only record and signify ties for first and second place.
+            if (nextRank.length > 1 && (i === 1||i === 2)) {
+              gameDoc.players_current_status[k].rank = i + '-tied';
+            } 
+            else {
+              gameDoc.players_current_status[k].rank = i;  
+            }
+          }
+        }
+      }
+      if (!playerRankArray.length) {
+        break;
+      }
+    }
+  }
+  
+  // Returns the opt in path for the indicated user's ranking. 
+  for (var i = 0; i < gameDoc.players_current_status.length; i++) {
+    if (gameDoc.players_current_status[i].phone === phone) {
+      var playerRanking = gameDoc.players_current_status[i].rank;
+      return storyConfig.story['END-GAME']['indiv-rank-oips'][playerRanking];
+    }
+  }
+  return false;
+}
 
 /**
  * 1) Checks the group endgame format of a game, on based on that:
@@ -1105,7 +1214,95 @@ SGCompetitiveStoryController.prototype.getUniversalGroupEndGameMessage = functio
     }
   }
   return groupSuccessFailureOips[levelSuccessCounter];
-}
+};
+
+/**
+ * End a game due to a player exiting it.
+ *
+ * @param playerDocs
+ *   Player documents for players leaving a game.
+ */
+SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerDocs) {
+  if (playerDocs.length == 0) {
+    return;
+  }
+
+  // Find all games the players were previously in.
+  var findCondition = {};
+  for (var i = 0; i < playerDocs.length; i++) {
+    if (typeof findCondition['$or'] === 'undefined') {
+      findCondition['$or'] = [];
+    }
+
+    findCondition['$or'][i] = {_id: playerDocs[i].current_game_id};
+  }
+
+  var self = this;
+  var promise = this.gameModel.find(findCondition).exec();
+  promise.then(function(docs) {
+
+    // For each game still in progress...
+    for (var i = 0; i < docs.length; i++) {
+
+      // Skip games that have already ended.
+      var gameDoc = docs[i];
+      if (gameDoc.game_ended) {
+        continue;
+      }
+
+      // Find users to message that the game has ended.
+      var players = [];
+      for (var j = 0; j < gameDoc.players_current_status.length; j++) {
+
+        // Do not send this message to the users who've been invited out of their game.
+        var doNotMessage = false;
+        for (var k = 0; k < playerDocs.length; k++) {
+          if (gameDoc.players_current_status[j].phone == playerDocs[k].phone) {
+            doNotMessage = true;
+            break;
+          }
+        }
+
+        if (!doNotMessage) {
+          players[players.length] = gameDoc.players_current_status[j].phone;
+        }
+      }
+
+      // Update game documents as having ended.
+      self.gameModel.update(
+        {_id: gameDoc._id},
+        {$set: {game_ended: true}},
+        function(err, num, raw) {
+          if (err) {
+            console.log(err);
+          }
+        }
+      );
+
+      // For players who were in ended games...
+      for (var playerIdx = 0; playerIdx < players.length; playerIdx++) {
+        // Remove the current_game_id from their document.
+        self.userModel.update(
+          {phone: players[playerIdx]},
+          {$unset: {current_game_id: 1}},
+          function(err, num, raw) {
+            if (err) {
+              console.log(err);
+            }
+          }
+        );
+
+        // Message them that the game has ended.
+        var args = {
+          alphaPhone: players[i],
+          alphaOptin: self.gameConfig[gameDoc.story_id].game_ended_from_exit_oip
+        };
+        self.scheduleMobileCommonsOptIn(args);
+      }
+    }
+
+  });
+};
 
 /**
  * Schedule a message to be sent via a Mobile Commons opt in.

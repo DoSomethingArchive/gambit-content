@@ -637,7 +637,7 @@
       },
       "END-GAME": {
         "__comments": "test endgame group win / loss determination",
-        "indiv-message-end-game-format" : "individual-decision-based",
+        "indiv-message-end-game-format" : "rankings-within-group-based",
         "group-message-end-game-format" : "group-success-failure-based",
         "group-level-success-oips" : [
                 169873, 
@@ -655,6 +655,28 @@
             "4" : 40,
             "5" : 50,
             "6" : 60
+        },
+        "indiv-level-success-oips": [
+            169867,
+            169871,
+            169883,
+            169887,
+            169901,
+            169903,
+            169925,
+            169927,
+            169939,
+            169941,
+            169957,
+            169959
+        ],
+        "indiv-rank-oips": {
+            "1": 1,
+            "2": 2,
+            "3": 3,
+            "4": 4,
+            "1-tied": 11,
+            "2-tied": 22
         },
         "choices": [
           {
