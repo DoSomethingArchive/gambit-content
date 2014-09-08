@@ -427,7 +427,8 @@
       "ask_beta_1_oip": 170433,
       "ask_beta_2_oip": 170435,
       "invalid_mobile_oip": 170439,
-      "not_enough_players_oip": 170465
+      "not_enough_players_oip": 170465,
+      "remind_friends_to_join_to_start_game_oip": 171109
     },
     "story": {
       "169859": {

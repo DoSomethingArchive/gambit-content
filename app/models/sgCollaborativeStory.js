@@ -8,7 +8,7 @@ var sgCollaborativeStory = function(app) {
   var modelName = 'sg_collaborativestory_game';
 
   var schema = sgGameSchema;
-  // @TODO figure out how this schema's going to differ from the collaborative story
+  // @TODO figure out how this schema's going to differ from the competitive story
   schema.add({
     // Last Mobile Commons opt in path delivered to the alpha player
     alpha_current_opt_in_path: Number,

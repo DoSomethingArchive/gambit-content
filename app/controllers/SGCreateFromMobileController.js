@@ -94,7 +94,6 @@ function ErrorAbortPromiseChain() {
  *   Express response object.
  */
 SGCreateFromMobileController.prototype.processRequest = function(request, response) {
-
   if (typeof request.query.story_id === 'undefined'
       || typeof request.query.story_type === 'undefined'
       || typeof request.body.phone === 'undefined'
@@ -143,9 +142,12 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
     // If a document is found, then process the user message.
     else {
       var message = self.request.body.args;
-      // Create the game if we have at least one beta number
+      // Create the game if we have at least one beta number.
+      // If the alpha responds 'Y' to the 'create game now?' query. 
       if (messageHelper.isYesResponse(message)) {
         if (configDoc.beta_mobile_0 && messageHelper.isValidPhone(configDoc.beta_mobile_0)) {
+          // Reminds alpha that we've merely created the game; her friends need to join for it to start.
+          sendSMS(configDoc.alpha_mobile, self.storyConfig.mobile_create.remind_friends_to_join_to_start_game_oip);
           createGame(configDoc, self.host);
           self._removeDocument(configDoc.alpha_mobile);
         }

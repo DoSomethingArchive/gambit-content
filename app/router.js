@@ -76,7 +76,7 @@ module.exports = function(app) {
    * Guides users through creating an SMS multiplayer game from mobile.
    */
   app.post('/sms-multiplayer-game/mobile-create', function(request, response) {
-    var host = request.get('host');
+    var host = request.get('host'); // Retrieving hostname; Express parsing request.
     var controller = new SGCreateFromMobileController(app, host);
     controller.processRequest(request, response);
   });
