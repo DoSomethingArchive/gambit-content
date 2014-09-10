@@ -34,10 +34,14 @@ var sgCompetitiveStory = function(app) {
     }],
 
     // Whether or not game has started
-    game_started: {type: Boolean, default: false},
+    game_started: {type: Boolean, default: false}
 
+/** PR-138 EXCISION
+    ,
     // Whether or not game has ended
     game_ended: {type: Boolean, default: false}
+PR-138 EXCISION **/
+
   });
 
   return app.getModel(modelName, schema);
