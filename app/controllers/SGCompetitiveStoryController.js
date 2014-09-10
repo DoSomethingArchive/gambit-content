@@ -121,6 +121,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
       }
     );
 
+/** PR-138 EXCISION
     // Build the condition to find existing documents for all invited players.
     var alphaPhone = messageHelper.getNormalizedPhone(doc.alpha_phone);
     var findCondition = {$or: [{phone: alphaPhone}]};
@@ -136,12 +137,22 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
     // End games that these players were previously in.
     self._endGameFromPlayerExit(playerDocs);
+PR-138 EXCISION **/
 
     // Upsert the document for the alpha user.
+
     self.userModel.update(
+/** PR-138 EXCISION
       {phone: self.createdGameDoc.alpha_phone},
       {$set: {phone: self.createdGameDoc.alpha_phone, current_game_id: self.createdGameDoc._id}},
-      {upsert: true},
+PR-138 EXCISION **/
+      {phone: doc.alpha_phone},
+      {$set: {
+        phone: doc.alpha_phone,
+        current_game_id: doc._id
+      }},
+
+      {upsert: true}, // Creates a new doc when no doc matches the query criteria via '.update()'.
       function(err, num, raw) {
         if (err) {
           console.log(err);
@@ -154,14 +165,23 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
     // Upsert documents for the beta users.
     var betaPhones = [];
+/** PR-138 EXCISION
     self.createdGameDoc.betas.forEach(function(value, index, set) {
+PR-138 EXCISION **/
+    doc.betas.forEach(function(value, index, set) {
       // Extract phone number for Mobile Commons opt in.
       betaPhones[betaPhones.length] = value.phone;
 
       // Upsert user document for the beta.
       self.userModel.update(
         {phone: value.phone},
+/** PR-138 EXCISION
         {$set: {phone: value.phone, current_game_id: self.createdGameDoc._id}},
+PR-138 EXCISION **/
+        {$set: {
+          phone: value.phone,
+          current_game_id: doc._id
+        }},      
         {upsert: true},
         function(err, num, raw) {
           if (err) {
@@ -319,7 +339,7 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
   else {
     /**
      * Callback for when beta's game is found. Update persistent storage, send
-     * game-pending messages if all player haven't joined yet, or auto-start the
+     * game-pending messages if all players haven't joined yet, or auto-start the
      * game if all players are joined.
      */
     var execBetaJoinGame = function(obj, doc) {
@@ -330,7 +350,7 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
           alphaPhone: obj.request.body.phone,
           alphaOptin: obj.gameConfig[doc.story_id].game_in_progress_oip
         };
-
+        // Good place to notify betas about ALPHA SOLO keywords for opt-in-paths. 
         obj.scheduleMobileCommonsOptIn(args);
         obj.response.send();
         return;
@@ -637,17 +657,23 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
       }
       // If the game is over, log it to stathat.
       if (gameEnded == true) {
+/** PR-138 EXCISION
         gameDoc.game_ended = true;
+PR-138 EXCISION **/ 
         obj.app.stathatReport('Count', 'mobilecommons: end game: success', 1);
       }
+
 
       // Update the player's current status in the database.
       obj.gameModel.update(
         {_id: doc._id},
         {$set: {
           players_current_status: gameDoc.players_current_status,
+          story_results: gameDoc.story_results
+/** PR-138 EXCISION
           story_results: gameDoc.story_results,
           game_ended: gameDoc.game_ended
+PR-138 EXCISION **/
         }},
         function(err, num, raw) {
           if (err) {
@@ -757,7 +783,8 @@ SGCompetitiveStoryController.prototype.findUserGame = function(obj, onUserGameFo
   };
 
   /**
-   * 1) First step in the process of finding the user's game - find the user document.
+   * 1) First step in the process of finding the user's game - find the user document. 
+   * http://mongoosejs.com/docs/queries.html
    */
   obj.userModel.findOne(
     {phone: messageHelper.getNormalizedPhone(obj.request.body.phone)},
@@ -1222,6 +1249,9 @@ SGCompetitiveStoryController.prototype.getUniversalGroupEndGameMessage = functio
  * @param playerDocs
  *   Player documents for players leaving a game.
  */
+
+/** PR-138 EXCISION
+
 SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerDocs) {
   if (playerDocs.length == 0) {
     return;
@@ -1303,6 +1333,8 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
 
   });
 };
+
+PR-138 EXCISION **/ 
 
 /**
  * Schedule a message to be sent via a Mobile Commons opt in.
