@@ -29,7 +29,7 @@ function createGame(gameConfig, host) {
     form: {
       alpha_mobile: gameConfig.alpha_mobile,
       alpha_first_name: gameConfig.alpha_first_name,
-      beta_mobile_0: gameConfig.beta_mobile_0,
+      beta_mobile_0: gameConfig.beta_mobile_0, // This will be problematic in ALPHA-SOLO mode.
       beta_mobile_1: gameConfig.beta_mobile_1 ? gameConfig.beta_mobile_1 : '',
       beta_mobile_2: gameConfig.beta_mobile_2 ? gameConfig.beta_mobile_2 : '',
       story_id: gameConfig.story_id,
@@ -145,7 +145,8 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
       // Create the game if we have at least one beta number.
       // If the alpha responds 'Y' to the 'create game now?' query. 
       if (messageHelper.isYesResponse(message)) {
-        if (configDoc.beta_mobile_0 && messageHelper.isValidPhone(configDoc.beta_mobile_0)) {
+        // TO DO: remove check beta_mobile_0 check below IF we receive alpha-solo params. 
+        if (configDoc.beta_mobile_0 && messageHelper.isValidPhone(configDoc.beta_mobile_0)) { // Will be problematic for ALPHA-SOLO game play. Checks if beta_mobile_0 exists.
           // Reminds alpha that we've merely created the game; her friends need to join for it to start.
           sendSMS(configDoc.alpha_mobile, self.storyConfig.mobile_create.remind_friends_to_join_to_start_game_oip);
           createGame(configDoc, self.host);
