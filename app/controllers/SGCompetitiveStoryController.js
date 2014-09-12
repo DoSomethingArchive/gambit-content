@@ -80,7 +80,8 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     story_id: storyId,
     alpha_name: request.body.alpha_first_name,
     alpha_phone: alphaPhone,
-    betas: []
+    betas: [],
+    game_type: (request.body.game_type || '')
   };
 
   for (var i = 0; i < MAX_PLAYERS_TO_INVITE; i++) {
