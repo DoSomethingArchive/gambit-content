@@ -20,7 +20,7 @@ var UNIVERSAL_GROUP_ENDGAME_MESSAGE_DELAY = 23000;
 var MAX_PLAYERS_TO_INVITE = 3;
 
 // Minimum number of players required to create and/or start a game.
-var MIN_PLAYERS_TO_INVITE = 1;
+var MIN_PLAYERS_TO_INVITE = 0; 
 
 var SGCompetitiveStoryController = function(app) {
   this.app = app;
@@ -80,7 +80,8 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     story_id: storyId,
     alpha_name: request.body.alpha_first_name,
     alpha_phone: alphaPhone,
-    betas: []
+    betas: [],
+    game_type: (request.body.game_type || '')
   };
 
   for (var i = 0; i < MAX_PLAYERS_TO_INVITE; i++) {
@@ -94,6 +95,10 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   }
 
   // If number of betas invited doesn't meet the minimum number, then error.
+  // Note: given the current structure of mobile-to-mobile game creation, 
+  // this warning isn't too meaningful for alpha-solo mobile game creation, 
+  // since if the beta_mobile_x params are empty, they're populated by empty strings. 
+
   if (gameDoc.betas.length < MIN_PLAYERS_TO_INVITE) {
     response.send(406, 'Not enough players. You need to invite at least %d to start.', MIN_PLAYERS_TO_INVITE);
     return false;

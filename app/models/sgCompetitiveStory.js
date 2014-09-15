@@ -34,7 +34,11 @@ var sgCompetitiveStory = function(app) {
     }],
 
     // Whether or not game has started
-    game_started: {type: Boolean, default: false}
+    game_started: {type: Boolean, default: false},
+
+    // The type of game. Currently unassigned if type is default multiplayer.
+    // Assigned if game type is SOLO; or one player. 
+    game_type: {type: String, default: ''}
 
 /** PR-138 EXCISION
     ,
