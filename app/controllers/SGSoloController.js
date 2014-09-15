@@ -27,17 +27,16 @@ var SGSoloController = function(app, host) {
 	this.host = host;
 }
 
-var SGSoloController.prototype.processRequest = function(request, response) {
+SGSoloController.prototype.processRequest = function(request, response) {
 
 	if (typeof request.query.story_id === 'undefined'
 		|| typeof request.query.story_type === 'undefined'
-    || typeof request.body.phone === 'undefined'
-    || typeof request.body.args === 'undefined') {
+    || typeof request.body.phone === 'undefined') {
     response.send(406, 'Missing required params.');
     return false
   }
 
-  var payload = {
+  var createPayload = {
     form: {
       story_id: request.query.story_id,
       story_type: request.query.story_type,
@@ -50,18 +49,42 @@ var SGSoloController.prototype.processRequest = function(request, response) {
     }
   }
 
-  var url = 'http://' + this.host + '/sms-multiplayer-game/create'; 
+  var createUrl = 'http://' + this.host + '/sms-multiplayer-game/create'; 
 
-  requestHttp.post(url, doc, function(err, response, body) {
+  var startPayload = {
+    form: {
+      args: 'Y',
+      phone: request.body.phone, 
+      story_type: request.query.story_type
+    }
+  }
+
+  var startUrl = 'http://' + this.host + '/sms-multiplayer-game/alpha-start';
+
+  // POST request to create game. 
+  requestHttp.post(createUrl, createPayload, function(err, response, body) {
     if (err) {
       console.log(err);
     } 
-
-    if (response && response.statusCode) {
-      console.log('POST to ' + url + ' returned status code: ' + response.statusCode);
+    else {
+      if (response && response.statusCode) {
+        console.log('POST to ' + createUrl + ' returned status code: ' + response.statusCode);
+      } 
+      // POST request to start game, using the alphaStartGame function on the 
+      // SGCompetitiveStoryController. Keep in mind that when we develop 
+      // other gameplay structures (i.e., "collaborative", we'll need to refactor.)
+      requestHttp.post(startUrl, startPayload, function(err, response, body) {
+        console.log(startPayload)
+        if (err) {
+          console.log(err);
+        } 
+        else if (response && response.statusCode) {
+          console.log('POST to ' + startUrl + ' returned status code: ' + response.statusCode);
+        }
+      })
     }
   })
-
+  response.send();
 }
 
 module.exports = SGSoloController;
