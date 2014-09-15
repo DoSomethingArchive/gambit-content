@@ -20,7 +20,11 @@ var UNIVERSAL_GROUP_ENDGAME_MESSAGE_DELAY = 23000;
 var MAX_PLAYERS_TO_INVITE = 3;
 
 // Minimum number of players required to create and/or start a game.
-var MIN_PLAYERS_TO_INVITE = 0; 
+var MIN_PLAYERS_TO_INVITE = 0;
+
+// The time interval between when a multiplayer game is created and 
+// when the SOLO option message is sent to the alpha.
+var TIME_UNTIL_SOLO_MESSAGE_SENT = 300000; // Five minutes.
 
 var SGCompetitiveStoryController = function(app) {
   this.app = app;
@@ -54,6 +58,11 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     response.send(406, request.body);
     return false;
   }
+
+  // Allows us to use the .findUserGame(obj, onUserGameFound) 
+  // helper function function. A bit hacky, mark for refactoring.
+  this.request = { body : {} };
+  this.request.body.phone = request.body.alpha_mobile;
 
   // Story ID could be in either POST or GET param.
   var storyId = null;
@@ -213,6 +222,34 @@ PR-138 EXCISION **/
   });
 
   response.send();
+
+  // Sets a time interval until the alpha is sent the 
+  // message asking if she wants to play a SOLO game.
+
+  setTimeout(
+    function() {
+      self.findUserGame(self, checkIfAnyBetasHaveJoined)
+    }, 
+    TIME_UNTIL_SOLO_MESSAGE_SENT
+  )
+
+  function checkIfAnyBetasHaveJoined(obj, doc) {
+    var aBetaHasJoined = false;
+    for (var i = 0; i < doc.betas.length; i++) {
+      if (doc.betas[i].invite_accepted == true) {
+        aBetaHasJoined = true;s
+      }
+    }
+    // If no Betas have joined, ask the alpha if she wants to play SOLO. 
+    if (!aBetaHasJoined) {
+      var args = {
+        alphaPhone: doc.alpha_phone, 
+        alphaOptin: self.gameConfig[storyId.toString()].ask_solo_play
+      };
+      console.log('No betas have joined, alpha has been sent instructions for a SOLO game.')
+      mobilecommons.optin(args);
+    }
+  }
 
   // Log to stathat... should this be 1 or 1 for each person?
   this.app.stathatReport('Count', 'mobilecommons: create game request: success', 1);
@@ -740,7 +777,7 @@ SGCompetitiveStoryController.prototype.findUserGame = function(obj, onUserGameFo
     if (err) {
       console.log(err);
     }
-
+    console.log(doc);
     if (doc) {
       onUserGameFound(obj, doc);
     }

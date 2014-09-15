@@ -423,6 +423,7 @@
     "beta_wait_oip": 169847,
     "game_in_progress_oip": 169849,
     "story_start_oip": 169859,
+    "ask_solo_play" : 100000000000000,
     "mobile_create": {
       "ask_beta_1_oip": 170433,
       "ask_beta_2_oip": 170435,
