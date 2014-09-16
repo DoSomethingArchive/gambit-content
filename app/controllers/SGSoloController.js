@@ -80,6 +80,7 @@ SGSoloController.prototype.processRequest = function(request, response) {
         } 
         else if (response && response.statusCode) {
           console.log('POST to ' + startUrl + ' returned status code: ' + response.statusCode);
+          this.app.stathatReport('Count', 'mobilecommons: start solo game request: success', 1);
         }
       })
     }

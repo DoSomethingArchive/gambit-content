@@ -225,7 +225,6 @@ PR-138 EXCISION **/
 
   // Sets a time interval until the alpha is sent the 
   // message asking if she wants to play a SOLO game.
-
   setTimeout(
     function() {
       self.findUserGame(self, checkIfAnyBetasHaveJoined)
@@ -956,10 +955,11 @@ SGCompetitiveStoryController.prototype.startGame = function(gameConfig, gameDoc)
     }
   }
 
-  // Log for each player that has accepted the invite.
+  // Log for each player that has accepted the invite. 
+  // 'Value' produces logs of averages, re: https://www.stathat.com/help. 
   this.app.stathatReport('Value', 'mobilecommons: number of players', numPlayers);
 
-  // Log started gamed to stathat.
+  // Log started game to stathat. 
   this.app.stathatReport('Count', 'mobilecommons: start game request: success', 1);
   return gameDoc;
 };
