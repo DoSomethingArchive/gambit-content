@@ -32,7 +32,6 @@ module.exports = function(app, express) {
   // Create a single database connection to be used for the lifetime of the app.
   var dbConnection = mongoose.createConnection(app.get('database-uri'));
 
-
   /**
    * Global stathat reporting wrapper function
    *
@@ -51,7 +50,6 @@ module.exports = function(app, express) {
       function(status, json) {}
     );
   };
-
 
   /**
    * Helper function to retrieve a Mongoose model.
