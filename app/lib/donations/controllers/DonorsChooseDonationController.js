@@ -56,8 +56,9 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
   // @todo Compose and send SMS message back to user with project details
   // @todo ask for the first name of the user, calling the retrieveFirstName() function
 
-  var subjectFilter = 'subject4=-4'; // Subject code for all Math & Science subjects.
-  var stateFilter = 'state=' + request.body.location; // Code for state location filter. 
+  // var stateFilter = 'state=' + request.body.location; // Code for state location filter. Decided to currently use ZIP. 
+  var keywordFilter = 'keywords="' + request.body.location + '"' // General keyword filter, used here specifically for ZIP. 
+  var subjectFilter = 'subject4=-4'; // Subject code for all 'Math & Science' subjects.
   var urgencySort = 'sortBy=0'; // Search returns results ordered by urgency algorithm. 
   var filterParams = stateFilter + '&' + subjectFilter + '&' + urgencySort + '&';
   var requestUrlString = 'http://api.donorschoose.org/common/json_feed.html?' + filterParams + 'APIKey=' + donorsChooseApiKey;
@@ -90,6 +91,7 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
       //here, we want to use the mobilecommons.profile_update() function here to update the profile
 
       var responseText = 'Hi!' + teacherName + ' from ' + schoolName + ' in ' + schoolCity + 'needs to buy equipment to help teach science, technology, engineering and mathematics! Wanna spend 3M\'s money to help? Text back INFO to hear from' + teacherName '  about the project.'; // Subject to change.
+        //We're not responding via text, but instead assigning the values to the profile 
       response.send(responseText);
     }
     else {
@@ -150,6 +152,9 @@ DonorsChooseDonationController.prototype.retrieveLocation = function(request, re
     sendSMS(request.body.phone, config.invalid_state_oip);
     return false;
   }
+
+
+
 
   var info = {
     mobile: request.body.phone,
@@ -276,6 +281,10 @@ function isValidState(state) {
   else {
     return false;
   }
+}
+
+function isValidZipCode(zip) {
+  return /(^\d{5}$)|(^\d{5}-\d{4}$)/.test(zip);
 }
 
 /**
