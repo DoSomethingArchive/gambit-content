@@ -155,7 +155,6 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
       if (messageHelper.isYesResponse(message)) {
         if (configDoc.beta_mobile_0 && messageHelper.isValidPhone(configDoc.beta_mobile_0)) { // Will be problematic for ALPHA-SOLO game play. Checks if beta_mobile_0 exists.
           // Reminds alpha that we've merely created the game; her friends need to join for it to start.
-          sendSMS(configDoc.alpha_mobile, self.storyConfig.mobile_create.remind_friends_to_join_to_start_game_oip);
           createGame(configDoc, self.host);
           self._removeDocument(configDoc.alpha_mobile);
         }
