@@ -2,6 +2,7 @@
 
 /**
  * Guides users through creating an SMS multiplayer game from mobile.
+ * Not used for SOLO mobile game creation, though. (See SGSoloController.js.)
  */
 
 var mobilecommons = require('../../mobilecommons/mobilecommons')
@@ -102,6 +103,10 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
     return false;
   }
 
+  if (request.query.game_type) {
+    this.game_type = request.query.game_type;
+  } 
+
   // @todo When collaborative and most-likely-to games happen, set configs here.
   // Verify game type and id are valid.
   if (request.query.story_type == 'competitive-story') {
@@ -113,7 +118,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
   }
 
   if (typeof this.gameConfig[request.query.story_id] === 'undefined') {
-    response.send(406, 'Game config not setup for story ID: ' + request.query.story_id);
+    response.send(406, 'Game config not set up for story ID: ' + request.query.story_id);
     return false;
   }
 
@@ -127,14 +132,17 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
   var promiseConfig = queryConfig.exec();
   promiseConfig.then(function(configDoc) {
 
-    // If no document found, then create one.
+    // If no document found, then create one. This game creation config doc 
+    // should NOT be confused with the game doc, or the gameConfig. It's destroyed
+    // after the game is begun; it's used only for game creation. 
     if (configDoc == null) {
       // We don't ask for the first name yet, so just saving it as phone for now.
       var doc = {
         alpha_mobile: self.request.body.phone,
         alpha_first_name: self.request.body.phone,
         story_id: self.request.query.story_id,
-        story_type: self.request.query.story_type
+        story_type: self.request.query.story_type,
+        game_type: (self.request.query.game_type || '')
       };
 
       return self.configModel.create(doc);
@@ -145,7 +153,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
       // Create the game if we have at least one beta number.
       // If the alpha responds 'Y' to the 'create game now?' query. 
       if (messageHelper.isYesResponse(message)) {
-        if (configDoc.beta_mobile_0 && messageHelper.isValidPhone(configDoc.beta_mobile_0)) {
+        if (configDoc.beta_mobile_0 && messageHelper.isValidPhone(configDoc.beta_mobile_0)) { // Will be problematic for ALPHA-SOLO game play. Checks if beta_mobile_0 exists.
           // Reminds alpha that we've merely created the game; her friends need to join for it to start.
           sendSMS(configDoc.alpha_mobile, self.storyConfig.mobile_create.remind_friends_to_join_to_start_game_oip);
           createGame(configDoc, self.host);
@@ -210,7 +218,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
         // If user responded with something else, ask for a valid phone number.
         sendSMS(configDoc.alpha_mobile, self.storyConfig.mobile_create.invalid_mobile_oip);
       }
-    }
+    }  
 
   }, function(err) {
     // ErrorAbortPromiseChain is ok. Otherwise, log the error.

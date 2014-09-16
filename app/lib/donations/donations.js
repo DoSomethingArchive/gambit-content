@@ -3,11 +3,12 @@
  *
  * @interface {
  *   string resourceName
- *   function findProject(POST body, response)
- *   function retrieveEmail(POST body, response)
- *   function retrieveFirstName(POST body, response)
- *   function retrieveLocation(POST body, response)
- *   function submitDonation(POST body, response)
+ *   function findProject(request, response)
+ *   function retrieveEmail(request, response)
+ *   function retrieveFirstName(request, response)
+ *   function retrieveLocation(request, response)
+ *   function submitDonation(request, response)
+ *   function setHost(hostname)
  * }
  */
 var DonorsChoose = require('./controllers/DonorsChooseDonationController')
@@ -48,7 +49,8 @@ module.exports = function(app) {
         typeof controller.retrieveEmail === 'function' &&
         typeof controller.retrieveFirstName === 'function' &&
         typeof controller.retrieveLocation === 'function' &&
-        typeof controller.submitDonation === 'function') {
+        typeof controller.submitDonation === 'function' &&
+        typeof controller.setHost === 'function') {
       return true;
     }
     else {
@@ -59,7 +61,8 @@ module.exports = function(app) {
   app.post('/donations/:controller/find-project', function(request, response) {
     var controller = loadController(request.params.controller);
     if (controller) {
-      controller.findProject(request.body, response);
+      controller.setHost(request.get('host'));
+      controller.findProject(request, response);
     }
     else {
       response.send(404, 'Request not available for: ' + request.params.controller);
@@ -69,7 +72,8 @@ module.exports = function(app) {
   app.post('/donations/:controller/retrieve-email', function(request, response) {
     var controller = loadController(request.params.controller);
     if (controller) {
-      controller.retrieveEmail(request.body, response);
+      controller.setHost(request.get('host'));
+      controller.retrieveEmail(request, response);
     }
     else {
       response.send(404, 'Request not available for: ' + request.params.controller);
@@ -79,7 +83,8 @@ module.exports = function(app) {
   app.post('/donations/:controller/retrieve-firstname', function(request, response) {
     var controller = loadController(request.params.controller);
     if (controller) {
-      controller.retrieveFirstName(request.body, response);
+      controller.setHost(request.get('host'));
+      controller.retrieveFirstName(request, response);
     }
     else {
       response.send(404, 'Request not available for: ' + request.params.controller);
@@ -89,7 +94,8 @@ module.exports = function(app) {
   app.post('/donations/:controller/retrieve-location', function(request, response) {
     var controller = loadController(request.params.controller);
     if (controller) {
-      controller.retrieveLocation(request.body, response);
+      controller.setHost(request.get('host'));
+      controller.retrieveLocation(request, response);
     }
     else {
       response.send(404, 'Request not available for: ' + request.params.controller);
@@ -99,7 +105,8 @@ module.exports = function(app) {
   app.post('/donations/:controller/submit-donation', function(request, response) {
     var controller = loadController(request.params.controller);
     if (controller) {
-      controller.submitDonation(request.body, response);
+      controller.setHost(request.get('host'));
+      controller.submitDonation(request, response);
     }
     else {
       response.send(404, 'Request not available for: ' + request.params.controller);

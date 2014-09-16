@@ -20,7 +20,11 @@ var UNIVERSAL_GROUP_ENDGAME_MESSAGE_DELAY = 23000;
 var MAX_PLAYERS_TO_INVITE = 3;
 
 // Minimum number of players required to create and/or start a game.
-var MIN_PLAYERS_TO_INVITE = 1;
+var MIN_PLAYERS_TO_INVITE = 0;
+
+// The time interval between when a multiplayer game is created and 
+// when the SOLO option message is sent to the alpha.
+var TIME_UNTIL_SOLO_MESSAGE_SENT = 10000; // Five minutes is 300000. Currently set to ten seconds for testing.
 
 var SGCompetitiveStoryController = function(app) {
   this.app = app;
@@ -55,6 +59,11 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     return false;
   }
 
+  // Allows us to use the .findUserGame(obj, onUserGameFound) 
+  // helper function function. A bit hacky, mark for refactoring.
+  this.request = { body : {} };
+  this.request.body.phone = request.body.alpha_mobile;
+
   // Story ID could be in either POST or GET param.
   var storyId = null;
   if (typeof request.body.story_id !== 'undefined') {
@@ -80,7 +89,8 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     story_id: storyId,
     alpha_name: request.body.alpha_first_name,
     alpha_phone: alphaPhone,
-    betas: []
+    betas: [],
+    game_type: (request.body.game_type || '')
   };
 
   for (var i = 0; i < MAX_PLAYERS_TO_INVITE; i++) {
@@ -94,6 +104,10 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   }
 
   // If number of betas invited doesn't meet the minimum number, then error.
+  // Note: given the current structure of mobile-to-mobile game creation, 
+  // this warning isn't too meaningful for alpha-solo mobile game creation, 
+  // since if the beta_mobile_x params are empty, they're populated by empty strings. 
+
   if (gameDoc.betas.length < MIN_PLAYERS_TO_INVITE) {
     response.send(406, 'Not enough players. You need to invite at least %d to start.', MIN_PLAYERS_TO_INVITE);
     return false;
@@ -152,7 +166,7 @@ PR-138 EXCISION **/
         current_game_id: doc._id
       }},
 
-      {upsert: true},
+      {upsert: true}, // Creates a new doc when no doc matches the query criteria via '.update()'.
       function(err, num, raw) {
         if (err) {
           console.log(err);
@@ -208,6 +222,33 @@ PR-138 EXCISION **/
   });
 
   response.send();
+
+  // Sets a time interval until the alpha is sent the 
+  // message asking if she wants to play a SOLO game.
+  setTimeout(
+    function() {
+      self.findUserGame(self, checkIfAnyBetasHaveJoined)
+    }, 
+    TIME_UNTIL_SOLO_MESSAGE_SENT
+  )
+
+  function checkIfAnyBetasHaveJoined(obj, doc) {
+    var aBetaHasJoined = false;
+    for (var i = 0; i < doc.betas.length; i++) {
+      if (doc.betas[i].invite_accepted == true) {
+        aBetaHasJoined = true;s
+      }
+    }
+    // If no Betas have joined, ask the alpha if she wants to play SOLO. 
+    if (!aBetaHasJoined) {
+      var args = {
+        alphaPhone: doc.alpha_phone, 
+        alphaOptin: self.gameConfig[storyId.toString()].ask_solo_play
+      };
+      console.log('No betas have joined, alpha has been sent instructions for a SOLO game.')
+      mobilecommons.optin(args);
+    }
+  }
 
   // Log to stathat... should this be 1 or 1 for each person?
   this.app.stathatReport('Count', 'mobilecommons: create game request: success', 1);
@@ -339,7 +380,7 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
   else {
     /**
      * Callback for when beta's game is found. Update persistent storage, send
-     * game-pending messages if all player haven't joined yet, or auto-start the
+     * game-pending messages if all players haven't joined yet, or auto-start the
      * game if all players are joined.
      */
     var execBetaJoinGame = function(obj, doc) {
@@ -350,7 +391,7 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
           alphaPhone: obj.request.body.phone,
           alphaOptin: obj.gameConfig[doc.story_id].game_in_progress_oip
         };
-
+        // Good place to notify betas about ALPHA SOLO keywords for opt-in-paths. 
         obj.scheduleMobileCommonsOptIn(args);
         obj.response.send();
         return;
@@ -735,7 +776,7 @@ SGCompetitiveStoryController.prototype.findUserGame = function(obj, onUserGameFo
     if (err) {
       console.log(err);
     }
-
+    console.log(doc);
     if (doc) {
       onUserGameFound(obj, doc);
     }
@@ -783,7 +824,8 @@ SGCompetitiveStoryController.prototype.findUserGame = function(obj, onUserGameFo
   };
 
   /**
-   * 1) First step in the process of finding the user's game - find the user document.
+   * 1) First step in the process of finding the user's game - find the user document. 
+   * http://mongoosejs.com/docs/queries.html
    */
   obj.userModel.findOne(
     {phone: messageHelper.getNormalizedPhone(obj.request.body.phone)},
@@ -913,10 +955,11 @@ SGCompetitiveStoryController.prototype.startGame = function(gameConfig, gameDoc)
     }
   }
 
-  // Log for each player that has accepted the invite.
+  // Log for each player that has accepted the invite. 
+  // 'Value' produces logs of averages, re: https://www.stathat.com/help. 
   this.app.stathatReport('Value', 'mobilecommons: number of players', numPlayers);
 
-  // Log started gamed to stathat.
+  // Log started game to stathat. 
   this.app.stathatReport('Count', 'mobilecommons: start game request: success', 1);
   return gameDoc;
 };

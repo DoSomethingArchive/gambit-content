@@ -1,6 +1,8 @@
 /**
  * Config model used for persistently tracking a user's setup
- * of a multiplayer SMS game through mobile.
+ * of a multiplayer SMS game through mobile. Destroyed after game
+ * is started or begun. Unused during web creation of games or solo
+ * game creation. 
  */
 
 var mongoose = require('mongoose')
@@ -29,7 +31,7 @@ var sgGameCreateConfig = function(app) {
     // Story ID
     story_id: Number,
 
-    // Game type
+    // Type of game structure; competitive? collaborative?
     story_type: String
   });
 
