@@ -24,7 +24,7 @@ var MIN_PLAYERS_TO_INVITE = 0;
 
 // The time interval between when a multiplayer game is created and 
 // when the SOLO option message is sent to the alpha.
-var TIME_UNTIL_SOLO_MESSAGE_SENT = 10000; // Five minutes is 300000. Currently set to ten seconds for testing.
+var TIME_UNTIL_SOLO_MESSAGE_SENT = 300000; // Five minutes.
 
 var SGCompetitiveStoryController = function(app) {
   this.app = app;
