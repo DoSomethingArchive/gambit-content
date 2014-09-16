@@ -217,7 +217,10 @@ PR-138 EXCISION **/
       betaPhone: betaPhones
     };
 
-    self.scheduleMobileCommonsOptIn(optinArgs);
+    // We opt users into these initial opt in paths only if the game type is NOT solo. 
+    if (doc.game_type !== 'solo') {
+      self.scheduleMobileCommonsOptIn(optinArgs);
+    }
 
   });
 
@@ -239,8 +242,8 @@ PR-138 EXCISION **/
         aBetaHasJoined = true;s
       }
     }
-    // If no Betas have joined, ask the alpha if she wants to play SOLO. 
-    if (!aBetaHasJoined) {
+    // If no Betas have joined and the game-type is NOT solo, ask the alpha if she wants to play SOLO. 
+    if ((!aBetaHasJoined) && (doc.game_type !== 'solo')) {
       var args = {
         alphaPhone: doc.alpha_phone, 
         alphaOptin: self.gameConfig[storyId.toString()].ask_solo_play
