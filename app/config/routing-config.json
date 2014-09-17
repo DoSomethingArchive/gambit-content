@@ -34,6 +34,11 @@
       "__comments": "Make Art Save Art 2014",
       "optin": 170771,
       "optout": 128431
+    },
+    "11559": {
+      "__comments": "Can Tribute, BBYO 2014",
+      "optin": 128729,
+      "optout": 128727
     }
   },
   "yesNoPaths": [
@@ -126,6 +131,12 @@
       "incomingPath": 170879,
       "yes": 170883,
       "no": 170885
+    },
+    {
+      "__comments": "Can Tribute, BBYO MMS Check",
+      "incomingPath": 171213,
+      "yes": 171215,
+      "no": 171217
     }
   ]
 }
