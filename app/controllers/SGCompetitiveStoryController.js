@@ -24,7 +24,7 @@ var MIN_PLAYERS_TO_INVITE = 0;
 
 // The time interval between when a multiplayer game is created and 
 // when the SOLO option message is sent to the alpha.
-var TIME_UNTIL_SOLO_MESSAGE_SENT = 300000; // Five minutes.
+var TIME_UNTIL_SOLO_MESSAGE_SENT = 300000; // Five minutes is 300000.
 
 var SGCompetitiveStoryController = function(app) {
   this.app = app;
@@ -119,7 +119,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   // Save game to the database.
   var game = this.gameModel.create(gameDoc);
   game.then(function(doc) {
-
+    console.log('**GAMEDOC CREATED @121')
     emitter.emit('game-created', doc);
     var config = self.gameConfig[doc.story_id];
 
@@ -228,18 +228,21 @@ PR-138 EXCISION **/
 
   // Sets a time interval until the alpha is sent the 
   // message asking if she wants to play a SOLO game.
+  console.log('**AT LINE BEFORE SETTIMEOUT FUNCTION**');
   setTimeout(
     function() {
       self.findUserGame(self, checkIfAnyBetasHaveJoined)
     }, 
     TIME_UNTIL_SOLO_MESSAGE_SENT
   )
+  console.log('**AT LINE AFTER SETTIMEOUT FUNCTION**');
 
   function checkIfAnyBetasHaveJoined(obj, doc) {
+    console.log('within checkIfAnyBetasHaveJoined function')
     var aBetaHasJoined = false;
     for (var i = 0; i < doc.betas.length; i++) {
       if (doc.betas[i].invite_accepted == true) {
-        aBetaHasJoined = true;s
+        aBetaHasJoined = true;
       }
     }
     // If no Betas have joined and the game-type is NOT solo, ask the alpha if she wants to play SOLO. 
