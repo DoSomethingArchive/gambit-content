@@ -74,7 +74,6 @@ SGSoloController.prototype.processRequest = function(request, response) {
       // SGCompetitiveStoryController. Keep in mind that when we develop 
       // other gameplay structures (i.e., "collaborative", we'll need to refactor.)
       requestHttp.post(startUrl, startPayload, function(err, response, body) {
-        console.log(startPayload)
         if (err) {
           console.log(err);
         } 
