@@ -119,7 +119,6 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   // Save game to the database.
   var game = this.gameModel.create(gameDoc);
   game.then(function(doc) {
-    console.log('**GAMEDOC CREATED @121')
     emitter.emit('game-created', doc);
     var config = self.gameConfig[doc.story_id];
 
