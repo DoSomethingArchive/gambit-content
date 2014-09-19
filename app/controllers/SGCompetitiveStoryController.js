@@ -172,6 +172,11 @@ PR-138 EXCISION **/
           console.log(err);
         }
         else {
+          // This response.send() call has been moved from outside into this 
+          // async Mongoose call to ensure that upon SOLO game creation, 
+          // the Alpha userModel will have been modified with the SOLO gameId before 
+          // the start game logic runs (triggered by the POST to the /alpha-start route.)
+          response.send(201, 'Alpha userModel updated for new game created.');
           emitter.emit('alpha-user-created');
           console.log(raw);
         }
@@ -223,8 +228,6 @@ PR-138 EXCISION **/
     }
 
   });
-
-  response.send();
 
   // Sets a time interval until the alpha is sent the 
   // message asking if she wants to play a SOLO game.
