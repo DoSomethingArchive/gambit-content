@@ -153,9 +153,9 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
       // Create the game if we have at least one beta number.
       // If the alpha responds 'Y' to the 'create game now?' query. 
       if (messageHelper.isYesResponse(message)) {
-        if (configDoc.beta_mobile_0 && messageHelper.isValidPhone(configDoc.beta_mobile_0)) { // Will be problematic for ALPHA-SOLO game play. Checks if beta_mobile_0 exists.
-          // Reminds alpha that we've merely created the game; her friends need to join for it to start.
-          createGame(configDoc, self.host);
+        if (configDoc.beta_mobile_0 && messageHelper.isValidPhone(configDoc.beta_mobile_0)) {
+          // While it may seem that the two calls may produce asynchronous weirdness, they don't. 
+          createGame(configDoc, self.host); 
           self._removeDocument(configDoc.alpha_mobile);
         }
         else {
@@ -165,7 +165,6 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
       }
       else if (isPhoneNumber(message)) {
         var betaMobile = messageHelper.getNormalizedPhone(message);
-
         // If we haven't saved a beta number yet, save it to beta_mobile_0.
         if (!configDoc.beta_mobile_0) {
           configDoc.beta_mobile_0 = betaMobile;

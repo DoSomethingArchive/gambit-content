@@ -230,17 +230,14 @@ PR-138 EXCISION **/
 
   // Sets a time interval until the alpha is sent the 
   // message asking if she wants to play a SOLO game.
-  console.log('**AT LINE BEFORE SETTIMEOUT FUNCTION**');
   setTimeout(
     function() {
       self.findUserGame(self, checkIfAnyBetasHaveJoined)
     }, 
     TIME_UNTIL_SOLO_MESSAGE_SENT
   )
-  console.log('**AT LINE AFTER SETTIMEOUT FUNCTION**');
 
   function checkIfAnyBetasHaveJoined(obj, doc) {
-    console.log('within checkIfAnyBetasHaveJoined function')
     var aBetaHasJoined = false;
     for (var i = 0; i < doc.betas.length; i++) {
       if (doc.betas[i].invite_accepted == true) {
@@ -253,7 +250,6 @@ PR-138 EXCISION **/
         alphaPhone: doc.alpha_phone, 
         alphaOptin: self.gameConfig[storyId.toString()].ask_solo_play
       };
-      console.log('No betas have joined, alpha has been sent instructions for a SOLO game.')
       mobilecommons.optin(args);
     }
   }
