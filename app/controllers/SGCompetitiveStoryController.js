@@ -113,7 +113,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     return false;
   }
 
-  // Closure variable to use through chanined callbacks.
+  // Closure variable to use through chained callbacks.
   var self = this;
 
   // Save game to the database.
@@ -134,37 +134,29 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
       }
     );
 
-/** PR-138 EXCISION
-    // Build the condition to find existing documents for all invited players.
+    // Build the condition to find existing user documents for all invited players.
     var alphaPhone = messageHelper.getNormalizedPhone(doc.alpha_phone);
     var findCondition = {$or: [{phone: alphaPhone}]};
     for (var i = 0; i < doc.betas.length; i++) {
       var betaPhone = messageHelper.getNormalizedPhone(doc.betas[i].phone);
       findCondition['$or'][i+1] = {phone: betaPhone};
     }
-
+    // Allowing us to use the created saved doc in the function called with the promise. 
     self.createdGameDoc = doc;
+    // If this returns before the gameMappingModel.create() function returns, would this cause problems?
     return self.userModel.find(findCondition).exec();
 
   }).then(function(playerDocs) {
 
     // End games that these players were previously in.
     self._endGameFromPlayerExit(playerDocs);
-PR-138 EXCISION **/
 
     // Upsert the document for the alpha user.
 
+    // ** THIS COULD HAPPEN FIRST, BEFORE _endGameFromPlayerExit **
     self.userModel.update(
-/** PR-138 EXCISION
       {phone: self.createdGameDoc.alpha_phone},
       {$set: {phone: self.createdGameDoc.alpha_phone, current_game_id: self.createdGameDoc._id}},
-PR-138 EXCISION **/
-      {phone: doc.alpha_phone},
-      {$set: {
-        phone: doc.alpha_phone,
-        current_game_id: doc._id
-      }},
-
       {upsert: true}, // Creates a new doc when no doc matches the query criteria via '.update()'.
       function(err, num, raw) {
         if (err) {
@@ -183,23 +175,14 @@ PR-138 EXCISION **/
 
     // Upsert documents for the beta users.
     var betaPhones = [];
-/** PR-138 EXCISION
     self.createdGameDoc.betas.forEach(function(value, index, set) {
-PR-138 EXCISION **/
-    doc.betas.forEach(function(value, index, set) {
       // Extract phone number for Mobile Commons opt in.
       betaPhones[betaPhones.length] = value.phone;
 
       // Upsert user document for the beta.
       self.userModel.update(
         {phone: value.phone},
-/** PR-138 EXCISION
-        {$set: {phone: value.phone, current_game_id: self.createdGameDoc._id}},
-PR-138 EXCISION **/
-        {$set: {
-          phone: value.phone,
-          current_game_id: doc._id
-        }},      
+        {$set: {phone: value.phone, current_game_id: self.createdGameDoc._id}},     
         {upsert: true},
         function(err, num, raw) {
           if (err) {
@@ -702,23 +685,17 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
       }
       // If the game is over, log it to stathat.
       if (gameEnded == true) {
-/** PR-138 EXCISION
         gameDoc.game_ended = true;
-PR-138 EXCISION **/ 
         obj.app.stathatReport('Count', 'mobilecommons: end game: success', 1);
       }
-
 
       // Update the player's current status in the database.
       obj.gameModel.update(
         {_id: doc._id},
         {$set: {
           players_current_status: gameDoc.players_current_status,
-          story_results: gameDoc.story_results
-/** PR-138 EXCISION
           story_results: gameDoc.story_results,
           game_ended: gameDoc.game_ended
-PR-138 EXCISION **/
         }},
         function(err, num, raw) {
           if (err) {
@@ -1296,21 +1273,20 @@ SGCompetitiveStoryController.prototype.getUniversalGroupEndGameMessage = functio
  *   Player documents for players leaving a game.
  */
 
-/** PR-138 EXCISION
-
 SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerDocs) {
   if (playerDocs.length == 0) {
     return;
   }
 
-  // Find all games the players were previously in.
+  // Using the user documents found before and stored inside the playerDocs array, 
+  // we find all games the players were previously in.
   var findCondition = {};
   for (var i = 0; i < playerDocs.length; i++) {
     if (typeof findCondition['$or'] === 'undefined') {
       findCondition['$or'] = [];
     }
 
-    findCondition['$or'][i] = {_id: playerDocs[i].current_game_id};
+    findCondition['$or'][i] = {_id: playerDocs[i].current_game_id}; // Because we're using the current_game_id from the playerDocs found before the .then() callback, this might not cause asynchronous problems. 
   }
 
   var self = this;
@@ -1326,14 +1302,15 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
         continue;
       }
 
-      // Find users to message that the game has ended.
+      // Find users to message that the game has ended. Note that this messages all users in 
+      // games created before the game model's .game_ended property was implemented. 
       var players = [];
       for (var j = 0; j < gameDoc.players_current_status.length; j++) {
 
         // Do not send this message to the users who've been invited out of their game.
         var doNotMessage = false;
         for (var k = 0; k < playerDocs.length; k++) {
-          if (gameDoc.players_current_status[j].phone == playerDocs[k].phone) {
+          if (gameDoc.players_current_status[j].phone == playerDocs[k].phone) { 
             doNotMessage = true;
             break;
           }
@@ -1360,7 +1337,7 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
         // Remove the current_game_id from their document.
         self.userModel.update(
           {phone: players[playerIdx]},
-          {$unset: {current_game_id: 1}},
+          {$unset: {current_game_id: 1}}, //HOLY SHIT THIS IS IT - If this applies to the original alpha, their game_id will have been modified
           function(err, num, raw) {
             if (err) {
               console.log(err);
@@ -1379,8 +1356,6 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
 
   });
 };
-
-PR-138 EXCISION **/ 
 
 /**
  * Schedule a message to be sent via a Mobile Commons opt in.

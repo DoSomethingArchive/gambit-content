@@ -154,8 +154,8 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
       // If the alpha responds 'Y' to the 'create game now?' query. 
       if (messageHelper.isYesResponse(message)) {
         if (configDoc.beta_mobile_0 && messageHelper.isValidPhone(configDoc.beta_mobile_0)) {
-          // While it may seem that the two calls may produce asynchronous weirdness, they don't. 
-          createGame(configDoc, self.host); 
+          // While it may seem that the two calls below may produce asynchronous weirdness, they don't. 
+          createGame(configDoc, self.host);
           self._removeDocument(configDoc.alpha_mobile);
         }
         else {
@@ -184,6 +184,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
         // At this point, this is the last number we need. So, create the game.
         else {
           configDoc.beta_mobile_2 = betaMobile;
+          // Again, while it may seem that the two calls below may produce async disorderlyness, they don't. 
           createGame(configDoc, self.host);
           self._removeDocument(configDoc.alpha_mobile);
         }
@@ -199,7 +200,8 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
 
   }).then(function(configDoc) {
 
-    // Config model has been successfully created.
+    // We only come within this .then() statement if the 
+    // config model has just been newly successfully created.
     if (configDoc) {
       // User should have responded with beta_mobile_0.
       var message = self.request.body.args;
