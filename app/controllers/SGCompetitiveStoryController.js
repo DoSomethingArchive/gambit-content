@@ -65,16 +65,16 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   this.request.body.phone = request.body.alpha_mobile;
 
   // Story ID could be in either POST or GET param.
-  var storyId = null;
+  this.storyId = null;
   if (typeof request.body.story_id !== 'undefined') {
-    storyId = request.body.story_id;
+    this.storyId = request.body.story_id;
   }
   else if (typeof request.query.story_id !== 'undefined') {
-    storyId = request.query.story_id;
+    this.storyId = request.query.story_id;
   }
 
-  if (typeof this.gameConfig[storyId] === 'undefined') {
-    response.send(406, 'Game config not setup for story ID: ' + storyId);
+  if (typeof this.gameConfig[this.storyId] === 'undefined') {
+    response.send(406, 'Game config not setup for story ID: ' + this.storyId);
     return false;
   }
 
@@ -86,7 +86,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
   // Compile a new game document.
   var gameDoc = {
-    story_id: storyId,
+    story_id: this.storyId,
     alpha_name: request.body.alpha_first_name,
     alpha_phone: alphaPhone,
     betas: [],
@@ -169,16 +169,11 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
           // the start game logic runs (triggered by the POST to the /alpha-start route.)
           response.send(201, 'Alpha userModel updated for new game created.');
           emitter.emit('alpha-user-created');
-          console.log(raw);
+          console.log('alpha user created, raw mongo response: ', raw);
         }
       });
 
-    // Upsert documents for the beta users.
-    var betaPhones = [];
     self.createdGameDoc.betas.forEach(function(value, index, set) {
-      // Extract phone number for Mobile Commons opt in.
-      betaPhones[betaPhones.length] = value.phone;
-
       // Upsert user document for the beta.
       self.userModel.update(
         {phone: value.phone},
@@ -190,22 +185,29 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
           }
           else {
             emitter.emit('beta-user-created');
-            console.log(raw);
+            console.log('beta user created, raw mongo response: ', raw);
           }
         }
       );
     });
 
+    var betaOptInArray = []; // Extract phone number for Mobile Commons opt in.
+    self.createdGameDoc.betas.forEach(function(value, index, set) {
+      betaOptInArray[betaOptInArray.length] = value.phone;
+    })
+
     // Opt users into their appropriate paths.
     var optinArgs = {
-      alphaPhone: doc.alpha_phone,
-      alphaOptin: config.alpha_wait_oip,
-      betaOptin: config.beta_join_ask_oip,
-      betaPhone: betaPhones
+      alphaPhone: self.createdGameDoc.alpha_phone,
+      alphaOptin: self.gameConfig[self.storyId.toString()].alpha_wait_oip,
+      betaOptin: self.gameConfig[self.storyId.toString()].beta_join_ask_oip,
+      betaPhone: betaOptInArray
     };
 
+    console.log('optinArgs before optin function', optinArgs)
+
     // We opt users into these initial opt in paths only if the game type is NOT solo. 
-    if (doc.game_type !== 'solo') {
+    if (self.createdGameDoc.game_type !== 'solo') {
       self.scheduleMobileCommonsOptIn(optinArgs);
     }
 
@@ -231,7 +233,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     if ((!aBetaHasJoined) && (doc.game_type !== 'solo')) {
       var args = {
         alphaPhone: doc.alpha_phone, 
-        alphaOptin: self.gameConfig[storyId.toString()].ask_solo_play
+        alphaOptin: self.gameConfig[self.storyId.toString()].ask_solo_play
       };
       mobilecommons.optin(args);
     }
@@ -1337,7 +1339,7 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
         // Remove the current_game_id from their document.
         self.userModel.update(
           {phone: players[playerIdx]},
-          {$unset: {current_game_id: 1}}, //HOLY SHIT THIS IS IT - If this applies to the original alpha, their game_id will have been modified
+          {$unset: {current_game_id: 1}},
           function(err, num, raw) {
             if (err) {
               console.log(err);
