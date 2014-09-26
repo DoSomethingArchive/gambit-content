@@ -56,7 +56,7 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
   // and assigning query params accordingly. 
   if (parseInt(request.body.location)){
     var locationFilter = 'keywords=' + request.body.location; // If zip. 
-  } 
+  }
   else {
     var locationFilter =  'state=' + request.body.location; // If state. 
   }
@@ -65,7 +65,6 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
 
   var subjectFilter = 'subject4=-4'; // Subject code for all 'Math & Science' subjects.
   var urgencySort = 'sortBy=0'; // Search returns results ordered by urgency algorithm. 
-
   var filterParams = locationFilter + '&' + subjectFilter + '&' + urgencySort + '&';
   var requestUrlString = 'http://api.donorschoose.org/common/json_feed.html?' + filterParams + 'APIKey=' + donorsChooseApiKey;
   var testRequestUrlString = 'http://api.donorschoose.org/common/json_feed.html?' + filterParams + 'APIKey=DONORSCHOOSE';
@@ -222,7 +221,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiKey, apiPa
     return deferred.promise;
   }
 
-  // Second request: donation transaction. 
+  // Second request: donation transaction.
   var requestTransaction = function(token){
     var donateParams = {
       'APIKey': apikey,
