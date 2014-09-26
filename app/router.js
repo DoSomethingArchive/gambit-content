@@ -5,6 +5,7 @@ var Babysitter = require('./controllers/Babysitter')
   , SGCollaborativeStoryController = require('./controllers/SGCollaborativeStoryController')
   , SGCompetitiveStoryController = require('./controllers/SGCompetitiveStoryController')
   , SGMostLikelyToController = require('./controllers/SGMostLikelyToController')
+  , SGSoloController = require('./controllers/SGSoloController')
   ;
 
 module.exports = function(app) {
@@ -74,12 +75,24 @@ module.exports = function(app) {
 
   /**
    * Guides users through creating an SMS multiplayer game from mobile.
+   * Creates a game by re-POSTing to the /sms-multiplayer-game/create route below.
    */
   app.post('/sms-multiplayer-game/mobile-create', function(request, response) {
-    var host = request.get('host');
+    var host = request.get('host'); // Retrieving hostname; Express parsing request.
     var controller = new SGCreateFromMobileController(app, host);
     controller.processRequest(request, response);
   });
+
+  /**
+   * Creates a new one-player solo SMS game. 
+   * Also creates a game by re-POSTing to the 
+   * /sms-multiplayer-game/create route below. 
+   */
+  app.post('/sms-multiplayer-game/solo', function(request, response) {
+    var host = request.get('host');
+    var controller = new SGSoloController(app, host);
+    controller.processRequest(request, response);
+  })
 
   /**
    * Gets a game controller.

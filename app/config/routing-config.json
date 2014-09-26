@@ -29,6 +29,21 @@
       "__comments": "Notes From Shawn (Opt Out From Photo Receipt)",
       "optin": 170139,
       "optout": 128005
+    },
+    "11515": {
+      "__comments": "Make Art Save Art 2014",
+      "optin": 170771,
+      "optout": 128431
+    },
+    "11559": {
+      "__comments": "Can Tribute, BBYO 2014",
+      "optin": 171417,
+      "optout": 128919
+    },
+    "11531": {
+      "__comments": "50 Cans 2014",
+      "optin": 171481,
+      "optout": 128525
     }
   },
   "yesNoPaths": [
@@ -112,9 +127,21 @@
     },
     {
       "__comments": "Make Art Create Art MMS Check",
-      "incomingPath": 170651,
-      "yes": 170653,
-      "no": 170655
+      "incomingPath": 171053,
+      "yes": 171055,
+      "no": 171057
+    },
+    {
+      "__comments": "50 Cans MMS Check",
+      "incomingPath": 170879,
+      "yes": 170883,
+      "no": 170885
+    },
+    {
+      "__comments": "Can Tribute, BBYO MMS Check",
+      "incomingPath": 171419,
+      "yes": 171421,
+      "no": 171423
     }
   ]
 }

@@ -90,7 +90,7 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
 
       //here, we want to use the mobilecommons.profile_update() function here to update the profile
 
-      var responseText = 'Hi!' + teacherName + ' from ' + schoolName + ' in ' + schoolCity + 'needs to buy equipment to help teach science, technology, engineering and mathematics! Wanna spend 3M\'s money to help? Text back INFO to hear from' + teacherName '  about the project.'; // Subject to change.
+      var responseText = 'Hi!' + teacherName + ' from ' + schoolName + ' in ' + schoolCity + 'needs to buy equipment to help teach science, technology, engineering and mathematics! Wanna spend 3M\'s money to help? Text back INFO to hear from' + teacherName + '  about the project.'; // Subject to change.
         //We're not responding via text, but instead assigning the values to the profile 
       response.send(responseText);
     }
@@ -113,6 +113,7 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
 DonorsChooseDonationController.prototype.retrieveEmail = function(request, response) {
 
   // Calls the submitDonation() function. Should 
+
   response.send();
 };
 
@@ -153,9 +154,6 @@ DonorsChooseDonationController.prototype.retrieveLocation = function(request, re
     return false;
   }
 
-
-
-
   var info = {
     mobile: request.body.phone,
     location: state
@@ -174,11 +172,16 @@ DonorsChooseDonationController.prototype.retrieveLocation = function(request, re
 /**
  * Submits a donation transaction to Donors Choose.
  *
+<<<<<<< HEAD
  * @param proposalId
+=======
+ * @param request
+>>>>>>> master
  *   Express Request object
  * @param response
  *   Express Response object
  */
+
 DonorsChooseDonationController.prototype.submitDonation = function(apiKey, apiPassword, apiUrl, proposalId, donationAmount, donorEmail, donorFirstName, donorLastName) {
 
   var productionDonateUrlString = 'https://apisecure.donorschoose.org/common/json_api.html?';
@@ -285,6 +288,77 @@ function isValidState(state) {
 
 function isValidZipCode(zip) {
   return /(^\d{5}$)|(^\d{5}-\d{4}$)/.test(zip);
+}
+
+/**
+ * Subscribe phone number to a Mobile Commons opt-in path.
+ *
+ * @param phone
+ *  Phone number to subscribe.
+ * @param oip
+ *   Opt-in path to subscribe to.
+ */
+function sendSMS(phone, oip) {
+  var args = {
+    alphaPhone: phone,
+    alphaOptin: oip
+  };
+  mobilecommons.optin(args);
+};
+
+/**
+ * Sets the hostname.
+ *
+ * @param host
+ *   The hostname string.
+ */
+DonorsChooseDonationController.prototype.setHost = function(host) {
+  this.host = host;
+};
+
+/**
+ * POST data to another endpoint on this Donors Choose resource.
+ *
+ * @param endpoint
+ *   Endpoint to POST to.
+ * @param data
+ *   Object with data to POST to the endpoint.
+ */
+DonorsChooseDonationController.prototype._post = function(endpoint, data) {
+  var url = 'http://' + this.host + '/donations/' + this.resourceName + '/' + endpoint;
+
+  var payload = {form:{}};
+  var keys = Object.keys(data);
+  for (var i = 0; i < keys.length; i++) {
+    payload.form[keys[i]] = data[keys[i]];
+  }
+
+  requestHttp.post(url, payload, function(err, response, body) {
+    if (err) {
+      console.log(err);
+    }
+
+    if (response && response.statusCode) {
+      console.log('POST to ' + url + ' return status code: ' + response.statusCode);
+    }
+  });
+}
+
+/**
+ * Check if string is an abbreviated US state.
+ *
+ * @param state
+ * @return Boolean
+ */
+function isValidState(state) {
+  var states = 'AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY|GU|PR|VI';
+  var split = states.split('|');
+  if (split.indexOf(state.toUpperCase()) > -1) {
+    return true;
+  }
+  else {
+    return false;
+  }
 }
 
 /**

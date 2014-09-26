@@ -1,6 +1,6 @@
 {
   "name": "ds-mdata-responder",
-  "version": "0.0.1",
+  "version": "0.0.1-19",
   "description": "Interface for interacting with DoSomething.org SMS experiences.",
   "dependencies": {
     "connect-multiparty": "1.1.0",

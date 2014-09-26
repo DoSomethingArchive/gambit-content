@@ -2,6 +2,7 @@
 
 /**
  * Guides users through creating an SMS multiplayer game from mobile.
+ * Not used for SOLO mobile game creation, though. (See SGSoloController.js.)
  */
 
 var mobilecommons = require('../../mobilecommons/mobilecommons')
@@ -94,7 +95,6 @@ function ErrorAbortPromiseChain() {
  *   Express response object.
  */
 SGCreateFromMobileController.prototype.processRequest = function(request, response) {
-
   if (typeof request.query.story_id === 'undefined'
       || typeof request.query.story_type === 'undefined'
       || typeof request.body.phone === 'undefined'
@@ -102,6 +102,10 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
     response.send(406, 'Missing required params.');
     return false;
   }
+
+  if (request.query.game_type) {
+    this.game_type = request.query.game_type;
+  } 
 
   // @todo When collaborative and most-likely-to games happen, set configs here.
   // Verify game type and id are valid.
@@ -114,7 +118,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
   }
 
   if (typeof this.gameConfig[request.query.story_id] === 'undefined') {
-    response.send(406, 'Game config not setup for story ID: ' + request.query.story_id);
+    response.send(406, 'Game config not set up for story ID: ' + request.query.story_id);
     return false;
   }
 
@@ -128,14 +132,17 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
   var promiseConfig = queryConfig.exec();
   promiseConfig.then(function(configDoc) {
 
-    // If no document found, then create one.
+    // If no document found, then create one. This game creation config doc 
+    // should NOT be confused with the game doc, or the gameConfig. It's destroyed
+    // after the game is begun; it's used only for game creation. 
     if (configDoc == null) {
       // We don't ask for the first name yet, so just saving it as phone for now.
       var doc = {
         alpha_mobile: self.request.body.phone,
         alpha_first_name: self.request.body.phone,
         story_id: self.request.query.story_id,
-        story_type: self.request.query.story_type
+        story_type: self.request.query.story_type,
+        game_type: (self.request.query.game_type || '')
       };
 
       return self.configModel.create(doc);
@@ -143,9 +150,11 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
     // If a document is found, then process the user message.
     else {
       var message = self.request.body.args;
-      // Create the game if we have at least one beta number
+      // Create the game if we have at least one beta number.
+      // If the alpha responds 'Y' to the 'create game now?' query. 
       if (messageHelper.isYesResponse(message)) {
         if (configDoc.beta_mobile_0 && messageHelper.isValidPhone(configDoc.beta_mobile_0)) {
+          // While it may seem that the two calls below may produce asynchronous weirdness, they don't. 
           createGame(configDoc, self.host);
           self._removeDocument(configDoc.alpha_mobile);
         }
@@ -156,7 +165,6 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
       }
       else if (isPhoneNumber(message)) {
         var betaMobile = messageHelper.getNormalizedPhone(message);
-
         // If we haven't saved a beta number yet, save it to beta_mobile_0.
         if (!configDoc.beta_mobile_0) {
           configDoc.beta_mobile_0 = betaMobile;
@@ -176,6 +184,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
         // At this point, this is the last number we need. So, create the game.
         else {
           configDoc.beta_mobile_2 = betaMobile;
+          // Again, while it may seem that the two calls below may produce async disorderlyness, they don't. 
           createGame(configDoc, self.host);
           self._removeDocument(configDoc.alpha_mobile);
         }
@@ -191,7 +200,8 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
 
   }).then(function(configDoc) {
 
-    // Config model has been successfully created.
+    // We only come within this .then() statement if the 
+    // config model has just been newly successfully created.
     if (configDoc) {
       // User should have responded with beta_mobile_0.
       var message = self.request.body.args;
@@ -208,7 +218,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
         // If user responded with something else, ask for a valid phone number.
         sendSMS(configDoc.alpha_mobile, self.storyConfig.mobile_create.invalid_mobile_oip);
       }
-    }
+    }  
 
   }, function(err) {
     // ErrorAbortPromiseChain is ok. Otherwise, log the error.
