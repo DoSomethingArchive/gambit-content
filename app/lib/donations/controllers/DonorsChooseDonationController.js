@@ -52,15 +52,21 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
     return false;
   }
 
-  // @todo Find Donor's Choose project based on the location given and other attributes.
-  // @todo Compose and send SMS message back to user with project details
-  // @todo ask for the first name of the user, calling the retrieveFirstName() function
+  // Checking to see if the location param is a zip code or a state,
+  // and assigning query params accordingly. 
+  if (parseInt(request.body.location)){
+    var locationFilter = 'keywords=' + request.body.location; // If zip. 
+  } 
+  else {
+    var locationFilter =  'state=' + request.body.location; // If state. 
+  }
 
-  // var stateFilter = 'state=' + request.body.location; // Code for state location filter. Decided to currently use ZIP. 
-  var keywordFilter = 'keywords="' + request.body.location + '"' // General keyword filter, used here specifically for ZIP. 
+  // @todo Compose and send SMS message back to user with project details
+
   var subjectFilter = 'subject4=-4'; // Subject code for all 'Math & Science' subjects.
   var urgencySort = 'sortBy=0'; // Search returns results ordered by urgency algorithm. 
-  var filterParams = stateFilter + '&' + subjectFilter + '&' + urgencySort + '&';
+
+  var filterParams = locationFilter + '&' + subjectFilter + '&' + urgencySort + '&';
   var requestUrlString = 'http://api.donorschoose.org/common/json_feed.html?' + filterParams + 'APIKey=' + donorsChooseApiKey;
   var testRequestUrlString = 'http://api.donorschoose.org/common/json_feed.html?' + filterParams + 'APIKey=DONORSCHOOSE';
 
@@ -82,16 +88,20 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
         }
       }
 
-      var proposalId = selectedProposal.id;
-      var teacherName = selectedProposal.teacherName;
-      var schoolName = selectedProposal.schoolName;
-      var schoolCity = selectedProposal.city;
-      var summary = selectedProposal.fulfillmentTrailer;
+      var mobileCommonsCustomFields = {
+        donorsChooseProposalId : selectedProposal.id,
+        donorsChooseProposalTitle : selectedProposal.title,
+        donorsChooseProposalUrl : selectedProposal.proposalUrl,
+        donorsChooseProposalTeacherName : selectedProposal.teacherName,
+        donorsChooseProposalSchoolName : selectedProposal.schoolName,
+        donorsChooseProposalSchoolCity : selectedProposal.city,
+        donorsChooseProposalSummary : selectedProposal.fulfillmentTrailer,
+      }
 
-      //here, we want to use the mobilecommons.profile_update() function here to update the profile
+      mobilecommons.profile_update(request.body.mobile, OPTINPATHID, mobileCommonsCustomFields) //phone, optInPathId, customFields. 
 
-      var responseText = 'Hi!' + teacherName + ' from ' + schoolName + ' in ' + schoolCity + 'needs to buy equipment to help teach science, technology, engineering and mathematics! Wanna spend 3M\'s money to help? Text back INFO to hear from' + teacherName + '  about the project.'; // Subject to change.
-        //We're not responding via text, but instead assigning the values to the profile 
+      // What's the best, non-hard-coded way of referencing the OptInPathId from inside this function? 
+
       response.send(responseText);
     }
     else {
@@ -112,7 +122,7 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
  */
 DonorsChooseDonationController.prototype.retrieveEmail = function(request, response) {
 
-  // Calls the submitDonation() function. Should 
+  // Calls the submitDonation() function. 
 
   response.send();
 };
@@ -147,6 +157,9 @@ DonorsChooseDonationController.prototype.retrieveLocation = function(request, re
     return false;
   }
 
+  //Check to see if there's going to be 
+
+  // Needs to be edited to respond to ZipCodes. 
   var config = dc_config[request.query.id];
   var state = messageHelper.getFirstWord(request.body.args);
   if (!isValidState(state)) {
