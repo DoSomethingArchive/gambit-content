@@ -14,6 +14,8 @@
  *        submitDonation responsible for responding to user with success message
  */
 
+var TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR = 'zip' // 'zip' or 'state'. Our retrieveLocation() function will adjust accordingly.
+
 var mobilecommons = require('../../../../mobilecommons/mobilecommons')
   , messageHelper = require('../../userMessageHelpers')
   , requestHttp = require('request')
@@ -61,8 +63,6 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
     var locationFilter =  'state=' + request.body.location; // If state. 
   }
 
-  // @todo Compose and send SMS message back to user with project details
-
   var subjectFilter = 'subject4=-4'; // Subject code for all 'Math & Science' subjects.
   var urgencySort = 'sortBy=0'; // Search returns results ordered by urgency algorithm. 
   var filterParams = locationFilter + '&' + subjectFilter + '&' + urgencySort + '&';
@@ -88,20 +88,18 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
       }
 
       var mobileCommonsCustomFields = {
-        donorsChooseProposalId : selectedProposal.id,
-        donorsChooseProposalTitle : selectedProposal.title,
-        donorsChooseProposalUrl : selectedProposal.proposalUrl,
+        donorsChooseProposalId :          selectedProposal.id,
+        donorsChooseProposalTitle :       selectedProposal.title,
+        donorsChooseProposalUrl :         selectedProposal.proposalUrl,
         donorsChooseProposalTeacherName : selectedProposal.teacherName,
-        donorsChooseProposalSchoolName : selectedProposal.schoolName,
-        donorsChooseProposalSchoolCity : selectedProposal.city,
-        donorsChooseProposalSummary : selectedProposal.fulfillmentTrailer,
+        donorsChooseProposalSchoolName :  selectedProposal.schoolName,
+        donorsChooseProposalSchoolCity :  selectedProposal.city,
+        donorsChooseProposalSummary :     selectedProposal.fulfillmentTrailer,
       }
 
-      mobilecommons.profile_update(request.body.mobile, OPTINPATHID, mobileCommonsCustomFields) //phone, optInPathId, customFields. 
+      mobilecommons.profile_update(request.body.mobile, config[request.query.id].found_project_ask_name, mobileCommonsCustomFields) // Arguments: phone, optInPathId, customFields. 
 
-      // What's the best, non-hard-coded way of referencing the OptInPathId from inside this function? 
-
-      response.send(responseText);
+      response.send(201, 'Making call to update Mobile Commons profile with campaign information.');
     }
     else {
       response.send(404, 'Was unable to retrieve a response from DonorsChoose.org.');
@@ -121,7 +119,13 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
  */
 DonorsChooseDonationController.prototype.retrieveEmail = function(request, response) {
 
-  // Calls the submitDonation() function. 
+  //Needs to handle two cases: 
+
+  //1 - email is texted to us. we identify the args as an email address, and call submitDonation with those arguments. 
+
+  //2 - SKIP is texted to us, upon which we call submitDonation() automatically. 
+
+  //3 - whatever is texted is not parsed as either an email address or SKIP, upon which we want to send the submitDonation() function anyway. 
 
   response.send();
 };
@@ -135,6 +139,17 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
  *   Express Response object
  */
 DonorsChooseDonationController.prototype.retrieveFirstName = function(request, response) {
+
+  var userSubmittedName = messageHelper.getFirstWord(request.body.args)
+
+  if (containsNaughtyWords(userSubmittedName)){
+    userSubmittedName = 'anonymous';
+  }
+
+  // How can we pass this onto the next function? Do we need to store this in a database? Yup, we need to make a database call here. 
+
+  // Make a database call here.
+
   response.send();
 };
 
@@ -156,14 +171,20 @@ DonorsChooseDonationController.prototype.retrieveLocation = function(request, re
     return false;
   }
 
-  //Check to see if there's going to be 
-
-  // Needs to be edited to respond to ZipCodes. 
   var config = dc_config[request.query.id];
-  var state = messageHelper.getFirstWord(request.body.args);
-  if (!isValidState(state)) {
-    sendSMS(request.body.phone, config.invalid_state_oip);
-    return false;
+  var location = messageHelper.getFirstWord(request.body.args);
+
+  if (TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR == 'zip') {
+    if (!isValidZip(location)) {
+      sendSMS(request.body.phone, config.invalid_zip_oip);
+      return false;
+    }
+  }
+  else if (TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR == 'state') {
+    if (!isValidState(location)) {
+      sendSMS(request.body.phone, config.invalid_state_oip);
+      return false;
+    }
   }
 
   var info = {
@@ -171,12 +192,16 @@ DonorsChooseDonationController.prototype.retrieveLocation = function(request, re
     location: state
   };
 
-  // Create doc to store data through the donation flow
+  // Create doc to store data through the donation flow.
   this.donationModel.create(info).then(function(doc) {
     console.log(doc);
-  });
+  }, onRejected);
 
-  // POST same data to find-project endpoint
+  function onRejected(error) {
+    console.log('Error creating donation document, error: ', error);
+  }
+
+  // POST same data to find-project endpoint. Should I put this inside the donationModel.create() callback? 
   this._post('find-project?id=' + request.query.id, info);
   response.send();
 };
@@ -184,22 +209,22 @@ DonorsChooseDonationController.prototype.retrieveLocation = function(request, re
 /**
  * Submits a donation transaction to Donors Choose.
  *
-<<<<<<< HEAD
+ * @param apiKey
+ * @param apiPassword
+ * @param apiUrl
  * @param proposalId
-=======
- * @param request
->>>>>>> master
- *   Express Request object
- * @param response
- *   Express Response object
+ * @param donationAmount
+ * @param donorEmail
+ * @param donorFirstName
+ * @param donorLastName
+ * 
+ *
  */
 
 DonorsChooseDonationController.prototype.submitDonation = function(apiKey, apiPassword, apiUrl, proposalId, donationAmount, donorEmail, donorFirstName, donorLastName) {
 
   var productionDonateUrlString = 'https://apisecure.donorschoose.org/common/json_api.html?';
   var testDonateUrlString = 'https://apiqasecure.donorschoose.org/common/json_api.html?';
-
-  // requestToken().then(requestTransaction(token), function(reason){});
 
   // First request: obtains a unique token for the donation. 
   var requestToken = function(){
@@ -298,25 +323,9 @@ function isValidState(state) {
   }
 }
 
-function isValidZipCode(zip) {
+function isValidZip(zip) {
   return /(^\d{5}$)|(^\d{5}-\d{4}$)/.test(zip);
 }
-
-/**
- * Subscribe phone number to a Mobile Commons opt-in path.
- *
- * @param phone
- *  Phone number to subscribe.
- * @param oip
- *   Opt-in path to subscribe to.
- */
-function sendSMS(phone, oip) {
-  var args = {
-    alphaPhone: phone,
-    alphaOptin: oip
-  };
-  mobilecommons.optin(args);
-};
 
 /**
  * Sets the hostname.
@@ -357,6 +366,22 @@ DonorsChooseDonationController.prototype._post = function(endpoint, data) {
 }
 
 /**
+ * Subscribe phone number to a Mobile Commons opt-in path.
+ *
+ * @param phone
+ *  Phone number to subscribe.
+ * @param oip
+ *   Opt-in path to subscribe to.
+ */
+function sendSMS(phone, oip) {
+  var args = {
+    alphaPhone: phone,
+    alphaOptin: oip
+  };
+  mobilecommons.optin(args);
+};
+
+/**
  * Check if string is an abbreviated US state.
  *
  * @param state
@@ -389,5 +414,26 @@ function sendSMS(phone, oip) {
 
   mobilecommons.optin(args);
 };
+
+/**
+ * Checks to see if user inputted strings contains naughty words. 
+ *
+ * @param phone
+ *  Phone number to subscribe.
+ * @param oip
+ *   Opt-in path to subscribe to.
+ */
+function containsNaughtyWords(stringToBeCensored) {
+  var naughtyWords = [ '2g1c', '2girls 1 cup', 'acrotomophilia', 'anal', 'anilingus', 'anus', 'arsehole', 'ass', 'asshole', 'assmunch', 'autoerotic', 'autoerotic', 'babeland', 'babybatter', 'ballgag', 'ballgravy', 'ballkicking', 'balllicking', 'ballsack', 'ballsucking', 'bangbros', 'bareback', 'barelylegal', 'barenaked', 'bastardo', 'bastinado', 'bbw', 'bdsm', 'beavercleaver', 'beaverlips', 'bestiality', 'bicurious', 'bigblack', 'bigbreasts', 'bigknockers', 'bigtits', 'bimbos', 'birdlock', 'bitch', 'blackcock', 'blondeaction', 'blondeon blonde action', 'blowj', 'blowyourl', 'bluewaffle', 'blumpkin', 'bollocks', 'bondage', 'boner', 'boob', 'boobs', 'bootycall', 'brownshowers', 'brunetteaction', 'bukkake', 'bulldyke', 'bulletvibe', 'bunghole', 'bunghole', 'busty', 'butt', 'buttcheeks', 'butthole', 'cameltoe', 'camgirl', 'camslut', 'camwhore', 'carpetmuncher', 'carpetmuncher', 'chink', 'chocolaterosebuds', 'circlejerk', 'clevelandsteamer', 'clit', 'clitoris', 'cloverclamps', 'clusterfuck', 'cock', 'cocks', 'coprolagnia', 'coprophilia', 'cornhole', 'cum', 'cumming', 'cunnilingus', 'cunt', 'darkie', 'daterape', 'daterape', 'deepthroat', 'deepthroat', 'dick', 'dildo', 'dirtypillows', 'dirtysanchez', 'doggiestyle', 'doggiestyle', 'doggystyle', 'doggystyle', 'dogstyle', 'dolcett', 'domination', 'dominatrix', 'dommes', 'donkeypunch', 'doubledong', 'doublepenetration', 'dpaction', 'eatmyass', 'ecchi', 'ejaculation', 'erotic', 'erotism', 'escort', 'ethicalslut', 'eunuch', 'faggot', 'fecal', 'felch', 'fellatio', 'feltch', 'femalesquirting', 'femdom', 'figging', 'fingering', 'fisting', 'footfetish', 'footjob', 'frotting', 'fuck', 'fuckbuttons', 'fudgepacker', 'fudgepacker', 'futanari', 'gangbang', 'gaysex', 'genitals', 'giantcock', 'girlon', 'girlontop', 'girlsgonewild', 'goatcx', 'goatse', 'gokkun', 'goldenshower', 'goodpoop', 'googirl', 'goregasm', 'grope', 'groupsex', 'g-spot', 'guro', 'handjob', 'handjob', 'hardcore', 'hardcore', 'hentai', 'homoerotic', 'honkey', 'hooker', 'hotchick', 'howto kill', 'howto murder', 'hugefat', 'humping', 'incest', 'intercourse', 'jackoff', 'jailbait', 'jailbait', 'jerkoff', 'jigaboo', 'jiggaboo', 'jiggerboo', 'jizz', 'juggs', 'kike', 'kinbaku', 'kinkster', 'kinky', 'knobbing', 'leatherrestraint', 'leatherstraight jacket', 'lemonparty', 'lolita', 'lovemaking', 'makeme come', 'malesquirting', 'masturbate', 'menagea trois', 'milf', 'missionaryposition', 'motherfucker', 'moundofvenus', 'mrhands', 'muffdiver', 'muffdiving', 'nambla', 'nawashi', 'negro', 'neonazi', 'nigga', 'nigger', 'nignog', 'nimphomania', 'nipple', 'nipples', 'nsfwimages', 'nude', 'nudity', 'nympho', 'nymphomania', 'octopussy', 'omorashi', 'onecuptwogirls', 'oneguyone jar', 'orgasm', 'orgy', 'paedophile', 'panties', 'panty', 'pedobear', 'pedophile', 'pegging', 'penis', 'phonesex', 'pieceofshit', 'pissing', 'pisspig', 'pisspig', 'playboy', 'pleasurechest', 'polesmoker', 'ponyplay', 'poof', 'poopchute', 'poopchute', 'porn', 'porno', 'pornography', 'princealbert piercing', 'pthc', 'pubes', 'pussy', 'queaf', 'raghead', 'ragingboner', 'rape', 'raping', 'rapist', 'rectum', 'reversecowgirl', 'rimjob', 'rimming', 'rosypalm', 'rosypalm and her 5 sisters', 'rustytrombone', 'sadism', 'scat', 'schlong', 'scissoring', 'semen', 'sex', 'sexo', 'sexy', 'shavedbeaver', 'shavedpussy', 'shemale', 'shibari', 'shit', 'shota', 'shrimping', 'slanteye', 'slut', 's&m', 'smut', 'snatch', 'snowballing', 'sodomize', 'sodomy', 'spic', 'spooge', 'spreadlegs', 'strapon', 'strapon', 'strappado', 'stripclub', 'styledoggy', 'suck', 'sucks', 'suicidegirls', 'sultrywomen', 'swastika', 'swinger', 'taintedlove', 'tastemy', 'teabagging', 'threesome', 'throating', 'tiedup', 'tightwhite', 'tit', 'tits', 'titties', 'titty', 'tongueina', 'topless', 'tosser', 'towelhead', 'tranny', 'tribadism', 'tubgirl', 'tubgirl', 'tushy', 'twat', 'twink', 'twinkie', 'twogirls one cup', 'undressing', 'upskirt', 'urethraplay', 'urophilia', 'vagina', 'venusmound', 'vibrator', 'violetblue', 'violetwand', 'vorarephilia', 'voyeur', 'vulva', 'wank', 'wetback', 'wetdream', 'whitepower', 'womenrapping', 'wrappingmen', 'wrinkledstarfish', 'xx', 'xxx', 'yaoi', 'yellowshowers', 'yiffy', 'zoophilia' ]
+
+  var noSpaceString = stringToBeCensored.toLowerCase().replace(/[^\w\s]/gi, '').replace(' ', '')
+
+  for (i = 0; i < naughtyWords.length; i++) {
+    if (noSpaceString.indexOf(naughtyWords[i]) != -1) {
+      return true;
+    }
+  } 
+  return false; 
+}
 
 module.exports = DonorsChooseDonationController;
