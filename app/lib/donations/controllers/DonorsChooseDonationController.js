@@ -148,16 +148,16 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
   var userSubmittedEmail = messageHelper.getFirstWord(request.body.args);
   var updateObject = {};
   var apiInfoObject = {
-    apiUrl:       TEST_DONATE_API_URL, 
-    apiPassword:  testDonorsChooseApiPassword, 
-    apiKey:       testDonorsChooseApiKey
+    'apiUrl':       TEST_DONATE_API_URL, 
+    'apiPassword':  testDonorsChooseApiPassword, 
+    'apiKey':       testDonorsChooseApiKey
   };
   var self = this;
   var req = request; 
   var config = dc_config[request.query.id];
 
   // Populates the updateObject with the user's email only 
-  // if it's non-obscene and is actually an email. 
+  // if it's non-obscene and is actually an email.
   if (isValidEmail(userSubmittedEmail) && !containsNaughtyWords(userSubmittedEmail)) {
     updateObject = { $set: { email: userSubmittedEmail }};
   }
@@ -191,6 +191,62 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
   )
 
   response.send();
+};
+
+/**
+ * Submits a donation transaction to Donors Choose.
+ *
+ * @param apiInfoObject = {apiUrl: string, apiPassword: string, apiKey: string}
+ * @param donorInfoObject = {donorEmail: string, donorFirstName: string}
+ * @param proposalId, the DonorsChoose proposal ID 
+ *
+ */
+DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject, donorInfoObject, proposalId) {
+  // First request: obtains a unique token for the donation.
+  function requestToken(){
+    // Creates promise-storing object.
+    var deferred = Q.defer();
+    var retrieveTokenParams = {'form':{
+      'APIKey': apiInfoObject.apiKey,
+      'apipassword': apiInfoObject.apiPassword, 
+      'action': 'token'
+    }}
+    requestHttp.post(apiInfoObject.apiUrl, retrieveTokenParams, function(err, response, body) {
+      if (!err) {
+        deferred.resolve(JSON.parse(body).token);
+      }
+      else {
+        deferred.reject('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, error: ', err);
+      }
+    });
+    return deferred.promise;
+  }
+
+  // After promise we make the second request: donation transaction.
+  requestToken().then(function(tokenData){
+    var donateParams = {
+      'APIKey': apiInfoObject.apiKey,
+      'apipassword': apiInfoObject.apiPassword, 
+      'action': 'donate',
+      'token': tokenData,
+      'proposalId': proposalId,
+      'amount': DONATION_AMOUNT,
+      'email': (donorInfoObject.donorEmail || defaultDonorsChooseTransactionEmail),
+      'first': donorInfoObject.donorEmail, 
+      'last': 'DoSomethingTest'
+    }
+    console.log('***DONATE PARAMS***', donateParams)
+    requestHttp.post(apiInfoObject.apiUrl, donateParams, function(err, response, body) {
+      if (!err) {
+        //ADD SUCCESS MESSAGE OPT IN PATH TO USER HERE
+        console.log('Donation to proposal ' + proposalId + ' was successful! Body: ', body);
+      }
+      else {
+        console.log('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, error: ', err);
+        return false;
+      }
+    })
+  }); 
 };
 
 /**
@@ -271,65 +327,6 @@ DonorsChooseDonationController.prototype.retrieveLocation = function(request, re
   // POST same data to find-project endpoint. Should I put this inside the donationModel.create() callback? If the database becomes crowded, will this async mess up our flow?
   this._post('find-project?id=' + request.query.id, info);
   response.send();
-};
-
-/**
- * Submits a donation transaction to Donors Choose.
- *
- * @param apiInfoObject = {apiUrl: string, apiPassword: string, apiKey: string}
- * @param donorInfoObject = {donorEmail: string, donorFirstName: string}
- * @param proposalId, the DonorsChoose proposal ID 
- *
- */
-DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject, donorInfoObject, proposalId) {
-  debugger;
-  // First request: obtains a unique token for the donation.
-  var requestToken = function(){
-    // Creates promise-storing object.
-    var deferred = Q.defer();
-    var retrieveTokenParams = {
-      APIKey: apiInfoObject.apiKey,
-      apipassword: apiInfoObject.apiPassword, 
-      action: 'token'
-    }
-    requestHttp.post(apiInfoObject.apiUrl, retrieveTokenParams, function(err, response, body) {
-      if (!err) {
-        console.log('**TOKEN**', body);
-        deferred.resolve(body.token);
-      }
-      else {
-        deferred.reject('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, error: ', err);
-      }
-    });
-    return deferred.promise;
-  }
-
-  // Second request: donation transaction.
-  var requestTransaction = function(token){
-    var donateParams = {
-      APIKey: apiInfoObject.apikey,
-      apipassword: apiInfoObject.apiPassword, 
-      action: 'donate',
-      token: token,
-      proposalId: proposalId,
-      amount: DONATION_AMOUNT,
-      email: (donorInfoObject.donorEmail || defaultDonorsChooseTransactionEmail),
-      first: donorInfoObject.donorEmail, 
-      last: 'DoSomethingTest'
-    }
-    console.log('***DONATE PARAMS***', donateParams)
-    requestHttp.post(apiInfoObject.apiUrl, donateParams, function(err, response, body) {
-      if (!err) {
-        console.log('Donation to proposal ' + proposalId + ' was successful! Response: ', response, 'Body: ', body);
-      }
-      else {
-        console.log('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, error: ', err);
-        return false;
-      }
-    })
-  }
-
-  requestToken().then(requestTransaction()); 
 };
 
 /**
