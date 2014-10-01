@@ -15,9 +15,9 @@
  */
 
 var TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR = 'zip'; // 'zip' or 'state'. Our retrieveLocation() function will adjust accordingly.
-var DONATION_AMOUNT = 10;
+var DONATION_AMOUNT = 1;
 var PRODUCTION_DONATE_API_URL = 'https://apisecure.donorschoose.org/common/json_api.html?';
-var TEST_DONATE_API_URL = 'https://apiqasecure.donorschoose.org/common/json_api.html?';
+var TEST_DONATE_API_URL = 'https://apiqasecure.donorschoose.org/common/json_api.html?APIKey=DONORSCHOOSE';
 
 var mobilecommons = require('../../../../mobilecommons/mobilecommons')
   , messageHelper = require('../../userMessageHelpers')
@@ -28,7 +28,8 @@ var mobilecommons = require('../../../../mobilecommons/mobilecommons')
 var donorsChooseApiKey = (process.env.DONORSCHOOSE_API_KEY || null),
     donorsChooseApiPassword = (process.env.DONORSCHOOSE_API_PASSWORD || null),
     testDonorsChooseApiKey = 'DONORSCHOOSE',
-    testDonorsChooseApiPassword = 'helpClassrooms!';
+    testDonorsChooseApiPassword = 'helpClassrooms!',
+    defaultDonorsChooseTransactionEmail = (process.env.DONORSCHOOSE_DEFAULT_EMAIL || null);
 
 function DonorsChooseDonationController(app) {
   this.app = app;
@@ -146,7 +147,11 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
 
   var userSubmittedEmail = messageHelper.getFirstWord(request.body.args);
   var updateObject = {};
-  var apiInfoObject = {apiUrl: TEST_DONATE_API_URL, apiPassword: testDonorsChooseApiPassword, apiKey: testDonorsChooseApiKey};
+  var apiInfoObject = {
+    apiUrl:       TEST_DONATE_API_URL, 
+    apiPassword:  testDonorsChooseApiPassword, 
+    apiKey:       testDonorsChooseApiKey
+  };
   var self = this;
   var req = request; 
   var config = dc_config[request.query.id];
@@ -173,7 +178,12 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
           mobilecommons.optin({alphaPhone: req.body.phone, alphaOptin: config.start_donation_flow});
         }
         else {
-          var donorInfoObject = {donorEmail: donorDocument.email, donorFirstName: donorDocument.first_name}
+          
+          var donorInfoObject = {
+            donorEmail: donorDocument.email, 
+            donorFirstName: donorDocument.first_name
+          }
+
           self.submitDonation(apiInfoObject, donorInfoObject, donorDocument.project_id);
         }
       }
@@ -272,15 +282,15 @@ DonorsChooseDonationController.prototype.retrieveLocation = function(request, re
  *
  */
 DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject, donorInfoObject, proposalId) {
-
+  debugger;
   // First request: obtains a unique token for the donation.
   var requestToken = function(){
     // Creates promise-storing object.
     var deferred = Q.defer();
     var retrieveTokenParams = {
-      'APIKey': apiInfoObject.apiKey,
-      'apipassword': apiInfoObject.apiPassword, 
-      'action': 'token'
+      APIKey: apiInfoObject.apiKey,
+      apipassword: apiInfoObject.apiPassword, 
+      action: 'token'
     }
     requestHttp.post(apiInfoObject.apiUrl, retrieveTokenParams, function(err, response, body) {
       if (!err) {
@@ -297,10 +307,15 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
   // Second request: donation transaction.
   var requestTransaction = function(token){
     var donateParams = {
-      'APIKey': apiInfoObject.apikey,
-      'apipassword': apiInfoObject.apiPassword, 
-      'action': 'donate',
-      'token': token
+      APIKey: apiInfoObject.apikey,
+      apipassword: apiInfoObject.apiPassword, 
+      action: 'donate',
+      token: token,
+      proposalId: proposalId,
+      amount: DONATION_AMOUNT,
+      email: (donorInfoObject.donorEmail || defaultDonorsChooseTransactionEmail),
+      first: donorInfoObject.donorEmail, 
+      last: 'DoSomethingTest'
     }
     console.log('***DONATE PARAMS***', donateParams)
     requestHttp.post(apiInfoObject.apiUrl, donateParams, function(err, response, body) {
@@ -314,7 +329,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
     })
   }
 
-  requestToken().then(requestTransaction(token)); 
+  requestToken().then(requestTransaction()); 
 };
 
 /**
