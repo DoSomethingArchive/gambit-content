@@ -14,9 +14,15 @@
  *        submitDonation responsible for responding to user with success message
  */
 
+var donorsChooseApiKey = (process.env.DONORSCHOOSE_API_KEY || null),
+    donorsChooseApiPassword = (process.env.DONORSCHOOSE_API_PASSWORD || null),
+    testDonorsChooseApiKey = 'DONORSCHOOSE',
+    testDonorsChooseApiPassword = 'helpClassrooms!',
+    defaultDonorsChooseTransactionEmail = (process.env.DONORSCHOOSE_DEFAULT_EMAIL || null);
+
 var TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR = 'zip'; // 'zip' or 'state'. Our retrieveLocation() function will adjust accordingly.
 var DONATION_AMOUNT = 1;
-var PRODUCTION_DONATE_API_URL = 'https://apisecure.donorschoose.org/common/json_api.html?';
+var PRODUCTION_DONATE_API_URL = 'https://apisecure.donorschoose.org/common/json_api.html?APIKey=' + donorsChooseApiKey;
 var TEST_DONATE_API_URL = 'https://apiqasecure.donorschoose.org/common/json_api.html?APIKey=DONORSCHOOSE';
 
 var mobilecommons = require('../../../../mobilecommons/mobilecommons')
@@ -25,11 +31,7 @@ var mobilecommons = require('../../../../mobilecommons/mobilecommons')
   , dc_config = require('../config/donorschoose')
   , Q = require('q');
 
-var donorsChooseApiKey = (process.env.DONORSCHOOSE_API_KEY || null),
-    donorsChooseApiPassword = (process.env.DONORSCHOOSE_API_PASSWORD || null),
-    testDonorsChooseApiKey = 'DONORSCHOOSE',
-    testDonorsChooseApiPassword = 'helpClassrooms!',
-    defaultDonorsChooseTransactionEmail = (process.env.DONORSCHOOSE_DEFAULT_EMAIL || null);
+
 
 function DonorsChooseDonationController(app) {
   this.app = app;
@@ -105,10 +107,10 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
       var mobileCommonsCustomFields = {
         donorsChooseProposalId :          selectedProposal.id,
         donorsChooseProposalTitle :       selectedProposal.title,
-        donorsChooseProposalUrl :         selectedProposal.proposalURL,
-        donorsChooseProposalTeacherName : selectedProposal.teacherName,
-        donorsChooseProposalSchoolName :  selectedProposal.schoolName,
-        donorsChooseProposalSchoolCity :  selectedProposal.city,
+        donorsChooseProposalUrl :         selectedProposal.proposalURL, // Currently used in MobileCommons.
+        donorsChooseProposalTeacherName : selectedProposal.teacherName, // Currently used in MobileCommons.
+        donorsChooseProposalSchoolName :  selectedProposal.schoolName, // Currently used in MobileCommons. 
+        donorsChooseProposalSchoolCity :  selectedProposal.city, // Currently used in MobileCommons.
         donorsChooseProposalSummary :     selectedProposal.fulfillmentTrailer,
       }
 
@@ -147,10 +149,15 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
 
   var userSubmittedEmail = messageHelper.getFirstWord(request.body.args);
   var updateObject = {};
+  // var apiInfoObject = {
+  //   'apiUrl':       PRODUCTION_DONATE_API_URL, 
+  //   'apiPassword':  donorsChooseApiPassword, 
+  //   'apiKey':       donorsChooseApiKey
+  // };
   var apiInfoObject = {
-    'apiUrl':       TEST_DONATE_API_URL, 
-    'apiPassword':  testDonorsChooseApiPassword, 
-    'apiKey':       testDonorsChooseApiKey
+    'apiUrl':       TEST_DONATE_API_URL,
+    'apiPassword':  testDonorsChooseApiPassword,
+    'apiKey':       testDonorsChooseApiKey 
   };
   var self = this;
   var req = request; 
@@ -214,6 +221,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
     }}
     requestHttp.post(apiInfoObject.apiUrl, retrieveTokenParams, function(err, response, body) {
       if (!err) {
+        console.log('**TOKEN BODY**', body)
         deferred.resolve(JSON.parse(body).token);
       }
       else {
@@ -233,14 +241,16 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
       'proposalId': proposalId,
       'amount': DONATION_AMOUNT,
       'email': (donorInfoObject.donorEmail || defaultDonorsChooseTransactionEmail),
-      'first': donorInfoObject.donorFirstName , 
-      'last': 'DoSomethingTest'
+      'first': donorInfoObject.donorFirstName, 
+      'last': 'DoSomethingTest',
+      'salutation': donorInfoObject.donorFirstName
     }}
     console.log('***DONATE PARAMS***', donateParams)
     requestHttp.post(apiInfoObject.apiUrl, donateParams, function(err, response, body) {
+      console.log('**DONATE TRANSACTION BODY**', body)
       if (!err && (JSON.parse(body).statusDescription == 'success')) {
         console.log('Donation to proposal ' + proposalId + ' was successful! Body: ', body);
-        mobilecommons.optin({alphaPhone: donorInfoObject.donorPhoneNumber, alphaOptin: donationConfig.donate_complete}); // We don't have access to the request here in this function. 
+        mobilecommons.optin({alphaPhone: donorInfoObject.donorPhoneNumber, alphaOptin: donationConfig.donate_complete});
       }
       else {
         console.log('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, error: ', err);
