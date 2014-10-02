@@ -181,10 +181,11 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
           
           var donorInfoObject = {
             donorEmail: donorDocument.email, 
-            donorFirstName: donorDocument.first_name
+            donorFirstName: donorDocument.first_name,
+            donorPhoneNumber: req.body.phone
           }
 
-          self.submitDonation(apiInfoObject, donorInfoObject, donorDocument.project_id);
+          self.submitDonation(apiInfoObject, donorInfoObject, donorDocument.project_id, config);
         }
       }
     }
@@ -201,12 +202,12 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
  * @param proposalId, the DonorsChoose proposal ID 
  *
  */
-DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject, donorInfoObject, proposalId) {
+DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject, donorInfoObject, proposalId, donationConfig) {
   // First request: obtains a unique token for the donation.
   function requestToken(){
     // Creates promise-storing object.
     var deferred = Q.defer();
-    var retrieveTokenParams = {'form':{
+    var retrieveTokenParams = { 'form': {
       'APIKey': apiInfoObject.apiKey,
       'apipassword': apiInfoObject.apiPassword, 
       'action': 'token'
@@ -224,7 +225,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
 
   // After promise we make the second request: donation transaction.
   requestToken().then(function(tokenData){
-    var donateParams = {
+    var donateParams = { 'form': {
       'APIKey': apiInfoObject.apiKey,
       'apipassword': apiInfoObject.apiPassword, 
       'action': 'donate',
@@ -232,14 +233,14 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
       'proposalId': proposalId,
       'amount': DONATION_AMOUNT,
       'email': (donorInfoObject.donorEmail || defaultDonorsChooseTransactionEmail),
-      'first': donorInfoObject.donorEmail, 
+      'first': donorInfoObject.donorFirstName , 
       'last': 'DoSomethingTest'
-    }
+    }}
     console.log('***DONATE PARAMS***', donateParams)
     requestHttp.post(apiInfoObject.apiUrl, donateParams, function(err, response, body) {
-      if (!err) {
-        //ADD SUCCESS MESSAGE OPT IN PATH TO USER HERE
+      if (!err && (JSON.parse(body).statusDescription == 'success')) {
         console.log('Donation to proposal ' + proposalId + ' was successful! Body: ', body);
+        mobilecommons.optin({alphaPhone: donorInfoObject.donorPhoneNumber, alphaOptin: donationConfig.donate_complete}); // We don't have access to the request here in this function. 
       }
       else {
         console.log('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, error: ', err);
