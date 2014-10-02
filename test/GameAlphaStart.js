@@ -20,7 +20,7 @@ describe('Alpha-Start Game:', function() {
   before(function() {
     app = express();
     require('../app/config')(app, express);
-    gameConfig = app.get('test-competitive-stories');
+    gameConfig = app.get('competitive-stories');
 
     gameController = new SGCompetitiveStoryController(app);
     gameId = 0;
