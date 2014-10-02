@@ -520,37 +520,37 @@
 
   "101": {
     "__comments": "Science Sleuth 2014",
-    "alpha_wait_oip": *,
-    "alpha_start_ask_oip": *,
-    "beta_join_ask_oip": *,
-    "beta_wait_oip": *,
-    "game_in_progress_oip": *,
-    "game_ended_from_exit_oip": *,
-    "story_start_oip": *,
-    "ask_solo_play" : *,
+    "alpha_wait_oip": 172121,
+    "alpha_start_ask_oip": 172123,
+    "beta_join_ask_oip": 172125,
+    "beta_wait_oip": 172127,
+    "game_in_progress_oip": 172129,
+    "game_ended_from_exit_oip": 172343,
+    "story_start_oip": 172147,
+    "ask_solo_play" : 172345,
     "mobile_create": {
-      "ask_beta_1_oip": *,
-      "ask_beta_2_oip": *,
-      "invalid_mobile_oip": *,
-      "not_enough_players_oip": *
+      "ask_beta_1_oip": 172133,
+      "ask_beta_2_oip": 172135,
+      "invalid_mobile_oip": 172137,
+      "not_enough_players_oip": 172139
     },
     "story": {
-      "*": {
+      "172147": {
         "__comments": "Level 1-0",
         "choices": [
           {
             "key": "L11A",
-            "next": *,
+            "next": 172149,
             "valid_answers": ["A"]
           },
           {
             "key": "L11B",
-            "next": *,
+            "next": 172151,
             "valid_answers": ["B"]
           }
         ]
       },
-      "*": {
+      "172149": {
         "__comments": "Level 1-1A",
         "choices": [
           {
@@ -565,7 +565,7 @@
           }
         ]
       },
-      "*": {
+      "172151": {
         "__comments": "Level 1-1B",
         "choices": [
           {
@@ -583,19 +583,19 @@
       "END-LEVEL1": {
         "choices": [
           {
-            "next": *,
+            "next": 172153,
             "conditions": {"$and": ["L11A", "L12C"]}
           },
           {
-            "next": *,
+            "next": 172155,
             "conditions": {"$and": ["L11A", "L12D"]}
           },
           {
-            "next": *,
+            "next": 172157,
             "conditions": {"$and": ["L11B", "L12C"]}
           },
           {
-            "next": *,
+            "next": 172159,
             "conditions": {"$and": ["L11B", "L12D"]}
           }
         ]
@@ -603,32 +603,32 @@
       "END-LEVEL1-GROUP": {
         "choices": [
           {
-            "next": *,
-            "conditions": { "$and": ["L12D"] }
+            "next": 172161,
+            "conditions": {"$or": [{"$and": ["L11A", "L12D"]}, {"$and": ["L11B", "L12C"]}]}
           },
           {
-            "next": *,
-            "conditions": { "$or": ["L11A", "L11B", "L12C"] }
+            "next": 172163,
+            "conditions": { "$or": [{"$and": ["L11A", "L12C"]}, {"$and": ["L11B", "L12D"]}] }
           }
         ],
-        "next_level": *
+        "next_level": 172165
       },
-      "*": {
+      "172165": {
         "__comments": "Level 2-0",
         "choices": [
           {
             "key": "L21A",
-            "next": *,
+            "next": 172167,
             "valid_answers": ["A"]
           },
           {
             "key": "L21B",
-            "next": *,
+            "next": 172169,
             "valid_answers": ["B"]
           }
         ]
       },
-      "*": {
+      "172167": {
         "__comments": "Level 2-1A",
         "choices": [
           {
@@ -643,7 +643,7 @@
           }
         ]
       },
-      "*": {
+      "172169": {
         "__comments": "Level 2-1B",
         "choices": [
           {
@@ -661,19 +661,19 @@
       "END-LEVEL2": {
         "choices": [
           {
-            "next": *,
+            "next": 172171,
             "conditions": {"$and": ["L21A", "L22C"]}
           },
           {
-            "next": *,
+            "next": 172173,
             "conditions": {"$and": ["L21A", "L22D"]}
           },
           {
-            "next": *,
+            "next": 172175,
             "conditions": {"$and": ["L21B", "L22C"]}
           },
           {
-            "next": *,
+            "next": 172177,
             "conditions": {"$and": ["L21B", "L22D"]}
           }
         ]
@@ -681,32 +681,32 @@
       "END-LEVEL2-GROUP": {
         "choices": [
           {
-            "next": *,
-            "conditions": { "$and": ["L22D"] }
+            "next": 172179,
+            "conditions": { "$and": ["L22C"] }
           },
           {
-            "next": *,
-            "conditions": { "$or": ["L21A", "L21B", "L22C"] }
+            "next": 172181,
+            "conditions": { "$and": ["L22D"] }
           }
         ],
-        "next_level": *
+        "next_level": 172183
       },
-      "*": {
+      "172183": {
         "__comments": "Level 3-0",
         "choices": [
           {
             "key": "L31A",
-            "next": *,
+            "next": 172185,
             "valid_answers": ["A"]
           },
           {
             "key": "L31B",
-            "next": *,
+            "next": 172187,
             "valid_answers": ["B"]
           }
         ]
       },
-      "*": {
+      "172185": {
         "__comments": "Level 3-1A",
         "choices": [
           {
@@ -721,7 +721,7 @@
           }
         ]
       },
-      "*": {
+      "172187": {
         "__comments": "Level 3-1B",
         "choices": [
           {
@@ -739,19 +739,19 @@
       "END-LEVEL3": {
         "choices": [
           {
-            "next": *,
+            "next": 172189,
             "conditions": {"$and": ["L31A", "L32C"]}
           },
           {
-            "next": *,
+            "next": 172191,
             "conditions": {"$and": ["L31A", "L32D"]}
           },
           {
-            "next": *,
+            "next": 172193,
             "conditions": {"$and": ["L31B", "L32C"]}
           },
           {
-            "next": *,
+            "next": 172195,
             "conditions": {"$and": ["L31B", "L32D"]}
           }
         ]
@@ -759,32 +759,32 @@
       "END-LEVEL3-GROUP": {
         "choices": [
           {
-            "next": *,
-            "conditions": { "$and": ["L31A"] }
+            "next": 172197,
+            "conditions": { "$or": [{"$and": ["L31A", "L32C"]}, {"$and": ["L31B", "L32D"]}] }
           },
           {
-            "next": *,
-            "conditions": { "$or": ["L31B", "L32C", "L32D"] }
+            "next": 172199,
+            "conditions": { "$or": [{"$and": ["L31A", "L32D"]}, {"$and": ["L31B", "L32C"]}] }
           }
         ],
-        "next_level": *
+        "next_level": 172201
       },
-      "*": {
+      "172201": {
         "__comments": "Level 4-0",
         "choices": [
           {
             "key": "L41A",
-            "next": *,
+            "next": 172203,
             "valid_answers": ["A"]
           },
           {
             "key": "L41B",
-            "next": *,
+            "next": 172205,
             "valid_answers": ["B"]
           }
         ]
       },
-      "*": {
+      "172203": {
         "__comments": "Level 4-1A",
         "choices": [
           {
@@ -799,7 +799,7 @@
           }
         ]
       },
-      "*": {
+      "172205": {
         "__comments": "Level 4-1B",
         "choices": [
           {
@@ -817,19 +817,19 @@
       "END-LEVEL4": {
         "choices": [
           {
-            "next": *,
+            "next": 172207,
             "conditions": {"$and": ["L41A", "L42C"]}
           },
           {
-            "next": *,
+            "next": 172209,
             "conditions": {"$and": ["L41A", "L42D"]}
           },
           {
-            "next": *,
+            "next": 172211,
             "conditions": {"$and": ["L41B", "L42C"]}
           },
           {
-            "next": *,
+            "next": 172213,
             "conditions": {"$and": ["L41B", "L42D"]}
           }
         ]
@@ -837,32 +837,32 @@
       "END-LEVEL4-GROUP": {
         "choices": [
           {
-            "next": *,
-            "conditions": { "$and": ["L41B"] }
+            "next": 172215,
+            "conditions": { "$and": ["L42C"] }
           },
           {
-            "next": *,
-            "conditions": { "$or": ["L41A", "L42C", "L42D"] }
+            "next": 172217,
+            "conditions": { "$and": ["L42D"] }
           }
         ],
-        "next_level": *
+        "next_level": 172219
       },
-      "*": {
+      "172219": {
         "__comments": "Level 5-0",
         "choices": [
           {
             "key": "L51A",
-            "next": *,
+            "next": 172221,
             "valid_answers": ["A"]
           },
           {
             "key": "L51B",
-            "next": *,
+            "next": 172223,
             "valid_answers": ["B"]
           }
         ]
       },
-      "*": {
+      "172221": {
         "__comments": "Level 5-1A",
         "choices": [
           {
@@ -877,7 +877,7 @@
           }
         ]
       },
-      "*": {
+      "172223": {
         "__comments": "Level 5-1B",
         "choices": [
           {
@@ -895,19 +895,19 @@
       "END-LEVEL5": {
         "choices": [
           {
-            "next": *,
+            "next": 172225,
             "conditions": {"$and": ["L51A", "L52C"]}
           },
           {
-            "next": *,
+            "next": 172227,
             "conditions": {"$and": ["L51A", "L52D"]}
           },
           {
-            "next": *,
+            "next": 172229,
             "conditions": {"$and": ["L51B", "L52C"]}
           },
           {
-            "next": *,
+            "next": 172231,
             "conditions": {"$and": ["L51B", "L52D"]}
           }
         ]
@@ -915,32 +915,32 @@
       "END-LEVEL5-GROUP": {
         "choices": [
           {
-            "next": *,
-            "conditions": { "$and": ["L51A"] }
+            "next": 172233,
+            "conditions": { "$and": ["L52D"] }
           },
           {
-            "next": *,
-            "conditions": { "$or": ["L51B", "L52C", "L52D"] }
+            "next": 172235,
+            "conditions": { "$and": ["L52C"] }
           }
         ],
-        "next_level": *
+        "next_level": 172237
       },
-      "*": {
+      "172237": {
         "__comments": "Level 6-0",
         "choices": [
           {
             "key": "L61A",
-            "next": *,
+            "next": 172239,
             "valid_answers": ["A"]
           },
           {
             "key": "L61B",
-            "next": *,
+            "next": 172241,
             "valid_answers": ["B"]
           }
         ]
       },
-      "*": {
+      "172239": {
         "__comments": "Level 6-1A",
         "choices": [
           {
@@ -955,7 +955,7 @@
           }
         ]
       },
-      "*": {
+      "172241": {
         "__comments": "Level 6-1B",
         "choices": [
           {
@@ -973,19 +973,19 @@
       "END-LEVEL6": {
         "choices": [
           {
-            "next": *,
+            "next": 172243,
             "conditions": {"$and": ["L61A", "L62C"]}
           },
           {
-            "next": *,
+            "next": 172245,
             "conditions": {"$and": ["L61A", "L62D"]}
           },
           {
-            "next": *,
+            "next": 172247,
             "conditions": {"$and": ["L61B", "L62C"]}
           },
           {
-            "next": *,
+            "next": 172249,
             "conditions": {"$and": ["L61B", "L62D"]}
           }
         ]
@@ -993,46 +993,59 @@
       "END-LEVEL6-GROUP": {
         "choices": [
           {
-            "next": *,
-            "conditions": { "$and": ["L62C"] }
+            "next": 172251,
+            "conditions": { "$or": [{"$and": ["L61A", "L62D"]}, {"$and": ["L61B", "L62C"]}] }
           },
           {
-            "next": *,
-            "conditions": { "$or": ["L61A", "L61B", "L62D"] }
+            "next": 172253,
+            "conditions": { "$or": [{"$and": ["L61A", "L62C"]}, {"$and": ["L61B", "L62D"]}] }
           }
         ],
         "next_level": "END-GAME"
       },
       "END-GAME": {
-        "__comments": "Science Sleuth endgame",
+        "__comments": "Science Sleuth endgame group win / loss determination",
         "indiv-message-end-game-format" : "rankings-within-group-based",
         "group-message-end-game-format" : "group-success-failure-based",
-        "choices": [
-          {
-            "next": *,
-            "conditions": { "$and": ["L12D", "L22C", "L31A", "L41B", "L51A", "L62C"] }
-          },
-          {
-            "next": *,
-            "conditions": { "$and": ["L12C", "L22C", "L41B"] }
-          },
-          {
-            "next": *,
-            "conditions": { "$and": ["L22D", "L31A", "L42D", "L51B"] }
-          },
-          {
-            "next": *,
-            "conditions": { "$and": ["L11B", "L52C", "L61A"] }
-          },
-          {
-            "next": *,
-            "conditions": { "$and": ["L12D", "L51B", {"$or": ["L41A", "L42C"]}] }
-          },
-          {
-            "next": *,
-            "conditions": { "$or": ["L61A", "L61B", "L62C", "L62D"] }
-          }
-        ]
+        "group-level-success-oips" : [
+                172161, 
+                172179, 
+                172197,
+                172215,
+                172233,
+                172251
+        ],
+        "group-success-failure-oips" : {
+            "0" : 172283,
+            "1" : 172283,
+            "2" : 172283,
+            "3" : 172281,
+            "4" : 172281,
+            "5" : 172279,
+            "6" : 172279
+        },
+        "indiv-level-success-oips": [
+            172155,
+            172157,
+            172171,
+            172175,
+            172189,
+            172195,
+            172207,
+            172211,
+            172227,
+            172231,
+            172245,
+            172247
+        ],
+        "indiv-rank-oips": {
+            "1": 172287,
+            "2": 172289,
+            "3": 172291,
+            "4": 172293,
+            "1-tied": 172297,
+            "2-tied": 172299
+        }
       }
     }
   }
