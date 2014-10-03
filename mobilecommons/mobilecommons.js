@@ -7,16 +7,17 @@ var request = require('request')
     ;
 
 /**
- * Mobile Commons profile_update API. Can be used to subscribe the user to an
- * opt-in path.
- *
- * @param phone
- *   Phone number of the profile to update.
- * @param optInPathId
- *   Opt-in path to subscribe the user to.
- * @param customFields
- *   Array of custom profile field names and values to update the user with.
- */
+* Mobile Commons profile_update API. Can be used to subscribe the user to an
+* opt-in path.
+*
+* @param phone
+*   Phone number of the profile to update.
+* @param optInPathId
+*   Opt-in path to subscribe the user to.
+* @param customFields
+*   Array of custom profile field names and values to update the user with.
+*/
+
 exports.profile_update = function(phone, optInPathId, customFields) {
   var url = 'https://secure.mcommons.com/api/profile_update';
   var authEmail = process.env.MOBILECOMMONS_AUTH_EMAIL;
