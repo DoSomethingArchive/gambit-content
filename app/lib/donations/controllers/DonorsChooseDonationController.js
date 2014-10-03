@@ -31,8 +31,6 @@ var mobilecommons = require('../../../../mobilecommons/mobilecommons')
   , dc_config = require('../config/donorschoose')
   , Q = require('q');
 
-
-
 function DonorsChooseDonationController(app) {
   this.app = app;
   this.donationModel = require('../models/DonationInfo')(app);
@@ -243,7 +241,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
       'amount': DONATION_AMOUNT,
       'email': (donorInfoObject.donorEmail || defaultDonorsChooseTransactionEmail),
       'first': donorInfoObject.donorFirstName, 
-      'last': 'DoSomethingTest',
+      'last': '',
       'salutation': donorInfoObject.donorFirstName
     }}
     console.log('***DONATE PARAMS***', donateParams)
