@@ -23,7 +23,7 @@ var donorsChooseApiKey = (process.env.DONORSCHOOSE_API_KEY || null),
 var TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR = 'zip'; // 'zip' or 'state'. Our retrieveLocation() function will adjust accordingly.
 var DONATION_AMOUNT = 1;
 var PRODUCTION_DONATE_API_URL = 'https://apisecure.donorschoose.org/common/json_api.html?APIKey=' + donorsChooseApiKey;
-var TEST_DONATE_API_URL = 'https://apiqasecure.donorschoose.org/common/json_api.html?APIKey=DONORSCHOOSE';
+var TEST_DONATE_API_URL = 'https://apiqasecure.donorschoose.org/common/json_api.html?APIKey=' + testDonorsChooseApiKey;
 
 var mobilecommons = require('../../../../mobilecommons/mobilecommons')
   , messageHelper = require('../../userMessageHelpers')
@@ -149,16 +149,17 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
 
   var userSubmittedEmail = messageHelper.getFirstWord(request.body.args);
   var updateObject = {};
-  // var apiInfoObject = {
-  //   'apiUrl':       PRODUCTION_DONATE_API_URL, 
-  //   'apiPassword':  donorsChooseApiPassword, 
-  //   'apiKey':       donorsChooseApiKey
-  // };
   var apiInfoObject = {
-    'apiUrl':       TEST_DONATE_API_URL,
-    'apiPassword':  testDonorsChooseApiPassword,
-    'apiKey':       testDonorsChooseApiKey 
+    'apiUrl':       PRODUCTION_DONATE_API_URL, 
+    'apiPassword':  donorsChooseApiPassword, 
+    'apiKey':       donorsChooseApiKey
   };
+  //Comment out above and comment in below for test donations. 
+  // var apiInfoObject = {
+  //   'apiUrl':       TEST_DONATE_API_URL,
+  //   'apiPassword':  testDonorsChooseApiPassword,
+  //   'apiKey':       testDonorsChooseApiKey 
+  // };
   var self = this;
   var req = request; 
   var config = dc_config[request.query.id];
