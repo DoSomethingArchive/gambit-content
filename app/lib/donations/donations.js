@@ -101,15 +101,4 @@ module.exports = function(app) {
       response.send(404, 'Request not available for: ' + request.params.controller);
     }
   });
-
-  app.post('/donations/:controller/submit-donation', function(request, response) {
-    var controller = loadController(request.params.controller);
-    if (controller) {
-      controller.setHost(request.get('host'));
-      controller.submitDonation(request, response);
-    }
-    else {
-      response.send(404, 'Request not available for: ' + request.params.controller);
-    }
-  });
 };

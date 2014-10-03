@@ -6,7 +6,13 @@
 
 var config = {
   "101": {
-    "invalid_state_oip": 1
+    "__comments": "Science Sleuth 2014 EndGame Donation Flow",
+    "start_donation_flow" : 170621,
+    "invalid_state_oip": 1,
+    "invalid_zip_oip": 2,
+    "found_project_ask_name": 170623,
+    "received_name_ask_email": 170625,
+    "donate_complete": 170627
   }
 };
 
