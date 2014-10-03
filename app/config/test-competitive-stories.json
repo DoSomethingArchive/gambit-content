@@ -1,6 +1,6 @@
-{
+{ 
   "1": {
-    "__comments": "This is a test.",
+    "__comments": "This is the config file for the original test competitive game.",
     "alpha_wait_oip": 168445,
     "alpha_start_ask_oip": 168447,
     "beta_join_ask_oip": 168449,
@@ -415,6 +415,166 @@
       }
     }
   },
+
+  "2" : {
+    "__comments" : "this a test JSON config file for final group endgame win/lose logic.",
+    "alpha_wait_oip" : 1,
+    "alpha_start_ask_oip" : 2, 
+    "beta_join_ask_oip" : 3,
+    "beta_wait_oip" : 4,
+    "game_in_progress_oip" : 5, 
+    "story_start_oip" : 6,
+    "story" : {
+        "7" : {
+            "__comments" : "Level 1",
+            "choices" : [
+                {
+                    "key" : "L1A",
+                    "next" : "END-LEVEL1",
+                    "valid_answers" : ["A"]
+                },
+                {
+                    "key" : "L1B",
+                    "next" : "END-LEVEL1",
+                    "valid_answers" : ["B"]
+                }
+            ]
+        },
+        "8" : {
+            "__comments" : "Level 2",
+            "choices" : [
+                {
+                    "key" : "L2A",
+                    "next" : "END-LEVEL2",
+                    "valid_answers" : ["A"]
+                },
+                {
+                    "key" : "L2B",
+                    "next" : "END-LEVEL2",
+                    "valid_answers" : ["B"]
+                }
+            ]
+        },
+        "9" : {
+            "__comments" : "Level 3",
+            "choices" : [
+                {
+                    "key" : "L3A",
+                    "next" : "END-LEVEL3",
+                    "valid_answers" : ["A"]
+                },
+                {
+                    "key" : "L3B",
+                    "next" : "END-LEVEL3",
+                    "valid_answers" : ["B"]
+                }
+            ]
+        },
+        "END-LEVEL1": {
+          "choices": [
+            {
+              "next": 11,
+              "conditions": {"$and": ["L1A"]}
+            },
+            {
+              "next": 12,
+              "conditions": {"$and": ["L1B"]}
+            }
+          ]
+        },
+        "END-LEVEL1-GROUP" : {
+          "choices": [
+            {
+              "next": 21,
+              "conditions": { "$and": ["L1A"] }
+            },
+            {
+              "next": 22,
+              "conditions": { "$and": ["L1B"] }
+            }
+          ],
+          "next_level": 8
+        },
+        "END-LEVEL2": {
+          "choices": [
+            {
+              "next": 13,
+              "conditions": {"$and": ["L2A"]}
+            },
+            {
+              "next": 14,
+              "conditions": {"$and": ["L2B"]}
+            }
+          ]
+        },
+        "END-LEVEL2-GROUP" : {
+          "choices": [
+            {
+              "next": 23,
+              "conditions": { "$and": ["L12D"] }
+            },
+            {
+              "next": 24,
+              "conditions": { "$or": ["L1A", "L1B", "L12C"] }
+            }
+          ],
+          "next_level": 9
+        },
+        "END-LEVEL3": {
+          "choices": [
+            {
+              "next": 15,
+              "conditions": {"$and": ["L3A"]}
+            },
+            {
+              "next": 16,
+              "conditions": {"$and": ["L3B"]}
+            }
+          ]
+        },
+        "END-LEVEL3-GROUP" : {
+          "choices": [
+            {
+              "next": 25,
+              "conditions": { "$and": ["L3A"] }
+            },
+            {
+              "next": 26,
+              "conditions": { "$and": ["L3B"] }
+            }
+          ],
+          "next_level": "END-GAME"
+        },
+        "END-GAME" : {
+            "__comments" : "test endgame group win / loss determination",
+            "indiv-message-end-game-format" : "individual-decision-based",
+            "group-message-end-game-format" : "group-success-failure-based",
+            "choices" : [
+                {
+                    "__comments" : "individual win",
+                    "next": 31,
+                    "conditions": {"$and": ["L1A", "L2A", "L3A"]}
+                },
+                {
+                    "__comments" : "individual loss",
+                    "next": 32,
+                    "conditions" : {"$or": ["L1B", "L2B", "L3B"]}
+                }
+            ],
+            "group-level-impact-oips" : [
+                    21, 
+                    23, 
+                    25
+                ],
+            "group-success-failure-oips" : {
+                "0" : 41,
+                "1" : 41,
+                "2" : 42,
+                "3" : 43
+                }
+            }
+        }
+    },
   "100": {
     "__comments": "Bully Text 2014",
     "alpha_wait_oip": 169841,
@@ -422,15 +582,7 @@
     "beta_join_ask_oip": 169845,
     "beta_wait_oip": 169847,
     "game_in_progress_oip": 169849,
-    "game_ended_from_exit_oip": 170805,
     "story_start_oip": 169859,
-    "ask_solo_play" : 171313,
-    "mobile_create": {
-      "ask_beta_1_oip": 170433,
-      "ask_beta_2_oip": 170435,
-      "invalid_mobile_oip": 170439,
-      "not_enough_players_oip": 170465
-    },
     "story": {
       "169859": {
         "__comments": "Level 1-0",
@@ -579,11 +731,11 @@
         "choices": [
           {
             "next": 169891,
-            "conditions": { "$and": ["L22D"] }
+            "conditions": { "$and": ["L22C"] }
           },
           {
             "next": 169893,
-            "conditions": { "$or": ["L21A", "L21B", "L22C"] }
+            "conditions": { "$or": ["L21A", "L21B", "L22D"] }
           }
         ],
         "next_level": 169895
@@ -738,7 +890,7 @@
             "conditions": { "$and": ["L41B"] }
           },
           {
-            "next": 169931,
+            "next": 169929,
             "conditions": { "$or": ["L41A", "L42C", "L42D"] }
           }
         ],
@@ -901,9 +1053,48 @@
         "next_level": "END-GAME"
       },
       "END-GAME": {
-        "__comments": "Bully Text end-game superlatives",
-        "indiv-message-end-game-format" : "individual-decision-based",
-        "group-message-end-game-format" : null,
+        "__comments": "test endgame group win / loss determination",
+        "indiv-message-end-game-format" : "rankings-within-group-based",
+        "group-message-end-game-format" : "group-success-failure-based",
+        "group-level-success-oips" : [
+                169873, 
+                169891, 
+                169909,
+                169929,
+                169947,
+                169965
+        ],
+        "group-success-failure-oips" : {
+            "0" : 0,
+            "1" : 10,
+            "2" : 20,
+            "3" : 30,
+            "4" : 40,
+            "5" : 50,
+            "6" : 60
+        },
+        "indiv-level-success-oips": [
+            169867,
+            169871,
+            169883,
+            169887,
+            169901,
+            169903,
+            169925,
+            169927,
+            169939,
+            169941,
+            169957,
+            169959
+        ],
+        "indiv-rank-oips": {
+            "1": 1,
+            "2": 2,
+            "3": 3,
+            "4": 4,
+            "1-tied": 11,
+            "2-tied": 22
+        },
         "choices": [
           {
             "next": 170437,
@@ -930,537 +1121,6 @@
             "conditions": { "$or": ["L61A", "L61B", "L62C", "L62D"] }
           }
         ]
-      }
-    }
-  },
-  "101": {
-    "__comments": "Science Sleuth 2014",
-    "alpha_wait_oip": 172121,
-    "alpha_start_ask_oip": 172123,
-    "beta_join_ask_oip": 172125,
-    "beta_wait_oip": 172127,
-    "game_in_progress_oip": 172129,
-    "game_ended_from_exit_oip": 172343,
-    "story_start_oip": 172147,
-    "ask_solo_play" : 172345,
-    "mobile_create": {
-      "ask_beta_1_oip": 172133,
-      "ask_beta_2_oip": 172135,
-      "invalid_mobile_oip": 172137,
-      "not_enough_players_oip": 172139
-    },
-    "story": {
-      "172147": {
-        "__comments": "Level 1-0",
-        "choices": [
-          {
-            "key": "L11A",
-            "next": 172149,
-            "valid_answers": ["A"]
-          },
-          {
-            "key": "L11B",
-            "next": 172151,
-            "valid_answers": ["B"]
-          }
-        ]
-      },
-      "172149": {
-        "__comments": "Level 1-1A",
-        "choices": [
-          {
-            "key": "L12C",
-            "next": "END-LEVEL1",
-            "valid_answers": ["A"]
-          },
-          {
-            "key": "L12D",
-            "next": "END-LEVEL1",
-            "valid_answers": ["B"]
-          }
-        ]
-      },
-      "172151": {
-        "__comments": "Level 1-1B",
-        "choices": [
-          {
-            "key": "L12C",
-            "next": "END-LEVEL1",
-            "valid_answers": ["A"]
-          },
-          {
-            "key": "L12D",
-            "next": "END-LEVEL1",
-            "valid_answers": ["B"]
-          }
-        ]
-      },
-      "END-LEVEL1": {
-        "choices": [
-          {
-            "next": 172153,
-            "conditions": {"$and": ["L11A", "L12C"]}
-          },
-          {
-            "next": 172155,
-            "conditions": {"$and": ["L11A", "L12D"]}
-          },
-          {
-            "next": 172157,
-            "conditions": {"$and": ["L11B", "L12C"]}
-          },
-          {
-            "next": 172159,
-            "conditions": {"$and": ["L11B", "L12D"]}
-          }
-        ]
-      },
-      "END-LEVEL1-GROUP": {
-        "choices": [
-          {
-            "next": 172161,
-            "conditions": {"$or": [{"$and": ["L11A", "L12D"]}, {"$and": ["L11B", "L12C"]}]}
-          },
-          {
-            "next": 172163,
-            "conditions": { "$or": [{"$and": ["L11A", "L12C"]}, {"$and": ["L11B", "L12D"]}] }
-          }
-        ],
-        "next_level": 172165
-      },
-      "172165": {
-        "__comments": "Level 2-0",
-        "choices": [
-          {
-            "key": "L21A",
-            "next": 172167,
-            "valid_answers": ["A"]
-          },
-          {
-            "key": "L21B",
-            "next": 172169,
-            "valid_answers": ["B"]
-          }
-        ]
-      },
-      "172167": {
-        "__comments": "Level 2-1A",
-        "choices": [
-          {
-            "key": "L22C",
-            "next": "END-LEVEL2",
-            "valid_answers": ["A"]
-          },
-          {
-            "key": "L22D",
-            "next": "END-LEVEL2",
-            "valid_answers": ["B"]
-          }
-        ]
-      },
-      "172169": {
-        "__comments": "Level 2-1B",
-        "choices": [
-          {
-            "key": "L22C",
-            "next": "END-LEVEL2",
-            "valid_answers": ["A"]
-          },
-          {
-            "key": "L22D",
-            "next": "END-LEVEL2",
-            "valid_answers": ["B"]
-          }
-        ]
-      },
-      "END-LEVEL2": {
-        "choices": [
-          {
-            "next": 172171,
-            "conditions": {"$and": ["L21A", "L22C"]}
-          },
-          {
-            "next": 172173,
-            "conditions": {"$and": ["L21A", "L22D"]}
-          },
-          {
-            "next": 172175,
-            "conditions": {"$and": ["L21B", "L22C"]}
-          },
-          {
-            "next": 172177,
-            "conditions": {"$and": ["L21B", "L22D"]}
-          }
-        ]
-      },
-      "END-LEVEL2-GROUP": {
-        "choices": [
-          {
-            "next": 172179,
-            "conditions": { "$and": ["L22C"] }
-          },
-          {
-            "next": 172181,
-            "conditions": { "$and": ["L22D"] }
-          }
-        ],
-        "next_level": 172183
-      },
-      "172183": {
-        "__comments": "Level 3-0",
-        "choices": [
-          {
-            "key": "L31A",
-            "next": 172185,
-            "valid_answers": ["A"]
-          },
-          {
-            "key": "L31B",
-            "next": 172187,
-            "valid_answers": ["B"]
-          }
-        ]
-      },
-      "172185": {
-        "__comments": "Level 3-1A",
-        "choices": [
-          {
-            "key": "L32C",
-            "next": "END-LEVEL3",
-            "valid_answers": ["A"]
-          },
-          {
-            "key": "L32D",
-            "next": "END-LEVEL3",
-            "valid_answers": ["B"]
-          }
-        ]
-      },
-      "172187": {
-        "__comments": "Level 3-1B",
-        "choices": [
-          {
-            "key": "L32C",
-            "next": "END-LEVEL3",
-            "valid_answers": ["A"]
-          },
-          {
-            "key": "L32D",
-            "next": "END-LEVEL3",
-            "valid_answers": ["B"]
-          }
-        ]
-      },
-      "END-LEVEL3": {
-        "choices": [
-          {
-            "next": 172189,
-            "conditions": {"$and": ["L31A", "L32C"]}
-          },
-          {
-            "next": 172191,
-            "conditions": {"$and": ["L31A", "L32D"]}
-          },
-          {
-            "next": 172193,
-            "conditions": {"$and": ["L31B", "L32C"]}
-          },
-          {
-            "next": 172195,
-            "conditions": {"$and": ["L31B", "L32D"]}
-          }
-        ]
-      },
-      "END-LEVEL3-GROUP": {
-        "choices": [
-          {
-            "next": 172197,
-            "conditions": { "$or": [{"$and": ["L31A", "L32C"]}, {"$and": ["L31B", "L32D"]}] }
-          },
-          {
-            "next": 172199,
-            "conditions": { "$or": [{"$and": ["L31A", "L32D"]}, {"$and": ["L31B", "L32C"]}] }
-          }
-        ],
-        "next_level": 172201
-      },
-      "172201": {
-        "__comments": "Level 4-0",
-        "choices": [
-          {
-            "key": "L41A",
-            "next": 172203,
-            "valid_answers": ["A"]
-          },
-          {
-            "key": "L41B",
-            "next": 172205,
-            "valid_answers": ["B"]
-          }
-        ]
-      },
-      "172203": {
-        "__comments": "Level 4-1A",
-        "choices": [
-          {
-            "key": "L42C",
-            "next": "END-LEVEL4",
-            "valid_answers": ["A"]
-          },
-          {
-            "key": "L42D",
-            "next": "END-LEVEL4",
-            "valid_answers": ["B"]
-          }
-        ]
-      },
-      "172205": {
-        "__comments": "Level 4-1B",
-        "choices": [
-          {
-            "key": "L42C",
-            "next": "END-LEVEL4",
-            "valid_answers": ["A"]
-          },
-          {
-            "key": "L42D",
-            "next": "END-LEVEL4",
-            "valid_answers": ["B"]
-          }
-        ]
-      },
-      "END-LEVEL4": {
-        "choices": [
-          {
-            "next": 172207,
-            "conditions": {"$and": ["L41A", "L42C"]}
-          },
-          {
-            "next": 172209,
-            "conditions": {"$and": ["L41A", "L42D"]}
-          },
-          {
-            "next": 172211,
-            "conditions": {"$and": ["L41B", "L42C"]}
-          },
-          {
-            "next": 172213,
-            "conditions": {"$and": ["L41B", "L42D"]}
-          }
-        ]
-      },
-      "END-LEVEL4-GROUP": {
-        "choices": [
-          {
-            "next": 172215,
-            "conditions": { "$and": ["L42C"] }
-          },
-          {
-            "next": 172217,
-            "conditions": { "$and": ["L42D"] }
-          }
-        ],
-        "next_level": 172219
-      },
-      "172219": {
-        "__comments": "Level 5-0",
-        "choices": [
-          {
-            "key": "L51A",
-            "next": 172221,
-            "valid_answers": ["A"]
-          },
-          {
-            "key": "L51B",
-            "next": 172223,
-            "valid_answers": ["B"]
-          }
-        ]
-      },
-      "172221": {
-        "__comments": "Level 5-1A",
-        "choices": [
-          {
-            "key": "L52C",
-            "next": "END-LEVEL5",
-            "valid_answers": ["A"]
-          },
-          {
-            "key": "L52D",
-            "next": "END-LEVEL5",
-            "valid_answers": ["B"]
-          }
-        ]
-      },
-      "172223": {
-        "__comments": "Level 5-1B",
-        "choices": [
-          {
-            "key": "L52C",
-            "next": "END-LEVEL5",
-            "valid_answers": ["A"]
-          },
-          {
-            "key": "L52D",
-            "next": "END-LEVEL5",
-            "valid_answers": ["B"]
-          }
-        ]
-      },
-      "END-LEVEL5": {
-        "choices": [
-          {
-            "next": 172225,
-            "conditions": {"$and": ["L51A", "L52C"]}
-          },
-          {
-            "next": 172227,
-            "conditions": {"$and": ["L51A", "L52D"]}
-          },
-          {
-            "next": 172229,
-            "conditions": {"$and": ["L51B", "L52C"]}
-          },
-          {
-            "next": 172231,
-            "conditions": {"$and": ["L51B", "L52D"]}
-          }
-        ]
-      },
-      "END-LEVEL5-GROUP": {
-        "choices": [
-          {
-            "next": 172233,
-            "conditions": { "$and": ["L52D"] }
-          },
-          {
-            "next": 172235,
-            "conditions": { "$and": ["L52C"] }
-          }
-        ],
-        "next_level": 172237
-      },
-      "172237": {
-        "__comments": "Level 6-0",
-        "choices": [
-          {
-            "key": "L61A",
-            "next": 172239,
-            "valid_answers": ["A"]
-          },
-          {
-            "key": "L61B",
-            "next": 172241,
-            "valid_answers": ["B"]
-          }
-        ]
-      },
-      "172239": {
-        "__comments": "Level 6-1A",
-        "choices": [
-          {
-            "key": "L62C",
-            "next": "END-LEVEL6",
-            "valid_answers": ["A"]
-          },
-          {
-            "key": "L62D",
-            "next": "END-LEVEL6",
-            "valid_answers": ["B"]
-          }
-        ]
-      },
-      "172241": {
-        "__comments": "Level 6-1B",
-        "choices": [
-          {
-            "key": "L62C",
-            "next": "END-LEVEL6",
-            "valid_answers": ["A"]
-          },
-          {
-            "key": "L62D",
-            "next": "END-LEVEL6",
-            "valid_answers": ["B"]
-          }
-        ]
-      },
-      "END-LEVEL6": {
-        "choices": [
-          {
-            "next": 172243,
-            "conditions": {"$and": ["L61A", "L62C"]}
-          },
-          {
-            "next": 172245,
-            "conditions": {"$and": ["L61A", "L62D"]}
-          },
-          {
-            "next": 172247,
-            "conditions": {"$and": ["L61B", "L62C"]}
-          },
-          {
-            "next": 172249,
-            "conditions": {"$and": ["L61B", "L62D"]}
-          }
-        ]
-      },
-      "END-LEVEL6-GROUP": {
-        "choices": [
-          {
-            "next": 172251,
-            "conditions": { "$or": [{"$and": ["L61A", "L62D"]}, {"$and": ["L61B", "L62C"]}] }
-          },
-          {
-            "next": 172253,
-            "conditions": { "$or": [{"$and": ["L61A", "L62C"]}, {"$and": ["L61B", "L62D"]}] }
-          }
-        ],
-        "next_level": "END-GAME"
-      },
-      "END-GAME": {
-        "__comments": "Science Sleuth endgame group win / loss determination",
-        "indiv-message-end-game-format" : "rankings-within-group-based",
-        "group-message-end-game-format" : "group-success-failure-based",
-        "group-level-success-oips" : [
-                172161, 
-                172179, 
-                172197,
-                172215,
-                172233,
-                172251
-        ],
-        "group-success-failure-oips" : {
-            "0" : 172283,
-            "1" : 172283,
-            "2" : 172283,
-            "3" : 172281,
-            "4" : 172281,
-            "5" : 172279,
-            "6" : 172279
-        },
-        "indiv-level-success-oips": [
-            172155,
-            172157,
-            172171,
-            172175,
-            172189,
-            172195,
-            172207,
-            172211,
-            172227,
-            172231,
-            172245,
-            172247
-        ],
-        "indiv-rank-oips": {
-            "1": 172287,
-            "2": 172289,
-            "3": 172291,
-            "4": 172293,
-            "1-tied": 172297,
-            "2-tied": 172299
-        }
       }
     }
   }
