@@ -1,6 +1,6 @@
-{
+ {
   "1": {
-    "__comments": "This is the config file for the original test competitive game.",
+    "__comments": "This is a test.",
     "alpha_wait_oip": 168445,
     "alpha_start_ask_oip": 168447,
     "beta_join_ask_oip": 168449,
@@ -940,9 +940,9 @@
     "beta_join_ask_oip": 172125,
     "beta_wait_oip": 172127,
     "game_in_progress_oip": 172129,
-    "game_ended_from_exit_oip": 172343,
+    "game_ended_from_exit_oip": 172141,
     "story_start_oip": 172147,
-    "ask_solo_play" : 172345,
+    "ask_solo_play" : 172143,
     "mobile_create": {
       "ask_beta_1_oip": 172133,
       "ask_beta_2_oip": 172135,
