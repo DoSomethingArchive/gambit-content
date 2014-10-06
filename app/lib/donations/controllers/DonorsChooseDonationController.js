@@ -116,7 +116,8 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
         mobile: req.body.mobile,
         location: req.body.location,
         project_id: selectedProposal.id,
-        project_url: selectedProposal.proposalURL
+        project_url: selectedProposal.proposalURL,
+        donation_complete: false
       }
 
       self.donationModel.create(currentDonationInfo).then(function(doc) {
@@ -146,7 +147,7 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
 DonorsChooseDonationController.prototype.retrieveEmail = function(request, response) {
 
   var userSubmittedEmail = messageHelper.getFirstWord(request.body.args);
-  var updateObject = {};
+  var updateObject = { $set: { donation_complete: true }};
   var apiInfoObject = {
     'apiUrl':       PRODUCTION_DONATE_API_URL, 
     'apiPassword':  donorsChooseApiPassword, 
@@ -163,17 +164,24 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
   var config = dc_config[request.query.id];
 
   // Populates the updateObject with the user's email only 
-  // if it's non-obscene and is actually an email.
+  // if it's non-obscene and is actually an email. Otherwise,
+  // the submitDonation() function inserts a default DoSomething.org 
+  // email address.
   if (isValidEmail(userSubmittedEmail) && !containsNaughtyWords(userSubmittedEmail)) {
-    updateObject = { $set: { email: userSubmittedEmail }};
+    updateObject['$set'].email = userSubmittedEmail;
   }
-
+  
   this.donationModel.findOneAndUpdate(
-    {mobile: request.body.phone},
+    {
+      $and : [
+        { mobile: request.body.phone },
+        { donation_complete: false }
+      ]
+    },
     updateObject,
     function(err, donorDocument) {
       if (err) {
-        console.log(err);
+        console.log('Error in donationModel.findOneAndUpdate: ', err);
       } 
       else {
         console.log('Mongo donorDocument returned by retrieveEmail: ', donorDocument);
