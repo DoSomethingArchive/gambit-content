@@ -55,7 +55,7 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
       || typeof request.body.mobile === 'undefined'
       || typeof request.body.location === 'undefined') {
     response.send(406, 'Missing required params.');
-    return false;
+    return;
   }
 
   var config = dc_config[request.query.id];
@@ -86,7 +86,17 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
 
   requestHttp.get(requestUrlString, function(error, response, data) {
     if (!error) {
-      var donorsChooseResponse = JSON.parse(data);
+      var donorsChooseResponse;
+      try {
+        donorsChooseResponse = JSON.parse(data);
+      }
+      catch (e) {
+        // JSON.parse will throw a SyntaxError exception if data is not valid JSON
+        console.log('Invalid JSON data received from DonorsChoose API.');
+        res.send(500, 'Invalid JSON data received from DonorsChoose API.');
+        return;
+      }
+
       var proposals = donorsChooseResponse.proposals;
 
       // Making sure that the project funded has a costToComplete >= $10.
@@ -136,7 +146,7 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
     else {
       res.send(404, 'Was unable to retrieve a response from DonorsChoose.org.');
       sendSMS(req.body.mobile, config.error_direct_user_to_restart);
-      return false;
+      return;
     }
   });
 };
@@ -190,7 +200,7 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
         console.log('Error in donationModel.findOneAndUpdate: ', err);
         sendSMS(req.body.phone, config.error_direct_user_to_restart);
       } 
-      else {
+      else if (donorDocument) {
         console.log('Mongo donorDocument returned by retrieveEmail: ', donorDocument);
         // In the case that the user is out of order in the donation flow, 
         // or our app hasn't found a proposal (aka project) and attached a 
