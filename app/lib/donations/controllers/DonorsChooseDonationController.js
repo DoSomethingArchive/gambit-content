@@ -16,14 +16,18 @@
 
 var donorsChooseApiKey = (process.env.DONORSCHOOSE_API_KEY || null),
     donorsChooseApiPassword = (process.env.DONORSCHOOSE_API_PASSWORD || null),
-    testDonorsChooseApiKey = 'DONORSCHOOSE',
-    testDonorsChooseApiPassword = 'helpClassrooms!',
+    donorsChooseApiBaseUrl = 'https://apisecure.donorschoose.org/common/json_api.html?APIKey=',
     defaultDonorsChooseTransactionEmail = (process.env.DONORSCHOOSE_DEFAULT_EMAIL || null);
+
+if (process.env.NODE_ENV == 'test') {
+  donorsChooseApiKey = 'DONORSCHOOSE';
+  donorsChooseApiPassword = 'helpClassrooms!';
+  donorsChooseApiBaseUrl = 'https://apiqasecure.donorschoose.org/common/json_api.html?APIKey=';
+}
 
 var TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR = 'zip'; // 'zip' or 'state'. Our retrieveLocation() function will adjust accordingly.
 var DONATION_AMOUNT = 1;
-var PRODUCTION_DONATE_API_URL = 'https://apisecure.donorschoose.org/common/json_api.html?APIKey=' + donorsChooseApiKey;
-var TEST_DONATE_API_URL = 'https://apiqasecure.donorschoose.org/common/json_api.html?APIKey=' + testDonorsChooseApiKey;
+var DONATE_API_URL = donorsChooseApiBaseUrl + donorsChooseApiKey;
 
 var mobilecommons = require('../../../../mobilecommons/mobilecommons')
   , messageHelper = require('../../userMessageHelpers')
@@ -141,7 +145,6 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
         console.log('Doc retrieved: ' + doc + ' Updating mobileCommons profile number ' + req.body.mobile + ' with the following data retrieved from MobileCommons: ' + mobileCommonsCustomFields);
         res.send(201, 'Making call to update Mobile Commons profile with campaign information.');
       }, onRejected);
-      
     }
     else {
       res.send(404, 'Was unable to retrieve a response from DonorsChoose.org.');
@@ -165,16 +168,10 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
   var userSubmittedEmail = messageHelper.getFirstWord(request.body.args);
   var updateObject = { $set: { donation_complete: true }};
   var apiInfoObject = {
-    'apiUrl':       PRODUCTION_DONATE_API_URL, 
-    'apiPassword':  donorsChooseApiPassword, 
+    'apiUrl':       DONATE_API_URL,
+    'apiPassword':  donorsChooseApiPassword,
     'apiKey':       donorsChooseApiKey
   };
-  // Comment out above and comment in below for test donations. 
-  // var apiInfoObject = {
-  //   'apiUrl':       TEST_DONATE_API_URL,
-  //   'apiPassword':  testDonorsChooseApiPassword,
-  //   'apiKey':       testDonorsChooseApiKey 
-  // };
   var self = this;
   var req = request; 
   var config = dc_config[request.query.id];
