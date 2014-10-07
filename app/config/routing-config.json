@@ -30,9 +30,9 @@
             "optin": 170139,
             "optout": 128005
         },
-        "11515": {
+        "11569": {
             "__comments": "Make Art Save Art 2014",
-            "optin": 170771,
+            "optin": 171799,
             "optout": 128431
         },
         "11531": {
@@ -49,6 +49,11 @@
             "__comments": "Musical Mixup 2014",
             "optin": 172427,
             "optout": 129189
+        },
+        "11603": {
+            "__comments": "Verizon Domestic Violence 2014",
+            "optin": 172459,
+            "optout": 129207
         }
     },
     "yesNoPaths": [
@@ -131,7 +136,7 @@
             "no": 170147
         },
         {
-            "__comments": "Make Art Create Art MMS Check",
+            "__comments": "Make Art Save Art MMS Check",
             "incomingPath": 171053,
             "yes": 171055,
             "no": 171057
@@ -153,6 +158,12 @@
             "incomingPath": 172429,
             "yes": 172431,
             "no": 172433
+        },
+        {
+            "__comments": "Verizon Domestic Violence 2014 MMS Check",
+            "incomingPath": 172461,
+            "yes": 172463,
+            "no": 172465
         }
     ]
 }
