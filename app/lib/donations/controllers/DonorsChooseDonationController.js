@@ -195,7 +195,7 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
           
           var donorInfoObject = {
             donorEmail: donorDocument.email, 
-            donorFirstName: donorDocument.first_name,
+            donorFirstName: (donorDocument.first_name || 'anonymous'),
             donorPhoneNumber: req.body.phone
           }
 
@@ -249,8 +249,8 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
       'amount': DONATION_AMOUNT,
       'email': (donorInfoObject.donorEmail || defaultDonorsChooseTransactionEmail),
       'first': donorInfoObject.donorFirstName, 
-      'last': '',
-      'salutation': donorInfoObject.donorFirstName
+      'last': 'a DoSomething.org member',
+      'salutation': donorInfoObject.donorFirstName + ', a DoSomething.org Member'
     }}
     console.log('***DONATE PARAMS***', donateParams)
     requestHttp.post(apiInfoObject.apiUrl, donateParams, function(err, response, body) {
