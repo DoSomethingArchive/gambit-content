@@ -82,6 +82,7 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
   // Handles Mongoose promise errors. 
   function onRejected(error) {
     console.log('Error creating donation document for user #: ' + req.body.mobile + ', error: ', error);
+    mobilecommons.optin({alphaPhone: req.body.phone, alphaOptin: config.start_donation_flow})
   }
 
   requestHttp.get(requestUrlString, function(error, response, data) {
@@ -130,6 +131,7 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
     }
     else {
       res.send(404, 'Was unable to retrieve a response from DonorsChoose.org.');
+      mobilecommons.optin({alphaPhone: req.body.phone, alphaOptin: config.start_donation_flow})
       return false;
     }
   });
@@ -182,6 +184,7 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
     function(err, donorDocument) {
       if (err) {
         console.log('Error in donationModel.findOneAndUpdate: ', err);
+        mobilecommons.optin({alphaPhone: req.body.phone, alphaOptin: config.start_donation_flow})
       } 
       else {
         console.log('Mongo donorDocument returned by retrieveEmail: ', donorDocument);
@@ -227,12 +230,13 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
       'action': 'token'
     }}
     requestHttp.post(apiInfoObject.apiUrl, retrieveTokenParams, function(err, response, body) {
-      if (!err) {
+      if (!err && JSON.parse(body).token) {
         console.log('**TOKEN BODY**', body)
         deferred.resolve(JSON.parse(body).token);
       }
       else {
         deferred.reject('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, error: ', err);
+        mobilecommons.optin({alphaPhone: req.body.phone, alphaOptin: config.start_donation_flow})
       }
     });
     return deferred.promise;
@@ -252,15 +256,16 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
       'last': 'a DoSomething.org member',
       'salutation': donorInfoObject.donorFirstName + ', a DoSomething.org Member'
     }}
-    console.log('***DONATE PARAMS***', donateParams)
+    console.log('***DONATE PARAMS***', donateParams);
     requestHttp.post(apiInfoObject.apiUrl, donateParams, function(err, response, body) {
-      console.log('**DONATE TRANSACTION BODY**', body)
+      console.log('**DONATE TRANSACTION BODY**', body);
       if (!err && (JSON.parse(body).statusDescription == 'success')) {
         console.log('Donation to proposal ' + proposalId + ' was successful! Body: ', body);
         mobilecommons.optin({alphaPhone: donorInfoObject.donorPhoneNumber, alphaOptin: donationConfig.donate_complete});
       }
       else {
         console.log('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, error: ', err);
+        mobilecommons.optin({alphaPhone: req.body.phone, alphaOptin: config.start_donation_flow})
         return false;
       }
     })
