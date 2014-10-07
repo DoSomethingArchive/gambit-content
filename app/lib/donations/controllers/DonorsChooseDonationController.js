@@ -310,7 +310,7 @@ DonorsChooseDonationController.prototype.retrieveFirstName = function(request, r
       }
       else {
         console.log(raw);
-        sendSMS(request.body.phone, config.received_name_ask_email)
+        sendSMS(request.body.phone, config.received_name_ask_email);
       }
     }
   )
@@ -446,11 +446,7 @@ DonorsChooseDonationController.prototype._post = function(endpoint, data) {
  *   Opt-in path to subscribe to.
  */
 function sendSMS(phone, oip) {
-  var args = {
-    alphaPhone: phone,
-    alphaOptin: oip
-  };
-  mobilecommons.optin(args);
+  mobilecommons.profile_update(phone, oip);
 };
 
 /**
@@ -489,24 +485,7 @@ function isValidZip(zip) {
 function isValidEmail(email) { 
     var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(email);
-} 
-
-/**
- * Subscribe phone number to a Mobile Commons opt-in path.
- *
- * @param phone
- *  Phone number to subscribe.
- * @param oip
- *   Opt-in path to subscribe to.
- */
-function sendSMS(phone, oip) {
-  var args = {
-    alphaPhone: phone,
-    alphaOptin: oip
-  };
-
-  mobilecommons.optin(args);
-};
+}
 
 /**
  * Checks to see if user inputted strings contains naughty words. 
