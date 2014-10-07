@@ -269,15 +269,27 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
     }}
     console.log('***DONATE PARAMS***', donateParams);
     requestHttp.post(apiInfoObject.apiUrl, donateParams, function(err, response, body) {
-      console.log('**DONATE TRANSACTION BODY**', body);
-      if (!err && (JSON.parse(body).statusDescription == 'success')) {
-        console.log('Donation to proposal ' + proposalId + ' was successful! Body: ', body);
-        sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.donate_complete);
-      }
-      else {
+      console.log('**DONATE TRANSACTION BODY**', body)
+      if (err) {
         console.log('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, error: ', err);
         sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
-        return false;
+      }
+      else if (response && response.statusCode != 200) {
+        console.log('Failed to submit donation to DonorsChoose.org. Status code: ' + response.statusCode);
+        sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
+      }
+      else {
+        try {
+          var jsonBody = JSON.parse(body);
+          if (JSON.parse(body).statusDescription == 'success') {
+            console.log('Donation to proposal ' + proposalId + ' was successful! Body: ', body);
+            sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.donate_complete);
+          }
+        }
+        catch (e) {
+          console.log('Failed trying to parse the donation response from DonorsChoose.org. Error: ', e.message);
+          sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
+        }
       }
     })
   }); 
@@ -340,7 +352,7 @@ DonorsChooseDonationController.prototype.retrieveLocation = function(request, re
       || typeof request.body.phone === 'undefined'
       || typeof request.body.args === 'undefined') {
     response.send(406, 'Missing required params.');
-    return false;
+    return;
   }
 
   var config = dc_config[request.query.id];
@@ -349,13 +361,13 @@ DonorsChooseDonationController.prototype.retrieveLocation = function(request, re
   if (TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR == 'zip') {
     if (!isValidZip(location)) {
       sendSMS(request.body.phone, config.invalid_zip_oip);
-      return false;
+      return;
     }
   }
   else if (TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR == 'state') {
     if (!isValidState(location)) {
       sendSMS(request.body.phone, config.invalid_state_oip);
-      return false;
+      return;
     }
   }
 
