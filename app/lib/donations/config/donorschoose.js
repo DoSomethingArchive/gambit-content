@@ -12,7 +12,8 @@ var config = {
     "invalid_zip_oip": 172543,
     "found_project_ask_name": 170623,
     "received_name_ask_email": 170625,
-    "donate_complete": 170627
+    "donate_complete": 170627,
+    "error_direct_user_to_restart": 172601
   }
 };
 

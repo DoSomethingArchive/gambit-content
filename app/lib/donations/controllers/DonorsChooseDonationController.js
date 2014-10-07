@@ -64,7 +64,7 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
 
   // Checking to see if the location param is a zip code or a state,
   // and assigning query params accordingly. 
-  if (parseInt(request.body.location)){
+  if (parseInt(request.body.location)) {
     var locationFilter = 'keywords=' + request.body.location; // If zip. 
   }
   else {
@@ -75,14 +75,13 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
   var urgencySort = 'sortBy=0'; // Search returns results ordered by urgency algorithm. 
   var filterParams = locationFilter + '&' + subjectFilter + '&' + urgencySort + '&';
   var requestUrlString = 'http://api.donorschoose.org/common/json_feed.html?' + filterParams + 'APIKey=' + donorsChooseApiKey;
-  var testRequestUrlString = 'http://api.donorschoose.org/common/json_feed.html?' + filterParams + 'APIKey=DONORSCHOOSE';
   var req = request;
   var res = response;
 
   // Handles Mongoose promise errors. 
   function onRejected(error) {
     console.log('Error creating donation document for user #: ' + req.body.mobile + ', error: ', error);
-    mobilecommons.optin({alphaPhone: req.body.phone, alphaOptin: config.start_donation_flow})
+    sendSMS(req.body.mobile, config.error_direct_user_to_restart);
   }
 
   requestHttp.get(requestUrlString, function(error, response, data) {
@@ -113,25 +112,30 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
         donorsChooseProposalSummary :     selectedProposal.fulfillmentTrailer,
       }
 
+      // Email and first_name can be overwritten later. Included in case of error, transaction can still be completed. 
       var currentDonationInfo = {
         mobile: req.body.mobile,
+        email: 'donorschoose@dosomething.org', 
+        first_name: 'Anonymous',
         location: req.body.location,
         project_id: selectedProposal.id,
         project_url: selectedProposal.proposalURL,
         donation_complete: false
       }
 
+      // .profile_update call placed within the donationModel.create() callback to 
+      // ensure that the ORIGINAL DOCUMENT IS CREATED before the user texts back 
+      // their name and attempts to find the  document to be updated. 
       self.donationModel.create(currentDonationInfo).then(function(doc) {
-        console.log(doc);
+        mobilecommons.profile_update(request.body.mobile, config.found_project_ask_name, mobileCommonsCustomFields); // Arguments: phone, optInPathId, customFields.
+        console.log('Doc retrieved: ' + doc + ' Updating mobileCommons profile number ' + req.body.mobile + ' with the following data retrieved from MobileCommons: ' + mobileCommonsCustomFields);
+        res.send(201, 'Making call to update Mobile Commons profile with campaign information.');
       }, onRejected);
-
-      mobilecommons.profile_update(request.body.mobile, config.found_project_ask_name, mobileCommonsCustomFields); // Arguments: phone, optInPathId, customFields.
-      console.log('Updating mobileCommons profile number ' + req.body.mobile + 'with the following data retrieved from MobileCommons: ' + mobileCommonsCustomFields);
-      res.send(201, 'Making call to update Mobile Commons profile with campaign information.');
+      
     }
     else {
       res.send(404, 'Was unable to retrieve a response from DonorsChoose.org.');
-      mobilecommons.optin({alphaPhone: req.body.phone, alphaOptin: config.start_donation_flow})
+      sendSMS(req.body.mobile, config.error_direct_user_to_restart);
       return false;
     }
   });
@@ -155,7 +159,7 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
     'apiPassword':  donorsChooseApiPassword, 
     'apiKey':       donorsChooseApiKey
   };
-  //Comment out above and comment in below for test donations. 
+  // Comment out above and comment in below for test donations. 
   // var apiInfoObject = {
   //   'apiUrl':       TEST_DONATE_API_URL,
   //   'apiPassword':  testDonorsChooseApiPassword,
@@ -184,7 +188,7 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
     function(err, donorDocument) {
       if (err) {
         console.log('Error in donationModel.findOneAndUpdate: ', err);
-        mobilecommons.optin({alphaPhone: req.body.phone, alphaOptin: config.start_donation_flow})
+        sendSMS(req.body.phone, config.error_direct_user_to_restart);
       } 
       else {
         console.log('Mongo donorDocument returned by retrieveEmail: ', donorDocument);
@@ -192,13 +196,13 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
         // or our app hasn't found a proposal (aka project) and attached a 
         // project_id to the document, we opt the user back into the start donation flow.  
         if (!donorDocument.project_id) {
-          mobilecommons.optin({alphaPhone: req.body.phone, alphaOptin: config.start_donation_flow});
+          sendSMS(req.body.phone, config.error_direct_user_to_restart);
         }
         else {
           
           var donorInfoObject = {
             donorEmail: donorDocument.email, 
-            donorFirstName: (donorDocument.first_name || 'anonymous'),
+            donorFirstName: (donorDocument.first_name || 'Anonymous'),
             donorPhoneNumber: req.body.phone
           }
 
@@ -221,7 +225,7 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
  */
 DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject, donorInfoObject, proposalId, donationConfig) {
   // First request: obtains a unique token for the donation.
-  function requestToken(){
+  function requestToken() {
     // Creates promise-storing object.
     var deferred = Q.defer();
     var retrieveTokenParams = { 'form': {
@@ -236,14 +240,14 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
       }
       else {
         deferred.reject('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, error: ', err);
-        mobilecommons.optin({alphaPhone: req.body.phone, alphaOptin: config.start_donation_flow})
+        sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
       }
     });
     return deferred.promise;
   }
 
   // After promise we make the second request: donation transaction.
-  requestToken().then(function(tokenData){
+  requestToken().then(function(tokenData) {
     var donateParams = { 'form': {
       'APIKey': apiInfoObject.apiKey,
       'apipassword': apiInfoObject.apiPassword, 
@@ -261,11 +265,11 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
       console.log('**DONATE TRANSACTION BODY**', body);
       if (!err && (JSON.parse(body).statusDescription == 'success')) {
         console.log('Donation to proposal ' + proposalId + ' was successful! Body: ', body);
-        mobilecommons.optin({alphaPhone: donorInfoObject.donorPhoneNumber, alphaOptin: donationConfig.donate_complete});
+        sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.donate_complete);
       }
       else {
         console.log('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, error: ', err);
-        mobilecommons.optin({alphaPhone: req.body.phone, alphaOptin: config.start_donation_flow})
+        sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
         return false;
       }
     })
@@ -285,22 +289,28 @@ DonorsChooseDonationController.prototype.retrieveFirstName = function(request, r
   var config = dc_config[request.query.id];
   var userSubmittedName = messageHelper.getFirstWord(request.body.args);
 
-  if (containsNaughtyWords(userSubmittedName) || !userSubmittedName){
-    userSubmittedName = 'anonymous';
+  if (containsNaughtyWords(userSubmittedName) || !userSubmittedName) {
+    userSubmittedName = 'Anonymous';
   }
 
-  this.donationModel.update(
-    {mobile: request.body.phone},
+  this.donationModel.findOneAndUpdate(
+    {
+      $and : [
+        { mobile: request.body.phone },
+        { donation_complete: false }
+      ]
+    },
     {$set: {
       first_name: userSubmittedName
     }},
     function(err, num, raw) {
       if (err) {
         console.log(err);
+        sendSMS(request.body.phone, config.error_direct_user_to_restart);
       }
       else {
         console.log(raw);
-        mobilecommons.optin({alphaPhone: request.body.phone, alphaOptin: config.received_name_ask_email});
+        sendSMS(request.body.phone, config.received_name_ask_email)
       }
     }
   )
@@ -347,7 +357,6 @@ DonorsChooseDonationController.prototype.retrieveLocation = function(request, re
     location: location
   };
 
-  // POST same data to find-project endpoint. Should I put this inside the donationModel.create() callback? If the database becomes crowded, will this async mess up our flow?
   this._post('find-project?id=' + request.query.id, info);
   response.send();
 };
