@@ -26,7 +26,14 @@ function DonationInfo(app) {
     project_id: Number,
 
     // Project URL
-    project_url: String
+    project_url: String, 
+
+    // Flag for donation completed. Flipped to 'true' when 
+    // retrieveEmail() is called, which itself calls submitDonation(). 
+    // Note that the flag is flipped *before* the donation is successfully 
+    // processed; this is safe because we will redirect the user to restart
+    // the donation flow if anything goes wrong. 
+    donation_complete: false,
   });
 
   return app.getModel(modelName, schema);
