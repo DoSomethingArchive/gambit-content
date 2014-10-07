@@ -16,14 +16,18 @@
 
 var donorsChooseApiKey = (process.env.DONORSCHOOSE_API_KEY || null),
     donorsChooseApiPassword = (process.env.DONORSCHOOSE_API_PASSWORD || null),
-    testDonorsChooseApiKey = 'DONORSCHOOSE',
-    testDonorsChooseApiPassword = 'helpClassrooms!',
+    donorsChooseApiBaseUrl = 'https://apisecure.donorschoose.org/common/json_api.html?APIKey=',
     defaultDonorsChooseTransactionEmail = (process.env.DONORSCHOOSE_DEFAULT_EMAIL || null);
+
+if (process.env.NODE_ENV == 'test') {
+  donorsChooseApiKey = 'DONORSCHOOSE';
+  donorsChooseApiPassword = 'helpClassrooms!';
+  donorsChooseApiBaseUrl = 'https://apiqasecure.donorschoose.org/common/json_api.html?APIKey=';
+}
 
 var TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR = 'zip'; // 'zip' or 'state'. Our retrieveLocation() function will adjust accordingly.
 var DONATION_AMOUNT = 1;
-var PRODUCTION_DONATE_API_URL = 'https://apisecure.donorschoose.org/common/json_api.html?APIKey=' + donorsChooseApiKey;
-var TEST_DONATE_API_URL = 'https://apiqasecure.donorschoose.org/common/json_api.html?APIKey=' + testDonorsChooseApiKey;
+var DONATE_API_URL = donorsChooseApiBaseUrl + donorsChooseApiKey;
 
 var mobilecommons = require('../../../../mobilecommons/mobilecommons')
   , messageHelper = require('../../userMessageHelpers')
@@ -55,7 +59,7 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
       || typeof request.body.mobile === 'undefined'
       || typeof request.body.location === 'undefined') {
     response.send(406, 'Missing required params.');
-    return false;
+    return;
   }
 
   var config = dc_config[request.query.id];
@@ -86,7 +90,17 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
 
   requestHttp.get(requestUrlString, function(error, response, data) {
     if (!error) {
-      var donorsChooseResponse = JSON.parse(data);
+      var donorsChooseResponse;
+      try {
+        donorsChooseResponse = JSON.parse(data);
+      }
+      catch (e) {
+        // JSON.parse will throw a SyntaxError exception if data is not valid JSON
+        console.log('Invalid JSON data received from DonorsChoose API.');
+        res.send(500, 'Invalid JSON data received from DonorsChoose API.');
+        return;
+      }
+
       var proposals = donorsChooseResponse.proposals;
 
       // Making sure that the project funded has a costToComplete >= $10.
@@ -131,12 +145,11 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
         console.log('Doc retrieved: ' + doc + ' Updating mobileCommons profile number ' + req.body.mobile + ' with the following data retrieved from MobileCommons: ' + mobileCommonsCustomFields);
         res.send(201, 'Making call to update Mobile Commons profile with campaign information.');
       }, onRejected);
-      
     }
     else {
       res.send(404, 'Was unable to retrieve a response from DonorsChoose.org.');
       sendSMS(req.body.mobile, config.error_direct_user_to_restart);
-      return false;
+      return;
     }
   });
 };
@@ -155,16 +168,10 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
   var userSubmittedEmail = messageHelper.getFirstWord(request.body.args);
   var updateObject = { $set: { donation_complete: true }};
   var apiInfoObject = {
-    'apiUrl':       PRODUCTION_DONATE_API_URL, 
-    'apiPassword':  donorsChooseApiPassword, 
+    'apiUrl':       DONATE_API_URL,
+    'apiPassword':  donorsChooseApiPassword,
     'apiKey':       donorsChooseApiKey
   };
-  // Comment out above and comment in below for test donations. 
-  // var apiInfoObject = {
-  //   'apiUrl':       TEST_DONATE_API_URL,
-  //   'apiPassword':  testDonorsChooseApiPassword,
-  //   'apiKey':       testDonorsChooseApiKey 
-  // };
   var self = this;
   var req = request; 
   var config = dc_config[request.query.id];
@@ -190,7 +197,7 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
         console.log('Error in donationModel.findOneAndUpdate: ', err);
         sendSMS(req.body.phone, config.error_direct_user_to_restart);
       } 
-      else {
+      else if (donorDocument) {
         console.log('Mongo donorDocument returned by retrieveEmail: ', donorDocument);
         // In the case that the user is out of order in the donation flow, 
         // or our app hasn't found a proposal (aka project) and attached a 
@@ -262,15 +269,27 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
     }}
     console.log('***DONATE PARAMS***', donateParams);
     requestHttp.post(apiInfoObject.apiUrl, donateParams, function(err, response, body) {
-      console.log('**DONATE TRANSACTION BODY**', body);
-      if (!err && (JSON.parse(body).statusDescription == 'success')) {
-        console.log('Donation to proposal ' + proposalId + ' was successful! Body: ', body);
-        sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.donate_complete);
-      }
-      else {
+      console.log('**DONATE TRANSACTION BODY**', body)
+      if (err) {
         console.log('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, error: ', err);
         sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
-        return false;
+      }
+      else if (response && response.statusCode != 200) {
+        console.log('Failed to submit donation to DonorsChoose.org. Status code: ' + response.statusCode);
+        sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
+      }
+      else {
+        try {
+          var jsonBody = JSON.parse(body);
+          if (JSON.parse(body).statusDescription == 'success') {
+            console.log('Donation to proposal ' + proposalId + ' was successful! Body: ', body);
+            sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.donate_complete);
+          }
+        }
+        catch (e) {
+          console.log('Failed trying to parse the donation response from DonorsChoose.org. Error: ', e.message);
+          sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
+        }
       }
     })
   }); 
@@ -310,7 +329,7 @@ DonorsChooseDonationController.prototype.retrieveFirstName = function(request, r
       }
       else {
         console.log(raw);
-        sendSMS(request.body.phone, config.received_name_ask_email)
+        sendSMS(request.body.phone, config.received_name_ask_email);
       }
     }
   )
@@ -333,7 +352,7 @@ DonorsChooseDonationController.prototype.retrieveLocation = function(request, re
       || typeof request.body.phone === 'undefined'
       || typeof request.body.args === 'undefined') {
     response.send(406, 'Missing required params.');
-    return false;
+    return;
   }
 
   var config = dc_config[request.query.id];
@@ -342,13 +361,13 @@ DonorsChooseDonationController.prototype.retrieveLocation = function(request, re
   if (TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR == 'zip') {
     if (!isValidZip(location)) {
       sendSMS(request.body.phone, config.invalid_zip_oip);
-      return false;
+      return;
     }
   }
   else if (TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR == 'state') {
     if (!isValidState(location)) {
       sendSMS(request.body.phone, config.invalid_state_oip);
-      return false;
+      return;
     }
   }
 
@@ -446,11 +465,7 @@ DonorsChooseDonationController.prototype._post = function(endpoint, data) {
  *   Opt-in path to subscribe to.
  */
 function sendSMS(phone, oip) {
-  var args = {
-    alphaPhone: phone,
-    alphaOptin: oip
-  };
-  mobilecommons.optin(args);
+  mobilecommons.profile_update(phone, oip);
 };
 
 /**
@@ -489,24 +504,7 @@ function isValidZip(zip) {
 function isValidEmail(email) { 
     var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(email);
-} 
-
-/**
- * Subscribe phone number to a Mobile Commons opt-in path.
- *
- * @param phone
- *  Phone number to subscribe.
- * @param oip
- *   Opt-in path to subscribe to.
- */
-function sendSMS(phone, oip) {
-  var args = {
-    alphaPhone: phone,
-    alphaOptin: oip
-  };
-
-  mobilecommons.optin(args);
-};
+}
 
 /**
  * Checks to see if user inputted strings contains naughty words. 

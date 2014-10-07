@@ -34,10 +34,12 @@ exports.profile_update = function(phone, optInPathId, customFields) {
     }
   };
 
-  var customFieldKeys = Object.keys(customFields);
-  for (var i = 0; i < customFieldKeys.length; i++) {
-    var key = customFieldKeys[i];
-    postData.form[key] = customFields[key];
+  if (typeof customFields == 'object') {
+    var customFieldKeys = Object.keys(customFields);
+    for (var i = 0; i < customFieldKeys.length; i++) {
+      var key = customFieldKeys[i];
+      postData.form[key] = customFields[key];
+    }
   }
 
   request.post(url, postData, function (error, response, body) {
