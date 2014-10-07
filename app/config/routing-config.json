@@ -49,6 +49,11 @@
             "__comments": "Musical Mixup 2014",
             "optin": 172427,
             "optout": 129189
+        },
+        "11603": {
+            "__comments": "Verizon Domestic Violence 2014",
+            "optin": 172459,
+            "optout": 129207
         }
     },
     "yesNoPaths": [
@@ -153,6 +158,12 @@
             "incomingPath": 172429,
             "yes": 172431,
             "no": 172433
+        },
+        {
+            "__comments": "Verizon Domestic Violence 2014 MMS Check",
+            "incomingPath": 172461,
+            "yes": 172463,
+            "no": 172465
         }
     ]
 }
