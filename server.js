@@ -1,3 +1,8 @@
+// Nodejitsu specifies NODE_ENV='production' by default
+if (process.env.NODE_ENV == 'production') {
+  require('newrelic');
+}
+
 var application_root = __dirname
     , express = require('express')
     , path = require('path');
