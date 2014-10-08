@@ -15,7 +15,7 @@ var bitlyToken = (process.env.BITLY_GENERIC_ACCESS_TOKEN || null);
 var baseURL = 'https://api-ssl.bitly.com'; // alternate: api.bitly.com
 var appendURL = '/v3/shorten';
 
-function shortenLink(longURL) {
+function shortenLink(longURL, callback) {
   var longURL = encodeURIComponent(longURL.trim());
   var apiURL = baseURL + appendURL + '?' + 'uri=' + longURL + '&' + 'access_token=' + bitlyToken;
 
@@ -24,7 +24,10 @@ function shortenLink(longURL) {
       var bitlyResponse;
       try {
         bitlyResponse = JSON.parse(body).data.url;
-        return bitlyResponse;
+        if (typeof callback === 'function') {
+          callback(bitlyResponse);
+          return;
+        }
       }
       catch (e) {
         // JSON.parse will throw a SyntaxError exception if data is not valid JSON

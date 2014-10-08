@@ -34,7 +34,7 @@ var mobilecommons = require('../../../../mobilecommons/mobilecommons')
   , requestHttp = require('request')
   , dc_config = require('../config/donorschoose')
   , Q = require('q')
-  , shortenURL = require('../../bitly/bitly');
+  , shortenLink = require('../../bitly/bitly');
 
 function DonorsChooseDonationController(app) {
   this.app = app;
@@ -282,9 +282,15 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
       else {
         try {
           var jsonBody = JSON.parse(body);
-          if (JSON.parse(body).statusDescription == 'success') {
+          if (jsonBody.statusDescription == 'success') {
             console.log('Donation to proposal ' + proposalId + ' was successful! Body: ', body);
-            sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.donate_complete);
+            // Uses Bitly to shorten the link, then updates the user's MC profile.
+            shortenLink(jsonBody.proposalURL, function(shortenedLink) {
+              var customFields = {
+                donorsChooseProposalUrl: shortenedLink
+              }
+              mobilecommons.profile_update(donorInfoObject.donorPhoneNumber, donationConfig.donate_complete, customFields);
+            })
           }
         }
         catch (e) {
