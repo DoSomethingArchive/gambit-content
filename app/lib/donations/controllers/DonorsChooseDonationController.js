@@ -14,10 +14,10 @@
  *        submitDonation responsible for responding to user with success message
  */
 
-var donorsChooseApiKey = (process.env.DONORSCHOOSE_API_KEY || null),
-    donorsChooseApiPassword = (process.env.DONORSCHOOSE_API_PASSWORD || null),
-    donorsChooseApiBaseUrl = 'https://apisecure.donorschoose.org/common/json_api.html?APIKey=',
-    defaultDonorsChooseTransactionEmail = (process.env.DONORSCHOOSE_DEFAULT_EMAIL || null);
+var donorsChooseApiKey = (process.env.DONORSCHOOSE_API_KEY || null)
+  , donorsChooseApiPassword = (process.env.DONORSCHOOSE_API_PASSWORD || null)
+  , donorsChooseApiBaseUrl = 'https://apisecure.donorschoose.org/common/json_api.html?APIKey='
+  , defaultDonorsChooseTransactionEmail = (process.env.DONORSCHOOSE_DEFAULT_EMAIL || null);
 
 if (process.env.NODE_ENV == 'test') {
   donorsChooseApiKey = 'DONORSCHOOSE';
@@ -25,9 +25,10 @@ if (process.env.NODE_ENV == 'test') {
   donorsChooseApiBaseUrl = 'https://apiqasecure.donorschoose.org/common/json_api.html?APIKey=';
 }
 
-var TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR = 'zip'; // 'zip' or 'state'. Our retrieveLocation() function will adjust accordingly.
-var DONATION_AMOUNT = 1;
-var DONATE_API_URL = donorsChooseApiBaseUrl + donorsChooseApiKey;
+var TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR = 'zip' // 'zip' or 'state'. Our retrieveLocation() function will adjust accordingly.
+  , DONATION_AMOUNT = 1
+  , DONATE_API_URL = donorsChooseApiBaseUrl + donorsChooseApiKey
+  , CITY_SCHOOLNAME_CHARLIMIT = 79; // Limit for the number of characters we have in this OIP: https://secure.mcommons.com/campaigns/128427/opt_in_paths/170623
 
 var mobilecommons = require('../../../../mobilecommons/mobilecommons')
   , messageHelper = require('../../userMessageHelpers')
@@ -117,13 +118,24 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
         }
       }
 
+      var revisedLocation = selectedProposal.city;
+      var revisedSchoolName = selectedProposal.schoolName;
+
+      // Check to see if we exceed character limits this text message: 
+      // https://secure.mcommons.com/campaigns/128427/opt_in_paths/170623
+      if ((selectedProposal.city + selectedProposal.schoolName).length > CITY_SCHOOLNAME_CHARLIMIT) {
+        revisedLocation = selectedProposal.state; // subsitute the state abbreviation
+        if ((revisedLocation + selectedProposal.schoolName).length > CITY_SCHOOLNAME_CHARLIMIT) {
+          revisedSchoolName = selectedProposal.schoolName.slice(0, parseInt(CITY_SCHOOLNAME_CHARLIMIT)-2);
+        }
+      }
+
       var mobileCommonsCustomFields = {
         donorsChooseProposalId :          selectedProposal.id,
         donorsChooseProposalTitle :       selectedProposal.title,
-        donorsChooseProposalUrl :         selectedProposal.proposalURL, // Currently used in MobileCommons.
         donorsChooseProposalTeacherName : selectedProposal.teacherName, // Currently used in MobileCommons.
-        donorsChooseProposalSchoolName :  selectedProposal.schoolName, // Currently used in MobileCommons. 
-        donorsChooseProposalSchoolCity :  selectedProposal.city, // Currently used in MobileCommons.
+        donorsChooseProposalSchoolName :  revisedSchoolName, // Currently used in MobileCommons. 
+        donorsChooseProposalSchoolCity :  revisedLocation, // Currently used in MobileCommons.
         donorsChooseProposalSummary :     selectedProposal.fulfillmentTrailer,
       }
 
