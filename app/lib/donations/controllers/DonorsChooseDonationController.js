@@ -288,7 +288,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
             shortenLink(jsonBody.proposalURL, function(shortenedLink) {
               var customFields = {
                 donorsChooseProposalUrl: shortenedLink
-              }
+              };
               mobilecommons.profile_update(donorInfoObject.donorPhoneNumber, donationConfig.donate_complete, customFields);
             })
           }

@@ -5,6 +5,8 @@
  *
  * @param longURL
  *   the URL to be shortened 
+ * @param callback
+ *   the callback function to be called, taking a single param of the shortened URL
  * @return shortURL
  *   a shortened form of the long URL
  */
@@ -37,7 +39,7 @@ function shortenLink(longURL, callback) {
       }
     }
     else {
-      console.log('error: ', err)
+      console.log('error: ', err);
     }
   });
 }
