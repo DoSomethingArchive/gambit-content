@@ -1,3 +1,5 @@
 #npm
 node_modules
 
+# newrelic
+newrelic_agent.log
