@@ -132,7 +132,6 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
         if (err) {
           console.log(err);
         }
-
         emitter.emit('game-mapping-created', doc);
       }
     );
@@ -146,17 +145,15 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     }
     // Allowing us to use the created saved doc in the function called with the promise. 
     self.createdGameDoc = doc;
-    // If this returns before the gameMappingModel.create() function returns, would this cause problems?
-    return self.userModel.find(findCondition).exec();
 
-  }).then(function(playerDocs) {
+    return self.userModel.find(findCondition).exec();
+  },
+  promiseErrorCallback('Unable to create player game docs within .createGame() function.')).then(function(playerDocs) {
 
     // End games that these players were previously in.
     self._endGameFromPlayerExit(playerDocs);
 
     // Upsert the document for the alpha user.
-
-    // @todo ** THIS COULD HAPPEN FIRST, BEFORE _endGameFromPlayerExit **
     self.userModel.update(
       {phone: self.createdGameDoc.alpha_phone},
       {$set: {phone: self.createdGameDoc.alpha_phone, current_game_id: self.createdGameDoc._id}},
@@ -214,7 +211,8 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
       scheduleMobileCommonsOptIn(optinArgs);
     }
 
-  });
+  },
+  promiseErrorCallback('Unable to end game, either from logic based on player exit, *OR* through logic creating or updating new player docs within .createGame() function.'));
 
   // Log to stathat... should this be 1 or 1 for each person?
   this.app.stathatReport('Count', 'mobilecommons: create game request: success', 1);
@@ -1333,7 +1331,8 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
       }
     }
 
-  });
+  },
+  promiseErrorCallback('Unable to end player game docs within _endGameFromPlayerExit function.'));
 };
 
 /**
