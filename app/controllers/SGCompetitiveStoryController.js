@@ -148,9 +148,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
     return self.userModel.find(findCondition).exec();
   },
-  function(error) { // Run if promise is rejected. 
-    console.log('Error creating player game docs within .createGame() function. Error: ', error);
-  }).then(function(playerDocs) {
+  promiseErrorCallback('Unable to create player game docs within .createGame() function.')).then(function(playerDocs) {
 
     // End games that these players were previously in.
     self._endGameFromPlayerExit(playerDocs);
@@ -214,9 +212,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     }
 
   },
-  function(error) { // Run if promise is rejected. 
-    console.log('Error ending games based on player exit *or* creating/updating new player docs within .createGame() function. Error: ', error);
-  });
+  promiseErrorCallback('Unable to end game, either from logic based on player exit, *OR* through logic creating or updating new player docs within .createGame() function.'));
 
   // Log to stathat... should this be 1 or 1 for each person?
   this.app.stathatReport('Count', 'mobilecommons: create game request: success', 1);
@@ -1336,9 +1332,7 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
     }
 
   },
-  function(error) { // Run if promise is rejected. 
-    console.log('Error ending player game docs within _endGameFromPlayerExit function. Error: ', error);
-  });
+  promiseErrorCallback('Unable to end player game docs within _endGameFromPlayerExit function.'));
 };
 
 /**

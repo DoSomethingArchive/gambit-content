@@ -84,12 +84,6 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
   var req = request;
   var res = response;
 
-  // Handles Mongoose promise errors. 
-  function onRejected(error) {
-    console.log('Error creating donation document for user #: ' + req.body.mobile + ', error: ', error);
-    sendSMS(req.body.mobile, config.error_direct_user_to_restart);
-  }
-
   requestHttp.get(requestUrlString, function(error, response, data) {
     if (!error) {
       var donorsChooseResponse;
@@ -157,7 +151,7 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
         mobilecommons.profile_update(request.body.mobile, config.found_project_ask_name, mobileCommonsCustomFields); // Arguments: phone, optInPathId, customFields.
         console.log('Doc retrieved: ' + doc + ' Updating mobileCommons profile number ' + req.body.mobile + ' with the following data retrieved from MobileCommons: ' + mobileCommonsCustomFields);
         res.send(201, 'Making call to update Mobile Commons profile with campaign information.');
-      }, onRejected);
+      }, promiseErrorCallback('Unable to create donation document.', req.body.mobile));
     }
     else {
       res.send(404, 'Was unable to retrieve a response from DonorsChoose.org.');
@@ -476,6 +470,20 @@ DonorsChooseDonationController.prototype._post = function(endpoint, data) {
       console.log('POST to ' + url + ' return status code: ' + response.statusCode);
     }
   });
+}
+
+/**
+ * The following two functions are for handling Mongoose Promise chain errors.
+ */
+function promiseErrorCallback(message, userPhone) {
+  return onPromiseErrorCallback.bind({message: message, userPhone: userPhone});
+}
+
+function onPromiseErrorCallback(err) {
+  if (err) {
+    console.error('Error: ' + this.message + '\n', err.stack);
+    sendSMS(this.userPhone, config.error_direct_user_to_restart)
+  }
 }
 
 /**
