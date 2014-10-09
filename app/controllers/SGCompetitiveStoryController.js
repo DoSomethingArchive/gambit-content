@@ -207,7 +207,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
       betaPhone: betaOptInArray
     };
 
-    console.log('optinArgs before optin function', optinArgs)
+    console.log('optinArgs before optin function', optinArgs);
 
     // We opt users into these initial opt in paths only if the game type is NOT solo. 
     if (self.createdGameDoc.game_type !== 'solo') {
@@ -1265,7 +1265,9 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
       findCondition['$or'] = [];
     }
 
-    findCondition['$or'][i] = {_id: playerDocs[i].current_game_id}; // Because we're using the current_game_id from the playerDocs found before the .then() callback, this might not cause asynchronous problems. 
+    // Because we're using the current_game_id from the playerDocs found before
+    // the .then() callback, this might not cause asynchronous problems.
+    findCondition['$or'][i] = {_id: playerDocs[i].current_game_id};
   }
 
   var self = this;
@@ -1275,9 +1277,30 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
     // For each game still in progress...
     for (var i = 0; i < docs.length; i++) {
 
-      // Skip games that have already ended.
       var gameDoc = docs[i];
+      var playerNotInGame = false;
+
+      // Skip games that have already ended.
       if (gameDoc.game_ended) {
+        playerNotInGame = true;
+      }
+      // Skip games where the player is not in the game.
+      else {
+        for (var j = 0; j < playerDocs.length; j++) {
+          for (var k = 0; k < gameDoc.betas.length; k++) {
+            if (playerDocs[j].phone == gameDoc.betas[k].phone && !gameDoc.betas[k].invite_accepted) {
+              playerNotInGame = true;
+              break;
+            }
+          }
+
+          if (playerNotInGame) {
+            break;
+          }
+        }
+      }
+
+      if (playerNotInGame) {
         continue;
       }
 
