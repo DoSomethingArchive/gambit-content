@@ -303,6 +303,9 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
               };
               mobilecommons.profile_update(donorInfoObject.donorPhoneNumber, donationConfig.donate_complete, customFields);
             })
+          } else {
+            console.log('Donation to proposal ' + proposalId + ' was NOT successful. Body: ', body);
+            sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
           }
         }
         catch (e) {
