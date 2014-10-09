@@ -4,7 +4,7 @@
 
 var mobilecommons = require('../../mobilecommons/mobilecommons')
   , messageHelper = require('../lib/userMessageHelpers')
-  , emitter = require('../eventEmitter');
+  , emitter = require('../eventEmitter')
   ;
 
 // Delay (in milliseconds) for end level group messages to be sent.
@@ -152,13 +152,9 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   }).then(function(playerDocs) {
 
     // End games that these players were previously in.
-    // @todo _endGameFromPlayerExit() should return a promise and we'll need to
-    // chain the following code to run after the promise.
     self._endGameFromPlayerExit(playerDocs);
 
     // Upsert the document for the alpha user.
-
-    // @todo ** THIS COULD HAPPEN FIRST, BEFORE _endGameFromPlayerExit **
     self.userModel.update(
       {phone: self.createdGameDoc.alpha_phone},
       {$set: {phone: self.createdGameDoc.alpha_phone, current_game_id: self.createdGameDoc._id}},
