@@ -248,9 +248,21 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
       'action': 'token'
     }}
     requestHttp.post(apiInfoObject.apiUrl, retrieveTokenParams, function(err, response, body) {
-      if (!err && JSON.parse(body).token) {
-        console.log('**TOKEN BODY**', body)
-        deferred.resolve(JSON.parse(body).token);
+      if (!err) {
+        try {
+          var jsonBody = JSON.parse(body);
+          if (jsonBody.statusDescription == 'success') {
+            console.log('**TOKEN BODY**', body)
+            deferred.resolve(JSON.parse(body).token);
+          } else {
+            console.log('Unable to retrieve a donation token from the DonorsChoose API.');
+            sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
+          }
+        }
+        catch (e) {
+          console.log('Failed trying to parse the donation token request response from DonorsChoose.org. Error: ', e.message);
+          sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
+        }
       }
       else {
         deferred.reject('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, error: ', err);
@@ -308,7 +320,8 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
         }
       }
     })
-  }); 
+  },
+  promiseErrorCallback('Unable to successfully retrieve donation token from DonorsChoose.org API.', donorInfoObject.donorPhoneNumber)); 
 };
 
 /**
