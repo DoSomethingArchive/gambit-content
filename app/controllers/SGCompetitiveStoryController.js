@@ -1337,6 +1337,19 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
 };
 
 /**
+ * The following two functions are for handling Mongoose Promise chain errors.
+ */
+function promiseErrorCallback(tag) {
+  return onPromiseErrorCallback.bind({tag: tag});
+}
+
+function onPromiseErrorCallback(err) {
+  if (err) {
+    console.error(this.tag + ':\n', err);
+  }
+}
+
+/**
  * Schedule a message to be sent to ask Alpha if she wants to play solo.
  *
  * @param gameId
@@ -1366,7 +1379,7 @@ function scheduleSoloMessage(gameId, gameModel, oip) {
         };
         scheduleMobileCommonsOptIn(args);
       }
-    });
+    }, promiseErrorCallback('scheduleSoloMessage.checkIfBetaJoined'));
   };
 
   setTimeout(function(){ checkIfBetaJoined(gameId, gameModel, oip) }, TIME_UNTIL_SOLO_MESSAGE_SENT);
