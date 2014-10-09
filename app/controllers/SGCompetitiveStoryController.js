@@ -1339,13 +1339,13 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
 /**
  * The following two functions are for handling Mongoose Promise chain errors.
  */
-function promiseErrorCallback(tag) {
-  return onPromiseErrorCallback.bind({tag: tag});
+function promiseErrorCallback(tag, message) {
+  return onPromiseErrorCallback.bind({tag: tag, message: message});
 }
 
 function onPromiseErrorCallback(err) {
   if (err) {
-    console.error(this.tag + ':\n', err);
+    console.error('[' + this.tag + '] ' + this.message + '\n', err);
   }
 }
 
@@ -1379,7 +1379,7 @@ function scheduleSoloMessage(gameId, gameModel, oip) {
         };
         scheduleMobileCommonsOptIn(args);
       }
-    }, promiseErrorCallback('scheduleSoloMessage.checkIfBetaJoined'));
+    }, promiseErrorCallback('scheduleSoloMessage.checkIfBetaJoined', 'Unable to find game.'));
   };
 
   setTimeout(function(){ checkIfBetaJoined(gameId, gameModel, oip) }, TIME_UNTIL_SOLO_MESSAGE_SENT);
