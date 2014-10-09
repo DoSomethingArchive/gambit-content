@@ -122,6 +122,9 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     emitter.emit('game-created', doc);
     var config = self.gameConfig[doc.story_id];
 
+    // Sets a time to ask the alpha if she wants to play a solo game.
+    scheduleSoloMessage(doc._id, self.gameModel, self.gameConfig[self.storyId].ask_solo_play);
+
     // Create game id to game type mapping.
     self.gameMappingModel.create(
       {game_id: doc._id, game_model: self.gameModel.modelName},
@@ -153,7 +156,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
     // Upsert the document for the alpha user.
 
-    // ** THIS COULD HAPPEN FIRST, BEFORE _endGameFromPlayerExit **
+    // @todo ** THIS COULD HAPPEN FIRST, BEFORE _endGameFromPlayerExit **
     self.userModel.update(
       {phone: self.createdGameDoc.alpha_phone},
       {$set: {phone: self.createdGameDoc.alpha_phone, current_game_id: self.createdGameDoc._id}},
@@ -208,36 +211,10 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
     // We opt users into these initial opt in paths only if the game type is NOT solo. 
     if (self.createdGameDoc.game_type !== 'solo') {
-      self.scheduleMobileCommonsOptIn(optinArgs);
+      scheduleMobileCommonsOptIn(optinArgs);
     }
 
   });
-
-  // Sets a time interval until the alpha is sent the 
-  // message asking if she wants to play a SOLO game.
-  setTimeout(
-    function() {
-      self.findUserGame(self, checkIfAnyBetasHaveJoined)
-    }, 
-    TIME_UNTIL_SOLO_MESSAGE_SENT
-  )
-
-  function checkIfAnyBetasHaveJoined(obj, doc) {
-    var aBetaHasJoined = false;
-    for (var i = 0; i < doc.betas.length; i++) {
-      if (doc.betas[i].invite_accepted == true) {
-        aBetaHasJoined = true;
-      }
-    }
-    // If no Betas have joined and the game-type is NOT solo, ask the alpha if she wants to play SOLO. 
-    if ((!aBetaHasJoined) && (doc.game_type !== 'solo')) {
-      var args = {
-        alphaPhone: doc.alpha_phone, 
-        alphaOptin: self.gameConfig[self.storyId.toString()].ask_solo_play
-      };
-      mobilecommons.optin(args);
-    }
-  }
 
   // Log to stathat... should this be 1 or 1 for each person?
   this.app.stathatReport('Count', 'mobilecommons: create game request: success', 1);
@@ -381,7 +358,7 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
           alphaOptin: obj.gameConfig[doc.story_id].game_in_progress_oip
         };
         // Good place to notify betas about ALPHA SOLO keywords for opt-in-paths. 
-        obj.scheduleMobileCommonsOptIn(args);
+        scheduleMobileCommonsOptIn(args);
         obj.response.send();
         return;
       }
@@ -642,7 +619,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
 
             // The end level group message is sent SECOND of all the messages
             // in the execUserAction() function call.
-            obj.scheduleMobileCommonsOptIn(endLevelGroupArgs, END_LEVEL_GROUP_MESSAGE_DELAY);
+            scheduleMobileCommonsOptIn(endLevelGroupArgs, END_LEVEL_GROUP_MESSAGE_DELAY);
             gameDoc = obj.addPathToStoryResults(gameDoc, playerPhone, groupOptin);
           }
 
@@ -677,7 +654,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
 
             // The next level message (or if at end-game, end-game unique individual message)
             // is sent LAST in the execUserAction() function call.
-            obj.scheduleMobileCommonsOptIn(optinArgs, NEXT_LEVEL_START_DELAY);
+            scheduleMobileCommonsOptIn(optinArgs, NEXT_LEVEL_START_DELAY);
             gameDoc = obj.addPathToStoryResults(gameDoc, playerPhone, nextPath);
 
             // Update player's current status to the end game or next level message.
@@ -723,7 +700,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
 
       // The individual response message is sent FIRST
       // in the execUserAction() function call.
-      obj.scheduleMobileCommonsOptIn(optinArgs);
+      scheduleMobileCommonsOptIn(optinArgs);
 
       obj.response.send();
     }
@@ -913,7 +890,7 @@ SGCompetitiveStoryController.prototype.startGame = function(gameConfig, gameDoc)
     alphaOptin: startMessage,
   };
 
-  this.scheduleMobileCommonsOptIn(alphaArgs);
+  scheduleMobileCommonsOptIn(alphaArgs);
 
   // Update the alpha's current status.
   gameDoc = this.updatePlayerCurrentStatus(gameDoc, gameDoc.alpha_phone, startMessage);
@@ -928,7 +905,7 @@ SGCompetitiveStoryController.prototype.startGame = function(gameConfig, gameDoc)
         alphaOptin: startMessage
       };
 
-      this.scheduleMobileCommonsOptIn(betaArgs);
+      scheduleMobileCommonsOptIn(betaArgs);
 
       // Update the beta's current status.
       gameDoc = this.updatePlayerCurrentStatus(gameDoc, gameDoc.betas[i].phone, startMessage);
@@ -970,7 +947,7 @@ SGCompetitiveStoryController.prototype.sendWaitMessages = function(gameConfig, g
     alphaOptin: alphaMessage
   };
 
-  this.scheduleMobileCommonsOptIn(alphaArgs);
+  scheduleMobileCommonsOptIn(alphaArgs);
 
   // Update the alpha's current status.
   gameDoc = this.updatePlayerCurrentStatus(gameDoc, gameDoc.alpha_phone, alphaMessage);
@@ -981,7 +958,7 @@ SGCompetitiveStoryController.prototype.sendWaitMessages = function(gameConfig, g
     alphaOptin: betaMessage
   };
 
-  this.scheduleMobileCommonsOptIn(betaArgs);
+  scheduleMobileCommonsOptIn(betaArgs);
 
   // Update the beta's current status.
   gameDoc = this.updatePlayerCurrentStatus(gameDoc, betaPhone, betaMessage);
@@ -1228,7 +1205,7 @@ SGCompetitiveStoryController.prototype.handleGroupEndGameMessage = function(stor
       }
       // If the game has ended, the universal group endgame message is
       // sent THIRD (or second-last) of all the messages in execUserAction().
-      this.scheduleMobileCommonsOptIn(groupOptInArgs, UNIVERSAL_GROUP_ENDGAME_MESSAGE_DELAY);
+      scheduleMobileCommonsOptIn(groupOptInArgs, UNIVERSAL_GROUP_ENDGAME_MESSAGE_DELAY);
       gameDoc = this.updatePlayerCurrentStatus(gameDoc, gameDoc.players_current_status[j].phone, nextPathForAllPlayers);
       gameDoc = this.addPathToStoryResults(gameDoc, gameDoc.players_current_status[j].phone, nextPathForAllPlayers);
     }
@@ -1352,12 +1329,61 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
           alphaPhone: players[i],
           alphaOptin: self.gameConfig[gameDoc.story_id].game_ended_from_exit_oip
         };
-        self.scheduleMobileCommonsOptIn(args);
+        scheduleMobileCommonsOptIn(args);
       }
     }
 
   });
 };
+
+/**
+ * The following two functions are for handling Mongoose Promise chain errors.
+ */
+function promiseErrorCallback(message) {
+  return onPromiseErrorCallback.bind({message: message});
+}
+
+function onPromiseErrorCallback(err) {
+  if (err) {
+    console.error('Error: ' + this.message + '\n', err.stack);
+  }
+}
+
+/**
+ * Schedule a message to be sent to ask Alpha if she wants to play solo.
+ *
+ * @param gameId
+ *   Game ID of the game to check.
+ * @param gameModel
+ *   Mongoose model to search with.
+ * @param oip
+ *   Solo-play opt-in path.
+ */
+function scheduleSoloMessage(gameId, gameModel, oip) {
+  var checkIfBetaJoined = function(_gameId, _gameModel, _oip) {
+    var findGame = _gameModel.findById(_gameId).exec();
+    findGame.then(function(doc) {
+      var aBetaHasJoined = false;
+      for (var i = 0; i < doc.betas.length; i++) {
+        if (doc.betas[i].invite_accepted == true) {
+          aBetaHasJoined = true;
+          break;
+        }
+      }
+      // If no Betas have joined and the game-type is NOT solo, ask the alpha
+      // if she wants to play SOLO.
+      if ((!aBetaHasJoined) && (doc.game_type !== 'solo')) {
+        var args = {
+          alphaPhone: doc.alpha_phone,
+          alphaOptin: _oip
+        };
+        scheduleMobileCommonsOptIn(args);
+      }
+    }, promiseErrorCallback('Unable to find game.'));
+  };
+
+  setTimeout(function(){ checkIfBetaJoined(gameId, gameModel, oip) }, TIME_UNTIL_SOLO_MESSAGE_SENT);
+}
 
 /**
  * Schedule a message to be sent via a Mobile Commons opt in.
@@ -1367,20 +1393,22 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
  * @param delay
  *   Time in milliseconds to delay the message. Defaults to 0 if not set.
  */
-
-SGCompetitiveStoryController.prototype.scheduleMobileCommonsOptIn = function(args, delay) {
-  if (!delay) {
-    delay = 0;
-  }
-
-  setTimeout(function() {
+function scheduleMobileCommonsOptIn(args, delay) {
+  var sendSMS = function(_args) {
     // Skip the actual Mobile Commons opt-in in test mode.
     if (process.env.NODE_ENV == 'test') {
       return;
     }
 
+    mobilecommons.optin(_args);
+  };
+
+  if (!delay) {
     mobilecommons.optin(args);
-  }, delay);
+  }
+  else {
+    setTimeout(function(){ sendSMS(args) }, delay);
+  }
 }
 
 module.exports = SGCompetitiveStoryController;
