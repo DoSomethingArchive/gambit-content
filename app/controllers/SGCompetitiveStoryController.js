@@ -152,6 +152,8 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   }).then(function(playerDocs) {
 
     // End games that these players were previously in.
+    // @todo _endGameFromPlayerExit() should return a promise and we'll need to
+    // chain the following code to run after the promise.
     self._endGameFromPlayerExit(playerDocs);
 
     // Upsert the document for the alpha user.
@@ -1278,29 +1280,34 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
     for (var i = 0; i < docs.length; i++) {
 
       var gameDoc = docs[i];
-      var playerNotInGame = false;
 
       // Skip games that have already ended.
+      var skipGame = false;
       if (gameDoc.game_ended) {
-        playerNotInGame = true;
+        skipGame = true;
       }
       // Skip games where the player is not in the game.
       else {
+        var noActivePlayerInGame = true;
         for (var j = 0; j < playerDocs.length; j++) {
-          for (var k = 0; k < gameDoc.betas.length; k++) {
-            if (playerDocs[j].phone == gameDoc.betas[k].phone && !gameDoc.betas[k].invite_accepted) {
-              playerNotInGame = true;
-              break;
-            }
+          if (playerDocs[i].current_game_id.equals(gameDoc._id) == false) {
+            continue;
           }
 
-          if (playerNotInGame) {
-            break;
+          for (var k = 0; k < gameDoc.betas.length; k++) {
+            if (playerDocs[j].phone == gameDoc.betas[k].phone && gameDoc.betas[k].invite_accepted) {
+              noActivePlayerInGame = false;
+              continue;
+            }
           }
+        }
+
+        if (noActivePlayerInGame) {
+          skipGame = true;
         }
       }
 
-      if (playerNotInGame) {
+      if (skipGame) {
         continue;
       }
 
@@ -1349,7 +1356,7 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
 
         // Message them that the game has ended.
         var args = {
-          alphaPhone: players[i],
+          alphaPhone: players[playerIdx],
           alphaOptin: self.gameConfig[gameDoc.story_id].game_ended_from_exit_oip
         };
         scheduleMobileCommonsOptIn(args);
