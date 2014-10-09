@@ -129,7 +129,6 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
         if (err) {
           console.log(err);
         }
-
         emitter.emit('game-mapping-created', doc);
       }
     );
@@ -143,17 +142,17 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     }
     // Allowing us to use the created saved doc in the function called with the promise. 
     self.createdGameDoc = doc;
-    // If this returns before the gameMappingModel.create() function returns, would this cause problems?
-    return self.userModel.find(findCondition).exec();
 
+    return self.userModel.find(findCondition).exec();
+  },
+  function(error) { // Run if promise is rejected. 
+    console.log('Error creating player game docs within .createGame() function. Error: ', error);
   }).then(function(playerDocs) {
 
     // End games that these players were previously in.
     self._endGameFromPlayerExit(playerDocs);
 
     // Upsert the document for the alpha user.
-
-    // ** THIS COULD HAPPEN FIRST, BEFORE _endGameFromPlayerExit **
     self.userModel.update(
       {phone: self.createdGameDoc.alpha_phone},
       {$set: {phone: self.createdGameDoc.alpha_phone, current_game_id: self.createdGameDoc._id}},
@@ -211,6 +210,9 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
       self.scheduleMobileCommonsOptIn(optinArgs);
     }
 
+  },
+  function(error) { // Run if promise is rejected. 
+    console.log('Error ending games based on player exit *or* creating/updating new player docs within .createGame() function. Error: ', error);
   });
 
   // Sets a time interval until the alpha is sent the 
@@ -1356,6 +1358,9 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
       }
     }
 
+  },
+  function(error) { // Run if promise is rejected. 
+    console.log('Error ending player game docs within _endGameFromPlayerExit function. Error: ', error);
   });
 };
 
