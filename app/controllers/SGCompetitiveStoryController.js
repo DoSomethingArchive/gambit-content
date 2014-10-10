@@ -4,7 +4,7 @@
 
 var mobilecommons = require('../../mobilecommons/mobilecommons')
   , messageHelper = require('../lib/userMessageHelpers')
-  , emitter = require('../eventEmitter');
+  , emitter = require('../eventEmitter')
   ;
 
 // Delay (in milliseconds) for end level group messages to be sent.
@@ -204,7 +204,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
       betaPhone: betaOptInArray
     };
 
-    console.log('optinArgs before optin function', optinArgs)
+    console.log('optinArgs before optin function', optinArgs);
 
     // We opt users into these initial opt in paths only if the game type is NOT solo. 
     if (self.createdGameDoc.game_type !== 'solo') {
@@ -1263,7 +1263,9 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
       findCondition['$or'] = [];
     }
 
-    findCondition['$or'][i] = {_id: playerDocs[i].current_game_id}; // Because we're using the current_game_id from the playerDocs found before the .then() callback, this might not cause asynchronous problems. 
+    // Because we're using the current_game_id from the playerDocs found before
+    // the .then() callback, this might not cause asynchronous problems.
+    findCondition['$or'][i] = {_id: playerDocs[i].current_game_id};
   }
 
   var self = this;
@@ -1273,9 +1275,35 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
     // For each game still in progress...
     for (var i = 0; i < docs.length; i++) {
 
-      // Skip games that have already ended.
       var gameDoc = docs[i];
+
+      // Skip games that have already ended.
+      var skipGame = false;
       if (gameDoc.game_ended) {
+        skipGame = true;
+      }
+      // Skip games where the player is not in the game.
+      else {
+        var noActivePlayerInGame = true;
+        for (var j = 0; j < playerDocs.length; j++) {
+          if (playerDocs[i].current_game_id.equals(gameDoc._id) == false) {
+            continue;
+          }
+
+          for (var k = 0; k < gameDoc.betas.length; k++) {
+            if (playerDocs[j].phone == gameDoc.betas[k].phone && gameDoc.betas[k].invite_accepted) {
+              noActivePlayerInGame = false;
+              continue;
+            }
+          }
+        }
+
+        if (noActivePlayerInGame) {
+          skipGame = true;
+        }
+      }
+
+      if (skipGame) {
         continue;
       }
 
@@ -1324,7 +1352,7 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
 
         // Message them that the game has ended.
         var args = {
-          alphaPhone: players[i],
+          alphaPhone: players[playerIdx],
           alphaOptin: self.gameConfig[gameDoc.story_id].game_ended_from_exit_oip
         };
         scheduleMobileCommonsOptIn(args);
