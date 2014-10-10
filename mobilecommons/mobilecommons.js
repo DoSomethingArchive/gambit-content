@@ -42,9 +42,13 @@ exports.profile_update = function(phone, optInPathId, customFields) {
     }
   }
 
-  request.post(url, postData, function (error, response, body) {
+
+  request.post(url, postData, function(error, response, body) {
     if (error) {
-      console.log(error);
+      console.error(error);
+    }
+    else if (response && response.statusCode != 200) {
+      console.error('Failed mobilecommons.profile_update with code: ', response.statusCode);
     }
   });
 };
@@ -83,25 +87,40 @@ exports.optin = function(args) {
       payload.form['friends[]'] = betaPhone;
     }
 
-    request.post( url, payload, function (error, response, body) {
-      if (!error && response.statusCode == 200) {
-          console.log(body)
+    request.post(url, payload, function(error, response, body) {
+      if (error) {
+        console.error(error);
+      }
+      else if (response) {
+        if (response.statusCode != 200) {
+          console.error('Failed mobilecommons.optin with code: ', response.statusCode);
+        }
+        else {
+          console.log(body);
+        }
       }
     });
   }
   // Otherwise, just execute the opt in for the alpha user
   else {
-    request.post(
-      url,
-      {
-        form: {
-          opt_in_path: alphaOptin,
-          'person[phone]': alphaPhone
+    var payload = {
+      form: {
+        opt_in_path: alphaOptin,
+        'person[phone]': alphaPhone
+      }
+    };
+
+    request.post(url, payload, function(error, response, body) {
+        if (error) {
+          console.error(error);
         }
-      },
-      function (error, response, body) {
-        if (!error && response.statusCode == 200) {
-            console.log(body)
+        else if (response) {
+          if (response.statusCode != 200) {
+            console.error('Failed mobilecommons.optin with code: ', response.statusCode);
+          }
+          else {
+            console.log(body);
+          }
         }
       }
     );
@@ -131,25 +150,30 @@ exports.optout = function(args) {
     return;
   }
 
-  // Logs to debug opt-out on production deploy. Remove when resolved.
-  console.log('auth email: ' + authEmail);
-  console.log('auth pass: ' + authPass);
-  console.log('company key: ' + companyKey);
-  console.log('campaign id: ' + campaignId);
-  console.log('phone: ' + phone);
+  var payload = {
+    'auth': {
+      'user': authEmail,
+      'pass': authPass
+    },
+    form: {
+      'person[phone]': phone,
+      campaign: campaignId,
+      company_key: companyKey
+    }
+  };
 
   // Send opt-out request
-  request.post(
-    url,
-    {
-      'auth': {
-        'user': authEmail,
-        'pass': authPass
-      },
-      form: {
-        'person[phone]': phone,
-        campaign: campaignId,
-        company_key: companyKey
+  request.post(url, payload, function(error, response, body) {
+      if (error) {
+        console.error(error);
+      }
+      else if (response) {
+        if (response.statusCode != 200) {
+          console.error('Failed mobilecommons.optout with code: ', response.statusCode);
+        }
+        else {
+          console.log(body);
+        }
       }
     }
   );
