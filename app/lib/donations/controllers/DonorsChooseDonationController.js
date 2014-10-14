@@ -35,7 +35,7 @@ var mobilecommons = require('../../../../mobilecommons/mobilecommons')
   , requestHttp = require('request')
   , dc_config = require('../config/donorschoose')
   , Q = require('q')
-  , shortenLink = require('../../bitly/bitly');
+  , shortenLink = require('../../bitly');
 
 function DonorsChooseDonationController(app) {
   this.app = app;
