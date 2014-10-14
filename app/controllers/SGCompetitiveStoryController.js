@@ -199,19 +199,9 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
       betaOptInArray[betaOptInArray.length] = value.phone;
     })
 
-    // Opt users into their appropriate paths.
-    var optinArgs = {
-      alphaPhone: self.createdGameDoc.alpha_phone,
-      alphaOptin: self.gameConfig[self.storyId.toString()].alpha_wait_oip,
-      betaOptin: self.gameConfig[self.storyId.toString()].beta_join_ask_oip,
-      betaPhone: betaOptInArray
-    };
-
-    console.log('optinArgs before optin function', optinArgs)
-
     // We opt users into these initial opt in paths only if the game type is NOT solo. 
     if (self.createdGameDoc.game_type !== 'solo') {
-      scheduleMobileCommonsOptIn(optinArgs);
+      optinGroup(self.createdGameDoc.alpha_phone, self.gameConfig[self.storyId.toString()].alpha_wait_oip, betaOptInArray, self.gameConfig[self.storyId.toString()].beta_join_ask_oip)
     }
 
   });
@@ -229,8 +219,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
  * @param delegate
  *   The function delegate.
  */
-function createCallback(obj, delegate)
-{
+function createCallback(obj, delegate) {
   return function() {
     delegate.apply(obj, arguments);
   }
@@ -353,12 +342,8 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
 
       // If the game's already started, notify the user and exit.
       if (doc.game_started) {
-        var args = {
-          alphaPhone: obj.request.body.phone,
-          alphaOptin: obj.gameConfig[doc.story_id].game_in_progress_oip
-        };
         // Good place to notify betas about ALPHA SOLO keywords for opt-in-paths. 
-        scheduleMobileCommonsOptIn(args);
+        optinSingleUser(obj.request.body.phone, obj.gameConfig[doc.story_id].game_in_progress_oip);
         obj.response.send();
         return;
       }
@@ -609,7 +594,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
           var endLevelGroupKey = level + '-GROUP';
           var groupOptin = obj.getEndLevelGroupMessage(endLevelGroupKey, storyConfig, gameDoc);
           for (var i = 0; i < gameDoc.players_current_status.length; i++) {
-            var playerPhone = gameDoc.players_current_status[i].phone;
+            var playerPhone = gameDoc.players_current_status[i].phone;  
 
             // Send group the end level message.
             var endLevelGroupArgs = {
@@ -619,7 +604,11 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
 
             // The end level group message is sent SECOND of all the messages
             // in the execUserAction() function call.
-            scheduleMobileCommonsOptIn(endLevelGroupArgs, END_LEVEL_GROUP_MESSAGE_DELAY);
+            delayedOptinSingleUser(playerPhone, groupOptin, END_LEVEL_GROUP_MESSAGE_DELAY, )
+
+            optinSingleUser(endLevelGroupArgs, END_LEVEL_GROUP_MESSAGE_DELAY);
+
+            
             gameDoc = obj.addPathToStoryResults(gameDoc, playerPhone, groupOptin);
           }
 
@@ -654,7 +643,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
 
             // The next level message (or if at end-game, end-game unique individual message)
             // is sent LAST in the execUserAction() function call.
-            scheduleMobileCommonsOptIn(optinArgs, NEXT_LEVEL_START_DELAY);
+            optinSingleUser(optinArgs, NEXT_LEVEL_START_DELAY);
             gameDoc = obj.addPathToStoryResults(gameDoc, playerPhone, nextPath);
 
             // Update player's current status to the end game or next level message.
@@ -687,7 +676,8 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
       );
     }
     else {
-      // Resend the same message by opting into the current path again.
+      // If the user's response isn't a valid answer, 
+      // resend the same message by opting into the current path again.
       nextOip = currentOip;
     }
 
@@ -700,7 +690,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
 
       // The individual response message is sent FIRST
       // in the execUserAction() function call.
-      scheduleMobileCommonsOptIn(optinArgs);
+      optinSingleUser(optinArgs);
 
       obj.response.send();
     }
@@ -890,7 +880,7 @@ SGCompetitiveStoryController.prototype.startGame = function(gameConfig, gameDoc)
     alphaOptin: startMessage,
   };
 
-  scheduleMobileCommonsOptIn(alphaArgs);
+  optinSingleUser(alphaArgs);
 
   // Update the alpha's current status.
   gameDoc = this.updatePlayerCurrentStatus(gameDoc, gameDoc.alpha_phone, startMessage);
@@ -905,7 +895,7 @@ SGCompetitiveStoryController.prototype.startGame = function(gameConfig, gameDoc)
         alphaOptin: startMessage
       };
 
-      scheduleMobileCommonsOptIn(betaArgs);
+      optinSingleUser(betaArgs);
 
       // Update the beta's current status.
       gameDoc = this.updatePlayerCurrentStatus(gameDoc, gameDoc.betas[i].phone, startMessage);
@@ -947,7 +937,7 @@ SGCompetitiveStoryController.prototype.sendWaitMessages = function(gameConfig, g
     alphaOptin: alphaMessage
   };
 
-  scheduleMobileCommonsOptIn(alphaArgs);
+  optinSingleUser(alphaArgs);
 
   // Update the alpha's current status.
   gameDoc = this.updatePlayerCurrentStatus(gameDoc, gameDoc.alpha_phone, alphaMessage);
@@ -958,7 +948,7 @@ SGCompetitiveStoryController.prototype.sendWaitMessages = function(gameConfig, g
     alphaOptin: betaMessage
   };
 
-  scheduleMobileCommonsOptIn(betaArgs);
+  optinSingleUser(betaArgs);
 
   // Update the beta's current status.
   gameDoc = this.updatePlayerCurrentStatus(gameDoc, betaPhone, betaMessage);
@@ -1205,7 +1195,7 @@ SGCompetitiveStoryController.prototype.handleGroupEndGameMessage = function(stor
       }
       // If the game has ended, the universal group endgame message is
       // sent THIRD (or second-last) of all the messages in execUserAction().
-      scheduleMobileCommonsOptIn(groupOptInArgs, UNIVERSAL_GROUP_ENDGAME_MESSAGE_DELAY);
+      optinSingleUser(groupOptInArgs, UNIVERSAL_GROUP_ENDGAME_MESSAGE_DELAY);
       gameDoc = this.updatePlayerCurrentStatus(gameDoc, gameDoc.players_current_status[j].phone, nextPathForAllPlayers);
       gameDoc = this.addPathToStoryResults(gameDoc, gameDoc.players_current_status[j].phone, nextPathForAllPlayers);
     }
@@ -1329,7 +1319,7 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
           alphaPhone: players[i],
           alphaOptin: self.gameConfig[gameDoc.story_id].game_ended_from_exit_oip
         };
-        scheduleMobileCommonsOptIn(args);
+        optinSingleUser(args);
       }
     }
 
@@ -1377,7 +1367,7 @@ function scheduleSoloMessage(gameId, gameModel, oip) {
           alphaPhone: doc.alpha_phone,
           alphaOptin: _oip
         };
-        scheduleMobileCommonsOptIn(args);
+        optinSingleUser(doc.alpha_phone, _oip);
       }
     }, promiseErrorCallback('Unable to find game.'));
   };
@@ -1385,30 +1375,100 @@ function scheduleSoloMessage(gameId, gameModel, oip) {
   setTimeout(function(){ checkIfBetaJoined(gameId, gameModel, oip) }, TIME_UNTIL_SOLO_MESSAGE_SENT);
 }
 
+
 /**
- * Schedule a message to be sent via a Mobile Commons opt in.
+ * Schedule a message to be sent to a SINGLE user via a Mobile Commons optin.
  *
- * @param args
- *   The opt-in args needed for the call to mobilecommons.optin()
- * @param delay
- *   Time in milliseconds to delay the message. Defaults to 0 if not set.
+ * @param phoneNumber
+ *   The phone number of the user.
+ *
+ * @param optinPath
+ *   The opt in path of the message we want to send the user. 
  */
-function scheduleMobileCommonsOptIn(args, delay) {
-  var sendSMS = function(_args) {
-    // Skip the actual Mobile Commons opt-in in test mode.
-    if (process.env.NODE_ENV == 'test') {
-      return;
-    }
-
-    mobilecommons.optin(_args);
-  };
-
-  if (!delay) {
-    mobilecommons.optin(args);
+function optinSingleUser(phoneNumber, optinPath) {
+  if (process.env.NODE_ENV == 'test') {
+    return;
   }
-  else {
-    setTimeout(function(){ sendSMS(args) }, delay);
+  var args = {
+    alphaPhone: phoneNumber,
+    alphaOptin: optinPath
   }
+  mobilecommons.optin(args);
 }
+
+/**
+ * Schedule a message to be sent to a GROUP of users via Mobile Commons optins.
+ *
+ * @param alphaPhone
+ *   The phone number of the alpha user. (For the purposes of this function, 
+ *   it's arbitrary which phone is designated the alpha, and which phones are
+ *   designated the betas. This distinction is only important because all the 
+ *   beta numbers will be opted into the same distinct opt in path.) 
+ *
+ * @param alphaOptin
+ *   The opt in path of the alpha user. 
+ *
+ * @param singleBetaPhoneOrArrayOfPhones
+ *   Can take either a 1) a number or string representing a single beta phone
+ *   or 2) an array of phones representing more than one beta phone. 
+ * 
+ * @param betaOptin
+ *    The opt in path for ALL the beta phones. 
+ */
+function optinGroup(alphaPhone, alphaOptin, singleBetaPhoneOrArrayOfPhones, betaOptin) {
+  if (process.env.NODE_ENV == 'test') {
+    return;
+  }
+  var args = {
+    alphaPhone: alphaPhone,
+    alphaOptin: alphaOptin,
+    betaOptin: betaOptin, 
+    betaPhone: singleBetaPhoneOrArrayOfPhones
+  }
+  mobilecommons.optin(args)
+}
+
+/**
+ * Schedule a delayed message to be sent to a SINGLE user via Mobile Commons optin. 
+ * After the delay time period has passed, this function first checks to see whether 
+ * or not the user has been invited into another game by determining if the userModel 
+ * of that user has a .current_game_id property different than the currentGameId param 
+ * passed into the function. 
+ *
+ * @param phoneNumber
+ *   The phone number of the user we're sending a delayed message. 
+ *
+ * @param optinPath
+ *   The opt in path of the message we're sending the user. 
+ *
+ * @param delay
+ *   The length of time, in milliseconds, before the message is sent (or not sent, if the user has invited
+ *   to another game.)
+ * 
+ * @param currentGameId
+ *   The Mongo-generated game id of the current game we are calling this function on. 
+ * 
+ * @param userModel
+ *   A reference to Mongoose userModel to which we're querying in order to retrieve 
+ *   the specific user's user document.
+ */
+function delayedOptinSingleUser(phoneNumber, optinPath, delay, currentGameId, userModel) {
+  if (!phoneNumber || !optinPath || !delay || !currentGameId || !userModel) {
+    return;
+  }
+
+  var sendSMS = function(_phoneNumber, _optinPath, _currentGameId, _userModel) {
+    _userModel.findOne({phone: _phoneNumber}, function(err, userDoc) {
+      if (userDoc.current_game_id == _currentGameId) {
+        mobilecommons.optin({alphaPhone: _phoneNumber, alphaOptin: _optinPath})
+      }
+      else {
+        console.log('** User has been invited to a new game!**')
+      }
+    })
+  }
+  setTimeout(sendSMS(phoneNumber, optinPath, currentGameId, userModel), delay);
+}
+
 
 module.exports = SGCompetitiveStoryController;
