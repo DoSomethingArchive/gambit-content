@@ -9,9 +9,10 @@ function DonationInfo(app) {
   var modelName = 'donation_info';
 
   var schema  = new mongoose.Schema();
+  schema.set('autoIndex', false);
   schema.add({
     // User's mobile number
-    mobile: String,
+    mobile: {type: String, index: true},
 
     // User's email
     email: String,

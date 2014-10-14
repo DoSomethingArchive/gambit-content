@@ -7,12 +7,12 @@ var mongoose = require('mongoose');
 var tip = function(app, modelName) {
 
   var schema = new mongoose.Schema({
-    phone: String,
+    phone: {type: String, index: true},
     last_tip_delivered: [{
       name: String,
       last_tip: Number
     }]
-  });
+  }, {autoIndex: false});
 
   return app.getModel(modelName, schema);
 };

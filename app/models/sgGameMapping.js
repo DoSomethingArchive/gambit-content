@@ -11,9 +11,10 @@ var sgGameMapping = function(app) {
   var modelName = 'sg_gamemapping';
 
   var schema = new mongoose.Schema();
+  schema.set('autoIndex', false);
   schema.add({
     // Game ID
-    game_id: mongoose.Schema.Types.ObjectId,
+    game_id: {type: mongoose.Schema.Types.ObjectId, index: true},
 
     // Model used for this game
     game_model: String
