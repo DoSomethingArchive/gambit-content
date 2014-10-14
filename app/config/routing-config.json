@@ -54,6 +54,31 @@
             "__comments": "Verizon Domestic Violence 2014",
             "optin": 172459,
             "optout": 129207
+        },
+        "11611": {
+            "__comments": "GGW2014 Smartphones4Seniors",
+            "optin": 172659,
+            "optout": 129321
+        },
+         "11619": {
+            "__comments": "GGW2014 SocialMedia4Seniors",
+            "optin": 172707,
+            "optout": 129347
+        },
+         "11623": {
+            "__comments": "GGW2014 OnlineMusic4Seniors",
+            "optin": 172743,
+            "optout": 129365
+        },
+         "11627": {
+            "__comments": "GGW2014 VideoChat4Seniors",
+            "optin": 172769,
+            "optout": 129383
+        },
+        "11631": {
+            "__comments": "GGW2014 Email4Seniors",
+            "optin": 172797,
+            "optout": 129397
         }
     },
     "yesNoPaths": [
@@ -164,6 +189,37 @@
             "incomingPath": 172461,
             "yes": 172463,
             "no": 172465
+        },
+        {
+            "__comments": "GGW2014 Smartphones4Seniors MMS Check",
+            "incomingPath": 172661,
+            "yes": 172663,
+            "no": 172665
+        },
+        {
+            "__comments": "GGW2014 SocialMedia4Seniors MMS Check",
+            "incomingPath": 172709,
+            "yes": 172711,
+            "no": 172713
+        },
+        {
+            "__comments": "GGW2014 OnlineMusic4Seniors MMS Check",
+            "incomingPath": 172745,
+            "yes": 172747,
+            "no": 172749
+        },
+        {
+            "__comments": "GGW2014 VideoChat4Seniors MMS Check",
+            "incomingPath": 172771,
+            "yes": 172773,
+            "no": 172775
+        },
+        {
+            "__comments": "GGW2014 Email4Seniors MMS Check",
+            "incomingPath": 172799,
+            "yes": 172801,
+            "no": 172803
         }
+
     ]
 }
