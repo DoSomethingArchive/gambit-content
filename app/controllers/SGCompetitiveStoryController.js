@@ -1418,23 +1418,30 @@ function delayedOptinSingleUser(phoneNumber, optinPath, delay, currentGameId, us
 
   // If currentGameId is referencing a Mongo ObjectId, convert it to a string. 
   if (typeof currentGameId === 'object') {
-    currentGameId = currentGameId.str;
+    var currentGameId = currentGameId.valueOf();
   } else if (typeof currentGameId !== 'string') {
     return;
   }
 
-  var sendSMS = function(_phoneNumber, _optinPath, _currentGameId, _userModel) {
+  function sendSMS(_phoneNumber, _optinPath, _currentGameId, _userModel) {
     _userModel.findOne({phone: _phoneNumber}, function(err, userDoc) {
-      if (userDoc.current_game_id.str == _currentGameId) {
-        mobilecommons.optin({alphaPhone: _phoneNumber, alphaOptin: _optinPath})
+      debugger;
+      if (!err) {
+        // If a user's in a game that has been ended, the current_game_id property will be removed
+        // from her user document. Checking to see if current_game_id still exists for that user. 
+        if (userDoc.current_game_id && (userDoc.current_game_id.valueOf() === _currentGameId)) {
+          mobilecommons.optin({alphaPhone: _phoneNumber, alphaOptin: _optinPath});
+        }
+        else {
+          console.log('** A player in the previous game has been invited to a new game, and no one in the previous game will now receive delayed end-level or end-game messages!**');
+        }
       }
       else {
-        console.log('** User has been invited to a new game, and will not receive delayed end-level or end-game messages!**')
+        console.log('Error in delayedOptinSinglerUser(): ', err);
       }
     })
   }
-  setTimeout(sendSMS(phoneNumber, optinPath, currentGameId, userModel), delay);
+  setTimeout(function() { sendSMS(phoneNumber, optinPath, currentGameId, userModel) }, delay);
 }
-
 
 module.exports = SGCompetitiveStoryController;
