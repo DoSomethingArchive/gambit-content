@@ -30,12 +30,14 @@ var TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR = 'zip' // 'zip' or 'state'. Our retrie
   , DONATE_API_URL = donorsChooseApiBaseUrl + donorsChooseApiKey
   , CITY_SCHOOLNAME_CHARLIMIT = 79; // Limit for the number of characters we have in this OIP: https://secure.mcommons.com/campaigns/128427/opt_in_paths/170623
 
-var mobilecommons = require('../../../../mobilecommons/mobilecommons')
+var mobilecommons = require('../../../../mobilecommons')
   , messageHelper = require('../../userMessageHelpers')
   , requestHttp = require('request')
   , dc_config = require('../config/donorschoose')
   , Q = require('q')
-  , shortenLink = require('../../bitly');
+  , shortenLink = require('../../bitly')
+  , logger = require('../../logger')
+  ;
 
 function DonorsChooseDonationController(app) {
   this.app = app;
@@ -494,7 +496,7 @@ function promiseErrorCallback(message, userPhone) {
 
 function onPromiseErrorCallback(err) {
   if (err) {
-    console.error('Error: ' + this.message + '\n', err.stack);
+    logger.error(this.message + '\n', err.stack);
     sendSMS(this.userPhone, config.error_direct_user_to_restart)
   }
 }
