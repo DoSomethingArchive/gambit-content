@@ -79,6 +79,11 @@
             "__comments": "GGW2014 Email4Seniors",
             "optin": 172797,
             "optout": 129397
+        },
+        "11673": {
+            "__comments": "BakesaleForBabies2014",
+            "optin": 172929,
+            "optout": 129491
         }
     },
     "yesNoPaths": [
@@ -219,6 +224,11 @@
             "incomingPath": 172799,
             "yes": 172801,
             "no": 172803
+        },
+        {   "__comments": "BakesaleForBabies2014",
+            "incomingPath": 172931,
+            "yes": 172933,
+            "no": 172935
         }
 
     ]
