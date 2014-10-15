@@ -4,7 +4,7 @@
 
 var mobilecommons = require('../../mobilecommons/mobilecommons')
   , messageHelper = require('../lib/userMessageHelpers')
-  , emitter = require('../eventEmitter');
+  , emitter = require('../eventEmitter')
   ;
 
 // Delay (in milliseconds) for end level group messages to be sent.
@@ -132,7 +132,6 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
         if (err) {
           console.log(err);
         }
-
         emitter.emit('game-mapping-created', doc);
       }
     );
@@ -146,17 +145,15 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     }
     // Allowing us to use the created saved doc in the function called with the promise. 
     self.createdGameDoc = doc;
-    // If this returns before the gameMappingModel.create() function returns, would this cause problems?
-    return self.userModel.find(findCondition).exec();
 
-  }).then(function(playerDocs) {
+    return self.userModel.find(findCondition).exec();
+  },
+  promiseErrorCallback('Unable to create player game docs within .createGame() function.')).then(function(playerDocs) {
 
     // End games that these players were previously in.
     self._endGameFromPlayerExit(playerDocs);
 
     // Upsert the document for the alpha user.
-
-    // @todo ** THIS COULD HAPPEN FIRST, BEFORE _endGameFromPlayerExit **
     self.userModel.update(
       {phone: self.createdGameDoc.alpha_phone},
       {$set: {phone: self.createdGameDoc.alpha_phone, current_game_id: self.createdGameDoc._id}},
@@ -204,7 +201,8 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
       optinGroup(self.createdGameDoc.alpha_phone, self.gameConfig[self.storyId.toString()].alpha_wait_oip, betaOptInArray, self.gameConfig[self.storyId.toString()].beta_join_ask_oip)
     }
 
-  });
+  },
+  promiseErrorCallback('Unable to end game, either from logic based on player exit, *OR* through logic creating or updating new player docs within .createGame() function.'));
 
   // Log to stathat... should this be 1 or 1 for each person?
   this.app.stathatReport('Count', 'mobilecommons: create game request: success', 1);
@@ -1221,7 +1219,9 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
       findCondition['$or'] = [];
     }
 
-    findCondition['$or'][i] = {_id: playerDocs[i].current_game_id}; // Because we're using the current_game_id from the playerDocs found before the .then() callback, this might not cause asynchronous problems. 
+    // Because we're using the current_game_id from the playerDocs found before
+    // the .then() callback, this might not cause asynchronous problems.
+    findCondition['$or'][i] = {_id: playerDocs[i].current_game_id};
   }
 
   var self = this;
@@ -1231,9 +1231,35 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
     // For each game still in progress...
     for (var i = 0; i < docs.length; i++) {
 
-      // Skip games that have already ended.
       var gameDoc = docs[i];
+
+      // Skip games that have already ended.
+      var skipGame = false;
       if (gameDoc.game_ended) {
+        skipGame = true;
+      }
+      // Skip games where the player is not in the game.
+      else {
+        var noActivePlayerInGame = true;
+        for (var j = 0; j < playerDocs.length; j++) {
+          if (playerDocs[i].current_game_id.equals(gameDoc._id) == false) {
+            continue;
+          }
+
+          for (var k = 0; k < gameDoc.betas.length; k++) {
+            if (playerDocs[j].phone == gameDoc.betas[k].phone && gameDoc.betas[k].invite_accepted) {
+              noActivePlayerInGame = false;
+              continue;
+            }
+          }
+        }
+
+        if (noActivePlayerInGame) {
+          skipGame = true;
+        }
+      }
+
+      if (skipGame) {
         continue;
       }
 
@@ -1285,7 +1311,8 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
       }
     }
 
-  });
+  },
+  promiseErrorCallback('Unable to end player game docs within _endGameFromPlayerExit function.'));
 };
 
 /**
