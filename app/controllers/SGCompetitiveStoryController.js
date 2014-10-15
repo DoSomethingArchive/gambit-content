@@ -1339,7 +1339,6 @@ function scheduleSoloMessage(gameId, gameModel, oip) {
  *
  * @param phoneNumber
  *   The phone number of the user.
- *
  * @param optinPath
  *   The opt in path of the message we want to send the user. 
  */
@@ -1350,7 +1349,7 @@ function optinSingleUser(phoneNumber, optinPath) {
   var args = {
     alphaPhone: phoneNumber,
     alphaOptin: optinPath
-  }
+  };
   mobilecommons.optin(args);
 }
 
@@ -1362,10 +1361,8 @@ function optinSingleUser(phoneNumber, optinPath) {
  *   it's arbitrary which phone is designated the alpha, and which phones are
  *   designated the betas. This distinction is only important because all the 
  *   beta numbers will be opted into the same distinct opt in path.) 
- *
  * @param alphaOptin
  *   The opt in path of the alpha user. 
- *
  * @param singleBetaPhoneOrArrayOfPhones
  *   Can take either a 1) a number or string representing a single beta phone
  *   or 2) an array of phones representing more than one beta phone. 
@@ -1382,8 +1379,8 @@ function optinGroup(alphaPhone, alphaOptin, singleBetaPhoneOrArrayOfPhones, beta
     alphaOptin: alphaOptin,
     betaOptin: betaOptin, 
     betaPhone: singleBetaPhoneOrArrayOfPhones
-  }
-  mobilecommons.optin(args)
+  };
+  mobilecommons.optin(args);
 }
 
 /**
@@ -1395,18 +1392,14 @@ function optinGroup(alphaPhone, alphaOptin, singleBetaPhoneOrArrayOfPhones, beta
  *
  * @param phoneNumber
  *   The phone number of the user we're sending a delayed message. 
- *
  * @param optinPath
  *   The opt in path of the message we're sending the user. 
- *
  * @param delay
  *   The length of time, in milliseconds, before the message is sent (or not sent, if the user has invited
  *   to another game.)
- * 
  * @param currentGameId
  *   The Mongo-generated game id of the current game we are calling this function on. Note that this accepts an ObjectId, which is converted into
  *   a string within the function. 
- * 
  * @param userModel
  *   A reference to Mongoose userModel to which we're querying in order to retrieve 
  *   the specific user's user document.
@@ -1425,7 +1418,6 @@ function delayedOptinSingleUser(phoneNumber, optinPath, delay, currentGameId, us
 
   function sendSMS(_phoneNumber, _optinPath, _currentGameId, _userModel) {
     _userModel.findOne({phone: _phoneNumber}, function(err, userDoc) {
-      debugger;
       if (!err) {
         // If a user's in a game that has been ended, the current_game_id property will be removed
         // from her user document. Checking to see if current_game_id still exists for that user. 
@@ -1433,15 +1425,15 @@ function delayedOptinSingleUser(phoneNumber, optinPath, delay, currentGameId, us
           mobilecommons.optin({alphaPhone: _phoneNumber, alphaOptin: _optinPath});
         }
         else {
-          console.log('** A player in the previous game has been invited to a new game, and no one in the previous game will now receive delayed end-level or end-game messages!**');
+          console.log('**A player in the previous game has been invited to a new game, and no one in the previous game will now receive delayed end-level or end-game messages!**');
         }
       }
       else {
         console.log('Error in delayedOptinSinglerUser(): ', err);
       }
-    })
+    });
   }
-  setTimeout(function() { sendSMS(phoneNumber, optinPath, currentGameId, userModel) }, delay);
+  setTimeout(function() { sendSMS(phoneNumber, optinPath, currentGameId, userModel); }, delay);
 }
 
 module.exports = SGCompetitiveStoryController;
