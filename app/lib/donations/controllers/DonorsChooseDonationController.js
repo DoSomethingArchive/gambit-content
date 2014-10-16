@@ -26,7 +26,7 @@ if (process.env.NODE_ENV == 'test') {
 }
 
 var TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR = 'zip' // 'zip' or 'state'. Our retrieveLocation() function will adjust accordingly.
-  , DONATION_AMOUNT = 1
+  , DONATION_AMOUNT = 10
   , DONATE_API_URL = donorsChooseApiBaseUrl + donorsChooseApiKey
   , CITY_SCHOOLNAME_CHARLIMIT = 79; // Limit for the number of characters we have in this OIP: https://secure.mcommons.com/campaigns/128427/opt_in_paths/170623
 
