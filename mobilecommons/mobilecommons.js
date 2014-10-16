@@ -4,7 +4,8 @@
  */
 
 var request = require('request')
-    ;
+  , logger = require('../app/lib/logger')
+  ;
 
 /**
 * Mobile Commons profile_update API. Can be used to subscribe the user to an
@@ -45,10 +46,10 @@ exports.profile_update = function(phone, optInPathId, customFields) {
 
   request.post(url, postData, function(error, response, body) {
     if (error) {
-      console.error(error);
+      logger.error(error);
     }
     else if (response && response.statusCode != 200) {
-      console.error('Failed mobilecommons.profile_update with code: ', response.statusCode);
+      logger.error('Failed mobilecommons.profile_update with code: ', response.statusCode);
     }
   });
 };
@@ -89,14 +90,14 @@ exports.optin = function(args) {
 
     request.post(url, payload, function(error, response, body) {
       if (error) {
-        console.error(error);
+        logger.error(error);
       }
       else if (response) {
         if (response.statusCode != 200) {
-          console.error('Failed mobilecommons.optin with code: ', response.statusCode);
+          logger.error('Failed mobilecommons.optin with code: ', response.statusCode);
         }
         else {
-          console.log(body);
+          logger.info('Success mobilecommons.optin: ', alphaOptin);
         }
       }
     });
@@ -112,14 +113,14 @@ exports.optin = function(args) {
 
     request.post(url, payload, function(error, response, body) {
         if (error) {
-          console.error(error);
+          logger.error(error);
         }
         else if (response) {
           if (response.statusCode != 200) {
-            console.error('Failed mobilecommons.optin with code: ', response.statusCode);
+            logger.error('Failed mobilecommons.optin with code: ', response.statusCode);
           }
           else {
-            console.log(body);
+            logger.info('Success mobilecommons.optin into: ', alphaOptin);
           }
         }
       }
@@ -165,14 +166,14 @@ exports.optout = function(args) {
   // Send opt-out request
   request.post(url, payload, function(error, response, body) {
       if (error) {
-        console.error(error);
+        logger.error(error);
       }
       else if (response) {
         if (response.statusCode != 200) {
-          console.error('Failed mobilecommons.optout with code: ', response.statusCode);
+          logger.error('Failed mobilecommons.optout with code: ', response.statusCode);
         }
         else {
-          console.log(body);
+          logger.info('Success mobilecommons.optout from: ', campaignId);
         }
       }
     }

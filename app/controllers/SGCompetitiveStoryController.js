@@ -2,9 +2,10 @@
  * Game controller for the Competitive Story template.
  */
 
-var mobilecommons = require('../../mobilecommons/mobilecommons')
+var mobilecommons = require('../../mobilecommons')
   , messageHelper = require('../lib/userMessageHelpers')
   , emitter = require('../eventEmitter')
+  , logger = require('../lib/logger')
   ;
 
 // Delay (in milliseconds) for end level group messages to be sent.
@@ -1324,7 +1325,7 @@ function promiseErrorCallback(message) {
 
 function onPromiseErrorCallback(err) {
   if (err) {
-    console.error('Error: ' + this.message + '\n', err.stack);
+    logger.error(this.message + '\n', err.stack);
   }
 }
 
