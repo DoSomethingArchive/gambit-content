@@ -41,7 +41,7 @@ function shortenLink(longURL, callback) {
       }
     }
     else {
-      console.log('error: ', err);
+      logger.error('bitly.shortenLink error: ', err);
     }
   });
 }

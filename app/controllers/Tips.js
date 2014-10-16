@@ -135,9 +135,8 @@ Tips.prototype.deliverTips = function(request, response, mdataOverride) {
               return logger.error(err);
             }
 
-            console.log('Updated %d document(s). Mongo raw response:', num);
-            console.log(raw);
-            console.log("\n\n");
+            logger.log('debug', 'Updated %d document(s).', num);
+            logger.info('Tip model updated:', doc._id.toString(), 'with optin:', optin);
           }
         );
       }
@@ -166,15 +165,17 @@ Tips.prototype.deliverTips = function(request, response, mdataOverride) {
         });
 
         // Save the doc to the database
-        model.save(function(err) {
+        model.save(function(err, doc, num) {
           if (err) {
             return logger.error(err);
           }
 
-          return console.log("Save successful.\n\n");
+          if (doc && doc._id) {
+            logger.info('Tip model saved:', doc._id.toString());
+          }
         });
 
-        console.log('Saving new model: ' + model);
+        logger.log('debug', 'Saving new model:', model);
       }
     }
   );
