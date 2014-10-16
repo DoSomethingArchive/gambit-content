@@ -1100,16 +1100,18 @@ SGCompetitiveStoryController.prototype.getIndivRankEndGameMessage = function(pho
     var FIRST_PLACE_NUMERAL = 1;
     var LAST_PLACE_NUMERAL = 4;
     for (var i = FIRST_PLACE_NUMERAL; i <= LAST_PLACE_NUMERAL; i++) {
+      if (!playerRankArray.length) {
+        break;
+      }
       var nextRank = [];
       nextRank.push(playerRankArray.pop());
       // If there's a tie.
       while ((playerRankArray.length) && (nextRank[0].levelSuccesses == playerRankArray.slice(-1)[0].levelSuccesses)) {
         nextRank.push(playerRankArray.pop());
       }
-      // Oh! In this case might it be possible that there are more items in the players_current_status array than there are next ranks? Not sure, actually, how possible that is. 
       for (var j = 0; j < nextRank.length; j++) {
         for (var k = 0; k < gameDoc.players_current_status.length; k++) {
-          if (gameDoc.players_current_status[k].phone == nextRank[j].phone) {
+          if (nextRank[j].phone && (gameDoc.players_current_status[k].phone == nextRank[j].phone)) {
             // We only record and signify ties for first and second place.
             if (nextRank.length > 1 && (i === 1||i === 2)) {
               gameDoc.players_current_status[k].rank = i + '-tied';
@@ -1119,9 +1121,6 @@ SGCompetitiveStoryController.prototype.getIndivRankEndGameMessage = function(pho
             }
           }
         }
-      }
-      if (!playerRankArray.length) {
-        break;
       }
     }
   }
