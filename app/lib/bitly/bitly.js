@@ -11,7 +11,9 @@
  *   a shortened form of the long URL
  */
 
-var requestHttp = require('request');
+var requestHttp = require('request')
+  , logger = require('../logger')
+  ;
 
 var bitlyToken = (process.env.BITLY_GENERIC_ACCESS_TOKEN || null);
 var baseURL = 'https://api-ssl.bitly.com'; // alternate: api.bitly.com
@@ -33,7 +35,7 @@ function shortenLink(longURL, callback) {
       }
       catch (e) {
         // JSON.parse will throw a SyntaxError exception if data is not valid JSON
-        console.log('Invalid JSON data received from Bitly API.');
+        logger.error('Invalid JSON data received from Bitly API.');
         res.send(500, 'Invalid JSON data received from Bitly API.');
         return;
       }

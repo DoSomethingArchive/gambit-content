@@ -12,6 +12,7 @@
 var mobilecommons = require('../../mobilecommons/mobilecommons')
  , messageHelper = require('../lib/userMessageHelpers')
  , requestHttp = require('request')
+ , logger = require('../lib/logger')
  ;
 
 function sendSMS(phone, oip) {
@@ -64,7 +65,7 @@ SGSoloController.prototype.processRequest = function(request, response) {
   // POST request to create game. 
   requestHttp.post(createUrl, createPayload, function(err, response, body) {
     if (err) {
-      console.log(err);
+      logger.error(err);
     } 
     else {
       if (response && response.statusCode) {
@@ -75,7 +76,7 @@ SGSoloController.prototype.processRequest = function(request, response) {
       // other gameplay structures (i.e., "collaborative", we'll need to refactor.)
       requestHttp.post(startUrl, startPayload, function(err, response, body) {
         if (err) {
-          console.log(err);
+          logger.error(err);
         } 
         else if (response && response.statusCode) {
           console.log('POST to ' + startUrl + ' returned status code: ' + response.statusCode);

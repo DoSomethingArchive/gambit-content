@@ -94,7 +94,7 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
       }
       catch (e) {
         // JSON.parse will throw a SyntaxError exception if data is not valid JSON
-        console.log('Invalid JSON data received from DonorsChoose API.');
+        logger.error('Invalid JSON data received from DonorsChoose API.');
         res.send(500, 'Invalid JSON data received from DonorsChoose API.');
         return;
       }
@@ -203,7 +203,7 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
     updateObject,
     function(err, donorDocument) {
       if (err) {
-        console.log('Error in donationModel.findOneAndUpdate: ', err);
+        logger.error('Error in donationModel.findOneAndUpdate: ', err);
         sendSMS(req.body.phone, config.error_direct_user_to_restart);
       } 
       else if (donorDocument) {
@@ -257,12 +257,12 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
             console.log('**TOKEN BODY**', body)
             deferred.resolve(JSON.parse(body).token);
           } else {
-            console.log('Unable to retrieve a donation token from the DonorsChoose API.');
+            logger.error('Unable to retrieve a donation token from the DonorsChoose API.');
             sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
           }
         }
         catch (e) {
-          console.log('Failed trying to parse the donation token request response from DonorsChoose.org. Error: ', e.message);
+          logger.error('Failed trying to parse the donation token request response from DonorsChoose.org. Error: ', e.message);
           sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
         }
       }
@@ -292,11 +292,11 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
     requestHttp.post(apiInfoObject.apiUrl, donateParams, function(err, response, body) {
       console.log('**DONATE TRANSACTION BODY**', body)
       if (err) {
-        console.log('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, error: ', err);
+        logger.error('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, error: ', err);
         sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
       }
       else if (response && response.statusCode != 200) {
-        console.log('Failed to submit donation to DonorsChoose.org. Status code: ' + response.statusCode);
+        logger.error('Failed to submit donation to DonorsChoose.org. Status code: ' + response.statusCode);
         sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
       }
       else {
@@ -317,7 +317,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
           }
         }
         catch (e) {
-          console.log('Failed trying to parse the donation response from DonorsChoose.org. Error: ', e.message);
+          logger.error('Failed trying to parse the donation response from DonorsChoose.org. Error: ', e.message);
           sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
         }
       }
@@ -355,7 +355,7 @@ DonorsChooseDonationController.prototype.retrieveFirstName = function(request, r
     }},
     function(err, num, raw) {
       if (err) {
-        console.log(err);
+        logger.error(err);
         sendSMS(request.body.phone, config.error_direct_user_to_restart);
       }
       else {
@@ -440,7 +440,7 @@ DonorsChooseDonationController.prototype._post = function(endpoint, data) {
 
   requestHttp.post(url, payload, function(err, response, body) {
     if (err) {
-      console.log(err);
+      logger.error(err);
     }
 
     if (response && response.statusCode) {
@@ -478,7 +478,7 @@ DonorsChooseDonationController.prototype._post = function(endpoint, data) {
 
   requestHttp.post(url, payload, function(err, response, body) {
     if (err) {
-      console.log(err);
+      logger.error(err);
     }
 
     if (response && response.statusCode) {

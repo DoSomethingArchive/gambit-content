@@ -2,8 +2,10 @@
  * Tips API
  */
 
-var mobilecommons = require('../../mobilecommons/mobilecommons');
-var mongoose = require('mongoose');
+var mobilecommons = require('../../mobilecommons/mobilecommons')
+  , mongoose = require('mongoose')
+  , logger = require('../lib/logger')
+  ;
 
 var Tips = function(app) {
   this.app = app;
@@ -61,7 +63,9 @@ Tips.prototype.deliverTips = function(request, response, mdataOverride) {
     {phone: request.body.phone},
     function(err, doc) {
 
-      if (err) return console.log(err);
+      if (err) {
+        return logger.error(err);
+      }
 
       // An existing doc for this phone number has been found
       if (doc) {
@@ -127,7 +131,9 @@ Tips.prototype.deliverTips = function(request, response, mdataOverride) {
           {phone: request.body.phone},
           data,
           function(err, num, raw) {
-            if (err) return console.log(err);
+            if (err) {
+              return logger.error(err);
+            }
 
             console.log('Updated %d document(s). Mongo raw response:', num);
             console.log(raw);
@@ -161,7 +167,9 @@ Tips.prototype.deliverTips = function(request, response, mdataOverride) {
 
         // Save the doc to the database
         model.save(function(err) {
-          if (err) return console.log(err);
+          if (err) {
+            return logger.error(err);
+          }
 
           return console.log("Save successful.\n\n");
         });

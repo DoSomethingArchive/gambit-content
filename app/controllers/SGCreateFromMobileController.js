@@ -8,6 +8,7 @@
 var mobilecommons = require('../../mobilecommons/mobilecommons')
   , messageHelper = require('../lib/userMessageHelpers')
   , requestHttp = require('request')
+  , logger = require('../lib/logger')
   ;
 
 var SGCreateFromMobileController = function(app, host) {
@@ -40,7 +41,7 @@ function createGame(gameConfig, host) {
 
   requestHttp.post(url, payload, function(err, response, body) {
     if (err) {
-      console.log(err);
+      logger.error(err);
     }
 
     if (response && response.statusCode) {
@@ -223,7 +224,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
   }, function(err) {
     // ErrorAbortPromiseChain is ok. Otherwise, log the error.
     if (!(err instanceof ErrorAbortPromiseChain)) {
-      console.log(err);
+      logger.error(err);
     }
   });
 
@@ -246,7 +247,7 @@ SGCreateFromMobileController.prototype._updateDocument = function(configDoc) {
     }},
     function(err, num, raw) {
       if (err) {
-        console.log(err);
+        logger.error(err);
       }
       else {
         console.log(raw);
@@ -266,7 +267,7 @@ SGCreateFromMobileController.prototype._removeDocument = function(phone) {
     {alpha_mobile: phone},
     function(err, num) {
       if (err) {
-        console.log(err);
+        logger.error(err);
       }
       else {
         console.log('Number of create config documents removed: ' + num);

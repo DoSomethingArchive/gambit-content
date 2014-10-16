@@ -131,7 +131,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
       {game_id: doc._id, game_model: self.gameModel.modelName},
       function(err, doc) {
         if (err) {
-          console.log(err);
+          logger.error(err);
         }
         emitter.emit('game-mapping-created', doc);
       }
@@ -161,7 +161,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
       {upsert: true}, // Creates a new doc when no doc matches the query criteria via '.update()'.
       function(err, num, raw) {
         if (err) {
-          console.log(err);
+          logger.error(err);
         }
         else {
           // This response.send() call has been moved from outside into this 
@@ -182,7 +182,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
         {upsert: true},
         function(err, num, raw) {
           if (err) {
-            console.log(err);
+            logger.error(err);
           }
           else {
             emitter.emit('beta-user-created');
@@ -390,7 +390,7 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
         }},
         function(err, num, raw) {
           if (err) {
-            console.log(err);
+            logger.error(err);
           }
           else {
             emitter.emit('game-updated');
@@ -448,7 +448,7 @@ SGCompetitiveStoryController.prototype.alphaStartGame = function(request, respon
         }},
         function(err, num, raw) {
           if (err) {
-            console.log(err);
+            logger.error(err);
           }
           else {
             emitter.emit('game-updated');
@@ -658,7 +658,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
         }},
         function(err, num, raw) {
           if (err) {
-            console.log(err);
+            logger.error(err);
           }
           else {
             console.log(raw);
@@ -710,7 +710,7 @@ SGCompetitiveStoryController.prototype.findUserGame = function(obj, onUserGameFo
    */
   var onGameFound = function(err, doc) {
     if (err) {
-      console.log(err);
+      logger.error(err);
     }
     console.log(doc);
     if (doc) {
@@ -727,7 +727,7 @@ SGCompetitiveStoryController.prototype.findUserGame = function(obj, onUserGameFo
    */
   var onGameMappingFound = function(err, doc) {
     if (err) {
-      console.log(err);
+      logger.error(err);
     }
 
     if (doc && doc.game_model == obj.gameModel.modelName) {
@@ -745,7 +745,7 @@ SGCompetitiveStoryController.prototype.findUserGame = function(obj, onUserGameFo
    */
   var onUserFound = function(err, doc) {
     if (err) {
-      console.log(err);
+      logger.error(err);
     }
 
     if (doc) {
@@ -1036,7 +1036,7 @@ SGCompetitiveStoryController.prototype.getUniqueIndivEndGameMessage = function(p
     return this.getIndivRankEndGameMessage(phone, storyConfig, gameDoc);
   }
   else {
-    console.log('This story has an indeterminate endgame format.');
+    logger.error('This story has an indeterminate endgame format.');
   }
 };
 
@@ -1289,7 +1289,7 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
         {$set: {game_ended: true}},
         function(err, num, raw) {
           if (err) {
-            console.log(err);
+            logger.error(err);
           }
         }
       );
@@ -1302,7 +1302,7 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
           {$unset: {current_game_id: 1}},
           function(err, num, raw) {
             if (err) {
-              console.log(err);
+              logger.error(err);
             }
           }
         );
@@ -1457,7 +1457,7 @@ function delayedOptinSingleUser(phoneNumber, optinPath, delay, currentGameId, us
         }
       }
       else {
-        console.log('Error in delayedOptinSinglerUser(): ', err);
+        logger.error('Error in delayedOptinSinglerUser(): ', err);
       }
     });
   }
