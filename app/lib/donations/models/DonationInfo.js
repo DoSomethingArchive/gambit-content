@@ -9,7 +9,6 @@ function DonationInfo(app) {
   var modelName = 'donation_info';
 
   var schema  = new mongoose.Schema();
-  schema.set('autoIndex', false);
   schema.add({
     // User's mobile number
     mobile: {type: String, index: true},

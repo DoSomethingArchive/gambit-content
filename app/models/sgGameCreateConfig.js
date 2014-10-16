@@ -12,7 +12,6 @@ var sgGameCreateConfig = function(app) {
   var modelName = 'sg_gamecreateconfig';
 
   var schema = new mongoose.Schema();
-  schema.set('autoIndex', false);
   schema.add({
     // Mobile number of the alpha user
     alpha_mobile: {type: String, index: true},

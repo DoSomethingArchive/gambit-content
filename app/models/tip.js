@@ -12,7 +12,7 @@ var tip = function(app, modelName) {
       name: String,
       last_tip: Number
     }]
-  }, {autoIndex: false});
+  });
 
   return app.getModel(modelName, schema);
 };
