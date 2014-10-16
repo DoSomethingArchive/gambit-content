@@ -168,9 +168,12 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
           // async Mongoose call to ensure that upon SOLO game creation, 
           // the Alpha userModel will have been modified with the SOLO gameId before 
           // the start game logic runs (triggered by the POST to the /alpha-start route.)
-          response.send(201, 'Alpha userModel updated for new game created.');
+          response.send(201);
           emitter.emit('alpha-user-created');
-          console.log('alpha user created, raw mongo response: ', raw);
+
+          if (raw && raw.upserted) {
+            logger.info('Alpha user upserted: ', raw.upserted.toString());
+          }
         }
       });
 
@@ -186,7 +189,10 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
           }
           else {
             emitter.emit('beta-user-created');
-            console.log('beta user created, raw mongo response: ', raw);
+
+            if (raw && raw.upserted) {
+              logger.info('Beta user upserted: ', raw.upserted.toString());
+            }
           }
         }
       );
@@ -1371,9 +1377,6 @@ function scheduleSoloMessage(gameId, gameModel, oip) {
  *   The opt in path of the message we want to send the user. 
  */
 function optinSingleUser(phoneNumber, optinPath) {
-  if (process.env.NODE_ENV == 'test') {
-    return;
-  }
   var args = {
     alphaPhone: phoneNumber,
     alphaOptin: optinPath
@@ -1399,9 +1402,6 @@ function optinSingleUser(phoneNumber, optinPath) {
  *    The opt in path for ALL the beta phones. 
  */
 function optinGroup(alphaPhone, alphaOptin, singleBetaPhoneOrArrayOfPhones, betaOptin) {
-  if (process.env.NODE_ENV == 'test') {
-    return;
-  }
   var args = {
     alphaPhone: alphaPhone,
     alphaOptin: alphaOptin,
