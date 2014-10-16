@@ -45,7 +45,7 @@ function createGame(gameConfig, host) {
     }
 
     if (response && response.statusCode) {
-      console.log('POST to ' + url + ' returned status code: ' + response.statusCode);
+      logger.info('SGCreateFromMobileController.createGame: POST to ' + url + ' returned status code: ' + response.statusCode);
     }
   });
 };
@@ -249,8 +249,8 @@ SGCreateFromMobileController.prototype._updateDocument = function(configDoc) {
       if (err) {
         logger.error(err);
       }
-      else {
-        console.log(raw);
+      else if (configDoc._id) {
+        logger.info('SGCreateFromMobileController._updateDocument success for doc:', configDoc._id.toString());
       }
     }
   );
@@ -270,7 +270,7 @@ SGCreateFromMobileController.prototype._removeDocument = function(phone) {
         logger.error(err);
       }
       else {
-        console.log('Number of create config documents removed: ' + num);
+        logger.info('Number of game create config documents removed: ' + num);
       }
     }
   );

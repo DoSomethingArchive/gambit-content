@@ -95,12 +95,14 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   };
 
   for (var i = 0; i < MAX_PLAYERS_TO_INVITE; i++) {
-    var phone = messageHelper.getNormalizedPhone(request.body['beta_mobile_' + i]);
-    if (messageHelper.isValidPhone(phone)) {
-      var idx = gameDoc.betas.length;
-      gameDoc.betas[idx] = {};
-      gameDoc.betas[idx].invite_accepted = false;
-      gameDoc.betas[idx].phone = phone;
+    if (request.body['beta_mobile_' + i]) {
+      var phone = messageHelper.getNormalizedPhone(request.body['beta_mobile_' + i]);
+      if (messageHelper.isValidPhone(phone)) {
+        var idx = gameDoc.betas.length;
+        gameDoc.betas[idx] = {};
+        gameDoc.betas[idx].invite_accepted = false;
+        gameDoc.betas[idx].phone = phone;
+      }
     }
   }
 

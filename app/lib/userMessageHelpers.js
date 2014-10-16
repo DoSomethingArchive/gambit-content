@@ -11,8 +11,8 @@ var logger = require('./logger')
  * @return Normalized phone number string.
  */
 module.exports.getNormalizedPhone = function(phone) {
-  if (!phone) {
-    logger.error('userMessageHelpers.getNormalizedPhone has been passed an undefined phone value\n', console.trace());
+  if (typeof phone === 'undefined') {
+    logger.error('userMessageHelpers.getNormalizedPhone has been passed an undefined phone value.', console.trace());
   }
   var newPhone = phone.replace(/\D/g, '');
   if (newPhone.length === 10) {
