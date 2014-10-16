@@ -1106,6 +1106,7 @@ SGCompetitiveStoryController.prototype.getIndivRankEndGameMessage = function(pho
       while ((playerRankArray.length) && (nextRank[0].levelSuccesses == playerRankArray.slice(-1)[0].levelSuccesses)) {
         nextRank.push(playerRankArray.pop());
       }
+      // Oh! In this case might it be possible that there are more items in the players_current_status array than there are next ranks? Not sure, actually, how possible that is. 
       for (var j = 0; j < nextRank.length; j++) {
         for (var k = 0; k < gameDoc.players_current_status.length; k++) {
           if (gameDoc.players_current_status[k].phone == nextRank[j].phone) {
