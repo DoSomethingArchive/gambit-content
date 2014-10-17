@@ -1,3 +1,6 @@
+var logger = require('./logger')
+  ;
+
 /**
  * Normalizes a phone number for processing. Prepends the '1' US international
  * code to the phone number if it doesn't have it.
@@ -8,8 +11,8 @@
  * @return Normalized phone number string.
  */
 module.exports.getNormalizedPhone = function(phone) {
-  if (!phone) {
-    console.log('getNormalizedPhone has been passed an undefined phone value.')
+  if (typeof phone === 'undefined') {
+    logger.error('userMessageHelpers.getNormalizedPhone has been passed an undefined phone value.', console.trace());
   }
   var newPhone = phone.replace(/\D/g, '');
   if (newPhone.length === 10) {

@@ -20,6 +20,11 @@ var request = require('request')
 */
 
 exports.profile_update = function(phone, optInPathId, customFields) {
+  if (process.env.NODE_ENV == 'test') {
+    logger.info('mobilecommons.profile_update: ', phone, ' | ', optInPathId, ' | ', customFields);
+    return;
+  }
+
   var url = 'https://secure.mcommons.com/api/profile_update';
   var authEmail = process.env.MOBILECOMMONS_AUTH_EMAIL;
   var authPass = process.env.MOBILECOMMONS_AUTH_PASS;
@@ -58,6 +63,11 @@ exports.profile_update = function(phone, optInPathId, customFields) {
  * Opt-in mobile numbers into specified Mobile Commons paths.
  */
 exports.optin = function(args) {
+  if (process.env.NODE_ENV == 'test') {
+    logger.info('mobilecommons.optin: ', args);
+    return;
+  }
+
   var url = 'https://secure.mcommons.com/profiles/join';
 
   var alphaPhone = args.alphaPhone || null;
@@ -132,6 +142,11 @@ exports.optin = function(args) {
  * Opt out of a Mobile Commons campaign.
  */
 exports.optout = function(args) {
+  if (process.env.NODE_ENV == 'test') {
+    logger.info('mobilecommons.optout: ', args);
+    return;
+  }
+
   var url = 'https://secure.mcommons.com/profiles/opt_out';
 
   var phone = args.phone || null;

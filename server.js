@@ -5,7 +5,9 @@ if (process.env.NODE_ENV == 'production') {
 
 var application_root = __dirname
     , express = require('express')
-    , path = require('path');
+    , path = require('path')
+    , logger = require('./app/lib/logger')
+    ;
 
 /**
  * Express Setup
@@ -17,5 +19,5 @@ var router = require('./app/router.js')(app);
 
 // Start server
 app.listen(app.get('port'), function() {
-  console.log('Express server listening on port %d in %s mode...\n\n', app.get('port'), app.settings.env);
+  logger.log('info', 'Express server listening on port %d in %s mode...\n\n', app.get('port'), app.settings.env);
 });
