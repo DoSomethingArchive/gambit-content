@@ -95,12 +95,14 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   };
 
   for (var i = 0; i < MAX_PLAYERS_TO_INVITE; i++) {
-    var phone = messageHelper.getNormalizedPhone(request.body['beta_mobile_' + i]);
-    if (messageHelper.isValidPhone(phone)) {
-      var idx = gameDoc.betas.length;
-      gameDoc.betas[idx] = {};
-      gameDoc.betas[idx].invite_accepted = false;
-      gameDoc.betas[idx].phone = phone;
+    if (request.body['beta_mobile_' + i]) {
+      var phone = messageHelper.getNormalizedPhone(request.body['beta_mobile_' + i]);
+      if (messageHelper.isValidPhone(phone)) {
+        var idx = gameDoc.betas.length;
+        gameDoc.betas[idx] = {};
+        gameDoc.betas[idx].invite_accepted = false;
+        gameDoc.betas[idx].phone = phone;
+      }
     }
   }
 
@@ -131,7 +133,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
       {game_id: doc._id, game_model: self.gameModel.modelName},
       function(err, doc) {
         if (err) {
-          console.log(err);
+          logger.error(err);
         }
         emitter.emit('game-mapping-created', doc);
       }
@@ -161,16 +163,19 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
       {upsert: true}, // Creates a new doc when no doc matches the query criteria via '.update()'.
       function(err, num, raw) {
         if (err) {
-          console.log(err);
+          logger.error(err);
         }
         else {
           // This response.send() call has been moved from outside into this 
           // async Mongoose call to ensure that upon SOLO game creation, 
           // the Alpha userModel will have been modified with the SOLO gameId before 
           // the start game logic runs (triggered by the POST to the /alpha-start route.)
-          response.send(201, 'Alpha userModel updated for new game created.');
+          response.send(201);
           emitter.emit('alpha-user-created');
-          console.log('alpha user created, raw mongo response: ', raw);
+
+          if (raw && raw.upserted) {
+            logger.info('Alpha user upserted: ', raw.upserted.toString());
+          }
         }
       });
 
@@ -182,11 +187,14 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
         {upsert: true},
         function(err, num, raw) {
           if (err) {
-            console.log(err);
+            logger.error(err);
           }
           else {
             emitter.emit('beta-user-created');
-            console.log('beta user created, raw mongo response: ', raw);
+
+            if (raw && raw.upserted) {
+              logger.info('Beta user upserted: ', raw.upserted.toString());
+            }
           }
         }
       );
@@ -374,8 +382,6 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
       // If we're still waiting on people, send appropriate messages to the recently
       // joined beta and alpha users.
       else {
-        console.log('Waiting on ' + numWaitingOn + ' people to join.');
-
         doc = obj.sendWaitMessages(obj.gameConfig, doc, obj.joiningBetaPhone);
         obj.response.send();
       }
@@ -390,11 +396,11 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
         }},
         function(err, num, raw) {
           if (err) {
-            console.log(err);
+            logger.error(err);
           }
           else {
             emitter.emit('game-updated');
-            console.log(raw);
+            logger.info('Beta joined game. Updating game doc:', doc._id.toString());
           }
         }
       );
@@ -448,11 +454,11 @@ SGCompetitiveStoryController.prototype.alphaStartGame = function(request, respon
         }},
         function(err, num, raw) {
           if (err) {
-            console.log(err);
+            logger.error(err);
           }
           else {
             emitter.emit('game-updated');
-            console.log(raw);
+            logger.info('Alpha is starting the game. Updating game doc:', doc._id.toString());
           }
         }
       );
@@ -658,10 +664,11 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
         }},
         function(err, num, raw) {
           if (err) {
-            console.log(err);
+            logger.error(err);
           }
           else {
-            console.log(raw);
+            logger.info('SGCompetitiveStoryController.userAction - Updated player\'s',
+                        'current status in game doc:', doc._id.toString());
           }
         }
       );
@@ -710,10 +717,11 @@ SGCompetitiveStoryController.prototype.findUserGame = function(obj, onUserGameFo
    */
   var onGameFound = function(err, doc) {
     if (err) {
-      console.log(err);
+      logger.error(err);
     }
-    console.log(doc);
+
     if (doc) {
+      logger.log('debug', 'Game doc found:\n', doc);
       onUserGameFound(obj, doc);
     }
     else {
@@ -727,7 +735,7 @@ SGCompetitiveStoryController.prototype.findUserGame = function(obj, onUserGameFo
    */
   var onGameMappingFound = function(err, doc) {
     if (err) {
-      console.log(err);
+      logger.error(err);
     }
 
     if (doc && doc.game_model == obj.gameModel.modelName) {
@@ -745,7 +753,7 @@ SGCompetitiveStoryController.prototype.findUserGame = function(obj, onUserGameFo
    */
   var onUserFound = function(err, doc) {
     if (err) {
-      console.log(err);
+      logger.error(err);
     }
 
     if (doc) {
@@ -1036,7 +1044,7 @@ SGCompetitiveStoryController.prototype.getUniqueIndivEndGameMessage = function(p
     return this.getIndivRankEndGameMessage(phone, storyConfig, gameDoc);
   }
   else {
-    console.log('This story has an indeterminate endgame format.');
+    logger.error('This story has an indeterminate endgame format.');
   }
 };
 
@@ -1059,16 +1067,16 @@ SGCompetitiveStoryController.prototype.getIndivRankEndGameMessage = function(pho
   if (!gameDoc.players_current_status[0].rank) {
     var tempPlayerSuccessObject = {};
     var indivLevelSuccessOips = storyConfig.story['END-GAME']['indiv-level-success-oips'];
+    // Populates the tempPlayerSuccess object with all the players. 
+    for (var i = 0; i < gameDoc.players_current_status.length; i++) {
+      tempPlayerSuccessObject[gameDoc.players_current_status[i].phone] = 0;
+    }
+
     // Counts the number of levels each user has successfully passed.
     for (var i = 0; i < indivLevelSuccessOips.length; i++) {
       for (var j = 0; j < gameDoc.story_results.length; j++) {
         if (indivLevelSuccessOips[i] === gameDoc.story_results[j].oip) {
-          if (tempPlayerSuccessObject[gameDoc.story_results[j].phone]) {
-            tempPlayerSuccessObject[gameDoc.story_results[j].phone]++;
-          }
-          else {
-            tempPlayerSuccessObject[gameDoc.story_results[j].phone] = 1;
-          }
+          tempPlayerSuccessObject[gameDoc.story_results[j].phone]++;
         }
       }
     }
@@ -1101,6 +1109,9 @@ SGCompetitiveStoryController.prototype.getIndivRankEndGameMessage = function(pho
     var FIRST_PLACE_NUMERAL = 1;
     var LAST_PLACE_NUMERAL = 4;
     for (var i = FIRST_PLACE_NUMERAL; i <= LAST_PLACE_NUMERAL; i++) {
+      if (!playerRankArray.length) {
+        break;
+      }
       var nextRank = [];
       nextRank.push(playerRankArray.pop());
       // If there's a tie.
@@ -1119,9 +1130,6 @@ SGCompetitiveStoryController.prototype.getIndivRankEndGameMessage = function(pho
             }
           }
         }
-      }
-      if (!playerRankArray.length) {
-        break;
       }
     }
   }
@@ -1289,7 +1297,7 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
         {$set: {game_ended: true}},
         function(err, num, raw) {
           if (err) {
-            console.log(err);
+            logger.error(err);
           }
         }
       );
@@ -1302,7 +1310,7 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
           {$unset: {current_game_id: 1}},
           function(err, num, raw) {
             if (err) {
-              console.log(err);
+              logger.error(err);
             }
           }
         );
@@ -1371,9 +1379,6 @@ function scheduleSoloMessage(gameId, gameModel, oip) {
  *   The opt in path of the message we want to send the user. 
  */
 function optinSingleUser(phoneNumber, optinPath) {
-  if (process.env.NODE_ENV == 'test') {
-    return;
-  }
   var args = {
     alphaPhone: phoneNumber,
     alphaOptin: optinPath
@@ -1399,9 +1404,6 @@ function optinSingleUser(phoneNumber, optinPath) {
  *    The opt in path for ALL the beta phones. 
  */
 function optinGroup(alphaPhone, alphaOptin, singleBetaPhoneOrArrayOfPhones, betaOptin) {
-  if (process.env.NODE_ENV == 'test') {
-    return;
-  }
   var args = {
     alphaPhone: alphaPhone,
     alphaOptin: alphaOptin,
@@ -1426,8 +1428,7 @@ function optinGroup(alphaPhone, alphaOptin, singleBetaPhoneOrArrayOfPhones, beta
  *   The length of time, in milliseconds, before the message is sent (or not sent, if the user has invited
  *   to another game.)
  * @param currentGameId
- *   The Mongo-generated game id of the current game we are calling this function on. Note that this accepts an ObjectId, which is converted into
- *   a string within the function. 
+ *   The Mongo-generated game id of the current game we are calling this function on.
  * @param userModel
  *   A reference to Mongoose userModel to which we're querying in order to retrieve 
  *   the specific user's user document.
@@ -1437,27 +1438,22 @@ function delayedOptinSingleUser(phoneNumber, optinPath, delay, currentGameId, us
     return;
   }
 
-  // If currentGameId is referencing a Mongo ObjectId, convert it to a string. 
-  if (typeof currentGameId === 'object') {
-    var currentGameId = currentGameId.valueOf();
-  } else if (typeof currentGameId !== 'string') {
-    return;
-  }
-
   function sendSMS(_phoneNumber, _optinPath, _currentGameId, _userModel) {
     _userModel.findOne({phone: _phoneNumber}, function(err, userDoc) {
       if (!err) {
         // If a user's in a game that has been ended, the current_game_id property will be removed
         // from her user document. Checking to see if current_game_id still exists for that user. 
-        if (userDoc.current_game_id && (userDoc.current_game_id.valueOf() === _currentGameId)) {
+        if (userDoc.current_game_id && (userDoc.current_game_id.equals(_currentGameId))) {
           mobilecommons.optin({alphaPhone: _phoneNumber, alphaOptin: _optinPath});
         }
         else {
-          console.log('**A player in the previous game has been invited to a new game, and no one in the previous game will now receive delayed end-level or end-game messages!**');
+          logger.info('**A player in the previous game has been invited to a new',
+                      'game, and no one in the previous game will now receive',
+                      'delayed end-level or end-game messages!**');
         }
       }
       else {
-        console.log('Error in delayedOptinSinglerUser(): ', err);
+        logger.error('Error in delayedOptinSinglerUser(): ', err);
       }
     });
   }

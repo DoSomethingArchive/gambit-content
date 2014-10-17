@@ -12,6 +12,7 @@
 var mobilecommons = require('../../mobilecommons/mobilecommons')
  , messageHelper = require('../lib/userMessageHelpers')
  , requestHttp = require('request')
+ , logger = require('../lib/logger')
  ;
 
 function sendSMS(phone, oip) {
@@ -64,21 +65,21 @@ SGSoloController.prototype.processRequest = function(request, response) {
   // POST request to create game. 
   requestHttp.post(createUrl, createPayload, function(err, response, body) {
     if (err) {
-      console.log(err);
+      logger.error(err);
     } 
     else {
       if (response && response.statusCode) {
-        console.log('POST to ' + createUrl + ' returned status code: ' + response.statusCode);
+        logger.info('Solo player creating game - POST to ' + createUrl + ' returned status code: ' + response.statusCode);
       } 
       // POST request to start game, using the alphaStartGame function on the 
       // SGCompetitiveStoryController. Keep in mind that when we develop 
       // other gameplay structures (i.e., "collaborative", we'll need to refactor.)
       requestHttp.post(startUrl, startPayload, function(err, response, body) {
         if (err) {
-          console.log(err);
+          logger.error(err);
         } 
         else if (response && response.statusCode) {
-          console.log('POST to ' + startUrl + ' returned status code: ' + response.statusCode);
+          logger.info('Solo player starting game - POST to ' + startUrl + ' returned status code: ' + response.statusCode);
           // this.app.stathatReport('Count', 'mobilecommons: start solo game request: success', 1);
         }
       })
