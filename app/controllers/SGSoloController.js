@@ -69,7 +69,7 @@ SGSoloController.prototype.processRequest = function(request, response) {
     } 
     else {
       if (response && response.statusCode) {
-        console.log('POST to ' + createUrl + ' returned status code: ' + response.statusCode);
+        logger.info('Solo player creating game - POST to ' + createUrl + ' returned status code: ' + response.statusCode);
       } 
       // POST request to start game, using the alphaStartGame function on the 
       // SGCompetitiveStoryController. Keep in mind that when we develop 
@@ -79,7 +79,7 @@ SGSoloController.prototype.processRequest = function(request, response) {
           logger.error(err);
         } 
         else if (response && response.statusCode) {
-          console.log('POST to ' + startUrl + ' returned status code: ' + response.statusCode);
+          logger.info('Solo player starting game - POST to ' + startUrl + ' returned status code: ' + response.statusCode);
           // this.app.stathatReport('Count', 'mobilecommons: start solo game request: success', 1);
         }
       })
