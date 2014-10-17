@@ -151,7 +151,7 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
       // their name and attempts to find the  document to be updated. 
       self.donationModel.create(currentDonationInfo).then(function(doc) {
         mobilecommons.profile_update(request.body.mobile, config.found_project_ask_name, mobileCommonsCustomFields); // Arguments: phone, optInPathId, customFields.
-        console.log('Doc retrieved: ' + doc + ' Updating mobileCommons profile number ' + req.body.mobile + ' with the following data retrieved from MobileCommons: ' + mobileCommonsCustomFields);
+        logger.info('Doc retrieved:', doc._id.toString(), ' - Updating Mobile Commons profile with:', mobileCommonsCustomFields);
         res.send(201, 'Making call to update Mobile Commons profile with campaign information.');
       }, promiseErrorCallback('Unable to create donation document.', req.body.mobile));
     }
@@ -207,7 +207,7 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
         sendSMS(req.body.phone, config.error_direct_user_to_restart);
       } 
       else if (donorDocument) {
-        console.log('Mongo donorDocument returned by retrieveEmail: ', donorDocument);
+        logger.log('debug', 'Mongo donorDocument returned by retrieveEmail:', donorDocument);
         // In the case that the user is out of order in the donation flow, 
         // or our app hasn't found a proposal (aka project) and attached a 
         // project_id to the document, we opt the user back into the start donation flow.  
@@ -254,7 +254,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
         try {
           var jsonBody = JSON.parse(body);
           if (jsonBody.statusDescription == 'success') {
-            console.log('**TOKEN BODY**', body)
+            logger.log('debug', 'Request for token returned body:', jsonBody);
             deferred.resolve(JSON.parse(body).token);
           } else {
             logger.error('Unable to retrieve a donation token from the DonorsChoose API.');
@@ -276,7 +276,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
 
   // After promise we make the second request: donation transaction.
   requestToken().then(function(tokenData) {
-    var donateParams = { 'form': {
+    var donateParams = {'form': {
       'APIKey': apiInfoObject.apiKey,
       'apipassword': apiInfoObject.apiPassword, 
       'action': 'donate',
@@ -287,10 +287,11 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
       'first': donorInfoObject.donorFirstName, 
       'last': 'a DoSomething.org member',
       'salutation': donorInfoObject.donorFirstName + ', a DoSomething.org Member'
-    }}
-    console.log('***DONATE PARAMS***', donateParams);
+    }};
+
+    logger.info('Submitting donation with params:', donateParams);
     requestHttp.post(apiInfoObject.apiUrl, donateParams, function(err, response, body) {
-      console.log('**DONATE TRANSACTION BODY**', body)
+      logger.log('debug', 'Donation submission return:', body.trim())
       if (err) {
         logger.error('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, error: ', err);
         sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
@@ -303,7 +304,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
         try {
           var jsonBody = JSON.parse(body);
           if (jsonBody.statusDescription == 'success') {
-            console.log('Donation to proposal ' + proposalId + ' was successful! Body: ', body);
+            logger.info('Donation to proposal ' + proposalId + ' was successful! Body:', jsonBody);
             // Uses Bitly to shorten the link, then updates the user's MC profile.
             shortenLink(jsonBody.proposalURL, function(shortenedLink) {
               var customFields = {
@@ -312,7 +313,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
               mobilecommons.profile_update(donorInfoObject.donorPhoneNumber, donationConfig.donate_complete, customFields);
             })
           } else {
-            console.log('Donation to proposal ' + proposalId + ' was NOT successful. Body: ', body);
+            logger.warn('Donation to proposal ' + proposalId + ' was NOT successful. Body:', jsonBody);
             sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
           }
         }
@@ -359,7 +360,6 @@ DonorsChooseDonationController.prototype.retrieveFirstName = function(request, r
         sendSMS(request.body.phone, config.error_direct_user_to_restart);
       }
       else {
-        console.log(raw);
         sendSMS(request.body.phone, config.received_name_ask_email);
       }
     }
@@ -444,7 +444,7 @@ DonorsChooseDonationController.prototype._post = function(endpoint, data) {
     }
 
     if (response && response.statusCode) {
-      console.log('POST to ' + url + ' return status code: ' + response.statusCode);
+      logger.info('DonorsChooseDonationController - POST to ' + url + ' return status code: ' + response.statusCode);
     }
   });
 }
@@ -458,34 +458,6 @@ DonorsChooseDonationController.prototype._post = function(endpoint, data) {
 DonorsChooseDonationController.prototype.setHost = function(host) {
   this.host = host;
 };
-
-/**
- * POST data to another endpoint on this Donors Choose resource.
- *
- * @param endpoint
- *   Endpoint to POST to.
- * @param data
- *   Object with data to POST to the endpoint.
- */
-DonorsChooseDonationController.prototype._post = function(endpoint, data) {
-  var url = 'http://' + this.host + '/donations/' + this.resourceName + '/' + endpoint;
-
-  var payload = {form:{}};
-  var keys = Object.keys(data);
-  for (var i = 0; i < keys.length; i++) {
-    payload.form[keys[i]] = data[keys[i]];
-  }
-
-  requestHttp.post(url, payload, function(err, response, body) {
-    if (err) {
-      logger.error(err);
-    }
-
-    if (response && response.statusCode) {
-      console.log('POST to ' + url + ' return status code: ' + response.statusCode);
-    }
-  });
-}
 
 /**
  * The following two functions are for handling Mongoose Promise chain errors.
