@@ -348,7 +348,7 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
     var execBetaJoinGame = function(obj, doc) {
 
       // If the game's already started, notify the user and exit.
-      if (doc.game_started) {
+      if (doc.game_started || doc.game_ended) {
         // Good place to notify betas about ALPHA SOLO keywords for opt-in-paths. 
         optinSingleUser(obj.request.body.phone, obj.gameConfig[doc.story_id].game_in_progress_oip);
         obj.response.send();
@@ -1251,7 +1251,12 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
       else {
         var noActivePlayerInGame = true;
         for (var j = 0; j < playerDocs.length; j++) {
-          if (playerDocs[i].current_game_id.equals(gameDoc._id) == false) {
+          if (playerDocs[j].current_game_id.equals(gameDoc._id) == false) {
+            continue;
+          }
+
+          if (playerDocs[j].phone == gameDoc.alpha_phone) {
+            noActivePlayerInGame = false;
             continue;
           }
 
