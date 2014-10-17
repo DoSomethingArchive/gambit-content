@@ -1428,8 +1428,7 @@ function optinGroup(alphaPhone, alphaOptin, singleBetaPhoneOrArrayOfPhones, beta
  *   The length of time, in milliseconds, before the message is sent (or not sent, if the user has invited
  *   to another game.)
  * @param currentGameId
- *   The Mongo-generated game id of the current game we are calling this function on. Note that this accepts an ObjectId, which is converted into
- *   a string within the function. 
+ *   The Mongo-generated game id of the current game we are calling this function on.
  * @param userModel
  *   A reference to Mongoose userModel to which we're querying in order to retrieve 
  *   the specific user's user document.
