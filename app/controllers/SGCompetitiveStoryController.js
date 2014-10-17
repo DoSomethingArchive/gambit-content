@@ -1058,16 +1058,17 @@ SGCompetitiveStoryController.prototype.getIndivRankEndGameMessage = function(pho
   if (!gameDoc.players_current_status[0].rank) {
     var tempPlayerSuccessObject = {};
     var indivLevelSuccessOips = storyConfig.story['END-GAME']['indiv-level-success-oips'];
+    // Populates the tempPlayerSuccess object with all the players. 
+    for (var i = 0; i < gameDoc.players_current_status.length; i++) {
+      tempPlayerSuccessObject[gameDoc.players_current_status[i].phone] = 0;
+    }
+    console.log('tempPlayerSuccessObject before rankings applied', tempPlayerSuccessObject);
+
     // Counts the number of levels each user has successfully passed.
     for (var i = 0; i < indivLevelSuccessOips.length; i++) {
       for (var j = 0; j < gameDoc.story_results.length; j++) {
         if (indivLevelSuccessOips[i] === gameDoc.story_results[j].oip) {
-          if (tempPlayerSuccessObject[gameDoc.story_results[j].phone]) {
-            tempPlayerSuccessObject[gameDoc.story_results[j].phone]++;
-          }
-          else {
-            tempPlayerSuccessObject[gameDoc.story_results[j].phone] = 1;
-          }
+          tempPlayerSuccessObject[gameDoc.story_results[j].phone]++;
         }
       }
     }
@@ -1111,7 +1112,7 @@ SGCompetitiveStoryController.prototype.getIndivRankEndGameMessage = function(pho
       }
       for (var j = 0; j < nextRank.length; j++) {
         for (var k = 0; k < gameDoc.players_current_status.length; k++) {
-          if (nextRank[j].phone && (gameDoc.players_current_status[k].phone == nextRank[j].phone)) {
+          if (nextRank[j] && (gameDoc.players_current_status[k].phone == nextRank[j].phone)) {
             // We only record and signify ties for first and second place.
             if (nextRank.length > 1 && (i === 1||i === 2)) {
               gameDoc.players_current_status[k].rank = i + '-tied';
