@@ -1067,16 +1067,16 @@ SGCompetitiveStoryController.prototype.getIndivRankEndGameMessage = function(pho
   if (!gameDoc.players_current_status[0].rank) {
     var tempPlayerSuccessObject = {};
     var indivLevelSuccessOips = storyConfig.story['END-GAME']['indiv-level-success-oips'];
+    // Populates the tempPlayerSuccess object with all the players. 
+    for (var i = 0; i < gameDoc.players_current_status.length; i++) {
+      tempPlayerSuccessObject[gameDoc.players_current_status[i].phone] = 0;
+    }
+
     // Counts the number of levels each user has successfully passed.
     for (var i = 0; i < indivLevelSuccessOips.length; i++) {
       for (var j = 0; j < gameDoc.story_results.length; j++) {
         if (indivLevelSuccessOips[i] === gameDoc.story_results[j].oip) {
-          if (tempPlayerSuccessObject[gameDoc.story_results[j].phone]) {
-            tempPlayerSuccessObject[gameDoc.story_results[j].phone]++;
-          }
-          else {
-            tempPlayerSuccessObject[gameDoc.story_results[j].phone] = 1;
-          }
+          tempPlayerSuccessObject[gameDoc.story_results[j].phone]++;
         }
       }
     }
@@ -1109,6 +1109,9 @@ SGCompetitiveStoryController.prototype.getIndivRankEndGameMessage = function(pho
     var FIRST_PLACE_NUMERAL = 1;
     var LAST_PLACE_NUMERAL = 4;
     for (var i = FIRST_PLACE_NUMERAL; i <= LAST_PLACE_NUMERAL; i++) {
+      if (!playerRankArray.length) {
+        break;
+      }
       var nextRank = [];
       nextRank.push(playerRankArray.pop());
       // If there's a tie.
@@ -1127,9 +1130,6 @@ SGCompetitiveStoryController.prototype.getIndivRankEndGameMessage = function(pho
             }
           }
         }
-      }
-      if (!playerRankArray.length) {
-        break;
       }
     }
   }
