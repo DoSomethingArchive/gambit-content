@@ -3,7 +3,7 @@ var winston = require('winston')
 
 require('winston-mongodb').MongoDB;
 
-var mongoDbUri = process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder';
+var mongoDbUri = process.env.LOGGING_DB_URI || 'mongodb://localhost/ds-mdata-responder';
 var logger = new (winston.Logger) ({
   levels: {
     verbose: 0,
