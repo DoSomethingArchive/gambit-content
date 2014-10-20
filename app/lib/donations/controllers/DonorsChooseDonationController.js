@@ -37,6 +37,7 @@ var mobilecommons = require('../../../../mobilecommons')
   , Q = require('q')
   , shortenLink = require('../../bitly')
   , logger = require('../../logger')
+  , Entities = require('html-entities').AllHtmlEntities
   ;
 
 function DonorsChooseDonationController(app) {
@@ -89,7 +90,8 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
     if (!error) {
       var donorsChooseResponse;
       try {
-        donorsChooseResponse = JSON.parse(data);
+        var entities = new Entities(); // Calling 'html-entities' module to decode escaped characters.
+        donorsChooseResponse = JSON.parse(entities.decode(data));
       }
       catch (e) {
         // JSON.parse will throw a SyntaxError exception if data is not valid JSON
