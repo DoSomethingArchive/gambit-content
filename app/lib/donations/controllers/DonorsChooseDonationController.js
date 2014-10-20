@@ -84,7 +84,6 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
   var filterParams = locationFilter + '&' + subjectFilter + '&' + urgencySort + '&';
   var requestUrlString = 'http://api.donorschoose.org/common/json_feed.html?' + filterParams + 'APIKey=' + donorsChooseApiKey;
   var req = request;
-  var res = response;
 
   requestHttp.get(requestUrlString, function(error, response, data) {
     if (!error) {
@@ -95,7 +94,6 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
       catch (e) {
         // JSON.parse will throw a SyntaxError exception if data is not valid JSON
         logger.error('Invalid JSON data received from DonorsChoose API.');
-        res.send(500, 'Invalid JSON data received from DonorsChoose API.');
         return;
       }
 
@@ -152,15 +150,15 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
       self.donationModel.create(currentDonationInfo).then(function(doc) {
         mobilecommons.profile_update(request.body.mobile, config.found_project_ask_name, mobileCommonsCustomFields); // Arguments: phone, optInPathId, customFields.
         logger.info('Doc retrieved:', doc._id.toString(), ' - Updating Mobile Commons profile with:', mobileCommonsCustomFields);
-        res.send(201, 'Making call to update Mobile Commons profile with campaign information.');
       }, promiseErrorCallback('Unable to create donation document.', req.body.mobile));
     }
     else {
-      res.send(404, 'Was unable to retrieve a response from DonorsChoose.org.');
       sendSMS(req.body.mobile, config.error_direct_user_to_restart);
+      logger.error('Error in retrieving proposal info from DonorsChoose or in uploading to MobileCommons custom fields: ', error);
       return;
     }
   });
+  response.send();
 };
 
 /**
