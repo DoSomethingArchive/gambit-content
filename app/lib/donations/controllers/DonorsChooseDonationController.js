@@ -228,7 +228,6 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
       }
     }
   )
-
   response.send();
 };
 
@@ -387,18 +386,22 @@ DonorsChooseDonationController.prototype.retrieveLocation = function(request, re
     return;
   }
 
+  response.send();
+
   var config = dc_config[request.query.id];
   var location = messageHelper.getFirstWord(request.body.args);
 
   if (TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR == 'zip') {
     if (!isValidZip(location)) {
       sendSMS(request.body.phone, config.invalid_zip_oip);
+      logger.info('User ' + request.body.phone + ' did not submit a valid zipcode in the DonorsChoose.org flow.');
       return;
     }
   }
   else if (TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR == 'state') {
     if (!isValidState(location)) {
       sendSMS(request.body.phone, config.invalid_state_oip);
+      logger.info('User ' + request.body.phone + ' did not submit a valid state abbreviation in the DonorsChoose.org flow.');
       return;
     }
   }
@@ -409,7 +412,6 @@ DonorsChooseDonationController.prototype.retrieveLocation = function(request, re
   };
 
   this._post('find-project?id=' + request.query.id, info);
-  response.send();
 };
 
 /**

@@ -348,7 +348,7 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
     var execBetaJoinGame = function(obj, doc) {
 
       // If the game's already started, notify the user and exit.
-      if (doc.game_started) {
+      if (doc.game_started || doc.game_ended) {
         // Good place to notify betas about ALPHA SOLO keywords for opt-in-paths. 
         optinSingleUser(obj.request.body.phone, obj.gameConfig[doc.story_id].game_in_progress_oip);
         obj.response.send();
@@ -1008,14 +1008,7 @@ SGCompetitiveStoryController.prototype.getEndLevelGroupMessage = function(endLev
   var selectChoice = -1;
   var maxCount = -1;
   for (var i = 0; i < choiceCounter.length; i++) {
-    // Covers edge case --> if only 1 out of 2 users select the impact choice-set,
-    // the group will now receive the non-impact level ending message.
-    // (This is purely because the non-impact choice-set is always second in the array of choices.)
-
-    var isTwoPlayerGame = (gameDoc.players_current_status.length === 2);
-    var countEqualsMax = (choiceCounter[i] === maxCount);
-    var isNewMax = (choiceCounter[i] > maxCount);
-    if ((isTwoPlayerGame && countEqualsMax) || isNewMax){
+    if (choiceCounter[i] > maxCount) {
       selectChoice = i;
       maxCount = choiceCounter[i];
     }
@@ -1251,7 +1244,12 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
       else {
         var noActivePlayerInGame = true;
         for (var j = 0; j < playerDocs.length; j++) {
-          if (playerDocs[i].current_game_id.equals(gameDoc._id) == false) {
+          if (playerDocs[j].current_game_id.equals(gameDoc._id) == false) {
+            continue;
+          }
+
+          if (playerDocs[j].phone == gameDoc.alpha_phone) {
+            noActivePlayerInGame = false;
             continue;
           }
 
