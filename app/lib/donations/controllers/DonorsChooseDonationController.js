@@ -90,8 +90,7 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
     if (!error) {
       var donorsChooseResponse;
       try {
-        var entities = new Entities(); // Calling 'html-entities' module to decode escaped characters.
-        donorsChooseResponse = JSON.parse(entities.decode(data));
+        donorsChooseResponse = JSON.parse(data);
       }
       catch (e) {
         // JSON.parse will throw a SyntaxError exception if data is not valid JSON
@@ -126,14 +125,16 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
         }
       }
 
+      var entities = new Entities(); // Calling 'html-entities' module to decode escaped characters.
+
       var mobileCommonsCustomFields = {
-        donorsChooseProposalId :          selectedProposal.id,
-        donorsChooseProposalTitle :       selectedProposal.title,
-        donorsChooseProposalTeacherName : selectedProposal.teacherName, // Currently used in MobileCommons.
-        donorsChooseProposalSchoolName :  revisedSchoolName, // Currently used in MobileCommons. 
-        donorsChooseProposalSchoolCity :  revisedLocation, // Currently used in MobileCommons.
-        donorsChooseProposalSummary :     selectedProposal.fulfillmentTrailer,
-      }
+        donorsChooseProposalId :          entities.decode(selectedProposal.id),
+        donorsChooseProposalTitle :       entities.decode(selectedProposal.title),
+        donorsChooseProposalTeacherName : entities.decode(selectedProposal.teacherName), // Currently used in MobileCommons.
+        donorsChooseProposalSchoolName :  entities.decode(revisedSchoolName), // Currently used in MobileCommons. 
+        donorsChooseProposalSchoolCity :  entities.decode(revisedLocation), // Currently used in MobileCommons.
+        donorsChooseProposalSummary :     entities.decode(selectedProposal.fulfillmentTrailer),
+      };
 
       // Email and first_name can be overwritten later. Included in case of error, transaction can still be completed. 
       var currentDonationInfo = {
