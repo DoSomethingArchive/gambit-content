@@ -89,9 +89,8 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
   requestHttp.get(requestUrlString, function(error, response, data) {
     if (!error) {
       var donorsChooseResponse;
-      try {
-        var entities = new Entities(); // Calling 'html-entities' module to decode escaped characters.
-        donorsChooseResponse = JSON.parse(entities.decode(data));
+      try {        
+        donorsChooseResponse = JSON.parse(data);
       }
       catch (e) {
         // JSON.parse will throw a SyntaxError exception if data is not valid JSON
