@@ -54,7 +54,8 @@ exports.profile_update = function(phone, optInPathId, customFields) {
       logger.error(error);
     }
     else if (response && response.statusCode != 200) {
-      logger.error('Failed mobilecommons.profile_update with code: ', response.statusCode);
+      logger.error('Failed mobilecommons.profile_update with code: ' + response.statusCode,
+        '| body: ' + body, '| stack: ' + new Error().stack);
     }
   });
 };
@@ -104,7 +105,8 @@ exports.optin = function(args) {
       }
       else if (response) {
         if (response.statusCode != 200) {
-          logger.error('Failed mobilecommons.optin with code: ', response.statusCode);
+          logger.error('Failed mobilecommons.optin with code: ' + response.statusCode,
+            '| body: ' + body, '| stack: ' + new Error().stack);
         }
         else {
           logger.info('Success mobilecommons.optin: ', alphaOptin);
@@ -127,7 +129,8 @@ exports.optin = function(args) {
         }
         else if (response) {
           if (response.statusCode != 200) {
-            logger.error('Failed mobilecommons.optin with code: ', response.statusCode);
+            logger.error('Failed mobilecommons.optin with code: ' + response.statusCode,
+              '| body: ' + body, '| stack: ' + new Error().stack);
           }
           else {
             logger.info('Success mobilecommons.optin into: ', alphaOptin);
@@ -185,7 +188,8 @@ exports.optout = function(args) {
       }
       else if (response) {
         if (response.statusCode != 200) {
-          logger.error('Failed mobilecommons.optout with code: ', response.statusCode);
+          logger.error('Failed mobilecommons.optout with code: ' + response.statusCode,
+            '| body: ' + body, '| stack: ' + new Error().stack);
         }
         else {
           logger.info('Success mobilecommons.optout from: ', campaignId);
