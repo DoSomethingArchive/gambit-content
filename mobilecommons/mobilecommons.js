@@ -7,10 +7,9 @@ var request = require('request')
   , logger = require('../app/lib/logger')
   ;
 
-// Modifying the default Request library's request object to have an 
-// extended timeout, rather than its default of 120000 ms. 
+// Modifying the default Request library's request object.
 var modifiedRequest = request.defaults({
-  timeout: 240000
+  timeout: 120000
 });
 
 /**
