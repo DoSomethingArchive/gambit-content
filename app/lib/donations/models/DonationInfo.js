@@ -11,7 +11,7 @@ function DonationInfo(app) {
   var schema  = new mongoose.Schema();
   schema.add({
     // User's mobile number
-    mobile: String,
+    mobile: {type: String, index: true},
 
     // User's email
     email: String,

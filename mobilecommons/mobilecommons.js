@@ -160,14 +160,9 @@ exports.optout = function(args) {
   var phone = args.phone || null;
   var campaignId = args.campaignId || null;
 
-  // A note on where MOBILECOMMONS_* variables are set:
-  // On CentOS servers, variables to be set for the system wide profile that are
-  // maintained even through a system reboot are recommended to be placed in
-  // the /etc/profile.d/ folder. So look there if any of these MOBILECOMMONS_*
-  // environment variables need to be changed.
-  var companyKey = args.mc_company_key || process.env.MOBILECOMMONS_COMPANY_KEY || null;
-  var authEmail = args.mc_auth_email || process.env.MOBILECOMMONS_AUTH_EMAIL || null;
-  var authPass = args.mc_auth_pass || process.env.MOBILECOMMONS_AUTH_PASS || null;
+  var companyKey = process.env.MOBILECOMMONS_COMPANY_KEY || null;
+  var authEmail = process.env.MOBILECOMMONS_AUTH_EMAIL || null;
+  var authPass = process.env.MOBILECOMMONS_AUTH_PASS || null;
 
   // Exit out if one of the values isn't available
   if (!phone || !campaignId || !companyKey || !authEmail || !authPass) {
