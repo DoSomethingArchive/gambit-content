@@ -14,7 +14,7 @@ var sgGameCreateConfig = function(app) {
   var schema = new mongoose.Schema();
   schema.add({
     // Mobile number of the alpha user
-    alpha_mobile: String,
+    alpha_mobile: {type: String, index: true},
 
     // Name of the alpha user
     alpha_first_name: String,
