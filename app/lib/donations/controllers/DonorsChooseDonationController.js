@@ -104,19 +104,19 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
       // If none of the projects returned satisfy this condition;
       // we'll select the project with the greatest cost to complete. 
       for (var i = 0; i < proposals.length; i++) {
-        if (parseInt(proposals[i].costToComplete) >= 10) {
+        if (parseInt(proposals[i].costToComplete) >= DONATION_AMOUNT) {
           var selectedProposal = proposals[i];
           break;
         }
         else if ((!selectedProposal)|| (proposals[i].costToComplete > selectedProposal.costToComplete)) {
-          var selectedProposal = proposal[i];
+          var selectedProposal = proposals[i];
         }
       }
 
       var revisedLocation = selectedProposal.city;
       var revisedSchoolName = selectedProposal.schoolName;
 
-      // Check to see if we exceed character limits this text message: 
+      // Check to see if we exceed the character limits of this text message: 
       // https://secure.mcommons.com/campaigns/128427/opt_in_paths/170623
       if ((selectedProposal.city + selectedProposal.schoolName).length > CITY_SCHOOLNAME_CHARLIMIT) {
         revisedLocation = selectedProposal.state; // subsitute the state abbreviation
