@@ -7,6 +7,11 @@ var request = require('request')
   , logger = require('../app/lib/logger')
   ;
 
+// Modifying the default Request library's request object.
+var modifiedRequest = request.defaults({
+  timeout: 120000
+});
+
 /**
 * Mobile Commons profile_update API. Can be used to subscribe the user to an
 * opt-in path.
@@ -49,7 +54,7 @@ exports.profile_update = function(phone, optInPathId, customFields) {
   }
 
 
-  request.post(url, postData, function(error, response, body) {
+  modifiedRequest.post(url, postData, function(error, response, body) {
     if (error) {
       logger.error(error);
     }
@@ -99,7 +104,7 @@ exports.optin = function(args) {
       payload.form['friends[]'] = betaPhone;
     }
 
-    request.post(url, payload, function(error, response, body) {
+    modifiedRequest.post(url, payload, function(error, response, body) {
       if (error) {
         logger.error(error);
       }
@@ -123,7 +128,7 @@ exports.optin = function(args) {
       }
     };
 
-    request.post(url, payload, function(error, response, body) {
+    modifiedRequest.post(url, payload, function(error, response, body) {
         if (error) {
           logger.error(error);
         }
@@ -182,7 +187,7 @@ exports.optout = function(args) {
   };
 
   // Send opt-out request
-  request.post(url, payload, function(error, response, body) {
+  modifiedRequest.post(url, payload, function(error, response, body) {
       if (error) {
         logger.error(error);
       }
