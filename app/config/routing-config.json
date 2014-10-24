@@ -84,6 +84,11 @@
             "__comments": "BakesaleForBabies2014",
             "optin": 172929,
             "optout": 129491
+        },
+        "11713": {
+            "__comments": "Teens for Jeans 2015",
+            "optin": 173237,
+            "optout": 129745
         }
     },
     "yesNoPaths": [
@@ -229,6 +234,11 @@
             "incomingPath": 172931,
             "yes": 172933,
             "no": 172935
+        },
+        {"__comments": "Teens for Jeans 2015",
+            "incomingPath": 173239,
+            "yes": 173241,
+            "no": 173243
         }
 
     ]
