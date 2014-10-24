@@ -174,7 +174,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
           emitter.emit('alpha-user-created');
 
           if (raw && raw.upserted) {
-            logger.info('Alpha user upserted: ', raw.upserted.toString());
+            logger.info('Alpha user upserted: ', JSON.stringify(raw.upserted));
           }
         }
       });
@@ -193,7 +193,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
             emitter.emit('beta-user-created');
 
             if (raw && raw.upserted) {
-              logger.info('Beta user upserted: ', raw.upserted.toString());
+              logger.info('Beta user upserted: ', JSON.stringify(raw.upserted));
             }
           }
         }
