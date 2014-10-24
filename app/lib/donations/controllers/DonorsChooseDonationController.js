@@ -94,7 +94,7 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
         donorsChooseResponse = JSON.parse(data);
         var proposals = donorsChooseResponse.proposals;
 
-        // Making sure that the project funded has a costToComplete >= $10.
+        // Making sure that the project funded has a costToComplete >= DONATION_AMOUNT.
         // If none of the projects returned satisfy this condition;
         // we'll select the project with the greatest cost to complete. 
         var selectedProposal;
@@ -104,39 +104,48 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
             selectedProposal = proposals[i];
             break;
           }
-          else if ((!selectedProposal)|| (parseInt(proposals[i].costToComplete) > parseInt(selectedProposal.costToComplete))) {
+          else if (!selectedProposal || (parseInt(proposals[i].costToComplete) > parseInt(selectedProposal.costToComplete))) {
             selectedProposal = proposals[i];
           }
         }
 
-        var revisedLocation = selectedProposal.city;
-        var revisedSchoolName = selectedProposal.schoolName;
+        if (selectedProposal) {
+          var revisedLocation = selectedProposal.city;
+          var revisedSchoolName = selectedProposal.schoolName;
 
-        // Check to see if we exceed the character limits of this text message: 
-        // https://secure.mcommons.com/campaigns/128427/opt_in_paths/170623
-        if ((selectedProposal.city + selectedProposal.schoolName).length > CITY_SCHOOLNAME_CHARLIMIT) {
-          revisedLocation = selectedProposal.state; // subsitute the state abbreviation
-          if ((revisedLocation + selectedProposal.schoolName).length > CITY_SCHOOLNAME_CHARLIMIT) {
-            revisedSchoolName = selectedProposal.schoolName.slice(0, parseInt(CITY_SCHOOLNAME_CHARLIMIT)-2);
+          // Check to see if we exceed the character limits of this text message: 
+          // https://secure.mcommons.com/campaigns/128427/opt_in_paths/170623
+          if ((selectedProposal.city + selectedProposal.schoolName).length > CITY_SCHOOLNAME_CHARLIMIT) {
+            revisedLocation = selectedProposal.state; // subsitute the state abbreviation
+            if ((revisedLocation + selectedProposal.schoolName).length > CITY_SCHOOLNAME_CHARLIMIT) {
+              revisedSchoolName = selectedProposal.schoolName.slice(0, parseInt(CITY_SCHOOLNAME_CHARLIMIT)-2);
+            }
           }
+
+          var entities = new Entities(); // Calling 'html-entities' module to decode escaped characters.
+
+          var mobileCommonsCustomFields = {
+            donorsChooseProposalId :          entities.decode(selectedProposal.id),
+            donorsChooseProposalTitle :       entities.decode(selectedProposal.title),
+            donorsChooseProposalTeacherName : entities.decode(selectedProposal.teacherName), // Currently used in MobileCommons.
+            donorsChooseProposalSchoolName :  entities.decode(revisedSchoolName), // Currently used in MobileCommons. 
+            donorsChooseProposalSchoolCity :  entities.decode(revisedLocation), // Currently used in MobileCommons.
+            donorsChooseProposalSummary :     entities.decode(selectedProposal.fulfillmentTrailer),
+          };       
+        } else {
+          sendSMS(req.body.mobile, config.error_direct_user_to_restart);
+          logger.error('DonorsChoose API response has not returned with a valid proposal.' );
+          return;
         }
-
-        var entities = new Entities(); // Calling 'html-entities' module to decode escaped characters.
-
-        var mobileCommonsCustomFields = {
-          donorsChooseProposalId :          entities.decode(selectedProposal.id),
-          donorsChooseProposalTitle :       entities.decode(selectedProposal.title),
-          donorsChooseProposalTeacherName : entities.decode(selectedProposal.teacherName), // Currently used in MobileCommons.
-          donorsChooseProposalSchoolName :  entities.decode(revisedSchoolName), // Currently used in MobileCommons. 
-          donorsChooseProposalSchoolCity :  entities.decode(revisedLocation), // Currently used in MobileCommons.
-          donorsChooseProposalSummary :     entities.decode(selectedProposal.fulfillmentTrailer),
-        };
 
       }
       catch (e) {
+
+        sendSMS(req.body.mobile, config.error_direct_user_to_restart);
         // JSON.parse will throw a SyntaxError exception if data is not valid JSON
         logger.error('Invalid JSON data received from DonorsChoose API, or selected proposal does not contain necessary fields.');
         return;
+
       }
 
       // Email and first_name can be overwritten later. Included in case of error, transaction can still be completed. 
