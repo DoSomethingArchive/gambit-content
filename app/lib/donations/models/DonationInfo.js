@@ -22,6 +22,9 @@ function DonationInfo(app) {
     // User's state or zipcode - depends on campaign
     location: String,
 
+    // Timestamp. 
+    created_at: {type: Date, default: Date.now},
+
     // Project ID
     project_id: Number,
 

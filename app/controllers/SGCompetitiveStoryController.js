@@ -159,7 +159,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     // Upsert the document for the alpha user.
     self.userModel.update(
       {phone: self.createdGameDoc.alpha_phone},
-      {$set: {phone: self.createdGameDoc.alpha_phone, current_game_id: self.createdGameDoc._id}},
+      {$set: {phone: self.createdGameDoc.alpha_phone, current_game_id: self.createdGameDoc._id, updated_at: Date.now()}},
       {upsert: true}, // Creates a new doc when no doc matches the query criteria via '.update()'.
       function(err, num, raw) {
         if (err) {
@@ -183,7 +183,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
       // Upsert user document for the beta.
       self.userModel.update(
         {phone: value.phone},
-        {$set: {phone: value.phone, current_game_id: self.createdGameDoc._id}},     
+        {$set: {phone: value.phone, current_game_id: self.createdGameDoc._id, updated_at: Date.now()}},     
         {upsert: true},
         function(err, num, raw) {
           if (err) {
@@ -794,6 +794,7 @@ SGCompetitiveStoryController.prototype.updatePlayerCurrentStatus = function(game
   for (var i = 0; i < gameDoc.players_current_status.length; i++) {
     if (gameDoc.players_current_status[i].phone == phone) {
       gameDoc.players_current_status[i].opt_in_path = currentPath;
+      gameDoc.players_current_status[i].updated_at = Date.now();
       updated = true;
     }
   }
@@ -803,6 +804,7 @@ SGCompetitiveStoryController.prototype.updatePlayerCurrentStatus = function(game
     gameDoc.players_current_status[idx] = {};
     gameDoc.players_current_status[idx].phone = phone;
     gameDoc.players_current_status[idx].opt_in_path = currentPath;
+    gameDoc.players_current_status[idx].updated_at = Date.now();
   }
 
   return gameDoc;
@@ -825,6 +827,7 @@ SGCompetitiveStoryController.prototype.addPathToStoryResults = function(gameDoc,
   gameDoc.story_results[idx] = {};
   gameDoc.story_results[idx].oip = oip;
   gameDoc.story_results[idx].phone = phone;
+  gameDoc.story_results[idx].created_at = Date.now();
 
   return gameDoc;
 }
@@ -850,6 +853,7 @@ SGCompetitiveStoryController.prototype.updateStoryResults = function(gameDoc, ph
   gameDoc.story_results[index].oip = oip;
   gameDoc.story_results[index].phone = phone;
   gameDoc.story_results[index].answer = answer;
+  gameDoc.story_results[index].created_at = Date.now();
 
   return gameDoc;
 };
