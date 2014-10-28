@@ -21,7 +21,7 @@ var sgCompetitiveStory = function(app) {
       rank: {type: String, default: ''},
 
       // Timestamp. 
-      updated_at: {type: Date, default: Date.now()}
+      updated_at: {type: Date, default: Date.now}
 
     }],
 
@@ -37,7 +37,7 @@ var sgCompetitiveStory = function(app) {
       answer: String,
 
       // Timestamp. 
-      created_at: {type: Date, default: Date.now()}
+      created_at: {type: Date, default: Date.now}
 
     }],
 
@@ -52,7 +52,7 @@ var sgCompetitiveStory = function(app) {
     game_type: {type: String, default: ''},
 
     // Timestamp. 
-    created_at: {type: Date, default: Date.now()}
+    created_at: {type: Date, default: Date.now}
 
   });
 
