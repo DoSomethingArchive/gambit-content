@@ -93,47 +93,43 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
     if (!error) {
       var donorsChooseResponse;
       try {
-
         donorsChooseResponse = JSON.parse(data);
         var selectedProposal = donorsChooseResponse.proposals[0];
-
-        if (selectedProposal) {
-          var revisedLocation = selectedProposal.city;
-          var revisedSchoolName = selectedProposal.schoolName;
-
-          // Check to see if we exceed the character limits of this text message: 
-          // https://secure.mcommons.com/campaigns/128427/opt_in_paths/170623
-          if ((selectedProposal.city + selectedProposal.schoolName).length > CITY_SCHOOLNAME_CHARLIMIT) {
-            revisedLocation = selectedProposal.state; // subsitute the state abbreviation
-            if ((revisedLocation + selectedProposal.schoolName).length > CITY_SCHOOLNAME_CHARLIMIT) {
-              revisedSchoolName = selectedProposal.schoolName.slice(0, parseInt(CITY_SCHOOLNAME_CHARLIMIT)-2);
-            }
-          }
-
-          var entities = new Entities(); // Calling 'html-entities' module to decode escaped characters.
-
-          var mobileCommonsCustomFields = {
-            donorsChooseProposalId :          entities.decode(selectedProposal.id),
-            donorsChooseProposalTitle :       entities.decode(selectedProposal.title),
-            donorsChooseProposalTeacherName : entities.decode(selectedProposal.teacherName), // Currently used in MobileCommons.
-            donorsChooseProposalSchoolName :  entities.decode(revisedSchoolName), // Currently used in MobileCommons. 
-            donorsChooseProposalSchoolCity :  entities.decode(revisedLocation), // Currently used in MobileCommons.
-            donorsChooseProposalSummary :     entities.decode(selectedProposal.fulfillmentTrailer),
-          };       
-        } else {
-          sendSMS(req.body.mobile, config.error_direct_user_to_restart);
-          logger.error('DonorsChoose API response for user mobile: ' + req.body.mobile + ' has not returned with a valid proposal. Response returned: ' + donorsChooseResponse);
-          return;
-        }
-
       }
       catch (e) {
-
         sendSMS(req.body.mobile, config.error_direct_user_to_restart);
         // JSON.parse will throw a SyntaxError exception if data is not valid JSON
         logger.error('Invalid JSON data received from DonorsChoose API for user mobile: ' + req.body.mobile + ' , or selected proposal does not contain necessary fields. Error: ', e);
         return;
+      }
 
+      if (selectedProposal) {
+        var revisedLocation = selectedProposal.city;
+        var revisedSchoolName = selectedProposal.schoolName;
+
+        // Check to see if we exceed the character limits of this text message: 
+        // https://secure.mcommons.com/campaigns/128427/opt_in_paths/170623
+        if ((selectedProposal.city + selectedProposal.schoolName).length > CITY_SCHOOLNAME_CHARLIMIT) {
+          revisedLocation = selectedProposal.state; // subsitute the state abbreviation
+          if ((revisedLocation + selectedProposal.schoolName).length > CITY_SCHOOLNAME_CHARLIMIT) {
+            revisedSchoolName = selectedProposal.schoolName.slice(0, parseInt(CITY_SCHOOLNAME_CHARLIMIT)-2);
+          }
+        }
+
+        var entities = new Entities(); // Calling 'html-entities' module to decode escaped characters.
+
+        var mobileCommonsCustomFields = {
+          donorsChooseProposalId :          entities.decode(selectedProposal.id),
+          donorsChooseProposalTitle :       entities.decode(selectedProposal.title),
+          donorsChooseProposalTeacherName : entities.decode(selectedProposal.teacherName), // Currently used in MobileCommons.
+          donorsChooseProposalSchoolName :  entities.decode(revisedSchoolName), // Currently used in MobileCommons. 
+          donorsChooseProposalSchoolCity :  entities.decode(revisedLocation), // Currently used in MobileCommons.
+          donorsChooseProposalSummary :     entities.decode(selectedProposal.fulfillmentTrailer),
+        };       
+      } else {
+        sendSMS(req.body.mobile, config.error_direct_user_to_restart);
+        logger.error('DonorsChoose API response for user mobile: ' + req.body.mobile + ' has not returned with a valid proposal. Response returned: ' + donorsChooseResponse);
+        return;
       }
 
       // Email and first_name can be overwritten later. Included in case of error, transaction can still be completed. 
