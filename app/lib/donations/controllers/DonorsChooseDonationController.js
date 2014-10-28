@@ -26,7 +26,8 @@ if (process.env.NODE_ENV == 'test') {
 }
 
 var TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR = 'zip' // 'zip' or 'state'. Our retrieveLocation() function will adjust accordingly.
-  , DONATION_AMOUNT = 5
+  , DONATION_AMOUNT = 10
+  , COST_TO_COMPLETE_UPPER_LIMIT = 10000
   , DONATE_API_URL = donorsChooseApiBaseUrl + donorsChooseApiKey
   , CITY_SCHOOLNAME_CHARLIMIT = 79; // Limit for the number of characters we have in this OIP: https://secure.mcommons.com/campaigns/128427/opt_in_paths/170623
 
@@ -82,8 +83,10 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
 
   var subjectFilter = 'subject4=-4'; // Subject code for all 'Math & Science' subjects.
   var urgencySort = 'sortBy=0'; // Search returns results ordered by urgency algorithm. 
-  var filterParams = locationFilter + '&' + subjectFilter + '&' + urgencySort + '&';
-  var requestUrlString = 'http://api.donorschoose.org/common/json_feed.html?' + filterParams + 'APIKey=' + donorsChooseApiKey;
+  var costToCompleteRange = 'costToCompleteRange=' + DONATION_AMOUNT + '+TO+' + COST_TO_COMPLETE_UPPER_LIMIT // Constrains results which fall within a specific 'costToComplete' value range. 
+  var maxNumberOfResults = '1' // Maximum number of results to return. 
+  var filterParams = locationFilter + '&' + subjectFilter + '&' + urgencySort + '&' + costToCompleteRange + '&';
+  var requestUrlString = 'http://api.donorschoose.org/common/json_feed.html?' + filterParams + 'APIKey=' + donorsChooseApiKey + '&max=' + maxNumberOfResults;
   var req = request;
 
   requestHttp.get(requestUrlString, function(error, response, data) {
@@ -92,22 +95,7 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
       try {
 
         donorsChooseResponse = JSON.parse(data);
-        var proposals = donorsChooseResponse.proposals;
-
-        // Making sure that the project funded has a costToComplete >= DONATION_AMOUNT.
-        // If none of the projects returned satisfy this condition;
-        // we'll select the project with the greatest cost to complete. 
-        var selectedProposal;
-
-        for (var i = 0; i < proposals.length; i++) {
-          if (parseInt(proposals[i].costToComplete) >= DONATION_AMOUNT) {
-            selectedProposal = proposals[i];
-            break;
-          }
-          else if (!selectedProposal || (parseInt(proposals[i].costToComplete) > parseInt(selectedProposal.costToComplete))) {
-            selectedProposal = proposals[i];
-          }
-        }
+        var selectedProposal = donorsChooseResponse.proposals[0];
 
         if (selectedProposal) {
           var revisedLocation = selectedProposal.city;
