@@ -122,7 +122,7 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
           };       
         } else {
           sendSMS(req.body.mobile, config.error_direct_user_to_restart);
-          logger.error('DonorsChoose API response has not returned with a valid proposal.' );
+          logger.error('DonorsChoose API response for user mobile: ' + req.body.mobile + ' has not returned with a valid proposal. Response returned: ' + donorsChooseResponse);
           return;
         }
 
@@ -131,7 +131,7 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
 
         sendSMS(req.body.mobile, config.error_direct_user_to_restart);
         // JSON.parse will throw a SyntaxError exception if data is not valid JSON
-        logger.error('Invalid JSON data received from DonorsChoose API, or selected proposal does not contain necessary fields.');
+        logger.error('Invalid JSON data received from DonorsChoose API for user mobile: ' + req.body.mobile + ' , or selected proposal does not contain necessary fields. Error: ', e);
         return;
 
       }
@@ -157,7 +157,7 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
     }
     else {
       sendSMS(req.body.mobile, config.error_direct_user_to_restart);
-      logger.error('Error in retrieving proposal info from DonorsChoose or in uploading to MobileCommons custom fields: ', error);
+      logger.error('Error for user mobile: ' + req.body.mobile + ' in retrieving proposal info from DonorsChoose or in uploading to MobileCommons custom fields: ' + error);
       return;
     }
   });
@@ -204,7 +204,7 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
     updateObject,
     function(err, donorDocument) {
       if (err) {
-        logger.error('Error in donationModel.findOneAndUpdate: ', err);
+        logger.error('Error for user mobile: ' + req.body.phone + 'in donationModel.findOneAndUpdate: ', err);
         sendSMS(req.body.phone, config.error_direct_user_to_restart);
       } 
       else if (donorDocument) {
@@ -257,17 +257,17 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
             logger.log('debug', 'Request for token returned body:', jsonBody);
             deferred.resolve(JSON.parse(body).token);
           } else {
-            logger.error('Unable to retrieve a donation token from the DonorsChoose API.');
+            logger.error('Unable to retrieve a donation token from the DonorsChoose API for user mobile:' + donorInfoObject.donorPhoneNumber);
             sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
           }
         }
         catch (e) {
-          logger.error('Failed trying to parse the donation token request response from DonorsChoose.org. Error: ', e.message);
+          logger.error('Failed trying to parse the donation token request response from DonorsChoose.org for user mobile:' + donorInfoObject.donorPhoneNumber + ' Error: ', e.message, '| Response: ', response, '| Body: ', body);
           sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
         }
       }
       else {
-        deferred.reject('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, error: ', err);
+        deferred.reject('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, user mobile: ' + donorInfoObject.donorPhoneNumber + 'error: ', err);
         sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
       }
     });
@@ -293,11 +293,11 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
     requestHttp.post(apiInfoObject.apiUrl, donateParams, function(err, response, body) {
       logger.log('debug', 'Donation submission return:', body.trim())
       if (err) {
-        logger.error('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, error: ', err);
+        logger.error('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, user mobile: ' + donorInfoObject.donorPhoneNumber + 'error: ' + err);
         sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
       }
       else if (response && response.statusCode != 200) {
-        logger.error('Failed to submit donation to DonorsChoose.org. Status code: ' + response.statusCode);
+        logger.error('Failed to submit donation to DonorsChoose.org for user mobile: ' + donorInfoObject.donorPhoneNumber + '. Status code: ' + response.statusCode);
         sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
       }
       else {
@@ -313,12 +313,12 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
               mobilecommons.profile_update(donorInfoObject.donorPhoneNumber, donationConfig.donate_complete, customFields);
             })
           } else {
-            logger.warn('Donation to proposal ' + proposalId + ' was NOT successful. Body:', jsonBody);
+            logger.warn('Donation to proposal ' + proposalId + ' for user mobile: ' + donorInfoObject.donorPhoneNumber + 'was NOT successful. Body:', jsonBody);
             sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
           }
         }
         catch (e) {
-          logger.error('Failed trying to parse the donation response from DonorsChoose.org. Error: ', e.message);
+          logger.error('Failed trying to parse the donation response from DonorsChoose.org. User mobile: ' + donorInfoObject.donorPhoneNumber + 'Error: ' + e.message);
           sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
         }
       }
@@ -339,6 +339,7 @@ DonorsChooseDonationController.prototype.retrieveFirstName = function(request, r
 
   var config = dc_config[request.query.id];
   var userSubmittedName = messageHelper.getFirstWord(request.body.args);
+  var req = request;
 
   if (containsNaughtyWords(userSubmittedName) || !userSubmittedName) {
     userSubmittedName = 'Anonymous';
@@ -356,7 +357,7 @@ DonorsChooseDonationController.prototype.retrieveFirstName = function(request, r
     }},
     function(err, num, raw) {
       if (err) {
-        logger.error(err);
+        logger.error('Error in retrieving first name of user for user mobile: ' + req.body.phone + ' | Error: ' + err);
         sendSMS(request.body.phone, config.error_direct_user_to_restart);
       }
       else {
