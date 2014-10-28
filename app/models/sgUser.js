@@ -9,6 +9,9 @@ var sgUser = function(app) {
   var modelName = 'sg_user';
 
   var schema = new mongoose.Schema({
+    // Timestamp. 
+    updated_at: {type: Date, default: Date.now()},
+
     // Phone number of this user
     phone: {type: String, index: true},
 
