@@ -16,19 +16,20 @@
 
 var donorsChooseApiKey = (process.env.DONORSCHOOSE_API_KEY || null)
   , donorsChooseApiPassword = (process.env.DONORSCHOOSE_API_PASSWORD || null)
-  , donorsChooseApiBaseUrl = 'https://apisecure.donorschoose.org/common/json_api.html?APIKey='
+  , donorsChooseDonationBaseURL = 'https://apisecure.donorschoose.org/common/json_api.html?APIKey='
+  , donorsChooseProposalsQueryBaseURL = 'http://api.donorschoose.org/common/json_feed.html?'
   , defaultDonorsChooseTransactionEmail = (process.env.DONORSCHOOSE_DEFAULT_EMAIL || null);
 
 if (process.env.NODE_ENV == 'test') {
   donorsChooseApiKey = 'DONORSCHOOSE';
   donorsChooseApiPassword = 'helpClassrooms!';
-  donorsChooseApiBaseUrl = 'https://apiqasecure.donorschoose.org/common/json_api.html?APIKey=';
+  donorsChooseDonationBaseURL = 'https://apiqasecure.donorschoose.org/common/json_api.html?APIKey=';
 }
 
 var TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR = 'zip' // 'zip' or 'state'. Our retrieveLocation() function will adjust accordingly.
   , DONATION_AMOUNT = 10
   , COST_TO_COMPLETE_UPPER_LIMIT = 10000
-  , DONATE_API_URL = donorsChooseApiBaseUrl + donorsChooseApiKey
+  , DONATE_API_URL = donorsChooseDonationBaseURL + donorsChooseApiKey
   , CITY_SCHOOLNAME_CHARLIMIT = 79; // Limit for the number of characters we have in this OIP: https://secure.mcommons.com/campaigns/128427/opt_in_paths/170623
 
 var mobilecommons = require('../../../../mobilecommons')
@@ -81,15 +82,17 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
     var locationFilter =  'state=' + request.body.location; // If state. 
   }
 
-  var subjectFilter = 'subject4=-4'; // Subject code for all 'Math & Science' subjects.
-  var urgencySort = 'sortBy=0'; // Search returns results ordered by urgency algorithm. 
-  var costToCompleteRange = 'costToCompleteRange=' + DONATION_AMOUNT + '+TO+' 
-  + COST_TO_COMPLETE_UPPER_LIMIT // Constrains results which fall within a specific 'costToComplete' value range. 
-  var maxNumberOfResults = '1' // Maximum number of results to return. 
-  var filterParams = locationFilter + '&' + subjectFilter + '&' + urgencySort 
-  + '&' + costToCompleteRange + '&';
-  var requestUrlString = donorsChooseApiBaseUrl + filterParams + 'APIKey=' + 
-  donorsChooseApiKey + '&max=' + maxNumberOfResults;
+  // Subject code for all 'Math & Science' subjects.
+  var subjectFilter = 'subject4=-4'; 
+  // Search returns results ordered by urgency algorithm. 
+  var urgencySort = 'sortBy=0'; 
+  // Constrains results which fall within a specific 'costToComplete' value range. 
+  var costToCompleteRange = 'costToCompleteRange=' + DONATION_AMOUNT + '+TO+' + COST_TO_COMPLETE_UPPER_LIMIT; 
+  // Maximum number of results to return. 
+  var maxNumberOfResults = '1';
+  var filterParams = locationFilter + '&' + subjectFilter + '&' + urgencySort + '&' + costToCompleteRange + '&';
+  var requestUrlString = donorsChooseProposalsQueryBaseURL + filterParams + 'APIKey=' + donorsChooseApiKey + '&max=' + maxNumberOfResults;
+
   var req = request;
 
   requestHttp.get(requestUrlString, function(error, response, data) {
@@ -97,7 +100,12 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
       var donorsChooseResponse;
       try {
         donorsChooseResponse = JSON.parse(data);
-        var selectedProposal = donorsChooseResponse.proposals[0];
+        if (!donorsChooseResponse.proposals || donorsChooseResponse.proposals.length == 0) {
+          throw new Error('No proposals returned from Donors Choose');
+        }
+        else {
+          var selectedProposal = donorsChooseResponse.proposals[0];
+        }    
       }
       catch (e) {
         sendSMS(req.body.mobile, config.error_direct_user_to_restart);
