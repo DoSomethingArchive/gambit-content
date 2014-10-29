@@ -16,19 +16,20 @@
 
 var donorsChooseApiKey = (process.env.DONORSCHOOSE_API_KEY || null)
   , donorsChooseApiPassword = (process.env.DONORSCHOOSE_API_PASSWORD || null)
-  , donorsChooseApiBaseUrl = 'https://apisecure.donorschoose.org/common/json_api.html?APIKey='
+  , donorsChooseDonationBaseURL = 'https://apisecure.donorschoose.org/common/json_api.html?APIKey='
+  , donorsChooseProposalsQueryBaseURL = 'http://api.donorschoose.org/common/json_feed.html?'
   , defaultDonorsChooseTransactionEmail = (process.env.DONORSCHOOSE_DEFAULT_EMAIL || null);
 
 if (process.env.NODE_ENV == 'test') {
   donorsChooseApiKey = 'DONORSCHOOSE';
   donorsChooseApiPassword = 'helpClassrooms!';
-  donorsChooseApiBaseUrl = 'https://apiqasecure.donorschoose.org/common/json_api.html?APIKey=';
+  donorsChooseDonationBaseURL = 'https://apiqasecure.donorschoose.org/common/json_api.html?APIKey=';
 }
 
 var TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR = 'zip' // 'zip' or 'state'. Our retrieveLocation() function will adjust accordingly.
   , DONATION_AMOUNT = 10
   , COST_TO_COMPLETE_UPPER_LIMIT = 10000
-  , DONATE_API_URL = donorsChooseApiBaseUrl + donorsChooseApiKey
+  , DONATE_API_URL = donorsChooseDonationBaseURL + donorsChooseApiKey
   , CITY_SCHOOLNAME_CHARLIMIT = 79; // Limit for the number of characters we have in this OIP: https://secure.mcommons.com/campaigns/128427/opt_in_paths/170623
 
 var mobilecommons = require('../../../../mobilecommons')
@@ -81,59 +82,68 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
     var locationFilter =  'state=' + request.body.location; // If state. 
   }
 
-  var subjectFilter = 'subject4=-4'; // Subject code for all 'Math & Science' subjects.
-  var urgencySort = 'sortBy=0'; // Search returns results ordered by urgency algorithm. 
-  var costToCompleteRange = 'costToCompleteRange=' + DONATION_AMOUNT + '+TO+' + COST_TO_COMPLETE_UPPER_LIMIT // Constrains results which fall within a specific 'costToComplete' value range. 
-  var maxNumberOfResults = '1' // Maximum number of results to return. 
+  // Subject code for all 'Math & Science' subjects.
+  var subjectFilter = 'subject4=-4'; 
+  // Search returns results ordered by urgency algorithm. 
+  var urgencySort = 'sortBy=0'; 
+  // Constrains results which fall within a specific 'costToComplete' value range. 
+  var costToCompleteRange = 'costToCompleteRange=' + DONATION_AMOUNT + '+TO+' + COST_TO_COMPLETE_UPPER_LIMIT; 
+  // Maximum number of results to return. 
+  var maxNumberOfResults = '1';
   var filterParams = locationFilter + '&' + subjectFilter + '&' + urgencySort + '&' + costToCompleteRange + '&';
-  var requestUrlString = 'http://api.donorschoose.org/common/json_feed.html?' + filterParams + 'APIKey=' + donorsChooseApiKey + '&max=' + maxNumberOfResults;
+  var requestUrlString = donorsChooseProposalsQueryBaseURL + filterParams + 'APIKey=' + donorsChooseApiKey + '&max=' + maxNumberOfResults;
+
   var req = request;
 
   requestHttp.get(requestUrlString, function(error, response, data) {
     if (!error) {
       var donorsChooseResponse;
       try {
-
         donorsChooseResponse = JSON.parse(data);
-        var selectedProposal = donorsChooseResponse.proposals[0];
-
-        if (selectedProposal) {
-          var revisedLocation = selectedProposal.city;
-          var revisedSchoolName = selectedProposal.schoolName;
-
-          // Check to see if we exceed the character limits of this text message: 
-          // https://secure.mcommons.com/campaigns/128427/opt_in_paths/170623
-          if ((selectedProposal.city + selectedProposal.schoolName).length > CITY_SCHOOLNAME_CHARLIMIT) {
-            revisedLocation = selectedProposal.state; // subsitute the state abbreviation
-            if ((revisedLocation + selectedProposal.schoolName).length > CITY_SCHOOLNAME_CHARLIMIT) {
-              revisedSchoolName = selectedProposal.schoolName.slice(0, parseInt(CITY_SCHOOLNAME_CHARLIMIT)-2);
-            }
-          }
-
-          var entities = new Entities(); // Calling 'html-entities' module to decode escaped characters.
-
-          var mobileCommonsCustomFields = {
-            donorsChooseProposalId :          entities.decode(selectedProposal.id),
-            donorsChooseProposalTitle :       entities.decode(selectedProposal.title),
-            donorsChooseProposalTeacherName : entities.decode(selectedProposal.teacherName), // Currently used in MobileCommons.
-            donorsChooseProposalSchoolName :  entities.decode(revisedSchoolName), // Currently used in MobileCommons. 
-            donorsChooseProposalSchoolCity :  entities.decode(revisedLocation), // Currently used in MobileCommons.
-            donorsChooseProposalSummary :     entities.decode(selectedProposal.fulfillmentTrailer),
-          };       
-        } else {
-          sendSMS(req.body.mobile, config.error_direct_user_to_restart);
-          logger.error('DonorsChoose API response has not returned with a valid proposal.' );
-          return;
+        if (!donorsChooseResponse.proposals || donorsChooseResponse.proposals.length == 0) {
+          throw new Error('No proposals returned from Donors Choose');
         }
-
+        else {
+          var selectedProposal = donorsChooseResponse.proposals[0];
+        }    
       }
       catch (e) {
-
         sendSMS(req.body.mobile, config.error_direct_user_to_restart);
         // JSON.parse will throw a SyntaxError exception if data is not valid JSON
-        logger.error('Invalid JSON data received from DonorsChoose API, or selected proposal does not contain necessary fields.');
+        logger.error('Invalid JSON data received from DonorsChoose API for user mobile: ' 
+          + req.body.mobile + ' , or selected proposal does not contain necessary fields. Error: ' + e);
         return;
+      }
 
+      if (selectedProposal) {
+        var revisedLocation = selectedProposal.city;
+        var revisedSchoolName = selectedProposal.schoolName;
+
+        // Check to see if we exceed the character limits of this text message: 
+        // https://secure.mcommons.com/campaigns/128427/opt_in_paths/170623
+        if ((selectedProposal.city + selectedProposal.schoolName).length > CITY_SCHOOLNAME_CHARLIMIT) {
+          revisedLocation = selectedProposal.state; // subsitute the state abbreviation
+          if ((revisedLocation + selectedProposal.schoolName).length > CITY_SCHOOLNAME_CHARLIMIT) {
+            revisedSchoolName = selectedProposal.schoolName.slice(0, parseInt(CITY_SCHOOLNAME_CHARLIMIT)-2);
+          }
+        }
+
+        var entities = new Entities(); // Calling 'html-entities' module to decode escaped characters.
+
+        var mobileCommonsCustomFields = {
+          donorsChooseProposalId :          entities.decode(selectedProposal.id),
+          donorsChooseProposalTitle :       entities.decode(selectedProposal.title),
+          donorsChooseProposalTeacherName : entities.decode(selectedProposal.teacherName), // Currently used in MobileCommons.
+          donorsChooseProposalSchoolName :  entities.decode(revisedSchoolName), // Currently used in MobileCommons. 
+          donorsChooseProposalSchoolCity :  entities.decode(revisedLocation), // Currently used in MobileCommons.
+          donorsChooseProposalSummary :     entities.decode(selectedProposal.fulfillmentTrailer),
+        };       
+      } else {
+        sendSMS(req.body.mobile, config.error_direct_user_to_restart);
+        logger.error('DonorsChoose API response for user mobile: ' + req.body.mobile 
+          + ' has not returned with a valid proposal. Response returned: ' 
+          + donorsChooseResponse);
+        return;
       }
 
       // Email and first_name can be overwritten later. Included in case of error, transaction can still be completed. 
@@ -153,11 +163,12 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
       self.donationModel.create(currentDonationInfo).then(function(doc) {
         mobilecommons.profile_update(request.body.mobile, config.found_project_ask_name, mobileCommonsCustomFields); // Arguments: phone, optInPathId, customFields.
         logger.info('Doc retrieved:', doc._id.toString(), ' - Updating Mobile Commons profile with:', mobileCommonsCustomFields);
-      }, promiseErrorCallback('Unable to create donation document.', req.body.mobile));
+      }, promiseErrorCallback('Unable to create donation document for user mobile: ' + req.body.mobile));
     }
     else {
       sendSMS(req.body.mobile, config.error_direct_user_to_restart);
-      logger.error('Error in retrieving proposal info from DonorsChoose or in uploading to MobileCommons custom fields: ', error);
+      logger.error('Error for user mobile: ' + req.body.mobile 
+        + ' in retrieving proposal info from DonorsChoose or in uploading to MobileCommons custom fields: ' + error);
       return;
     }
   });
@@ -204,11 +215,12 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
     updateObject,
     function(err, donorDocument) {
       if (err) {
-        logger.error('Error in donationModel.findOneAndUpdate: ', err);
+        logger.error('Error for user mobile: ' + req.body.phone 
+          + 'in donationModel.findOneAndUpdate: ' + err);
         sendSMS(req.body.phone, config.error_direct_user_to_restart);
       } 
       else if (donorDocument) {
-        logger.log('debug', 'Mongo donorDocument returned by retrieveEmail:', donorDocument);
+        logger.log('debug', 'Mongo donorDocument returned by retrieveEmail:' + donorDocument);
         // In the case that the user is out of order in the donation flow, 
         // or our app hasn't found a proposal (aka project) and attached a 
         // project_id to the document, we opt the user back into the start donation flow.  
@@ -254,20 +266,23 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
         try {
           var jsonBody = JSON.parse(body);
           if (jsonBody.statusDescription == 'success') {
-            logger.log('debug', 'Request for token returned body:', jsonBody);
+            logger.log('debug', 'Request for token returned body:' + jsonBody);
             deferred.resolve(JSON.parse(body).token);
           } else {
-            logger.error('Unable to retrieve a donation token from the DonorsChoose API.');
+            logger.error('Unable to retrieve a donation token from the DonorsChoose API for user mobile:' 
+              + donorInfoObject.donorPhoneNumber);
             sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
           }
         }
         catch (e) {
-          logger.error('Failed trying to parse the donation token request response from DonorsChoose.org. Error: ', e.message);
+          logger.error('Failed trying to parse the donation token request response from DonorsChoose.org for user mobile:' 
+            + donorInfoObject.donorPhoneNumber + ' Error: ' + e.message + '| Response: ' + response + '| Body: ' + body);
           sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
         }
       }
       else {
-        deferred.reject('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, error: ', err);
+        deferred.reject('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, user mobile: ' 
+          + donorInfoObject.donorPhoneNumber + 'error: ' + err);
         sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
       }
     });
@@ -293,11 +308,12 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
     requestHttp.post(apiInfoObject.apiUrl, donateParams, function(err, response, body) {
       logger.log('debug', 'Donation submission return:', body.trim())
       if (err) {
-        logger.error('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, error: ', err);
+        logger.error('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, user mobile: ' + donorInfoObject.donorPhoneNumber + 'error: ' + err);
         sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
       }
       else if (response && response.statusCode != 200) {
-        logger.error('Failed to submit donation to DonorsChoose.org. Status code: ' + response.statusCode);
+        logger.error('Failed to submit donation to DonorsChoose.org for user mobile: ' 
+          + donorInfoObject.donorPhoneNumber + '. Status code: ' + response.statusCode);
         sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
       }
       else {
@@ -313,18 +329,21 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
               mobilecommons.profile_update(donorInfoObject.donorPhoneNumber, donationConfig.donate_complete, customFields);
             })
           } else {
-            logger.warn('Donation to proposal ' + proposalId + ' was NOT successful. Body:', jsonBody);
+            logger.warn('Donation to proposal ' + proposalId + ' for user mobile: ' 
+              + donorInfoObject.donorPhoneNumber + 'was NOT successful. Body:' + jsonBody);
             sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
           }
         }
         catch (e) {
-          logger.error('Failed trying to parse the donation response from DonorsChoose.org. Error: ', e.message);
+          logger.error('Failed trying to parse the donation response from DonorsChoose.org. User mobile: ' 
+            + donorInfoObject.donorPhoneNumber + 'Error: ' + e.message);
           sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
         }
       }
     })
   },
-  promiseErrorCallback('Unable to successfully retrieve donation token from DonorsChoose.org API.', donorInfoObject.donorPhoneNumber)); 
+  promiseErrorCallback('Unable to successfully retrieve donation token from DonorsChoose.org API. User mobile: ' 
+    + donorInfoObject.donorPhoneNumber)); 
 };
 
 /**
@@ -339,6 +358,7 @@ DonorsChooseDonationController.prototype.retrieveFirstName = function(request, r
 
   var config = dc_config[request.query.id];
   var userSubmittedName = messageHelper.getFirstWord(request.body.args);
+  var req = request;
 
   if (containsNaughtyWords(userSubmittedName) || !userSubmittedName) {
     userSubmittedName = 'Anonymous';
@@ -356,7 +376,8 @@ DonorsChooseDonationController.prototype.retrieveFirstName = function(request, r
     }},
     function(err, num, raw) {
       if (err) {
-        logger.error(err);
+        logger.error('Error in retrieving first name of user for user mobile: ' 
+          + req.body.phone + ' | Error: ' + err);
         sendSMS(request.body.phone, config.error_direct_user_to_restart);
       }
       else {
@@ -394,14 +415,16 @@ DonorsChooseDonationController.prototype.retrieveLocation = function(request, re
   if (TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR == 'zip') {
     if (!isValidZip(location)) {
       sendSMS(request.body.phone, config.invalid_zip_oip);
-      logger.info('User ' + request.body.phone + ' did not submit a valid zipcode in the DonorsChoose.org flow.');
+      logger.info('User ' + request.body.phone 
+        + ' did not submit a valid zipcode in the DonorsChoose.org flow.');
       return;
     }
   }
   else if (TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR == 'state') {
     if (!isValidState(location)) {
       sendSMS(request.body.phone, config.invalid_state_oip);
-      logger.info('User ' + request.body.phone + ' did not submit a valid state abbreviation in the DonorsChoose.org flow.');
+      logger.info('User ' + request.body.phone 
+        + ' did not submit a valid state abbreviation in the DonorsChoose.org flow.');
       return;
     }
   }
@@ -447,7 +470,8 @@ DonorsChooseDonationController.prototype._post = function(endpoint, data) {
     }
 
     if (response && response.statusCode) {
-      logger.info('DonorsChooseDonationController - POST to ' + url + ' return status code: ' + response.statusCode);
+      logger.info('DonorsChooseDonationController - POST to ' + url 
+        + ' return status code: ' + response.statusCode);
     }
   });
 }
