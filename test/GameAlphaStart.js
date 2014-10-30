@@ -21,11 +21,6 @@ describe('Alpha-Start Game:', function() {
     app = express();
     require('../app/config')(app, express);
 
-    // Note that the gameConfig required below isn't used for the entire 
-    // competitive game creation testing process, since the 
-    // SGCompetitiveGameStoryController requires its own config file 
-    // upon controller creation. Hence we seem to be assigning `gameConfig` twice. 
-
     gameController = new SGCompetitiveStoryController(app);
 
     // Reassigning the this.gameConfig property of the controller we just
@@ -187,7 +182,7 @@ describe('Alpha-Start Game:', function() {
           }
         }
 
-        if (!updated) assert(false);
+        if (!updated) { assert(false); }
       })
     })
     it('should send a Mobile Commons opt-in to Beta(' + phone + ')')

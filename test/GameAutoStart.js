@@ -230,56 +230,133 @@ describe('Auto-Start Game:', function() {
 
     it('should send the start message to all players')
   })
+  
+  /**
+   * Tests that a user action has opted her into the proper opt in path, 
+   * at the proper level, and that action has been saved as the user's 
+   * current status in the db. 
+   * 
+   * @param userPhone
+   *  The user's phone number. 
+   * @param userInput
+   *  What we're simulating the user texting in.
+   * @param correctNextLevelId
+   *  The ID of the next level, for test readability purposes. (ex: 'L11B')
+   * @param correctNextLevelOip
+   *  What oip the user should be opted into, given her input. 
+   */
+  var userActionTest = function(userPhone, userInput, correctNextLevelId, correctNextLevelOip) {
+    var request; 
+    before(function() {
+      phone = messageHelper.getNormalizedPhone(userPhone);
+      request = {
+        body: {
+          phone: phone,
+          args: userInput
+        }
+      }
+    });
 
+    it('should emit player-status-updated event', function(done) {
+      emitter.on('player-status-updated', function() {
+        done();
+        emitter.removeAllListeners('player-status-updated')
+      })
+
+      // User submits user action. 
+      gameController.userAction(request, response);
+    })
+
+    it('should move user to level ' + correctNextLevelId + ' (optin path: ' + correctNextLevelOip + ') in the game doc', function(done) {
+      gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
+        var updated = false;
+        var playerStatus = doc.players_current_status
+        for (i = 0; i < playerStatus.length; i ++) {
+          if (playerStatus[i].phone == phone && playerStatus[i].opt_in_path == correctNextLevelOip) {
+            done();
+            updated = true;
+          }
+        }
+        if (!updated) { assert(false); }
+      }) 
+    })
+  }
+
+  var userActionEndLevelTest = function(userPhone, userInput, correctNextLevelId, correctNextLevelOip) {
+
+  }
+
+  var userActionEndGameTest = function() {
+
+  }
+  
   describe('Alpha answers A at Level 1-0', function() {
-    it('should move Alpha to Level 1-1')
+    userActionTest(alphaPhone, 'A', '11A', 168455);
   })
+
   describe('Alpha answers A at Level 1-1', function() {
-    it('should move Alpha to Level 1-2')
+    userActionTest(alphaPhone, 'A', '12A', 168459);
   })
+
   describe('Alpha answers A at Level 1-2', function() {
-    it('should move Alpha to Level 1-3')
+    userActionTest(alphaPhone, 'A', '13A', 168657);
   })
+
   describe('Alpha answers A at Level 1-3', function() {
-    it('should move Alpha to End-Level 1')
+    userActionTest(alphaPhone, 'A', 'END-LEVEL1', 168825);
   })
+
 
   describe('Beta0 answers A at Level 1-0', function() {
-    it('should move Beta0 to Level 1-1')
+    userActionTest(betaPhone0, 'A', '11A', 168455);
   })
+
   describe('Beta0 answers A at Level 1-1', function() {
-    it('should move Beta0 to Level 1-2')
+    userActionTest(betaPhone0, 'A', '12A', 168459);
   })
+
   describe('Beta0 answers A at Level 1-2', function() {
-    it('should move Beta0 to Level 1-3')
+    userActionTest(betaPhone0, 'A', '13A', 168657);
   })
+
   describe('Beta0 answers A at Level 1-3', function() {
-    it('should move Beta0 to End-Level 1')
+    userActionTest(betaPhone0, 'A', 'END-LEVEL1', 168825);
   })
+
 
   describe('Beta1 answers A at Level 1-0', function() {
-    it('should move Beta1 to Level 1-1')
-  })
-  describe('Beta1 answers A at Level 1-1', function() {
-    it('should move Beta1 to Level 1-2')
-  })
-  describe('Beta1 answers A at Level 1-2', function() {
-    it('should move Beta1 to Level 1-3')
-  })
-  describe('Beta1 answers A at Level 1-3', function() {
-    it('should move Beta1 to End-Level 1')
+    userActionTest(betaPhone1, 'A', '11A', 168455);
   })
 
+  describe('Beta1 answers A at Level 1-1', function() {
+    userActionTest(betaPhone1, 'A', '12A', 168459);
+  })
+
+  describe('Beta1 answers A at Level 1-2', function() {
+    userActionTest(betaPhone1, 'A', '13A', 168657);
+  })
+
+  describe('Beta1 answers A at Level 1-3', function() {
+    userActionTest(betaPhone1, 'A', 'END-LEVEL1', 168825);
+  })
+
+
   describe('Beta2 answers A at Level 1-0', function() {
-    it('should move Beta2 to Level 1-1')
+    userActionTest(betaPhone2, 'A', '11A', 168455);
   })
+
   describe('Beta2 answers A at Level 1-1', function() {
-    it('should move Beta2 to Level 1-2')
+    userActionTest(betaPhone2, 'A', '12A', 168459);
   })
+
   describe('Beta2 answers A at Level 1-2', function() {
-    it('should move Beta2 to Level 1-3')
+    userActionTest(betaPhone2, 'A', '13A', 168657);
   })
+
   describe('Beta2 answers A at Level 1-3', function() {
+
+    // userActionTest(betaPhone2, 'A', 'END-LEVEL1', 168825); // Hmmm.. this fails, because the last OIP the user gets put into is the end-level group message, not the other thang. Let's write another function to do this. 
+    
     it('should move Beta2 to End-Level 1')
     it('should deliver the end-level group message')
     it('should move all players to Level 2')
@@ -288,9 +365,11 @@ describe('Auto-Start Game:', function() {
   describe('Alpha answers A at Level 2-0', function() {
     it('should move Alpha to Level 2-1')
   })
+
   describe('Alpha answers A at Level 2-1', function() {
     it('should move Alpha to Level 2-2')
   })
+
   describe('Alpha answers A at Level 2-2', function() {
     it('should move Alpha to End-Level 2')
   })
@@ -298,9 +377,11 @@ describe('Auto-Start Game:', function() {
   describe('Beta0 answers A at Level 2-0', function() {
     it('should move Beta0 to Level 2-1')
   })
+
   describe('Beta0 answers A at Level 2-1', function() {
     it('should move Beta0 to Level 2-2')
   })
+
   describe('Beta0 answers A at Level 2-2', function() {
     it('should move Beta0 to End-Level 2')
   })
@@ -308,9 +389,11 @@ describe('Auto-Start Game:', function() {
   describe('Beta1 answers A at Level 2-0', function() {
     it('should move Beta1 to Level 2-1')
   })
+
   describe('Beta1 answers A at Level 2-1', function() {
     it('should move Beta1 to Level 2-2')
   })
+
   describe('Beta1 answers A at Level 2-2', function() {
     it('should move Beta1 to End-Level 2')
   })
@@ -318,9 +401,11 @@ describe('Auto-Start Game:', function() {
   describe('Beta2 answers A at Level 2-0', function() {
     it('should move Beta2 to Level 2-1')
   })
+
   describe('Beta2 answers A at Level 2-1', function() {
     it('should move Beta2 to Level 2-2')
   })
+
   describe('Beta2 answers A at Level 2-2', function() {
     it('should move Beta2 to End-Level 2')
     it('should deliver the end-level group message')

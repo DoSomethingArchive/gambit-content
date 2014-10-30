@@ -115,7 +115,7 @@
         "__comments": "Level 1-3A",
         "choices": [
           {
-            "key": "L14B",
+            "key": "L14A",
             "next": "END-LEVEL1",
             "valid_answers": [
               "A",
@@ -123,7 +123,7 @@
             ]
           },
           {
-            "key": "L14A",
+            "key": "L14B",
             "next": "END-LEVEL1",
             "valid_answers": [
               "B",

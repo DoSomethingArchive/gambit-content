@@ -667,6 +667,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
             logger.error(err);
           }
           else {
+            emitter.emit('player-status-updated');
             logger.info('SGCompetitiveStoryController.userAction - Updated player\'s',
                         'current status in game doc:', doc._id.toString());
           }
