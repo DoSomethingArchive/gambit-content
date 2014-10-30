@@ -25,7 +25,7 @@ describe('Auto-Start Game:', function() {
     // competitive game creation testing process, since the 
     // SGCompetitiveGameStoryController requires its own config file 
     // upon controller creation. Hence we seem to be assigning `gameConfig` twice.
-    gameConfig = require('./test_config/test-competitive-stories');
+
     gameController = new SGCompetitiveStoryController(app);
 
     // Reassigning the this.gameConfig property of the controller we just
@@ -106,46 +106,46 @@ describe('Auto-Start Game:', function() {
     it('should add sg_user doc for alpha user', function(done) {
       var phone = messageHelper.getNormalizedPhone(alphaPhone);
       gameController.userModel.find({phone: phone}, function(err, docs) {
-        if (!err && docs.length > 0) done();
-        else assert(false);
+        if (!err && docs.length > 0) { done(); }
+        else { assert(false); }
       })
     })
 
     it('should add sg_user doc for beta0 user', function(done) {
       var phone = messageHelper.getNormalizedPhone(betaPhone0);
       gameController.userModel.find({phone: phone}, function(err, docs) {
-        if (!err && docs.length > 0) done();
-        else assert(false);
+        if (!err && docs.length > 0) { done(); }
+        else { assert(false); }
       })
     })
 
     it('should add sg_user doc for beta1 user', function(done) {
       var phone = messageHelper.getNormalizedPhone(betaPhone1);
       gameController.userModel.find({phone: phone}, function(err, docs) {
-        if (!err && docs.length > 0) done();
-        else assert(false);
+        if (!err && docs.length > 0) { done(); }
+        else { assert(false); }
       })
     })
 
     it('should add sg_user doc for beta2 user', function(done) {
       var phone = messageHelper.getNormalizedPhone(betaPhone2);
       gameController.userModel.find({phone: phone}, function(err, docs) {
-        if (!err && docs.length > 0) done();
-        else assert(false);
+        if (!err && docs.length > 0) { done(); }
+        else { assert(false); }
       })
     })
 
     it('should add a sg_gamemapping document', function(done) {
       gameController.gameMappingModel.find({_id: gameMappingId}, function(err, docs) {
-        if (!err && docs.length > 0) done();
-        else assert(false);
+        if (!err && docs.length > 0) { done(); }
+        else { assert(false); }
       })
     })
 
     it('should add a sg_competitivestory_game document', function(done) {
       gameController.gameModel.find({_id: gameId}, function(err, docs) {
-        if (!err && docs.length > 0) done();
-        else assert(false);
+        if (!err && docs.length > 0) { done(); }
+        else { assert(false); }
       })
     })
   })
@@ -205,8 +205,8 @@ describe('Auto-Start Game:', function() {
     betaJoinGameTest(betaPhone2);
 
     it('should auto-start the game', function(done) {
-      var alphaStarted = beta0Started = beta1Started = beta2Started = false;
-      var startOip = gameConfig[storyId].story_start_oip;
+      var alphaStarted = beta0Started = beta1Started = beta2Started = false; // Chaining assignment operators. They all are set to false. 
+      var startOip = gameController.gameConfig[storyId].story_start_oip;
       gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
         if (!err && doc) {
           for (var i = 0; i < doc.players_current_status.length; i++) {
