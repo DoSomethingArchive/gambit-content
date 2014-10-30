@@ -20,9 +20,17 @@ describe('Auto-Start Game:', function() {
   before(function() {
     app = express();
     require('../app/config')(app, express);
-    gameConfig = app.get('competitive-stories');
 
+    // Note that the gameConfig required below isn't used for the entire 
+    // competitive game creation testing process, since the 
+    // SGCompetitiveGameStoryController requires its own config file 
+    // upon controller creation. Hence we seem to be assigning `gameConfig` twice.
+    gameConfig = require('./test_config/test-competitive-stories');
     gameController = new SGCompetitiveStoryController(app);
+
+    // Reassigning the this.gameConfig property of the controller we just
+    // instantiated to use our test config file. 
+    gameController.gameConfig = require('./test_config/test-competitive-stories');
     gameId = 0;
     gameMappingId = 0;
 
