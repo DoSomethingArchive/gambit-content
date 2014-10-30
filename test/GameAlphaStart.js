@@ -21,13 +21,18 @@ describe('Alpha-Start Game:', function() {
     app = express();
     require('../app/config')(app, express);
 
-    // Note that the gameConfig required below isn't actually used 
-    // by the competitive game creation process, since the 
+    // Note that the gameConfig required below isn't used for the entire 
+    // competitive game creation testing process, since the 
     // SGCompetitiveGameStoryController requires its own config file 
     // upon controller creation. 
     gameConfig = app.get('competitive-stories');
 
+    // gameConfig = app.get('test-competitive-stories');
     gameController = new SGCompetitiveStoryController(app);
+
+    // Reassigning the this.gameConfig property of the controller we just 
+    // instantiated to use our test config file. 
+    // gameController.gameConfig = app.get('test-competitive-stories'); 
     gameId = 0;
     gameMappingId = 0;
 

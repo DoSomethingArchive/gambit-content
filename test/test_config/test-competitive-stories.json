@@ -417,7 +417,7 @@
   },
 
   "2" : {
-    "__comments" : "this a test JSON config file for final group endgame win/lose logic.",
+    "__comments" : "this a test JSON config file for final group endgame win/lose logic. This may be invalid, need to confirm. (Believe that testing was done with Bully Text clone below.",
     "alpha_wait_oip" : 1,
     "alpha_start_ask_oip" : 2, 
     "beta_join_ask_oip" : 3,
@@ -576,7 +576,7 @@
         }
     },
   "100": {
-    "__comments": "Bully Text 2014",
+    "__comments": "Bully Text 2014, test file for final group endgame win/lose logic.=, the kind used in Science Sleuth",
     "alpha_wait_oip": 169841,
     "alpha_start_ask_oip": 169843,
     "beta_join_ask_oip": 169845,
