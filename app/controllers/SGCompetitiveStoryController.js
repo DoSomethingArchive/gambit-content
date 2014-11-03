@@ -1389,7 +1389,7 @@ function optinSingleUser(phoneNumber, optinPath) {
     alphaOptin: optinPath
   };
   mobilecommons.optin(args);
-  emitter.emit('single-user-opted-in', args);
+  emitter.emit('single-user-opted-in', args); // Event currently used in testing. 
 }
 
 /**
@@ -1453,7 +1453,7 @@ function delayedOptinSingleUser(phoneNumber, optinPath, delay, currentGameId, us
         if (userDoc.current_game_id && (userDoc.current_game_id.equals(_currentGameId))) {
           var args = {alphaPhone: _phoneNumber, alphaOptin: _optinPath};
           mobilecommons.optin(args);
-          emitter.emit('single-user-opted-in-after-delay', args);
+          emitter.emit('single-user-opted-in-after-delay', args); // Event currently unused in testing. 
         }
         else {
           logger.info('**A player in the previous game has been invited to a new',
