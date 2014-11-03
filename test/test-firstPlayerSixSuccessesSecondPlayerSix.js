@@ -1,3 +1,5 @@
+// Test JSON files for group endgame logic, i.e. BullyText Superlatives
+
 var firstPlayerSixSuccessesSecondPlayerSix = {
   "_id": "540091855d722f8e071a87bf",
   "story_id": 100,

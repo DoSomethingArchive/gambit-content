@@ -603,13 +603,14 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
 
             // Send group the end level message. The end level group message is sent 
             // SECOND of all the messages in the execUserAction() function call.
+
             delayedOptinSingleUser(playerPhone, groupOptin, END_LEVEL_GROUP_MESSAGE_DELAY, gameDoc._id, obj.userModel);
             gameDoc = obj.addPathToStoryResults(gameDoc, playerPhone, groupOptin);
           }
 
-          // Note: Doing this for loop separately from the end-level message so
+          // Note: Doing this `gameEnded` for loop separately from the end-level message so
           // that results for all players can be updated before figuring out the
-          // next message.
+          // final messages.
           // Send group the next level message.
           var gameEnded = false;
           var nextLevel = storyConfig.story[endLevelGroupKey].next_level;
@@ -654,7 +655,8 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
         obj.app.stathatReport('Count', 'mobilecommons: end game: success', 1);
       }
 
-      // Update the player's current status in the database.
+      // Update the player's current status in the database. (Or ALL of the players' current statuses,
+      // if we're at the end-level or end-game situation.)
       obj.gameModel.update(
         {_id: doc._id},
         {$set: {
@@ -1387,6 +1389,7 @@ function optinSingleUser(phoneNumber, optinPath) {
     alphaOptin: optinPath
   };
   mobilecommons.optin(args);
+  emitter.emit('single-user-opted-in', args);
 }
 
 /**
@@ -1414,6 +1417,7 @@ function optinGroup(alphaPhone, alphaOptin, singleBetaPhoneOrArrayOfPhones, beta
     betaPhone: singleBetaPhoneOrArrayOfPhones
   };
   mobilecommons.optin(args);
+  emitter.emit('group-of-users-opted-in', args); // Event currently unused in testing. 
 }
 
 /**
@@ -1447,7 +1451,9 @@ function delayedOptinSingleUser(phoneNumber, optinPath, delay, currentGameId, us
         // If a user's in a game that has been ended, the current_game_id property will be removed
         // from her user document. Checking to see if current_game_id still exists for that user. 
         if (userDoc.current_game_id && (userDoc.current_game_id.equals(_currentGameId))) {
-          mobilecommons.optin({alphaPhone: _phoneNumber, alphaOptin: _optinPath});
+          var args = {alphaPhone: _phoneNumber, alphaOptin: _optinPath};
+          mobilecommons.optin(args);
+          emitter.emit('single-user-opted-in-after-delay', args);
         }
         else {
           logger.info('**A player in the previous game has been invited to a new',

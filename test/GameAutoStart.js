@@ -260,7 +260,7 @@ describe('Auto-Start Game:', function() {
     it('should emit player-status-updated event', function(done) {
       emitter.on('player-status-updated', function() {
         done();
-        emitter.removeAllListeners('player-status-updated')
+        emitter.removeAllListeners('player-status-updated');
       })
 
       // User submits user action. 
@@ -355,23 +355,83 @@ describe('Auto-Start Game:', function() {
 
   describe('Beta2 answers A at Level 1-3', function() {
 
-    // userActionTest(betaPhone2, 'A', 'END-LEVEL1', 168825); // Hmmm.. this fails, because the last OIP the user gets put into is the end-level group message, not the other thang. Let's write another function to do this. 
-    
-    it('should move Beta2 to End-Level 1')
-    it('should deliver the end-level group message')
-    it('should move all players to Level 2')
+    var endLevelUserActionTest = function(userPhone, userInput, indivEndLevelMessageId, indivEndLevelMessageOip, endLevelGroupMessageId, endLevelGroupMessageOip, nextLevelGroupMessageId, nextLevelGroupMessageOip) {
+      var request;
+      before(function() {
+        phone = messageHelper.getNormalizedPhone(userPhone);
+        request = {
+          body: {
+            phone: phone, 
+            args: userInput
+          }
+        }
+      })
+
+      // Test for an individual user's end level message. 
+      it('should move user to ' + indivEndLevelMessageId, function(done) {
+        emitter.on('single-user-opted-in', function(args) {
+          if (messageHelper.getNormalizedPhone(userPhone) == messageHelper.getNormalizedPhone(args.alphaPhone) && args.alphaOptin == indivEndLevelMessageOip) {
+            done();
+            emitter.removeAllListeners('single-user-opted-in');
+          }
+        })
+        gameController.userAction(request, response);
+      })
+
+      // Test for a group end-level message. 
+      it('should deliver the end-level group message for ' + endLevelGroupMessageId + ' to all users in group',  function(done) {
+        gameController.gameModel.find({_id: gameId}, function(err, doc) {
+          if (!err && doc.length > 0) {
+            var storyResults = doc[0].story_results;
+            var numberOfActivePlayers = doc[0].players_current_status[0].length;
+            for (var i = 0; i < storyResults.length; i ++) {
+              if (storyResults[i].oip === endLevelGroupMessageOip) {
+                numberOfActivePlayers--;
+              }
+            }
+            if (!numberOfActivePlayers) {
+              done();
+            } else {
+              assert(false);
+            }
+          }
+        })
+      })
+
+      // Test for the message which moves all players to the next level. 
+      it('should move all players to ' + nextLevelGroupMessageId, function(done) {
+        gameController.gameModel.find({_id: gameId}, function(err, doc) {
+          if (!err && doc.length > 0) {
+            var playersCurrentStatus = doc[0].players_current_status;
+            var allPlayersAtNextLevel = true;
+            for (var i = 0; i < playersCurrentStatus.length; i ++) {
+              if (playersCurrentStatus[i].opt_in_path !== nextLevelGroupMessageOip) {
+                allPlayersAtNextLevel = false;
+              }
+            }
+            if (allPlayersAtNextLevel) {
+              done();
+            } else {
+              assert(false);
+            }
+          }
+        })
+      })
+
+    endLevelUserActionTest(betaPhone2, 'A', 'L14A', 168825, 'END-LEVEL1-GROUP', 168897, '2-0', 168901)
+
   })
 
   describe('Alpha answers A at Level 2-0', function() {
-    it('should move Alpha to Level 2-1')
+    // userActionTest(alphaPhone, 'A', '21A', 169071);
   })
 
   describe('Alpha answers A at Level 2-1', function() {
-    it('should move Alpha to Level 2-2')
+    // userActionTest(alphaPhone, 'A', '22A', 169075);
   })
 
   describe('Alpha answers A at Level 2-2', function() {
-    it('should move Alpha to End-Level 2')
+    // userActionTest(alphaPhone, 'A', 'END-LEVEL2', 169083);
   })
 
   describe('Beta0 answers A at Level 2-0', function() {
