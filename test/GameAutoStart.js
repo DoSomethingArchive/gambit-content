@@ -232,57 +232,6 @@ describe('Auto-Start Game:', function() {
   })
   
   /**
-   * Tests that a user action has opted her into the proper opt in path, 
-   * at the proper level, and that action has been saved as the user's 
-   * current status in the db. 
-   * 
-   * @param userPhone
-   *  The user's phone number. 
-   * @param userInput
-   *  What we're simulating the user texting in.
-   * @param correctNextLevelId
-   *  The ID of the next level, for test readability purposes. (ex: 'L11B')
-   * @param correctNextLevelOip
-   *  What oip the user should be opted into, given her input. 
-   */
-  var userActionTest = function(userPhone, userInput, correctNextLevelId, correctNextLevelOip) {
-    var request; 
-    before(function() {
-      phone = messageHelper.getNormalizedPhone(userPhone);
-      request = {
-        body: {
-          phone: phone,
-          args: userInput
-        }
-      }
-    });
-
-    it('should emit player-status-updated event', function(done) {
-      emitter.on('player-status-updated', function() {
-        done();
-        emitter.removeAllListeners('player-status-updated');
-      })
-
-      // User submits user action. 
-      gameController.userAction(request, response);
-    })
-
-    it('should move user to level ' + correctNextLevelId + ' (optin path: ' + correctNextLevelOip + ') in the game doc', function(done) {
-      gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
-        var updated = false;
-        var playerStatus = doc.players_current_status;
-        for (i = 0; i < playerStatus.length; i ++) {
-          if (playerStatus[i].phone == phone && playerStatus[i].opt_in_path == correctNextLevelOip) {
-            done();
-            updated = true;
-          }
-        }
-        if (!updated) { assert(false); }
-      }) 
-    })
-  }
-
-  /**
    * Tests that if a user's the last user to act at the end of a level,
    * that we've opted her into the proper end-level opt in path, 
    * that we've opted the group into the proper group end-level message, 
@@ -305,7 +254,7 @@ describe('Auto-Start Game:', function() {
    * @param nextLevelGroupMessageOip
    *  The OIP of the next-level group message. 
    */
-  var endLevelUserActionTest = function(userPhone, userInput, indivEndLevelMessageId, indivEndLevelMessageOip, endLevelGroupMessageId, endLevelGroupMessageOip, nextLevelGroupMessageId, nextLevelGroupMessageOip) {
+  var userActionTest = function(userPhone, userInput, indivEndLevelMessageId, indivEndLevelMessageOip, endLevelGroupMessageId, endLevelGroupMessageOip, nextLevelGroupMessageId, nextLevelGroupMessageOip) {
     var request;
     before(function() {
       phone = messageHelper.getNormalizedPhone(userPhone);
@@ -317,55 +266,42 @@ describe('Auto-Start Game:', function() {
       }
     })
 
-    // Test for an individual user's end level message. 
-    // it('should move user to ' + indivEndLevelMessageId, function(done) {
-    //   emitter.on('single-user-opted-in', function(args) {
-    //     if (messageHelper.getNormalizedPhone(userPhone) == messageHelper.getNormalizedPhone(args.alphaPhone) && args.alphaOptin == indivEndLevelMessageOip) {
-    //       done();
-    //       emitter.removeAllListeners('single-user-opted-in');
-    //     }
-    //   })
-    //   gameController.userAction(request, response);
-    // })
-
     it('should emit player-status-updated event', function(done) {
       emitter.on('player-status-updated', function() {
         done();
         emitter.removeAllListeners('player-status-updated');
       })
 
-      // User submits user action. 
+      // Simulates the user game action. 
       gameController.userAction(request, response);
     })
 
 
     it('should move user to level ' + indivEndLevelMessageId + ' (optin path: ' + indivEndLevelMessageOip + ') in the game doc', function(done) {
 
-
-
-
-
-
-
-
-      // WHY IS THIS NOT WORKING FOR THE END-LEVEL CASES? 
-
-      // This first test is failing in the beginning, because the storyResults isn't updated with the NEXT oip that it SHOULD be enrolled in, but instead the PREVIOUS oip. Why does this mess us up? 
-
-      // So we need to have two checks. If the first one (the players_current_status) fails (which will be the test used in the vast majority of userAction test cases), then we'll try the second test, where we run through all the story results. 
-
-
       gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
+        var playersCurrentStatus = doc.players_current_status
         var storyResults = doc.story_results;
         var updated = false;
-        console.log(storyResults, 'normalized phone ', phone, 'indivEndLevelMessageOip ', indivEndLevelMessageOip);
-        for (var i = 0; i < storyResults.length; i++) {
-          if (storyResults[i].phone == phone && storyResults[i].oip == indivEndLevelMessageOip) {
-            done();
+
+        for (var i = 0; i < playersCurrentStatus.length; i++) {
+          if (playersCurrentStatus[i].phone == phone && playersCurrentStatus[i].opt_in_path == indivEndLevelMessageOip) {
             updated = true;
           }
         }
+
         if (!updated) {
+          for (var i = 0; i < storyResults.length; i++) {
+            if (storyResults[i].phone == phone && storyResults[i].oip == indivEndLevelMessageOip) {
+              updated = true;
+            }
+          }
+        }
+
+        if (updated === true) {
+          done();
+        } 
+        else {
           assert(false);
         }
       }) 
@@ -399,7 +335,6 @@ describe('Auto-Start Game:', function() {
         gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
           if (!err) {
             var playersCurrentStatus = doc.players_current_status;
-            // console.log('playersCurrentStatus 393: ', playersCurrentStatus, 'nextLevelGroupMessageOip ', nextLevelGroupMessageOip);
             var allPlayersAtNextLevel = true;
             for (var i = 0; i < playersCurrentStatus.length; i ++) {
               if (playersCurrentStatus[i].opt_in_path != nextLevelGroupMessageOip) {
@@ -419,118 +354,121 @@ describe('Auto-Start Game:', function() {
   }
   
   describe('Alpha answers A at Level 1-0', function() {
-    endLevelUserActionTest(alphaPhone, 'A', '11A', 168455);
+    userActionTest(alphaPhone, 'A', '11A', 168455);
   })
 
   describe('Alpha answers A at Level 1-1', function() {
-    endLevelUserActionTest(alphaPhone, 'A', '12A', 168459);
+    userActionTest(alphaPhone, 'A', '12A', 168459);
   })
 
   describe('Alpha answers A at Level 1-2', function() {
-    endLevelUserActionTest(alphaPhone, 'A', '13A', 168657);
+    userActionTest(alphaPhone, 'A', '13A', 168657);
   })
 
   describe('Alpha answers A at Level 1-3', function() {
-    endLevelUserActionTest(alphaPhone, 'A', 'END-LEVEL1', 168825);
+    userActionTest(alphaPhone, 'A', 'END-LEVEL1', 168825);
   })
 
 
   describe('Beta0 answers A at Level 1-0', function() {
-    endLevelUserActionTest(betaPhone0, 'A', '11A', 168455);
+    userActionTest(betaPhone0, 'A', '11A', 168455);
   })
 
   describe('Beta0 answers A at Level 1-1', function() {
-    endLevelUserActionTest(betaPhone0, 'A', '12A', 168459);
+    userActionTest(betaPhone0, 'A', '12A', 168459);
   })
 
   describe('Beta0 answers A at Level 1-2', function() {
-    endLevelUserActionTest(betaPhone0, 'A', '13A', 168657);
+    userActionTest(betaPhone0, 'A', '13A', 168657);
   })
 
   describe('Beta0 answers A at Level 1-3', function() {
-    endLevelUserActionTest(betaPhone0, 'A', 'END-LEVEL1', 168825);
+    userActionTest(betaPhone0, 'A', 'END-LEVEL1', 168825);
   })
 
 
   describe('Beta1 answers A at Level 1-0', function() {
-    endLevelUserActionTest(betaPhone1, 'A', '11A', 168455);
+    userActionTest(betaPhone1, 'A', '11A', 168455);
   })
 
   describe('Beta1 answers A at Level 1-1', function() {
-    endLevelUserActionTest(betaPhone1, 'A', '12A', 168459);
+    userActionTest(betaPhone1, 'A', '12A', 168459);
   })
 
   describe('Beta1 answers A at Level 1-2', function() {
-    endLevelUserActionTest(betaPhone1, 'A', '13A', 168657);
+    userActionTest(betaPhone1, 'A', '13A', 168657);
   })
 
   describe('Beta1 answers A at Level 1-3', function() {
-    endLevelUserActionTest(betaPhone1, 'A', 'END-LEVEL1', 168825);
+    userActionTest(betaPhone1, 'A', 'END-LEVEL1', 168825);
   })
 
 
   describe('Beta2 answers A at Level 1-0', function() {
-    endLevelUserActionTest(betaPhone2, 'A', '11A', 168455);
+    userActionTest(betaPhone2, 'A', '11A', 168455);
   })
 
   describe('Beta2 answers A at Level 1-1', function() {
-    endLevelUserActionTest(betaPhone2, 'A', '12A', 168459);
+    userActionTest(betaPhone2, 'A', '12A', 168459);
   })
 
   describe('Beta2 answers A at Level 1-2', function() {
-    endLevelUserActionTest(betaPhone2, 'A', '13A', 168657);
+    userActionTest(betaPhone2, 'A', '13A', 168657);
   })
 
   describe('Beta2 answers A at Level 1-3', function() {
-    endLevelUserActionTest(betaPhone2, 'A', 'L14A', 168825, 'END-LEVEL1-GROUP', 168897, '2-0', 168901);
+    userActionTest(betaPhone2, 'A', 'L14A', 168825, 'END-LEVEL1-GROUP', 168897, '2-0', 168901);
   })
 
   describe('Alpha answers A at Level 2-0', function() {
-    endLevelUserActionTest(alphaPhone, 'A', '21A', 169071);
+    userActionTest(alphaPhone, 'A', '21A', 169071);
   })
 
   describe('Alpha answers A at Level 2-1', function() {
-    endLevelUserActionTest(alphaPhone, 'A', '22A', 169075);
+    userActionTest(alphaPhone, 'A', '22A', 169075);
   })
 
   describe('Alpha answers A at Level 2-2', function() {
-    endLevelUserActionTest(alphaPhone, 'A', 'END-LEVEL2', 169083);
+    userActionTest(alphaPhone, 'A', 'END-LEVEL2', 169083);
   })
 
   describe('Beta0 answers A at Level 2-0', function() {
-    endLevelUserActionTest(betaPhone0, 'A', '21A', 169071);
+    userActionTest(betaPhone0, 'A', '21A', 169071);
   })
 
   describe('Beta0 answers A at Level 2-1', function() {
-    endLevelUserActionTest(alphaPhone, 'A', '22A', 169075);
+    userActionTest(alphaPhone, 'A', '22A', 169075);
   })
 
   describe('Beta0 answers A at Level 2-2', function() {
-    endLevelUserActionTest(betaPhone0, 'A', 'END-LEVEL2', 169083);
+    userActionTest(betaPhone0, 'A', 'END-LEVEL2', 169083);
   })
 
   describe('Beta1 answers A at Level 2-0', function() {
-    endLevelUserActionTest(betaPhone1, 'A', '21A', 169071);
+    debugger;
+    userActionTest(betaPhone1, 'A', '21A', 169071);
   })
 
   describe('Beta1 answers A at Level 2-1', function() {
-    endLevelUserActionTest(betaPhone1, 'A', '22A', 169075);
+    debugger;
+    userActionTest(betaPhone1, 'A', '22A', 169075);
   })
 
   describe('Beta1 answers A at Level 2-2', function() {
-    endLevelUserActionTest(betaPhone1, 'A', 'END-LEVEL2', 169083);
+    debugger;
+    userActionTest(betaPhone1, 'A', 'END-LEVEL2', 169083);
   })
 
   describe('Beta2 answers A at Level 2-0', function() {
-    endLevelUserActionTest(betaPhone2, 'A', '21A', 169071);
+    userActionTest(betaPhone2, 'A', '21A', 169071);
   })
 
   describe('Beta2 answers A at Level 2-1', function() {
-    endLevelUserActionTest(betaPhone2, 'A', '22A', 169075);
+    userActionTest(betaPhone2, 'A', '22A', 169075);
   })
 
   describe('Beta2 answers A at Level 2-2', function() {
-    endLevelUserActionTest(betaPhone2, 'A', 'L14A', 168825, 'END-LEVEL1-GROUP', 168897, '2-0', 168901);
+    userActionTest(betaPhone2, 'A', 'L14A', 168825, 'END-LEVEL1-GROUP', 168897, '2-0', 168901);
 
 
     it('should move Beta2 to End-Level 2')
