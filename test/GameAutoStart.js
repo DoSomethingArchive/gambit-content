@@ -237,22 +237,24 @@ describe('Auto-Start Game:', function() {
    * that we've opted the group into the proper group end-level message, 
    * and that we've opted the group into the proper next-level start message. 
    * 
+   * Notice that we've structured the function to use chained function calls for clarity. 
+   * 
    * @param phone
    *  The user's phone number. 
    * @param input
    *  What we're simulating the user texting in.
    * @param nextLevelName
-   *  The ID of the end-level message we're opting the individual into, for test readability purposes. (ex: 'L11B')
+   *  The name of the end-level message we're opting the individual into, for test readability purposes. (ex: 'L11B')
    * @param nextLevelMessage
    *  The OIP of the end-level message the user should be opted into. 
    * @param endStageName 
-   *  The ID of the end-level group message, for readability purposes.
+   *  The name of the end-level group message, for readability purposes.
    * @param endStageMessage
    *  The OIP of the end-level group message. 
    * @param nextStageName
-   *  The ID of the next-level group message, for readability purposes. 
+   *  The name of the next-level group message, for readability purposes. 
    * @param nextStageMessage
-   *  The OIP of the next-level group message. 
+   *  The OIP of the next-level group message, or the OIP of the end-game message.
    */
 
 
@@ -376,7 +378,6 @@ describe('Auto-Start Game:', function() {
             gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
               if (!err) {
                 var playersCurrentStatus = doc.players_current_status;
-                console.log('**playersCurrentStatus', playersCurrentStatus);
                 var allPlayersAtNextLevel = true;
                 for (var i = 0; i < playersCurrentStatus.length; i ++) {
                   if (playersCurrentStatus[i].opt_in_path != self.nextStageMessage) {
@@ -510,15 +511,6 @@ describe('Auto-Start Game:', function() {
 
   describe('Beta2 answers A at Level 2-2', function() {
     userActionTest().withPhone(betaPhone2).withUserInput('A').expectNextLevelName('END-LEVEL2').expectNextLevelMessage(169083).expectEndStageName('END-LEVEL2-GROUP').expectEndStageMessage(169087).expectNextStageName('END-GAME').expectNextStageMessage(169197).exec();
-
-    // Why doesn't the end-game logic get saved? Should I create a new module just for the end-game logic? 
-
-    // userActionTest(betaPhone2, 'A', 'END-LEVEL2', 169083, 'END-LEVEL2-GROUP', 169087, 'END-GAME', 169197);
-
-
-    it('should move Beta2 to End-Level 2')
-    it('should deliver the end-level group message')
-    it('should deliver to all player the end-game group message')
   })
 
   after(function() {

@@ -373,7 +373,7 @@
       "END-GAME": {
         "__comments": "END-GAME",
         "indiv-message-end-game-format" : "individual-decision-based",
-        "group-message-end-game-format" : "group-success-failure-based",
+        "group-message-end-game-format" : null,
         "choices": [
           {
             "next": 169089,
