@@ -15,6 +15,10 @@
       "invalid_mobile_oip": 170439,
       "not_enough_players_oip": 170465
     },
+    "endgame_config": {
+      "indiv-message-end-game-format" : "individual-decision-based",
+      "group-message-end-game-format" : null
+    },
     "story": {
       "169859": {
         "__comments": "Level 1-0",
@@ -485,9 +489,7 @@
         "next_level": "END-GAME"
       },
       "END-GAME": {
-        "__comments": "Bully Text end-game superlatives",
-        "indiv-message-end-game-format" : "individual-decision-based",
-        "group-message-end-game-format" : null,
+        "__comments": "Bully Text end-game superlatives. Individual message endgame format: individual decision based; group message endgame format: null.",
         "choices": [
           {
             "next": 170437,
@@ -532,6 +534,10 @@
       "ask_beta_2_oip": 172135,
       "invalid_mobile_oip": 172137,
       "not_enough_players_oip": 172139
+    },
+    "endgame_config": {
+      "indiv-message-end-game-format" : "rankings-within-group-based",
+      "group-message-end-game-format" : "group-success-failure-based"
     },
     "story": {
       "172147": {
@@ -1003,16 +1009,14 @@
         "next_level": "END-GAME"
       },
       "END-GAME": {
-        "__comments": "Science Sleuth endgame group win / loss determination",
-        "indiv-message-end-game-format" : "rankings-within-group-based",
-        "group-message-end-game-format" : "group-success-failure-based",
+        "__comments": "Science Sleuth endgame group win / loss determination. Individual message endgame format: rankings within group based (1st place, 2nd); group message endgame format: group success / failure based.",
         "group-level-success-oips" : [
-                172161, 
-                172179, 
-                172197,
-                172215,
-                172233,
-                172251
+            172161, 
+            172179, 
+            172197,
+            172215,
+            172233,
+            172251
         ],
         "group-success-failure-oips" : {
             "0" : 172283,

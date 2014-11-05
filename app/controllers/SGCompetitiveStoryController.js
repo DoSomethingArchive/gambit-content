@@ -1036,7 +1036,7 @@ SGCompetitiveStoryController.prototype.getEndLevelGroupMessage = function(endLev
  * @return End game individual message opt-in path
  */
 SGCompetitiveStoryController.prototype.getUniqueIndivEndGameMessage = function(phone, storyConfig, gameDoc) {
-  var indivMessageEndGameFormat = storyConfig.story['END-GAME']['indiv-message-end-game-format'];
+  var indivMessageEndGameFormat = storyConfig['endgame_config']['indiv-message-end-game-format'];
   if (indivMessageEndGameFormat == 'individual-decision-based') {
     return this.getEndLevelMessage(phone, 'END-GAME', storyConfig, gameDoc, 'answer');
   }
@@ -1159,7 +1159,7 @@ SGCompetitiveStoryController.prototype.getIndivRankEndGameMessage = function(pho
  * @return The updated gamedoc.
  */
 SGCompetitiveStoryController.prototype.handleGroupEndGameMessage = function(storyConfig, gameDoc) {
-  if (storyConfig.story['END-GAME']['group-message-end-game-format'] == 'group-success-failure-based') {
+  if (storyConfig['endgame_config']['group-message-end-game-format'] == 'group-success-failure-based') {
     var nextPathForAllPlayers = this.getUniversalGroupEndGameMessage(storyConfig, gameDoc)
     // Iterating through all players, enrolling them in this new OIP.
     for (var j = 0; j < gameDoc.players_current_status.length; j ++) {

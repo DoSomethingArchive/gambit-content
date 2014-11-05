@@ -36,10 +36,12 @@ describe('Alpha-Start Game:', function() {
             code = 200;
           }
           if (typeof message === 'undefined') {
-            if (code == 200)
+            if (code == 200) {
               message = 'OK';
-            else
+            }
+            else {
               message = '';
+            } 
           }
 
           console.log('Response: ' + code + ' - ' + message);
