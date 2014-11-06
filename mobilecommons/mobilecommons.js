@@ -5,6 +5,7 @@
 
 var request = require('request')
   , logger = require('../app/lib/logger')
+  , emitter = require('../app/eventEmitter')
   ;
 
 // Modifying the default Request library's request object.
@@ -25,11 +26,6 @@ var modifiedRequest = request.defaults({
 */
 
 exports.profile_update = function(phone, optInPathId, customFields) {
-  if (process.env.NODE_ENV == 'test') {
-    logger.info('mobilecommons.profile_update: ', phone, ' | ', optInPathId, ' | ', customFields);
-    return;
-  }
-
   var url = 'https://secure.mcommons.com/api/profile_update';
   var authEmail = process.env.MOBILECOMMONS_AUTH_EMAIL;
   var authPass = process.env.MOBILECOMMONS_AUTH_PASS;
@@ -53,8 +49,14 @@ exports.profile_update = function(phone, optInPathId, customFields) {
     }
   }
 
-  var trace = new Error().stack;
+  // If we're in a test env, just log and emit an event.
+  if (process.env.NODE_ENV == 'test') {
+    logger.info('mobilecommons.profile_update: ', phone, ' | ', optInPathId, ' | ', customFields);
+    emitter.emit(emitter.events.mcProfileUpdateTest, postData);
+    return;
+  }
 
+  var trace = new Error().stack;
   modifiedRequest.post(url, postData, function(error, response, body) {
     if (error) {
       logger.error('Failed mobilecommons.profile_update for user phone: ' 
@@ -74,11 +76,6 @@ exports.profile_update = function(phone, optInPathId, customFields) {
  * Opt-in mobile numbers into specified Mobile Commons paths.
  */
 exports.optin = function(args) {
-  if (process.env.NODE_ENV == 'test') {
-    logger.info('mobilecommons.optin: ', args);
-    return;
-  }
-
   var url = 'https://secure.mcommons.com/profiles/join';
 
   var alphaPhone = args.alphaPhone || null;
@@ -109,12 +106,19 @@ exports.optin = function(args) {
       payload.form['friends[]'] = betaPhone;
     }
 
-    var trace = new Error().stack;
+    // If we're in a test env, just log and emit an event.
+    if (process.env.NODE_ENV == 'test') {
+      logger.info('mobilecommons.optin: ', args);
+      emitter.emit(emitter.events.mcOptinTest, payload);
+      return;
+    }
 
+    var trace = new Error().stack;
     modifiedRequest.post(url, payload, function(error, response, body) {
       if (error) {
         logger.error('Failed mobilecommons.optin for user: ' + alphaPhone 
           + ' | with request payload: ' + JSON.stringify(payload) 
+          + ' | with error: ' + JSON.stringify(error)
           + ' | stack: ' + trace);
       }
       else if (response) {
@@ -139,12 +143,19 @@ exports.optin = function(args) {
       }
     };
 
-    var trace = new Error().stack;
+    // If we're in a test env, just log and emit an event.
+    if (process.env.NODE_ENV == 'test') {
+      logger.info('mobilecommons.optin: ', args);
+      emitter.emit(emitter.events.mcOptinTest, payload);
+      return;
+    }
 
+    var trace = new Error().stack;
     modifiedRequest.post(url, payload, function(error, response, body) {
         if (error) {
           logger.error('Failed mobilecommons.optin for user: ' + alphaPhone 
             + ' | with request payload: ' + JSON.stringify(payload) 
+            + ' | with error: ' + JSON.stringify(error)
             + ' | stack: ' + trace);
         }
         else if (response) {
@@ -167,11 +178,6 @@ exports.optin = function(args) {
  * Opt out of a Mobile Commons campaign.
  */
 exports.optout = function(args) {
-  if (process.env.NODE_ENV == 'test') {
-    logger.info('mobilecommons.optout: ', args);
-    return;
-  }
-
   var url = 'https://secure.mcommons.com/profiles/opt_out';
 
   var phone = args.phone || null;
@@ -198,13 +204,20 @@ exports.optout = function(args) {
     }
   };
 
-  var trace = new Error().stack;
+  // If we're in a test env, just log and emit an event.
+  if (process.env.NODE_ENV == 'test') {
+    logger.info('mobilecommons.optout: ', args);
+    emitter.emit(emitter.events.mcOptoutTest, payload);
+    return;
+  }
 
+  var trace = new Error().stack;
   // Send opt-out request
   modifiedRequest.post(url, payload, function(error, response, body) {
       if (error) {
         logger.error('Failed mobilecommons.optout for user: ' + phone 
           + ' | with request payload: ' + JSON.stringify(payload.form) 
+          + ' | with error: ' + JSON.stringify(error)
           + ' | stack: ' + trace);
       }
       else if (response) {
