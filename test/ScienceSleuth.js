@@ -16,17 +16,19 @@ describe('Science Sleuth game being played:', function() {
   var betaPhone2 = '5555550203';
   var storyId = 101;
 
-  before(function() {
-    app = express();
+  before('instantiating Express app, game controller, game config, dummy response', function() {
+    var app = express();
     require('../app/config')(app, express);
 
-    gameController = new SGCompetitiveStoryController(app);
+    this.gameController = new SGCompetitiveStoryController(app);
 
     // Reassigning the this.gameConfig property of the controller we just
     // instantiated to use our test config file. 
-    gameController.gameConfig = require('../app/config/competitive-stories');
-    var gameId = 2;
-    var gameMappingId = 2;
+    this.gameController.gameConfig = require('../app/config/competitive-stories');
+    // Because of the unique scope of the before() hook, 
+    // the variables below weren't actually used/reassigned in testing. 
+    // var gameId = 2;
+    // var gameMappingId = 2;
 
     // Dummy Express response object.
     response = {
@@ -94,12 +96,12 @@ describe('Science Sleuth game being played:', function() {
       });
 
       // With event listeners setup, can now create the game.
-      assert.equal(true, gameController.createGame(request, response));
+      assert.equal(true, this.gameController.createGame(request, response));
     })
 
     it('should add sg_user doc for alpha user', function(done) {
       var phone = messageHelper.getNormalizedPhone(alphaPhone);
-      gameController.userModel.find({phone: phone}, function(err, docs) {
+      this.gameController.userModel.find({phone: phone}, function(err, docs) {
         if (!err && docs.length > 0) { done(); }
         else { assert(false); }
       })
@@ -107,7 +109,7 @@ describe('Science Sleuth game being played:', function() {
 
     it('should add sg_user doc for beta0 user', function(done) {
       var phone = messageHelper.getNormalizedPhone(betaPhone0);
-      gameController.userModel.find({phone: phone}, function(err, docs) {
+      this.gameController.userModel.find({phone: phone}, function(err, docs) {
         if (!err && docs.length > 0) { done(); }
         else { assert(false); }
       })
@@ -115,7 +117,7 @@ describe('Science Sleuth game being played:', function() {
 
     it('should add sg_user doc for beta1 user', function(done) {
       var phone = messageHelper.getNormalizedPhone(betaPhone1);
-      gameController.userModel.find({phone: phone}, function(err, docs) {
+      this.gameController.userModel.find({phone: phone}, function(err, docs) {
         if (!err && docs.length > 0) { done(); }
         else { assert(false); }
       })
@@ -123,32 +125,42 @@ describe('Science Sleuth game being played:', function() {
 
     it('should add sg_user doc for beta2 user', function(done) {
       var phone = messageHelper.getNormalizedPhone(betaPhone2);
-      gameController.userModel.find({phone: phone}, function(err, docs) {
+      this.gameController.userModel.find({phone: phone}, function(err, docs) {
         if (!err && docs.length > 0) { done(); }
         else { assert(false); }
       })
     })
 
     it('should add a sg_gamemapping document', function(done) {
-      gameController.gameMappingModel.find({_id: gameMappingId}, function(err, docs) {
+      this.gameController.gameMappingModel.find({_id: gameMappingId}, function(err, docs) {
         if (!err && docs.length > 0) { done(); }
         else { assert(false); }
       })
     })
 
     it('should add a sg_competitivestory_game document', function(done) {
-      gameController.gameModel.find({_id: gameId}, function(err, docs) {
+      this.gameController.gameModel.find({_id: gameId}, function(err, docs) {
         if (!err && docs.length > 0) { done(); }
         else { assert(false); }
       })
     })
 
     it('should have a sg_competitivestory_game document with Science Sleuth\'s story_id of 101', function(done) {
-      gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
+      this.gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
         if (!err && doc.story_id == 101) { done(); }
         else { assert(false); }
       })
     })
   })
- 
+  
+  after(function() {
+    // Remove all test documents
+    this.gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(alphaPhone)}, function() {});
+    this.gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone0)}, function() {});
+    this.gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone1)}, function() {});
+    this.gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone2)}, function() {});
+    this.gameController.gameMappingModel.remove({_id: gameMappingId}, function() {});
+    this.gameController.gameModel.remove({_id: gameId}, function() {});
+    this.gameController = null;
+  })
 })

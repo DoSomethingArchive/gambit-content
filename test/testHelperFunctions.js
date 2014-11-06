@@ -8,8 +8,8 @@ var assert = require('assert')
  * that we've opted her into the proper end-level opt in path, 
  * that we've opted the group into the proper group end-level message, 
  * and that we've opted the group into the proper next-level start message. 
- * Note that this function requires a gameController to be defined in the test 
- * file it is called in. (i.e., gameController = new SGCompetitiveStoryController(app)).
+ * Note that this function requires a this.gameController to be defined in the test 
+ * file it is called in. (i.e., this.gameController = new SGCompetitiveStoryController(app)).
  * 
  * Notice that we've structured the function to use chained function calls for clarity. 
  * 
@@ -89,13 +89,13 @@ exports.userActionTest = function() {
         })
 
         // Simulates the user game action. 
-        gameController.userAction(request, response);
+        this.gameController.userAction(request, response);
       })
 
 
       it('should move user to level ' + this.nextLevelName + ' (optin path: ' + this.nextLevelMessage + ') in the game doc', function(done) {
 
-        gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
+        this.gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
           var playersCurrentStatus = doc.players_current_status
           var storyResults = doc.story_results;
           var updated = false;
@@ -126,7 +126,7 @@ exports.userActionTest = function() {
       // If supplied the arguments, test for a group end-level message.
       if (this.endStageName && this.endStageMessage) {
         it('should deliver the end-level group message for ' + this.endStageName + ' to all users in group',  function(done) {
-          gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
+          this.gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
             if (!err) {
               var storyResults = doc.story_results;
               var numberOfActivePlayers = doc.players_current_status.length;
@@ -148,7 +148,7 @@ exports.userActionTest = function() {
       // If supplied the arguments, test for the message which moves all players to the next level. 
       if (this.nextStageName && this.nextStageMessage) {
         it('should move all players to ' + this.nextStageName, function(done) {
-          gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
+          this.gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
             if (!err) {
               var playersCurrentStatus = doc.players_current_status;
               var allPlayersAtNextLevel = true;
