@@ -3,7 +3,6 @@ var assert = require('assert')
  , messageHelper = require('../app/lib/userMessageHelpers')
  ;
 
-
 /**
  * Tests that if a user's the last user to act at the end of a level,
  * that we've opted her into the proper end-level opt in path, 

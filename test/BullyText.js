@@ -5,6 +5,6 @@ var assert = require('assert')
   , SGCompetitiveStoryController = require('../app/controllers/SGCompetitiveStoryController')
   ;
 
-describe('Bully Text Game:', function() {
-  
+describe('Bully Text game being played:', function() {
+
 })

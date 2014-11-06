@@ -6,17 +6,17 @@ var assert = require('assert')
   , testHelper = require('./testHelperFunctions')
   ;
 
-describe('Auto-Start Game:', function() {
+describe('Auto-Starting a game based on the test config file:', function() {
   // Test players' details.
-  alphaName = 'alpha';
-  alphaPhone = '5555550100';
-  betaName0 = 'friend0';
-  betaName1 = 'friend1';
-  betaName2 = 'friend2';
-  betaPhone0 = '5555550101';
-  betaPhone1 = '5555550102';
-  betaPhone2 = '5555550103';
-  storyId = 1;
+  var alphaName = 'alpha';
+  var alphaPhone = '5555550100';
+  var betaName0 = 'friend0';
+  var betaName1 = 'friend1';
+  var betaName2 = 'friend2';
+  var betaPhone0 = '5555550101';
+  var betaPhone1 = '5555550102';
+  var betaPhone2 = '5555550103';
+  var storyId = 1;
 
   before(function() {
     app = express();
@@ -27,28 +27,28 @@ describe('Auto-Start Game:', function() {
     // Reassigning the this.gameConfig property of the controller we just
     // instantiated to use our test config file. 
     gameController.gameConfig = require('./test_config/test-competitive-stories');
-    gameId = 0;
-    gameMappingId = 0;
+    var gameId = 0;
+    var gameMappingId = 0;
 
     // Dummy Express response object.
     response = {
-        send: function(code, message) {
-          if (typeof code === 'undefined') {
-            code = 200;
-          }
-          if (typeof message === 'undefined') {
-            if (code == 200)
-              message = 'OK';
-            else
-              message = '';
-          }
-
-          console.log('Response: ' + code + ' - ' + message);
+      send: function(code, message) {
+        if (typeof code === 'undefined') {
+          code = 200;
         }
+        if (typeof message === 'undefined') {
+          if (code == 200)
+            message = 'OK';
+          else
+            message = '';
+        }
+
+        console.log('Response: ' + code + ' - ' + message);
+      }
     };
   })
 
-  describe('Creating a Competitive Story game', function() {
+  describe('Creating a Competitive Story game based on the test config file', function() {
     var request;
     before(function() {
       // Test request object to create the game.
