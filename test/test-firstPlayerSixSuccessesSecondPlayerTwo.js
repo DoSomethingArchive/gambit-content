@@ -1,7 +1,6 @@
-// JSON file from a completed BullyText game, used for testing end-game logic. 
-// Endgame format: 
-// "indiv-message-end-game-format" : "individual-decision-based",
-// "group-message-end-game-format" : null,
+// Test JSON files for group endgame logic, i.e. BullyText Superlatives. 
+// Originally created so that endgame individual ranking logic 
+// for Science Sleuth could be tested.
 
 var firstPlayerSixSuccessesSecondPlayerTwo = 
 {
