@@ -3,6 +3,7 @@ var assert = require('assert')
   , emitter = require('../app/eventEmitter')
   , messageHelper = require('../app/lib/userMessageHelpers')
   , SGCompetitiveStoryController = require('../app/controllers/SGCompetitiveStoryController')
+  , testHelper = require('./testHelperFunctions')
   ;
 
 describe('Science Sleuth game being played:', function() {
@@ -27,6 +28,7 @@ describe('Science Sleuth game being played:', function() {
     this.gameController.gameConfig = require('../app/config/competitive-stories');
     // Because of the unique scope of the before() hook, 
     // the variables below weren't actually used/reassigned in testing. 
+    // They're defined much lower, globally. 
     // var gameId = 2;
     // var gameMappingId = 2;
 
@@ -101,6 +103,7 @@ describe('Science Sleuth game being played:', function() {
 
     it('should add sg_user doc for alpha user', function(done) {
       var phone = messageHelper.getNormalizedPhone(alphaPhone);
+      console.log('**GAMECONFIG**', this.gameController.gameConfig)
       this.gameController.userModel.find({phone: phone}, function(err, docs) {
         if (!err && docs.length > 0) { done(); }
         else { assert(false); }
@@ -151,6 +154,120 @@ describe('Science Sleuth game being played:', function() {
         else { assert(false); }
       })
     })
+
+    describe('Beta 0 joining the game', function() {
+      testHelper.betaJoinGameTest(betaPhone0);
+    })
+
+    describe('Beta 1 joining the game', function() {
+      testHelper.betaJoinGameTest(betaPhone1);
+    })
+
+    describe('Beta 2 joining the game', function() {
+      testHelper.betaJoinGameTest(betaPhone2);
+
+      it('should auto-start the game', function(done) {
+        var alphaStarted = beta0Started = beta1Started = beta2Started = false; // Chaining assignment operators. They all are set to false. 
+        var startOip = this.gameController.gameConfig[storyId].story_start_oip;
+        this.gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
+          if (!err && doc) {
+            for (var i = 0; i < doc.players_current_status.length; i++) {
+              if (doc.players_current_status[i].opt_in_path == startOip) {
+                var phone = doc.players_current_status[i].phone;
+                var aPhone = messageHelper.getNormalizedPhone(alphaPhone);
+                var b0Phone = messageHelper.getNormalizedPhone(betaPhone0);
+                var b1Phone = messageHelper.getNormalizedPhone(betaPhone1);
+                var b2Phone = messageHelper.getNormalizedPhone(betaPhone2);
+                if (phone == aPhone)
+                  alphaStarted = true;
+                else if (phone == b0Phone)
+                  beta0Started = true;
+                else if (phone == b1Phone)
+                  beta1Started = true;
+                else if (phone == b2Phone)
+                  beta2Started = true;
+              }
+            }
+          }
+
+          assert(alphaStarted && beta0Started && beta1Started && beta2Started);
+          done();
+        })
+      })
+
+      it('should send the start message to all players')
+    })
+
+    // Gameplay. 
+
+    // Level 1. 
+    describe('Alpha answers A at Level 1-0', function() {
+      testHelper.userActionTest().withPhone(alphaPhone).withUserInput('A').expectNextLevelName('11A').expectNextLevelMessage(172149).exec();
+    });
+
+    describe('Alpha answers A at Level 1-1A', function() {
+      testHelper.userActionTest().withPhone(alphaPhone).withUserInput('A').expectNextLevelName('END-LEVEL1').expectNextLevelMessage(172153).exec();
+    });
+
+    describe('Beta0 answers A at Level 1-0', function() {
+      testHelper.userActionTest().withPhone(betaPhone0).withUserInput('A').expectNextLevelName('11A').expectNextLevelMessage(172149).exec();
+    });
+
+    describe('Beta0 answers A at Level 1-1A', function() {
+      testHelper.userActionTest().withPhone(betaPhone0).withUserInput('A').expectNextLevelName('END-LEVEL1').expectNextLevelMessage(172153).exec();
+    });
+
+    describe('Beta1 answers A at Level 1-0', function() {
+      testHelper.userActionTest().withPhone(betaPhone1).withUserInput('A').expectNextLevelName('11A').expectNextLevelMessage(172149).exec();
+    });
+
+    describe('Beta1 answers A at Level 1-1A', function() {
+      testHelper.userActionTest().withPhone(betaPhone1).withUserInput('A').expectNextLevelName('END-LEVEL1').expectNextLevelMessage(172153).exec();
+    });
+
+    describe('Beta2 answers A at Level 1-0', function() {
+      testHelper.userActionTest().withPhone(betaPhone2).withUserInput('A').expectNextLevelName('11A').expectNextLevelMessage(172149).exec();
+    });
+
+    describe('Beta2 answers A at Level 1-1A', function() {
+      testHelper.userActionTest().withPhone(betaPhone2).withUserInput('A').expectNextLevelName('END-LEVEL1').expectNextLevelMessage(172153).expectEndStageName('END-LEVEL1-GROUP').expectEndStageMessage(172163).expectNextStageName('2-0').expectNextStageMessage(172165).exec();
+    });
+
+    // Level 2. 
+    describe('Alpha answers A at Level 2-0', function() {
+      testHelper.userActionTest().withPhone(alphaPhone).withUserInput('A').expectNextLevelName('21A').expectNextLevelMessage(172167).exec();
+    });
+
+    describe('Alpha answers A at Level 2-1A', function() {
+      testHelper.userActionTest().withPhone(alphaPhone).withUserInput('A').expectNextLevelName('END-LEVEL1').expectNextLevelMessage(172171).exec();
+    });
+
+    describe('Beta0 answers A at Level 2-0', function() {
+      testHelper.userActionTest().withPhone(betaPhone0).withUserInput('A').expectNextLevelName('21A').expectNextLevelMessage(172167).exec();
+    });
+
+    describe('Beta0 answers A at Level 2-1A', function() {
+      testHelper.userActionTest().withPhone(betaPhone0).withUserInput('A').expectNextLevelName('END-LEVEL2').expectNextLevelMessage(172171).exec();
+    });
+
+    describe('Beta1 answers A at Level 2-0', function() {
+      testHelper.userActionTest().withPhone(betaPhone1).withUserInput('A').expectNextLevelName('21A').expectNextLevelMessage(172167).exec();
+    });
+
+    describe('Beta1 answers A at Level 2-1A', function() {
+      testHelper.userActionTest().withPhone(betaPhone1).withUserInput('A').expectNextLevelName('END-LEVEL1').expectNextLevelMessage(172171).exec();
+    });
+
+    describe('Beta2 answers A at Level 2-0', function() {
+      testHelper.userActionTest().withPhone(betaPhone2).withUserInput('A').expectNextLevelName('21A').expectNextLevelMessage(172167).exec();
+    });
+
+    describe('Beta2 answers A at Level 2-1A', function() {
+      testHelper.userActionTest().withPhone(betaPhone2).withUserInput('A').expectNextLevelName('END-LEVEL2').expectNextLevelMessage(172171).expectEndStageName('END-LEVEL2-GROUP').expectEndStageMessage(172179).expectNextStageName('3-0').expectNextStageMessage(172183).exec();
+    });
+
+    //Level 3.
+
   })
   
   after(function() {

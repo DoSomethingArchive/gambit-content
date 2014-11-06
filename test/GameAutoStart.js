@@ -29,6 +29,7 @@ describe('Auto-Starting a game based on the test config file:', function() {
     this.gameController.gameConfig = require('./test_config/test-competitive-stories');
     // Because of the unique scope of the before() hook, 
     // the variables below weren't actually used/reassigned in testing. 
+    // They're defined much lower, globally. 
     // var gameId = 0;
     // var gameMappingId = 0;
 
@@ -148,59 +149,16 @@ describe('Auto-Starting a game based on the test config file:', function() {
     })
   })
 
-  // Describe test for betas joining the game.
-  var betaJoinGameTest = function(_phone) {
-    var request;
-    var phone = _phone;
-    before(function() {
-      phone = messageHelper.getNormalizedPhone(phone);
-      request = {
-        body: {
-          phone: phone,
-          args: 'Y'
-        }
-      }
-    })
-
-    it('should emit game-updated event', function(done) {
-      emitter.on('game-updated', function() {
-        done();
-        emitter.removeAllListeners('game-updated');
-      });
-
-      // Join beta user to the game.
-      this.gameController.betaJoinGame(request, response);
-    })
-
-    it('should update the game document', function(done) {
-      this.gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
-        var updated = false;
-        if (!err && doc) {
-          for (var i = 0; i < doc.betas.length; i++) {
-            if (doc.betas[i].phone == phone && doc.betas[i].invite_accepted) {
-              updated = true;
-              done();
-            }
-          }
-        }
-
-        if (!updated) assert(false);
-      })
-    })
-    it('should send a Mobile Commons opt-in to Beta(' + phone + ')')
-    it('should send a Mobile Commons opt-in to Alpha')
-  };
-
   describe('Beta 0 joining the game', function() {
-    betaJoinGameTest(betaPhone0);
+    testHelper.betaJoinGameTest(betaPhone0);
   })
 
   describe('Beta 1 joining the game', function() {
-    betaJoinGameTest(betaPhone1);
+    testHelper.betaJoinGameTest(betaPhone1);
   })
 
   describe('Beta 2 joining the game', function() {
-    betaJoinGameTest(betaPhone2);
+    testHelper.betaJoinGameTest(betaPhone2);
 
     it('should auto-start the game', function(done) {
       var alphaStarted = beta0Started = beta1Started = beta2Started = false; // Chaining assignment operators. They all are set to false. 

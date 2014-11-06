@@ -28,6 +28,7 @@ describe('Alpha-Starting a game based on the test config file:', function() {
     this.gameController.gameConfig = require('./test_config/test-competitive-stories');
     // Because of the unique scope of the before() hook, 
     // the variables below weren't actually used/reassigned in testing. 
+    // They're defined much lower, globally. 
     // var gameId = 0; 
     // var gameMappingId = 0;
 

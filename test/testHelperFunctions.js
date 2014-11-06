@@ -3,6 +3,49 @@ var assert = require('assert')
  , messageHelper = require('../app/lib/userMessageHelpers')
  ;
 
+// Describe test for betas joining the game.
+exports.betaJoinGameTest = function(_phone) {
+  var request;
+  var phone = _phone;
+  before(function() {
+    phone = messageHelper.getNormalizedPhone(phone);
+    request = {
+      body: {
+        phone: phone,
+        args: 'Y'
+      }
+    }
+  })
+
+  it('should emit game-updated event', function(done) {
+    emitter.on('game-updated', function() {
+      done();
+      emitter.removeAllListeners('game-updated');
+    });
+
+    // Join beta user to the game.
+    this.gameController.betaJoinGame(request, response);
+  })
+
+  it('should update the game document', function(done) {
+    this.gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
+      var updated = false;
+      if (!err && doc) {
+        for (var i = 0; i < doc.betas.length; i++) {
+          if (doc.betas[i].phone == phone && doc.betas[i].invite_accepted) {
+            updated = true;
+            done();
+          }
+        }
+      }
+
+      if (!updated) assert(false);
+    })
+  })
+  it('should send a Mobile Commons opt-in to Beta(' + phone + ')')
+  it('should send a Mobile Commons opt-in to Alpha')
+};
+
 /**
  * Tests that if a user's the last user to act at the end of a level,
  * that we've opted her into the proper end-level opt in path, 
