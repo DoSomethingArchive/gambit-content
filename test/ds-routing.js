@@ -15,7 +15,8 @@ var MCRouting = require(appRoot + '/app/lib/ds-routing/controllers/MCRouting')
   , Tips = require(appRoot + '/app/lib/ds-routing/controllers/Tips')
   ;
 
-describe('MCRouting tests', function() {
+describe('ds-routing tests', function() {
+
   var app = express();
   require(appRoot + '/app/config')(app, express);
 
@@ -37,11 +38,16 @@ describe('MCRouting tests', function() {
     }
   };
 
+  // Helper to remove a test user's `tip` document.
+  var resetUserTipDoc = function() {
+    tips.tipModel.remove({phone: '15555550100'}, function() {});
+  };
+
 
   /**
    * yes-no-gateway tests
    */
-  describe('POST to yes-no-gateway with opt_in_path_id=166253, args=yes', function() {
+  describe('Call to yesNoGateway with opt_in_path_id=166253, args=yes', function() {
     it('should optin user to 165419', function(done) {
       var test = {
         body: {
@@ -66,7 +72,7 @@ describe('MCRouting tests', function() {
     });
   });
 
-  describe('POST to yes-no-gateway with opt_in_path_id=166253, args=no', function() {
+  describe('Call to yesNoGateway with opt_in_path_id=166253, args=no', function() {
     it('should optin user to 165417', function(done) {
       var test = {
         body: {
@@ -95,7 +101,7 @@ describe('MCRouting tests', function() {
   /**
    * start-campaign-gate tests
    */
-  describe('POST to start-campaign-gate with mdata_id=11493', function() {
+  describe('Call to startCampaignGate with mdata_id=11493', function() {
     it('should optin to 170139, optout of 128005', function(done) {
       var test = {
         body: {
@@ -144,10 +150,8 @@ describe('MCRouting tests', function() {
   /**
    * handle-start-campaign-response tests
    */
-  describe('POST to handle-start-campaign-response from 167209', function() {
-    before(function() {
-      tips.tipModel.remove({phone: '15555550100'}, function() {});
-    });
+  describe('Call to handleStartCampaignResponse from 167209', function() {
+    before(resetUserTipDoc);
 
     describe('Texting "KNOW"', function() {
       it('should optin user to a KNOW path', function(done) {
@@ -252,9 +256,40 @@ describe('MCRouting tests', function() {
       });
     });
 
-    after(function() {
-      tips.tipModel.remove({phone: '15555550100'}, function() {});
-    });
+    after(resetUserTipDoc);
   });
+
+
+  /**
+   * Tips tests
+   */
+   describe('Call to deliverTips with mdata_id=9521', function() {
+    before(resetUserTipDoc);
+
+    it('should optin user to a correct optin path', function(done) {
+      var test = {
+        body: {
+          phone: 15555550100,
+          mdata_id: 9521
+        }
+      };
+
+      emitter.on(emitter.events.mcOptinTest, function(payload) {
+        emitter.removeAllListeners(emitter.events.mcOptinTest);
+
+        var expected = tips.config.tips['9521'].optins;
+        if (expected.indexOf(payload.form.opt_in_path) >= 0) {
+          done();
+        }
+        else {
+          assert(false);
+        }
+      });
+
+      tips.deliverTips(test, response);
+    });
+
+    after(resetUserTipDoc);
+   });
 
 });
