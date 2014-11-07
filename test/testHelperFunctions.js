@@ -72,6 +72,14 @@ exports.betaJoinGameTest = function(_phone) {
  *  The name of the next-level group message, for readability purposes. 
  * @param nextStageMessage
  *  The OIP of the next-level group message, or the OIP of the end-game message.
+ * @param endGameGroupMessageFormat
+    The format of the message, sent at the end of the game, containing group feedback. 
+ * @param endGameGroupMessage
+ *  The OIP of the endgame group message. 
+ * @param endGameIndivMessageFormat
+    The format of the message, sent at the end of the game, containing unique individual feedback. 
+ * @param expectEndGameIndividualMessage
+ *  The OIP of the endgame individual message. 
  */
 
 exports.userActionTest = function() {
@@ -109,6 +117,24 @@ exports.userActionTest = function() {
     },
     expectNextStageMessage: function(nextStageMessage) {
       this.nextStageMessage = nextStageMessage;
+      return this;
+    },
+
+    expectEndGameGroupMessageFormat: function(endGameGroupMessageFormat) {
+      this.endGameGroupMessageFormat = endGameGroupMessageFormat;
+      return this;
+    },
+    expectEndGameGroupMessage: function(endGameGroupMessage) {
+      this.endGameGroupMessage = endGameGroupMessage;
+      return this;
+    },
+
+    expectEndGameIndividualMessageFormat: function(endGameIndivMessageFormat) {
+      this.endGameIndivMessageFormat = endGameIndivMessageFormat;
+      return this;
+    },
+    expectEndGameIndividualMessage: function(endGameIndivMessage) {
+      this.endGameIndivMessage = endGameIndivMessage;
       return this;
     },
 
@@ -188,7 +214,8 @@ exports.userActionTest = function() {
         })
       }
 
-      // If supplied the arguments, test for the message which moves all players to the next level. 
+      // If supplied the arguments, test for the message which moves all players
+      // to the next level. 
       if (this.nextStageName && this.nextStageMessage) {
         it('should move all players to ' + this.nextStageName, function(done) {
           this.gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
@@ -206,6 +233,127 @@ exports.userActionTest = function() {
               else {
                 assert(false);
               }
+            }
+          })
+        })
+      }
+
+      var checkIfAllPlayersReceivedMessage = function(playerPhoneObject, totalNumberOfPlayers) {
+        var numberPlayersReceivedMessage = 0;
+        for (phone in playerPhoneObject) {
+          if (playerPhoneObject.hasOwnProperty(phone) && playerPhoneObject[phone] === true) {
+            numberPlayersReceivedMessage ++;
+          }
+        }
+        if (numberPlayersReceivedMessage == totalNumberOfPlayers) {
+          return true;
+        }
+        return false;
+      }
+
+      // If supplied the arguments, test for the end-game message sent to all 
+      // members of the group. 
+      if (this.endGameGroupMessageFormat && this.endGameGroupMessage) {
+        it('it should send the endgame group message with the format of ' + this.endGameGroupMessageFormat + ' (optin path: ' + this.endGameGroupMessage + ') to all players.', function(done) {
+
+          this.gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
+            var playersCurrentStatus = doc.players_current_status
+            var storyResults = doc.story_results;
+            var allPlayersReceivedMessage = false;
+
+            var playerPhoneObject = {}
+            for (var i = 0; i < playersCurrentStatus.length; i++) {
+              playerPhoneObject[playersCurrentStatus[i].phone] = false;
+            }
+
+            for (var i = 0; i < playersCurrentStatus.length; i++) {
+              if (playersCurrentStatus[i].opt_in_path == self.endGameGroupMessage) {
+                playerPhoneObject[playersCurrentStatus[i].phone] = true;
+              }
+            }
+
+            // Checking to see if all players have received the message. If false, reset playerPhoneObject.
+            if (checkIfAllPlayersReceivedMessage(playerPhoneObject, playersCurrentStatus.length)) {
+              allPlayersReceivedMessage = true; 
+            } else {
+              for (phone in playerPhoneObject) {
+                if (playerPhoneObject.hasOwnProperty(phone)) {
+                  playerPhoneObject[phone] = false;
+                }
+              }
+            }
+
+            if (!allPlayersReceivedMessage) {
+              for (var i = 0; i < storyResults.length; i++) {
+                if (storyResults[i].oip == self.endGameGroupMessage) {
+                  playerPhoneObject[storyResults[i].phone] = true;
+                }
+              }
+            }
+
+            if (checkIfAllPlayersReceivedMessage(playerPhoneObject, playersCurrentStatus.length)) {
+              allPlayersReceivedMessage = true; 
+            }
+
+            if (allPlayersReceivedMessage) {
+              done();
+            } 
+            else {
+              assert(false);
+            }
+          }) 
+        })
+      }
+
+      // If supplied the arguments, test for the end-game message unique to 
+      // individual users. 
+      if (this.endGameIndivMessageFormat && this.endGameIndivMessage) {
+        it('it should send the endgame unique individual message with the format of ' + this.endGameIndivMessageFormat + ' (optin path: ' + this.endGameIndivMessage + ') to all players.', function(done) {
+          this.gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
+            var playersCurrentStatus = doc.players_current_status
+            var storyResults = doc.story_results;
+
+            var playerPhoneObject = {}
+            for (var i = 0; i < playersCurrentStatus.length; i++) {
+              playerPhoneObject[playersCurrentStatus[i].phone] = false;
+            }
+
+            var allPlayersReceivedMessage = false;
+
+            for (var i = 0; i < playersCurrentStatus.length; i++) {
+              if (playersCurrentStatus[i].opt_in_path == self.endGameIndivMessage) {
+                playerPhoneObject[playersCurrentStatus[i].phone] = true;
+              }
+            }
+
+            // Checking to see if all players have received the message. If false, reset playerPhoneObject.
+            if (checkIfAllPlayersReceivedMessage(playerPhoneObject, playersCurrentStatus.length)) {
+              allPlayersReceivedMessage = true; 
+            } else {
+              for (phone in playerPhoneObject) {
+                if (playerPhoneObject.hasOwnProperty(phone)) {
+                  playerPhoneObject[phone] = false;
+                }
+              }
+            }
+
+            if (!allPlayersReceivedMessage) {
+              for (var i = 0; i < storyResults.length; i++) {
+                if (storyResults[i].oip == self.endGameIndivMessage) {
+                  playerPhoneObject[storyResults[i].phone] = true;
+                }
+              }
+            }
+
+            if (checkIfAllPlayersReceivedMessage(playerPhoneObject, playersCurrentStatus.length)) {
+              allPlayersReceivedMessage = true; 
+            }
+
+            if (allPlayersReceivedMessage) {
+              done();
+            } 
+            else {
+              assert(false);
             }
           })
         })
