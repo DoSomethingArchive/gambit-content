@@ -1,6 +1,4 @@
-var MCRouting = require('./controllers/MCRouting')
-  , Tips = require('./controllers/Tips')
-  , SGCreateFromMobileController = require('./controllers/SGCreateFromMobileController')
+var SGCreateFromMobileController = require('./controllers/SGCreateFromMobileController')
   , SGCollaborativeStoryController = require('./controllers/SGCollaborativeStoryController')
   , SGCompetitiveStoryController = require('./controllers/SGCompetitiveStoryController')
   , SGMostLikelyToController = require('./controllers/SGMostLikelyToController')
@@ -9,48 +7,14 @@ var MCRouting = require('./controllers/MCRouting')
 
 module.exports = function(app) {
 
-  var mcRouting = new MCRouting(app);
-  var tips = new Tips(app);
-
-  /**
-   * Internal module for handling SMS donations.
-   */
+  //Internal module for handling SMS donations.
   require('./lib/donations')(app);
 
-  /**
-   * Pregnancy Text 2014
-   */
+  //Pregnancy Text 2014
   require('./lib/pregnancytext')(app);
 
-  /**
-   * Route user to appropriate opt-in path based on their answer to a Y/N question.
-   */
-  app.post('/ds-routing/yes-no-gateway', function(req, res) {
-    mcRouting.yesNoGateway(req, res);
-  });
-
-  /**
-   * Transition users for the sign up campaign to the actual campaign.
-   */
-  app.post('/ds-routing/start-campaign-gate', function(req, res) {
-    mcRouting.startCampaignGate(req, res);
-  });
-
-  /**
-   * Once in the actual campaign, the first message a user gets is a welcome
-   * message with the KNOW, PLAN, DO, and PROVE options. People can text 1-4 to
-   * select what they want to do. This handles that.
-   */
-  app.post('/ds/handle-start-campaign-response', function(req, res) {
-    mcRouting.handleStartCampaignResponse(req, res);
-  });
-
-  /**
-   * Retrieve in-order tips.
-   */
-  app.post('/ds/tips', function(req, res) {
-    tips.deliverTips(req, res);
-  });
+  //Custom DS routing to Mobile Commons paths for campaigns.
+  require('./lib/ds-routing')(app);
 
   /**
    * Guides users through creating an SMS multiplayer game from mobile.
