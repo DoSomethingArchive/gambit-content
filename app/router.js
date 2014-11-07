@@ -1,5 +1,4 @@
-var Babysitter = require('./controllers/Babysitter')
-  , MCRouting = require('./controllers/MCRouting')
+var MCRouting = require('./controllers/MCRouting')
   , Tips = require('./controllers/Tips')
   , SGCreateFromMobileController = require('./controllers/SGCreateFromMobileController')
   , SGCollaborativeStoryController = require('./controllers/SGCollaborativeStoryController')
@@ -10,7 +9,6 @@ var Babysitter = require('./controllers/Babysitter')
 
 module.exports = function(app) {
 
-  var babysitter = new Babysitter(app);
   var mcRouting = new MCRouting(app);
   var tips = new Tips(app);
 
@@ -22,26 +20,7 @@ module.exports = function(app) {
   /**
    * Pregnancy Text 2014
    */
-  app.post('/pregnancy-text/send-babysitter-invite-alpha', function(req, res) {
-    babysitter.onSendBabysitterInvite(req, res, babysitter.optinParentOnInviteAlpha,
-      babysitter.campaignIdParentNoBsAlpha);
-  });
-
-  app.post('/pregnancy-text/send-babysitter-invite-beta', function(req, res) {
-    babysitter.onSendBabysitterInvite(req, res, babysitter.optinParentOnInviteBeta,
-      babysitter.campaignIdParentNoBsBeta);
-  });
-
-  /**
-   * For players who accidentally opt-out, we give them the option to get back into
-   * the game through an opt-in in a different campaign that continues the drip
-   * messages on the same day. For babysitter invites sent from this campaign,
-   * we'll push the players to the Beta w/ Babysitter campaign.
-   */
-  app.post('/pregnancy-text/send-babysitter-invite-resurrected', function(req, res) {
-    babysitter.onSendBabysitterInvite(req, res, babysitter.optinParentOnInviteBeta,
-      babysitter.campaignIdParentNoBsResurrected);
-  });
+  require('./lib/pregnancytext')(app);
 
   /**
    * Route user to appropriate opt-in path based on their answer to a Y/N question.
