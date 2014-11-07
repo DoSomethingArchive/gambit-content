@@ -2,14 +2,14 @@
  * Tips API
  */
 
-var mobilecommons = require('../../mobilecommons/mobilecommons')
+var mobilecommons = require(appRoot + '/mobilecommons')
   , mongoose = require('mongoose')
-  , logger = require('../lib/logger')
+  , logger = require(appRoot + '/app/lib/logger')
   ;
 
 var Tips = function(app) {
   this.app = app;
-  this.config = app.get('tips-config');
+  this.config = require('../config/tips-config');
   this.tipModel = require('../models/tip')(app, this.config.modelName);
 }
 

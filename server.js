@@ -3,11 +3,13 @@ if (process.env.NODE_ENV == 'production') {
   require('newrelic');
 }
 
-var application_root = __dirname
-    , express = require('express')
+var express = require('express')
     , path = require('path')
     , logger = require('./app/lib/logger')
     ;
+
+// Set application root to global namespace
+global.appRoot = path.resolve(__dirname);
 
 /**
  * Express Setup

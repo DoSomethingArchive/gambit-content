@@ -2,14 +2,14 @@
  * Custom DS routing.
  */
 
-var mobilecommons = require('../../mobilecommons/mobilecommons');
+var mobilecommons = require(appRoot + '/mobilecommons');
 var Tips = require('./Tips');
 
 var MCRouting = function(app) {
   this.app = app;
   this.tips_api = new Tips(app);
-  this.routing_config = app.get('routing-config');
-  this.campaign_start_config = app.get('campaign-start-config');
+  this.routing_config = require('../config/routing-config');
+  this.campaign_start_config = require('../config/campaign-start-config');
 }
 
 module.exports = MCRouting;
