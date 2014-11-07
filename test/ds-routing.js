@@ -140,4 +140,121 @@ describe('MCRouting tests', function() {
     });
   });
 
+
+  /**
+   * handle-start-campaign-response tests
+   */
+  describe('POST to handle-start-campaign-response from 167209', function() {
+    before(function() {
+      tips.tipModel.remove({phone: '15555550100'}, function() {});
+    });
+
+    describe('Texting "KNOW"', function() {
+      it('should optin user to a KNOW path', function(done) {
+        var test = {
+          body: {
+            phone: 15555550100,
+            opt_in_path_id: 167209,
+            args: 'KNOW'
+          }
+        };
+
+        emitter.on(emitter.events.mcOptinTest, function(payload) {
+          emitter.removeAllListeners(emitter.events.mcOptinTest);
+
+          var expected = tips.config.tips['10673'].optins;
+          if (expected.indexOf(payload.form.opt_in_path) >= 0) {
+            done();
+          }
+          else {
+            assert(false);
+          }
+        });
+
+        mcRouting.handleStartCampaignResponse(test, response);
+      });
+    });
+
+    describe('Texting "PLAN"', function() {
+      it('should optin user to a PLAN path', function(done) {
+        var test = {
+          body: {
+            phone: 15555550100,
+            opt_in_path_id: 167209,
+            args: 'PLAN'
+          }
+        };
+
+        emitter.on(emitter.events.mcOptinTest, function(payload) {
+          emitter.removeAllListeners(emitter.events.mcOptinTest);
+
+          var expected = tips.config.tips['10663'].optins;
+          if (expected.indexOf(payload.form.opt_in_path) >= 0) {
+            done();
+          }
+          else {
+            assert(false);
+          }
+        });
+
+        mcRouting.handleStartCampaignResponse(test, response);
+      });
+    });
+
+    describe('Texting "DO"', function() {
+      it('should optin user to a DO path', function(done) {
+        var test = {
+          body: {
+            phone: 15555550100,
+            opt_in_path_id: 167209,
+            args: 'DO'
+          }
+        };
+
+        emitter.on(emitter.events.mcOptinTest, function(payload) {
+          emitter.removeAllListeners(emitter.events.mcOptinTest);
+
+          var expected = tips.config.tips['10243'].optins;
+          if (expected.indexOf(payload.form.opt_in_path) >= 0) {
+            done();
+          }
+          else {
+            assert(false);
+          }
+        });
+
+        mcRouting.handleStartCampaignResponse(test, response);
+      });
+    });
+
+    describe('Texting "PROVE"', function() {
+      it('should optin user to the PROVE path', function(done) {
+        var test = {
+          body: {
+            phone: 15555550100,
+            opt_in_path_id: 167209,
+            args: 'PROVE'
+          }
+        };
+
+        emitter.on(emitter.events.mcOptinTest, function(payload) {
+          emitter.removeAllListeners(emitter.events.mcOptinTest);
+
+          if (payload.form.opt_in_path == 167259) {
+            done();
+          }
+          else {
+            assert(false);
+          }
+        });
+
+        mcRouting.handleStartCampaignResponse(test, response);
+      });
+    });
+
+    after(function() {
+      tips.tipModel.remove({phone: '15555550100'}, function() {});
+    });
+  });
+
 });
