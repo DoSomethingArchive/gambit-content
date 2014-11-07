@@ -1,3 +1,7 @@
+// Test JSON files for group endgame logic, i.e. BullyText Superlatives. 
+// Originally created so that endgame individual ranking logic 
+// for Science Sleuth could be tested.
+
 var firstPlayerSixSuccessesSecondPlayerTwo = 
 {
   "_id": "540081675d722f8e071a8740",

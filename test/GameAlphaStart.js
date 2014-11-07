@@ -5,51 +5,54 @@ var assert = require('assert')
   , SGCompetitiveStoryController = require('../app/controllers/SGCompetitiveStoryController')
   ;
 
-describe('Alpha-Start Game:', function() {
+describe('Alpha-Starting a game based on the test config file:', function() {
   // Test players' details.
-  alphaName = 'alpha';
-  alphaPhone = '5555550100';
-  betaName0 = 'friend0';
-  betaName1 = 'friend1';
-  betaName2 = 'friend2';
-  betaPhone0 = '5555550101';
-  betaPhone1 = '5555550102';
-  betaPhone2 = '5555550103';
-  storyId = 1;
+  var alphaName = 'alpha';
+  var alphaPhone = '5555550100';
+  var betaName0 = 'friend0';
+  var betaName1 = 'friend1';
+  var betaName2 = 'friend2';
+  var betaPhone0 = '5555550101';
+  var betaPhone1 = '5555550102';
+  var betaPhone2 = '5555550103';
+  var storyId = 1;
 
-  before(function() {
-    app = express();
+  before('instantiating Express app, game controller, game config, dummy response', function() {
+    var app = express();
     require('../app/config')(app, express);
 
-    // Note that the gameConfig required below isn't actually used 
-    // by the competitive game creation process, since the 
-    // SGCompetitiveGameStoryController requires its own config file 
-    // upon controller creation. 
-    gameConfig = app.get('competitive-stories');
+    this.gameController = new SGCompetitiveStoryController(app);
 
-    gameController = new SGCompetitiveStoryController(app);
-    gameId = 0;
-    gameMappingId = 0;
+    // Reassigning the this.gameConfig property of the controller we just
+    // instantiated to use our test config file. 
+    this.gameController.gameConfig = require('./test_config/test-competitive-stories');
+    // Because of the unique scope of the before() hook, 
+    // the variables below weren't actually used/reassigned in testing. 
+    // They're defined much lower, globally. 
+    // var gameId = 0; 
+    // var gameMappingId = 0;
 
     // Dummy Express response object.
     response = {
-        send: function(code, message) {
-          if (typeof code === 'undefined') {
-            code = 200;
-          }
-          if (typeof message === 'undefined') {
-            if (code == 200)
-              message = 'OK';
-            else
-              message = '';
-          }
-
-          console.log('Response: ' + code + ' - ' + message);
+      send: function(code, message) {
+        if (typeof code === 'undefined') {
+          code = 200;
         }
+        if (typeof message === 'undefined') {
+          if (code == 200) {
+            message = 'OK';
+          }
+          else {
+            message = '';
+          } 
+        }
+
+        console.log('Response: ' + code + ' - ' + message);
+      }
     };
   })
 
-  describe('Creating a Competitive Story game', function() {
+  describe('Creating a Competitive Story game based on the test config file', function() {
     var request;
     before(function() {
       // Test request object to create the game.
@@ -63,7 +66,7 @@ describe('Alpha-Start Game:', function() {
           beta_mobile_2: betaPhone2
         }
       };
-    })
+    });
 
     it('should emit all game doc events', function(done) {
       var eventCount = 0;
@@ -85,7 +88,8 @@ describe('Alpha-Start Game:', function() {
       emitter.on('alpha-user-created', onEventReceived);
       // 3 expected beta-user-created events
       emitter.on('beta-user-created', onEventReceived);
-      // 1 expected game-mapping-created event
+      // 1 expected game-mapping-created event. (Callback function takes a 'doc' 
+      // argument because the emitter.emit() function gets passed a Mongo doc.)
       emitter.on('game-mapping-created', function(doc) {
         gameMappingId = doc._id;
         onEventReceived();
@@ -97,52 +101,52 @@ describe('Alpha-Start Game:', function() {
       });
 
       // With event listeners setup, can now create the game.
-      assert.equal(true, gameController.createGame(request, response));
-    })
+      assert.equal(true, this.gameController.createGame(request, response));
+    });
 
     it('should add sg_user doc for alpha user', function(done) {
       var phone = messageHelper.getNormalizedPhone(alphaPhone);
-      gameController.userModel.find({phone: phone}, function(err, docs) {
-        if (!err && docs.length > 0) done();
-        else assert(false);
+      this.gameController.userModel.find({phone: phone}, function(err, docs) {
+        if (!err && docs.length > 0) { done(); }
+        else { assert(false); }
       })
     })
 
     it('should add sg_user doc for beta0 user', function(done) {
       var phone = messageHelper.getNormalizedPhone(betaPhone0);
-      gameController.userModel.find({phone: phone}, function(err, docs) {
-        if (!err && docs.length > 0) done();
-        else assert(false);
+      this.gameController.userModel.find({phone: phone}, function(err, docs) {
+        if (!err && docs.length > 0) { done(); }
+        else { assert(false); }
       })
     })
 
     it('should add sg_user doc for beta1 user', function(done) {
       var phone = messageHelper.getNormalizedPhone(betaPhone1);
-      gameController.userModel.find({phone: phone}, function(err, docs) {
-        if (!err && docs.length > 0) done();
-        else assert(false);
+      this.gameController.userModel.find({phone: phone}, function(err, docs) {
+        if (!err && docs.length > 0) { done(); }
+        else { assert(false); }
       })
     })
 
     it('should add sg_user doc for beta2 user', function(done) {
       var phone = messageHelper.getNormalizedPhone(betaPhone2);
-      gameController.userModel.find({phone: phone}, function(err, docs) {
-        if (!err && docs.length > 0) done();
-        else assert(false);
+      this.gameController.userModel.find({phone: phone}, function(err, docs) {
+        if (!err && docs.length > 0) { done(); }
+        else { assert(false); }
       })
     })
 
     it('should add a sg_gamemapping document', function(done) {
-      gameController.gameMappingModel.find({_id: gameMappingId}, function(err, docs) {
-        if (!err && docs.length > 0) done();
-        else assert(false);
+      this.gameController.gameMappingModel.find({_id: gameMappingId}, function(err, docs) {
+        if (!err && docs.length > 0) { done(); }
+        else { assert(false); }
       })
     })
 
     it('should add a sg_competitivestory_game document', function(done) {
-      gameController.gameModel.find({_id: gameId}, function(err, docs) {
-        if (!err && docs.length > 0) done();
-        else assert(false);
+      this.gameController.gameModel.find({_id: gameId}, function(err, docs) {
+        if (!err && docs.length > 0) { done(); }
+        else { assert(false); }
       })
     })
   })
@@ -168,11 +172,11 @@ describe('Alpha-Start Game:', function() {
       });
 
       // Join beta user to the game.
-      gameController.betaJoinGame(request, response);
+      this.gameController.betaJoinGame(request, response);
     })
 
     it('should update the game document', function(done) {
-      gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
+      this.gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
         var updated = false;
         if (!err && doc) {
           for (var i = 0; i < doc.betas.length; i++) {
@@ -183,7 +187,7 @@ describe('Alpha-Start Game:', function() {
           }
         }
 
-        if (!updated) assert(false);
+        if (!updated) { assert(false); }
       })
     })
     it('should send a Mobile Commons opt-in to Beta(' + phone + ')')
@@ -213,13 +217,13 @@ describe('Alpha-Start Game:', function() {
       });
 
       // Alpha force starts the game.
-      gameController.alphaStartGame(request, response);
+      this.gameController.alphaStartGame(request, response);
     })
 
     it('should start the game', function(done) {
       var alphaStarted = beta1Started = false;
-      var startOip = gameConfig[storyId].story_start_oip;
-      gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
+      var startOip = this.gameController.gameConfig[storyId].story_start_oip;
+      this.gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
         if (!err && doc) {
           for (var i = 0; i < doc.players_current_status.length; i++) {
             var phone = doc.players_current_status[i].phone;
@@ -250,11 +254,12 @@ describe('Alpha-Start Game:', function() {
 
   after(function() {
     // Remove all test documents
-    gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(alphaPhone)}, function() {});
-    gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone0)}, function() {});
-    gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone1)}, function() {});
-    gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone2)}, function() {});
-    gameController.gameMappingModel.remove({_id: gameMappingId}, function() {});
-    gameController.gameModel.remove({_id: gameId}, function() {});
+    this.gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(alphaPhone)}, function() {});
+    this.gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone0)}, function() {});
+    this.gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone1)}, function() {});
+    this.gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone2)}, function() {});
+    this.gameController.gameMappingModel.remove({_id: gameMappingId}, function() {});
+    this.gameController.gameModel.remove({_id: gameId}, function() {});
+    this.gameController = null;
   })
 })

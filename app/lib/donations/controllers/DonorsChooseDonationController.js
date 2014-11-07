@@ -313,7 +313,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
       }
       else if (response && response.statusCode != 200) {
         logger.error('Failed to submit donation to DonorsChoose.org for user mobile: ' 
-          + donorInfoObject.donorPhoneNumber + '. Status code: ' + response.statusCode);
+          + donorInfoObject.donorPhoneNumber + '. Status code: ' + response.statusCode + ' | Response: ' + response);
         sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
       }
       else {

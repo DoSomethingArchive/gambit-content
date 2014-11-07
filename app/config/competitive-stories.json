@@ -1,420 +1,4 @@
  {
-  "1": {
-    "__comments": "This is a test.",
-    "alpha_wait_oip": 168445,
-    "alpha_start_ask_oip": 168447,
-    "beta_join_ask_oip": 168449,
-    "beta_wait_oip": 168451,
-    "game_in_progress_oip": 169809,
-    "story_start_oip": 168453,
-    "story": {
-      "168453": {
-        "__comments": "Level 1-0",
-        "choices": [
-          {
-            "key": "L11A",
-            "next": 168455,
-            "valid_answers": [
-              "A",
-              "LOOK"
-            ]
-          },
-          {
-            "key": "L11B",
-            "next": 168457,
-            "valid_answers": [
-              "B",
-              "DOOR"
-            ]
-          }
-        ]
-      },
-      "168455": {
-        "__comments": "Level 1-1A",
-        "choices": [
-          {
-            "key": "L12A",
-            "next": 168459,
-            "valid_answers": [
-              "A",
-              "TV"
-            ]
-          },
-          {
-            "key": "L12C",
-            "next": 168655,
-            "valid_answers": [
-              "B",
-              "DOOR"
-            ]
-          }
-        ]
-      },
-      "168457": {
-        "__comments": "Level 1-1B",
-        "choices": [
-          {
-            "key": "L12A",
-            "next": 168459,
-            "valid_answers": [
-              "A",
-              "TV"
-            ]
-          },
-          {
-            "key": "L12B",
-            "next": 168461,
-            "valid_answers": [
-              "B",
-              "BOOK",
-              "BOOKCASE"
-            ]
-          }
-        ]
-      },
-      "168459": {
-        "__comments": "Level 1-2A",
-        "choices": [
-          {
-            "key": "L13A",
-            "next": 168657,
-            "valid_answers": [
-              "A",
-              "HELLO"
-            ]
-          }
-        ]
-      },
-      "168461": {
-        "__comments": "Level 1-2B",
-        "choices": [
-          {
-            "key": "L13B",
-            "next": 168659,
-            "valid_answers": [
-              "A",
-              "KEY"
-            ]
-          }
-        ]
-      },
-      "168655": {
-        "__comments": "Level 1-2C",
-        "choices": [
-          {
-            "key": "L13A",
-            "next": 168657,
-            "valid_answers": [
-              "A",
-              "HELLO"
-            ]
-          }
-        ]
-      },
-      "168657": {
-        "__comments": "Level 1-3A",
-        "choices": [
-          {
-            "key": "L14B",
-            "next": "END-LEVEL1",
-            "valid_answers": [
-              "A",
-              "KICK"
-            ]
-          },
-          {
-            "key": "L14A",
-            "next": "END-LEVEL1",
-            "valid_answers": [
-              "B",
-              "HIDE"
-            ]
-          }
-        ]
-      },
-      "168659": {
-        "__comments": "Level 1-3B",
-        "choices": [
-          {
-            "key": "L14B",
-            "next": "END-LEVEL1",
-            "valid_answers": [
-              "A",
-              "OUT"
-            ]
-          },
-          {
-            "key": "L14C",
-            "next": "END-LEVEL1",
-            "valid_answers": [
-              "B",
-              "WAIT"
-            ]
-          }
-        ]
-      },
-      "END-LEVEL1": {
-        "__comments": "This is all TBD. I'm not exactly sure how I'm dealing with end-level scenarios yet. Maybe use opt-in paths instead of the string answers here.",
-        "choices": [
-          {
-            "next": 168825,
-            "conditions": {
-              "$or": ["L14A"]
-            }
-          },
-          {
-            "next": 168827,
-            "conditions": {
-              "$and": ["L14B"]
-            }
-          },
-          {
-            "next": 168831,
-            "conditions": {
-              "$and": ["L14C"]
-            }
-          }
-        ]
-      },
-      "END-LEVEL1-GROUP": {
-        "__comments": "More TBD stuff. This defines the messages users should get when the entire team makes it to the end of the level.",
-        "choices": [
-          {
-            "next": 168897,
-            "conditions": { "$or": ["L14A", "L14B"] }
-          },
-          {
-            "next": 168899,
-            "conditions": { "$or": ["L14C"] }
-          }
-        ],
-        "next_level": 168901
-      },
-      "168901": {
-        "__comments": "Level 2-0",
-        "choices": [
-          {
-            "key": "L21A",
-            "next": 169071,
-            "valid_answers": [
-              "A",
-              "PICHU"
-            ]
-          },
-          {
-            "key": "L21B",
-            "next": 169073,
-            "valid_answers": [
-              "B",
-              "RAICHU"
-            ]
-          }
-        ]
-      },
-      "169071": {
-        "__comments": "Level 2-1A",
-        "choices": [
-          {
-            "key": "L22A",
-            "next": 169075,
-            "valid_answers": [
-              "A",
-              "1"
-            ]
-          },
-          {
-            "key": "L22B",
-            "next": 169077,
-            "valid_answers": [
-              "B",
-              "6"
-            ]
-          },
-          {
-            "key": "L22C",
-            "next": 169079,
-            "valid_answers": [
-              "C",
-              "9"
-            ]
-          }
-        ]
-      },
-      "169073": {
-        "__comments": "Level 2-1B",
-        "choices": [
-          {
-            "key": "L22A",
-            "next": 169075,
-            "valid_answers": [
-              "A",
-              "1"
-            ]
-          },
-          {
-            "key": "L22B",
-            "next": 169077,
-            "valid_answers": [
-              "B",
-              "6"
-            ]
-          },
-          {
-            "key": "L22C",
-            "next": 169079,
-            "valid_answers": [
-              "C",
-              "9"
-            ]
-          }
-        ]
-      },
-      "169075": {
-        "__comments": "Level 2-2A",
-        "choices": [
-          {
-            "key": "L23A",
-            "next": "END-LEVEL2",
-            "valid_answers": [
-              "A",
-              "FIGHT"
-            ]
-          },
-          {
-            "key": "L23B",
-            "next": "END-LEVEL2",
-            "valid_answers": [
-              "B"
-            ]
-          }
-        ]
-      },
-      "169077": {
-        "__comments": "Level 2-2B",
-        "choices": [
-          {
-            "key": "L23A",
-            "next": "END-LEVEL2",
-            "valid_answers": [
-              "A",
-              "FIGHT"
-            ]
-          },
-          {
-            "key": "L23B",
-            "next": "END-LEVEL2",
-            "valid_answers": [
-              "B"
-            ]
-          }
-        ]
-      },
-      "169079": {
-        "__comments": "Level 2-2C",
-        "choices": [
-          {
-            "key": "L23A",
-            "next": "END-LEVEL2",
-            "valid_answers": [
-              "A",
-              "FIGHT"
-            ]
-          },
-          {
-            "key": "L23B",
-            "next": "END-LEVEL2",
-            "valid_answers": [
-              "B"
-            ]
-          }
-        ]
-      },
-      "END-LEVEL2": {
-        "__comments": "END-LEVEL2",
-        "choices": [
-          {
-            "next": 169081,
-            "conditions": {
-              "$or": [
-                {"$and": ["L21B", "L22B"]},
-                {"$and": ["L22B", "L23A"]},
-                {"$and": ["L21B", "L23A"]}
-              ]
-            }
-          },
-          {
-            "next": 169083,
-            "conditions": {
-              "$or": ["L23A", "L23B"]
-            }
-          }
-        ]
-      },
-      "END-LEVEL2-GROUP": {
-        "__comments": "END-LEVEL2-GROUP",
-        "choices": [
-          {
-            "next": 169085,
-            "conditions": {
-              "$or": [
-                {"$and": ["L21B", "L22B"]},
-                {"$and": ["L22B", "L23A"]},
-                {"$and": ["L21B", "L23A"]}
-              ]
-            }
-          },
-          {
-            "next": 169087,
-            "conditions": { "$or": ["L23A", "L23B"] }
-          }
-        ],
-        "next_level": "END-GAME"
-      },
-      "END-GAME": {
-        "__comments": "END-GAME",
-        "choices": [
-          {
-            "next": 169089,
-            "conditions": {
-              "$and": [
-                {"$or": [
-                  {"$and": ["L21B", "L22B"]},
-                  {"$and": ["L22B", "L23A"]},
-                  {"$and": ["L21B", "L23A"]}
-                ]},
-                "L14B"
-              ]
-            }
-          },
-          {
-            "next": 169091,
-            "conditions": {
-              "$and": [
-                {"$or": [
-                  {"$and": ["L21B", "L22B"]},
-                  {"$and": ["L22B", "L23A"]},
-                  {"$and": ["L21B", "L23A"]}
-                ]},
-                {"$or": ["L14A", "L14C"]}
-              ]
-            }
-          },
-          {
-            "next": 169195,
-            "conditions": {
-              "$and": ["L14B"]
-            }
-          },
-          {
-            "next": 169197,
-            "conditions": {
-              "$or": ["L14A", "L14C"]
-            }
-          }
-        ]
-      }
-    }
-  },
   "100": {
     "__comments": "Bully Text 2014",
     "alpha_wait_oip": 169841,
@@ -430,6 +14,10 @@
       "ask_beta_2_oip": 170435,
       "invalid_mobile_oip": 170439,
       "not_enough_players_oip": 170465
+    },
+    "endgame_config": {
+      "indiv-message-end-game-format" : "individual-decision-based",
+      "group-message-end-game-format" : null
     },
     "story": {
       "169859": {
@@ -901,9 +489,7 @@
         "next_level": "END-GAME"
       },
       "END-GAME": {
-        "__comments": "Bully Text end-game superlatives",
-        "indiv-message-end-game-format" : "individual-decision-based",
-        "group-message-end-game-format" : null,
+        "__comments": "Bully Text end-game superlatives. Individual message endgame format: individual decision based; group message endgame format: null.",
         "choices": [
           {
             "next": 170437,
@@ -948,6 +534,10 @@
       "ask_beta_2_oip": 172135,
       "invalid_mobile_oip": 172137,
       "not_enough_players_oip": 172139
+    },
+    "endgame_config": {
+      "indiv-message-end-game-format" : "rankings-within-group-based",
+      "group-message-end-game-format" : "group-success-failure-based"
     },
     "story": {
       "172147": {
@@ -1419,16 +1009,14 @@
         "next_level": "END-GAME"
       },
       "END-GAME": {
-        "__comments": "Science Sleuth endgame group win / loss determination",
-        "indiv-message-end-game-format" : "rankings-within-group-based",
-        "group-message-end-game-format" : "group-success-failure-based",
+        "__comments": "Science Sleuth endgame group win / loss determination. Individual message endgame format: rankings within group based (1st place, 2nd); group message endgame format: group success / failure based.",
         "group-level-success-oips" : [
-                172161, 
-                172179, 
-                172197,
-                172215,
-                172233,
-                172251
+            172161, 
+            172179, 
+            172197,
+            172215,
+            172233,
+            172251
         ],
         "group-success-failure-oips" : {
             "0" : 172283,

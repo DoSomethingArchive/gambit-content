@@ -7,6 +7,10 @@
     "beta_wait_oip": 168451,
     "game_in_progress_oip": 169809,
     "story_start_oip": 168453,
+    "endgame_config": {
+      "indiv-message-end-game-format" : "individual-decision-based",
+      "group-message-end-game-format" : null
+    },
     "story": {
       "168453": {
         "__comments": "Level 1-0",
@@ -115,7 +119,7 @@
         "__comments": "Level 1-3A",
         "choices": [
           {
-            "key": "L14B",
+            "key": "L14A",
             "next": "END-LEVEL1",
             "valid_answers": [
               "A",
@@ -123,7 +127,7 @@
             ]
           },
           {
-            "key": "L14A",
+            "key": "L14B",
             "next": "END-LEVEL1",
             "valid_answers": [
               "B",
@@ -371,7 +375,7 @@
         "next_level": "END-GAME"
       },
       "END-GAME": {
-        "__comments": "END-GAME",
+        "__comments": "END-GAME. Individual message endgame format: individual decision based; group message endgame format: null.",
         "choices": [
           {
             "next": 169089,
@@ -416,173 +420,18 @@
     }
   },
 
-  "2" : {
-    "__comments" : "this a test JSON config file for final group endgame win/lose logic.",
-    "alpha_wait_oip" : 1,
-    "alpha_start_ask_oip" : 2, 
-    "beta_join_ask_oip" : 3,
-    "beta_wait_oip" : 4,
-    "game_in_progress_oip" : 5, 
-    "story_start_oip" : 6,
-    "story" : {
-        "7" : {
-            "__comments" : "Level 1",
-            "choices" : [
-                {
-                    "key" : "L1A",
-                    "next" : "END-LEVEL1",
-                    "valid_answers" : ["A"]
-                },
-                {
-                    "key" : "L1B",
-                    "next" : "END-LEVEL1",
-                    "valid_answers" : ["B"]
-                }
-            ]
-        },
-        "8" : {
-            "__comments" : "Level 2",
-            "choices" : [
-                {
-                    "key" : "L2A",
-                    "next" : "END-LEVEL2",
-                    "valid_answers" : ["A"]
-                },
-                {
-                    "key" : "L2B",
-                    "next" : "END-LEVEL2",
-                    "valid_answers" : ["B"]
-                }
-            ]
-        },
-        "9" : {
-            "__comments" : "Level 3",
-            "choices" : [
-                {
-                    "key" : "L3A",
-                    "next" : "END-LEVEL3",
-                    "valid_answers" : ["A"]
-                },
-                {
-                    "key" : "L3B",
-                    "next" : "END-LEVEL3",
-                    "valid_answers" : ["B"]
-                }
-            ]
-        },
-        "END-LEVEL1": {
-          "choices": [
-            {
-              "next": 11,
-              "conditions": {"$and": ["L1A"]}
-            },
-            {
-              "next": 12,
-              "conditions": {"$and": ["L1B"]}
-            }
-          ]
-        },
-        "END-LEVEL1-GROUP" : {
-          "choices": [
-            {
-              "next": 21,
-              "conditions": { "$and": ["L1A"] }
-            },
-            {
-              "next": 22,
-              "conditions": { "$and": ["L1B"] }
-            }
-          ],
-          "next_level": 8
-        },
-        "END-LEVEL2": {
-          "choices": [
-            {
-              "next": 13,
-              "conditions": {"$and": ["L2A"]}
-            },
-            {
-              "next": 14,
-              "conditions": {"$and": ["L2B"]}
-            }
-          ]
-        },
-        "END-LEVEL2-GROUP" : {
-          "choices": [
-            {
-              "next": 23,
-              "conditions": { "$and": ["L12D"] }
-            },
-            {
-              "next": 24,
-              "conditions": { "$or": ["L1A", "L1B", "L12C"] }
-            }
-          ],
-          "next_level": 9
-        },
-        "END-LEVEL3": {
-          "choices": [
-            {
-              "next": 15,
-              "conditions": {"$and": ["L3A"]}
-            },
-            {
-              "next": 16,
-              "conditions": {"$and": ["L3B"]}
-            }
-          ]
-        },
-        "END-LEVEL3-GROUP" : {
-          "choices": [
-            {
-              "next": 25,
-              "conditions": { "$and": ["L3A"] }
-            },
-            {
-              "next": 26,
-              "conditions": { "$and": ["L3B"] }
-            }
-          ],
-          "next_level": "END-GAME"
-        },
-        "END-GAME" : {
-            "__comments" : "test endgame group win / loss determination",
-            "indiv-message-end-game-format" : "individual-decision-based",
-            "group-message-end-game-format" : "group-success-failure-based",
-            "choices" : [
-                {
-                    "__comments" : "individual win",
-                    "next": 31,
-                    "conditions": {"$and": ["L1A", "L2A", "L3A"]}
-                },
-                {
-                    "__comments" : "individual loss",
-                    "next": 32,
-                    "conditions" : {"$or": ["L1B", "L2B", "L3B"]}
-                }
-            ],
-            "group-level-impact-oips" : [
-                    21, 
-                    23, 
-                    25
-                ],
-            "group-success-failure-oips" : {
-                "0" : 41,
-                "1" : 41,
-                "2" : 42,
-                "3" : 43
-                }
-            }
-        }
-    },
   "100": {
-    "__comments": "Bully Text 2014",
+    "__comments": "Bully Text 2014, test file for final group endgame win/lose logic.=, the kind used in Science Sleuth",
     "alpha_wait_oip": 169841,
     "alpha_start_ask_oip": 169843,
     "beta_join_ask_oip": 169845,
     "beta_wait_oip": 169847,
     "game_in_progress_oip": 169849,
     "story_start_oip": 169859,
+    "endgame_config": {
+      "indiv-message-end-game-format" : "rankings-within-group-based",
+      "group-message-end-game-format" : "group-success-failure-based"
+      },
     "story": {
       "169859": {
         "__comments": "Level 1-0",
@@ -1053,9 +902,7 @@
         "next_level": "END-GAME"
       },
       "END-GAME": {
-        "__comments": "test endgame group win / loss determination",
-        "indiv-message-end-game-format" : "rankings-within-group-based",
-        "group-message-end-game-format" : "group-success-failure-based",
+        "__comments": "test endgame group win / loss determination. Individual message endgame format: rankings within group based; group message endgame format: group success/failure based.",
         "group-level-success-oips" : [
                 169873, 
                 169891, 

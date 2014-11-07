@@ -3,48 +3,55 @@ var assert = require('assert')
   , emitter = require('../app/eventEmitter')
   , messageHelper = require('../app/lib/userMessageHelpers')
   , SGCompetitiveStoryController = require('../app/controllers/SGCompetitiveStoryController')
+  , testHelper = require('./testHelperFunctions')
   ;
 
-describe('Auto-Start Game:', function() {
+describe('Auto-Starting a game based on the test config file:', function() {
   // Test players' details.
-  alphaName = 'alpha';
-  alphaPhone = '5555550100';
-  betaName0 = 'friend0';
-  betaName1 = 'friend1';
-  betaName2 = 'friend2';
-  betaPhone0 = '5555550101';
-  betaPhone1 = '5555550102';
-  betaPhone2 = '5555550103';
-  storyId = 1;
+  var alphaName = 'alpha';
+  var alphaPhone = '5555550100';
+  var betaName0 = 'friend0';
+  var betaName1 = 'friend1';
+  var betaName2 = 'friend2';
+  var betaPhone0 = '5555550101';
+  var betaPhone1 = '5555550102';
+  var betaPhone2 = '5555550103';
+  var storyId = 1;
 
-  before(function() {
-    app = express();
+  before('instantiating Express app, game controller, game config, dummy response', function() {
+    var app = express();
     require('../app/config')(app, express);
-    gameConfig = app.get('competitive-stories');
 
-    gameController = new SGCompetitiveStoryController(app);
-    gameId = 0;
-    gameMappingId = 0;
+    this.gameController = new SGCompetitiveStoryController(app);
+
+    // Reassigning the this.gameConfig property of the controller we just
+    // instantiated to use our test config file. 
+    this.gameController.gameConfig = require('./test_config/test-competitive-stories');
+    // Because of the unique scope of the before() hook, 
+    // the variables below weren't actually used/reassigned in testing. 
+    // They're defined much lower, globally. 
+    // var gameId = 0;
+    // var gameMappingId = 0;
 
     // Dummy Express response object.
     response = {
-        send: function(code, message) {
-          if (typeof code === 'undefined') {
-            code = 200;
-          }
-          if (typeof message === 'undefined') {
-            if (code == 200)
-              message = 'OK';
-            else
-              message = '';
-          }
-
-          console.log('Response: ' + code + ' - ' + message);
+      send: function(code, message) {
+        if (typeof code === 'undefined') {
+          code = 200;
         }
+        if (typeof message === 'undefined') {
+          if (code == 200)
+            message = 'OK';
+          else
+            message = '';
+        }
+
+        console.log('Response: ' + code + ' - ' + message);
+      }
     };
   })
 
-  describe('Creating a Competitive Story game', function() {
+  describe('Creating a Competitive Story game based on the test config file', function() {
     var request;
     before(function() {
       // Test request object to create the game.
@@ -92,114 +99,71 @@ describe('Auto-Start Game:', function() {
       });
 
       // With event listeners setup, can now create the game.
-      assert.equal(true, gameController.createGame(request, response));
+      assert.equal(true, this.gameController.createGame(request, response));
     })
 
     it('should add sg_user doc for alpha user', function(done) {
       var phone = messageHelper.getNormalizedPhone(alphaPhone);
-      gameController.userModel.find({phone: phone}, function(err, docs) {
-        if (!err && docs.length > 0) done();
-        else assert(false);
+      this.gameController.userModel.find({phone: phone}, function(err, docs) {
+        if (!err && docs.length > 0) { done(); }
+        else { assert(false); }
       })
     })
 
     it('should add sg_user doc for beta0 user', function(done) {
       var phone = messageHelper.getNormalizedPhone(betaPhone0);
-      gameController.userModel.find({phone: phone}, function(err, docs) {
-        if (!err && docs.length > 0) done();
-        else assert(false);
+      this.gameController.userModel.find({phone: phone}, function(err, docs) {
+        if (!err && docs.length > 0) { done(); }
+        else { assert(false); }
       })
     })
 
     it('should add sg_user doc for beta1 user', function(done) {
       var phone = messageHelper.getNormalizedPhone(betaPhone1);
-      gameController.userModel.find({phone: phone}, function(err, docs) {
-        if (!err && docs.length > 0) done();
-        else assert(false);
+      this.gameController.userModel.find({phone: phone}, function(err, docs) {
+        if (!err && docs.length > 0) { done(); }
+        else { assert(false); }
       })
     })
 
     it('should add sg_user doc for beta2 user', function(done) {
       var phone = messageHelper.getNormalizedPhone(betaPhone2);
-      gameController.userModel.find({phone: phone}, function(err, docs) {
-        if (!err && docs.length > 0) done();
-        else assert(false);
+      this.gameController.userModel.find({phone: phone}, function(err, docs) {
+        if (!err && docs.length > 0) { done(); }
+        else { assert(false); }
       })
     })
 
     it('should add a sg_gamemapping document', function(done) {
-      gameController.gameMappingModel.find({_id: gameMappingId}, function(err, docs) {
-        if (!err && docs.length > 0) done();
-        else assert(false);
+      this.gameController.gameMappingModel.find({_id: gameMappingId}, function(err, docs) {
+        if (!err && docs.length > 0) { done(); }
+        else { assert(false); }
       })
     })
 
     it('should add a sg_competitivestory_game document', function(done) {
-      gameController.gameModel.find({_id: gameId}, function(err, docs) {
-        if (!err && docs.length > 0) done();
-        else assert(false);
+      this.gameController.gameModel.find({_id: gameId}, function(err, docs) {
+        if (!err && docs.length > 0) { done(); }
+        else { assert(false); }
       })
     })
   })
 
-  // Describe test for betas joining the game.
-  var betaJoinGameTest = function(_phone) {
-    var request;
-    var phone = _phone;
-    before(function() {
-      phone = messageHelper.getNormalizedPhone(phone);
-      request = {
-        body: {
-          phone: phone,
-          args: 'Y'
-        }
-      }
-    })
-
-    it('should emit game-updated event', function(done) {
-      emitter.on('game-updated', function() {
-        done();
-        emitter.removeAllListeners('game-updated');
-      });
-
-      // Join beta user to the game.
-      gameController.betaJoinGame(request, response);
-    })
-
-    it('should update the game document', function(done) {
-      gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
-        var updated = false;
-        if (!err && doc) {
-          for (var i = 0; i < doc.betas.length; i++) {
-            if (doc.betas[i].phone == phone && doc.betas[i].invite_accepted) {
-              updated = true;
-              done();
-            }
-          }
-        }
-
-        if (!updated) assert(false);
-      })
-    })
-    it('should send a Mobile Commons opt-in to Beta(' + phone + ')')
-    it('should send a Mobile Commons opt-in to Alpha')
-  };
-
   describe('Beta 0 joining the game', function() {
-    betaJoinGameTest(betaPhone0);
+    testHelper.betaJoinGameTest(betaPhone0);
   })
 
   describe('Beta 1 joining the game', function() {
-    betaJoinGameTest(betaPhone1);
+    testHelper.betaJoinGameTest(betaPhone1);
   })
 
   describe('Beta 2 joining the game', function() {
-    betaJoinGameTest(betaPhone2);
+    testHelper.betaJoinGameTest(betaPhone2);
 
     it('should auto-start the game', function(done) {
-      var alphaStarted = beta0Started = beta1Started = beta2Started = false;
-      var startOip = gameConfig[storyId].story_start_oip;
-      gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
+      var alphaStarted = beta0Started = beta1Started = beta2Started = false; // Chaining assignment operators. They all are set to false. 
+      var startOip = this.gameController.gameConfig[storyId].story_start_oip;
+      this.gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
         if (!err && doc) {
           for (var i = 0; i < doc.players_current_status.length; i++) {
             if (doc.players_current_status[i].opt_in_path == startOip) {
@@ -227,110 +191,130 @@ describe('Auto-Start Game:', function() {
 
     it('should send the start message to all players')
   })
-
+  
   describe('Alpha answers A at Level 1-0', function() {
-    it('should move Alpha to Level 1-1')
+    testHelper.userActionTest().withPhone(alphaPhone).withUserInput('A').expectNextLevelName('11A').expectNextLevelMessage(168455).exec();
   })
+
   describe('Alpha answers A at Level 1-1', function() {
-    it('should move Alpha to Level 1-2')
+    testHelper.userActionTest().withPhone(alphaPhone).withUserInput('A').expectNextLevelName('12A').expectNextLevelMessage(168459).exec();
   })
+
   describe('Alpha answers A at Level 1-2', function() {
-    it('should move Alpha to Level 1-3')
+    testHelper.userActionTest().withPhone(alphaPhone).withUserInput('A').expectNextLevelName('13A').expectNextLevelMessage(168657).exec();
   })
+
   describe('Alpha answers A at Level 1-3', function() {
-    it('should move Alpha to End-Level 1')
+    testHelper.userActionTest().withPhone(alphaPhone).withUserInput('A').expectNextLevelName('END-LEVEL1').expectNextLevelMessage(168825).exec();
   })
+
 
   describe('Beta0 answers A at Level 1-0', function() {
-    it('should move Beta0 to Level 1-1')
+    testHelper.userActionTest().withPhone(betaPhone0).withUserInput('A').expectNextLevelName('11A').expectNextLevelMessage(168455).exec();
   })
+
   describe('Beta0 answers A at Level 1-1', function() {
-    it('should move Beta0 to Level 1-2')
+    testHelper.userActionTest().withPhone(betaPhone0).withUserInput('A').expectNextLevelName('12A').expectNextLevelMessage(168459).exec();
   })
+
   describe('Beta0 answers A at Level 1-2', function() {
-    it('should move Beta0 to Level 1-3')
+    testHelper.userActionTest().withPhone(betaPhone0).withUserInput('A').expectNextLevelName('13A').expectNextLevelMessage(168657).exec();
   })
+
   describe('Beta0 answers A at Level 1-3', function() {
-    it('should move Beta0 to End-Level 1')
+    testHelper.userActionTest().withPhone(betaPhone0).withUserInput('A').expectNextLevelName('END-LEVEL1').expectNextLevelMessage(168825).exec();
   })
+
 
   describe('Beta1 answers A at Level 1-0', function() {
-    it('should move Beta1 to Level 1-1')
-  })
-  describe('Beta1 answers A at Level 1-1', function() {
-    it('should move Beta1 to Level 1-2')
-  })
-  describe('Beta1 answers A at Level 1-2', function() {
-    it('should move Beta1 to Level 1-3')
-  })
-  describe('Beta1 answers A at Level 1-3', function() {
-    it('should move Beta1 to End-Level 1')
+    testHelper.userActionTest().withPhone(betaPhone1).withUserInput('A').expectNextLevelName('11A').expectNextLevelMessage(168455).exec();
   })
 
+  describe('Beta1 answers A at Level 1-1', function() {
+    testHelper.userActionTest().withPhone(betaPhone1).withUserInput('A').expectNextLevelName('12A').expectNextLevelMessage(168459).exec();
+  })
+
+  describe('Beta1 answers A at Level 1-2', function() {
+    testHelper.userActionTest().withPhone(betaPhone1).withUserInput('A').expectNextLevelName('13A').expectNextLevelMessage(168657).exec();
+  })
+
+  describe('Beta1 answers A at Level 1-3', function() {
+    testHelper.userActionTest().withPhone(betaPhone1).withUserInput('A').expectNextLevelName('13A').expectNextLevelMessage(168825).exec();
+  })
+
+
   describe('Beta2 answers A at Level 1-0', function() {
-    it('should move Beta2 to Level 1-1')
+    testHelper.userActionTest().withPhone(betaPhone2).withUserInput('A').expectNextLevelName('11A').expectNextLevelMessage(168455).exec();
   })
+
   describe('Beta2 answers A at Level 1-1', function() {
-    it('should move Beta2 to Level 1-2')
+    testHelper.userActionTest().withPhone(betaPhone2).withUserInput('A').expectNextLevelName('12A').expectNextLevelMessage(168459).exec();
   })
+
   describe('Beta2 answers A at Level 1-2', function() {
-    it('should move Beta2 to Level 1-3')
+    testHelper.userActionTest().withPhone(betaPhone2).withUserInput('A').expectNextLevelName('13A').expectNextLevelMessage(168657).exec();
   })
+
   describe('Beta2 answers A at Level 1-3', function() {
-    it('should move Beta2 to End-Level 1')
-    it('should deliver the end-level group message')
-    it('should move all players to Level 2')
+    testHelper.userActionTest().withPhone(betaPhone2).withUserInput('A').expectNextLevelName('14A').expectNextLevelMessage(168825).expectEndStageName('END-LEVEL1-GROUP').expectEndStageMessage(168897).expectNextStageName('2-0').expectNextStageMessage(168901).exec();
   })
 
   describe('Alpha answers A at Level 2-0', function() {
-    it('should move Alpha to Level 2-1')
+    testHelper.userActionTest().withPhone(alphaPhone).withUserInput('A').expectNextLevelName('21A').expectNextLevelMessage(169071).exec();
   })
+
   describe('Alpha answers A at Level 2-1', function() {
-    it('should move Alpha to Level 2-2')
+    testHelper.userActionTest().withPhone(alphaPhone).withUserInput('A').expectNextLevelName('22A').expectNextLevelMessage(169075).exec();
   })
+
   describe('Alpha answers A at Level 2-2', function() {
-    it('should move Alpha to End-Level 2')
+    testHelper.userActionTest().withPhone(alphaPhone).withUserInput('A').expectNextLevelName('END-LEVEL2').expectNextLevelMessage(169083).exec();
   })
 
   describe('Beta0 answers A at Level 2-0', function() {
-    it('should move Beta0 to Level 2-1')
+    testHelper.userActionTest().withPhone(betaPhone0).withUserInput('A').expectNextLevelName('21A').expectNextLevelMessage(169071).exec();
   })
+
   describe('Beta0 answers A at Level 2-1', function() {
-    it('should move Beta0 to Level 2-2')
+    testHelper.userActionTest().withPhone(betaPhone0).withUserInput('A').expectNextLevelName('22A').expectNextLevelMessage(169075).exec();
   })
+
   describe('Beta0 answers A at Level 2-2', function() {
-    it('should move Beta0 to End-Level 2')
+    testHelper.userActionTest().withPhone(betaPhone0).withUserInput('A').expectNextLevelName('LEVEL2').expectNextLevelMessage(169083).exec();
   })
 
   describe('Beta1 answers A at Level 2-0', function() {
-    it('should move Beta1 to Level 2-1')
+    testHelper.userActionTest().withPhone(betaPhone1).withUserInput('A').expectNextLevelName('21A').expectNextLevelMessage(169071).exec();
   })
+
   describe('Beta1 answers A at Level 2-1', function() {
-    it('should move Beta1 to Level 2-2')
+    testHelper.userActionTest().withPhone(betaPhone1).withUserInput('A').expectNextLevelName('22A').expectNextLevelMessage(169075).exec();
   })
+
   describe('Beta1 answers A at Level 2-2', function() {
-    it('should move Beta1 to End-Level 2')
+    testHelper.userActionTest().withPhone(betaPhone1).withUserInput('A').expectNextLevelName('END-LEVEL2').expectNextLevelMessage(169083).exec();
   })
 
   describe('Beta2 answers A at Level 2-0', function() {
-    it('should move Beta2 to Level 2-1')
+    testHelper.userActionTest().withPhone(betaPhone2).withUserInput('A').expectNextLevelName('21A').expectNextLevelMessage(169071).exec();
   })
+
   describe('Beta2 answers A at Level 2-1', function() {
-    it('should move Beta2 to Level 2-2')
+    testHelper.userActionTest().withPhone(betaPhone2).withUserInput('A').expectNextLevelName('22A').expectNextLevelMessage(169075).exec();
   })
+
   describe('Beta2 answers A at Level 2-2', function() {
-    it('should move Beta2 to End-Level 2')
-    it('should deliver the end-level group message')
-    it('should deliver to all player the end-game group message')
+    testHelper.userActionTest().withPhone(betaPhone2).withUserInput('A').expectNextLevelName('END-LEVEL2').expectNextLevelMessage(169083).expectEndStageName('END-LEVEL2-GROUP').expectEndStageMessage(169087).expectNextStageName('END-GAME').expectNextStageMessage(169197).exec();
   })
 
   after(function() {
     // Remove all test documents
-    gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(alphaPhone)}, function() {});
-    gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone0)}, function() {});
-    gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone1)}, function() {});
-    gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone2)}, function() {});
-    gameController.gameMappingModel.remove({_id: gameMappingId}, function() {});
-    gameController.gameModel.remove({_id: gameId}, function() {});
+    this.gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(alphaPhone)}, function() {});
+    this.gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone0)}, function() {});
+    this.gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone1)}, function() {});
+    this.gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone2)}, function() {});
+    this.gameController.gameMappingModel.remove({_id: gameMappingId}, function() {});
+    this.gameController.gameModel.remove({_id: gameId}, function() {});
+    this.gameController = null;
   })
 });
