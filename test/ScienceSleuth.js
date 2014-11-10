@@ -103,7 +103,6 @@ describe('Science Sleuth game being played:', function() {
 
     it('should add sg_user doc for alpha user', function(done) {
       var phone = messageHelper.getNormalizedPhone(alphaPhone);
-      console.log('**GAMECONFIG**', this.gameController.gameConfig)
       this.gameController.userModel.find({phone: phone}, function(err, docs) {
         if (!err && docs.length > 0) { done(); }
         else { assert(false); }
@@ -202,200 +201,416 @@ describe('Science Sleuth game being played:', function() {
 
     // Level 1. 
     describe('Alpha answers A at Level 1-0', function() {
-      testHelper.userActionTest().withPhone(alphaPhone).withUserInput('A').expectNextLevelName('11A').expectNextLevelMessage(172149).exec();
+      testHelper.userActionTest().withPhone(alphaPhone)
+        .withUserInput('A')
+        .expectNextLevelName('11A')
+        .expectNextLevelMessage(172149)
+        .exec();
     });
 
     describe('Alpha answers A at Level 1-1A', function() {
-      testHelper.userActionTest().withPhone(alphaPhone).withUserInput('A').expectNextLevelName('END-LEVEL1').expectNextLevelMessage(172153).exec();
+      testHelper.userActionTest().withPhone(alphaPhone)
+        .withUserInput('A')
+        .expectNextLevelName('END-LEVEL1').expectNextLevelMessage(172153).exec();
     });
 
     describe('Beta0 answers A at Level 1-0', function() {
-      testHelper.userActionTest().withPhone(betaPhone0).withUserInput('A').expectNextLevelName('11A').expectNextLevelMessage(172149).exec();
+      testHelper.userActionTest().withPhone(betaPhone0)
+        .withUserInput('A')
+        .expectNextLevelName('11A')
+        .expectNextLevelMessage(172149)
+        .exec();
     });
 
     describe('Beta0 answers A at Level 1-1A', function() {
-      testHelper.userActionTest().withPhone(betaPhone0).withUserInput('A').expectNextLevelName('END-LEVEL1').expectNextLevelMessage(172153).exec();
+      testHelper.userActionTest().withPhone(betaPhone0)
+        .withUserInput('A')
+        .expectNextLevelName('END-LEVEL1')
+        .expectNextLevelMessage(172153)
+        .exec();
     });
 
     describe('Beta1 answers A at Level 1-0', function() {
-      testHelper.userActionTest().withPhone(betaPhone1).withUserInput('A').expectNextLevelName('11A').expectNextLevelMessage(172149).exec();
+      testHelper.userActionTest().withPhone(betaPhone1)
+        .withUserInput('A')
+        .expectNextLevelName('11A')
+        .expectNextLevelMessage(172149)
+        .exec();
     });
 
     describe('Beta1 answers A at Level 1-1A', function() {
-      testHelper.userActionTest().withPhone(betaPhone1).withUserInput('A').expectNextLevelName('END-LEVEL1').expectNextLevelMessage(172153).exec();
+      testHelper.userActionTest().withPhone(betaPhone1)
+        .withUserInput('A')
+        .expectNextLevelName('END-LEVEL1')
+        .expectNextLevelMessage(172153)
+        .exec();
     });
 
     describe('Beta2 answers A at Level 1-0', function() {
-      testHelper.userActionTest().withPhone(betaPhone2).withUserInput('A').expectNextLevelName('11A').expectNextLevelMessage(172149).exec();
+      testHelper.userActionTest().withPhone(betaPhone2)
+        .withUserInput('A')
+        .expectNextLevelName('11A')
+        .expectNextLevelMessage(172149)
+        .exec();
     });
 
     describe('Beta2 answers A at Level 1-1A', function() {
-      testHelper.userActionTest().withPhone(betaPhone2).withUserInput('A').expectNextLevelName('END-LEVEL1').expectNextLevelMessage(172153).expectEndStageName('END-LEVEL1-GROUP').expectEndStageMessage(172163).expectNextStageName('2-0').expectNextStageMessage(172165).exec();
+      testHelper.userActionTest().withPhone(betaPhone2)
+        .withUserInput('A')
+        .expectNextLevelName('END-LEVEL1')
+        .expectNextLevelMessage(172153)
+        .expectEndStageName('END-LEVEL1-GROUP')
+        .expectEndStageMessage(172163)
+        .expectNextStageName('2-0')
+        .expectNextStageMessage(172165)
+        .exec();
     });
 
     // Level 2. 
     describe('Alpha answers A at Level 2-0', function() {
-      testHelper.userActionTest().withPhone(alphaPhone).withUserInput('A').expectNextLevelName('21A').expectNextLevelMessage(172167).exec();
+      testHelper.userActionTest().withPhone(alphaPhone)
+        .withUserInput('A')
+        .expectNextLevelName('21A')
+        .expectNextLevelMessage(172167)
+        .exec();
     });
 
     describe('Alpha answers A at Level 2-1A', function() {
-      testHelper.userActionTest().withPhone(alphaPhone).withUserInput('A').expectNextLevelName('END-LEVEL2').expectNextLevelMessage(172171).exec();
+      testHelper.userActionTest().withPhone(alphaPhone)
+        .withUserInput('A')
+        .expectNextLevelName('END-LEVEL2')
+        .expectNextLevelMessage(172171)
+        .exec();
     });
 
     describe('Beta0 answers A at Level 2-0', function() {
-      testHelper.userActionTest().withPhone(betaPhone0).withUserInput('A').expectNextLevelName('21A').expectNextLevelMessage(172167).exec();
+      testHelper.userActionTest().withPhone(betaPhone0)
+        .withUserInput('A')
+        .expectNextLevelName('21A')
+        .expectNextLevelMessage(172167)
+        .exec();
     });
 
     describe('Beta0 answers A at Level 2-1A', function() {
-      testHelper.userActionTest().withPhone(betaPhone0).withUserInput('A').expectNextLevelName('END-LEVEL2').expectNextLevelMessage(172171).exec();
+      testHelper.userActionTest().withPhone(betaPhone0)
+        .withUserInput('A')
+        .expectNextLevelName('END-LEVEL2')
+        .expectNextLevelMessage(172171)
+        .exec();
     });
 
     describe('Beta1 answers A at Level 2-0', function() {
-      testHelper.userActionTest().withPhone(betaPhone1).withUserInput('A').expectNextLevelName('21A').expectNextLevelMessage(172167).exec();
+      testHelper.userActionTest().withPhone(betaPhone1)
+        .withUserInput('A')
+        .expectNextLevelName('21A')
+        .expectNextLevelMessage(172167)
+        .exec();
     });
 
     describe('Beta1 answers A at Level 2-1A', function() {
-      testHelper.userActionTest().withPhone(betaPhone1).withUserInput('A').expectNextLevelName('END-LEVEL2').expectNextLevelMessage(172171).exec();
+      testHelper.userActionTest().withPhone(betaPhone1)
+        .withUserInput('A')
+        .expectNextLevelName('END-LEVEL2')
+        .expectNextLevelMessage(172171)
+        .exec();
     });
 
     describe('Beta2 answers A at Level 2-0', function() {
-      testHelper.userActionTest().withPhone(betaPhone2).withUserInput('A').expectNextLevelName('21A').expectNextLevelMessage(172167).exec();
+      testHelper.userActionTest().withPhone(betaPhone2)
+        .withUserInput('A')
+        .expectNextLevelName('21A')
+        .expectNextLevelMessage(172167)
+        .exec();
     });
 
     describe('Beta2 answers A at Level 2-1A', function() {
-      testHelper.userActionTest().withPhone(betaPhone2).withUserInput('A').expectNextLevelName('END-LEVEL2').expectNextLevelMessage(172171).expectEndStageName('END-LEVEL2-GROUP').expectEndStageMessage(172179).expectNextStageName('3-0').expectNextStageMessage(172183).exec();
+      testHelper.userActionTest().withPhone(betaPhone2)
+        .withUserInput('A')
+        .expectNextLevelName('END-LEVEL2')
+        .expectNextLevelMessage(172171)
+        .expectEndStageName('END-LEVEL2-GROUP')
+        .expectEndStageMessage(172179)
+        .expectNextStageName('3-0')
+        .expectNextStageMessage(172183)
+        .exec();
     });
 
     //Level 3.
     describe('Alpha answers A at Level 3-0', function() {
-      testHelper.userActionTest().withPhone(alphaPhone).withUserInput('A').expectNextLevelName('31A').expectNextLevelMessage(172185).exec();
+      testHelper.userActionTest().withPhone(alphaPhone)
+        .withUserInput('A')
+        .expectNextLevelName('31A')
+        .expectNextLevelMessage(172185)
+        .exec();
     });
 
     describe('Alpha answers A at Level 3-1A', function() {
-      testHelper.userActionTest().withPhone(alphaPhone).withUserInput('A').expectNextLevelName('END-LEVEL3').expectNextLevelMessage(172189).exec();
+      testHelper.userActionTest().withPhone(alphaPhone)
+        .withUserInput('A')
+        .expectNextLevelName('END-LEVEL3')
+        .expectNextLevelMessage(172189)
+        .exec();
     });
 
     describe('Beta0 answers A at Level 3-0', function() {
-      testHelper.userActionTest().withPhone(betaPhone0).withUserInput('A').expectNextLevelName('31A').expectNextLevelMessage(172185).exec();
+      testHelper.userActionTest().withPhone(betaPhone0)
+        .withUserInput('A')
+        .expectNextLevelName('31A')
+        .expectNextLevelMessage(172185)
+        .exec();
     });
 
     describe('Beta0 answers A at Level 3-1A', function() {
-      testHelper.userActionTest().withPhone(betaPhone0).withUserInput('A').expectNextLevelName('END-LEVEL3').expectNextLevelMessage(172189).exec();
+      testHelper.userActionTest().withPhone(betaPhone0)
+        .withUserInput('A')
+        .expectNextLevelName('END-LEVEL3')
+        .expectNextLevelMessage(172189)
+        .exec();
     });
 
     describe('Beta1 answers A at Level 3-0', function() {
-      testHelper.userActionTest().withPhone(betaPhone1).withUserInput('A').expectNextLevelName('31A').expectNextLevelMessage(172185).exec();
+      testHelper.userActionTest().withPhone(betaPhone1)
+        .withUserInput('A')
+        .expectNextLevelName('31A')
+        .expectNextLevelMessage(172185)
+        .exec();
     });
 
     describe('Beta1 answers A at Level 3-1A', function() {
-      testHelper.userActionTest().withPhone(betaPhone1).withUserInput('A').expectNextLevelName('END-LEVEL3').expectNextLevelMessage(172189).exec();
+      testHelper.userActionTest().withPhone(betaPhone1)
+        .withUserInput('A')
+        .expectNextLevelName('END-LEVEL3')
+        .expectNextLevelMessage(172189)
+        .exec();
     });
 
     describe('Beta2 answers A at Level 3-0', function() {
-      testHelper.userActionTest().withPhone(betaPhone2).withUserInput('A').expectNextLevelName('31A').expectNextLevelMessage(172185).exec();
+      testHelper.userActionTest().withPhone(betaPhone2)
+        .withUserInput('A')
+        .expectNextLevelName('31A')
+        .expectNextLevelMessage(172185)
+        .exec();
     });
 
     describe('Beta2 answers A at Level 3-1A', function() {
-      testHelper.userActionTest().withPhone(betaPhone2).withUserInput('A').expectNextLevelName('END-LEVEL3').expectNextLevelMessage(172189).expectEndStageName('END-LEVEL3-GROUP').expectEndStageMessage(172197).expectNextStageName('4-0').expectNextStageMessage(172201).exec();
+      testHelper.userActionTest().withPhone(betaPhone2)
+        .withUserInput('A')
+        .expectNextLevelName('END-LEVEL3')
+        .expectNextLevelMessage(172189)
+        .expectEndStageName('END-LEVEL3-GROUP')
+        .expectEndStageMessage(172197)
+        .expectNextStageName('4-0')
+        .expectNextStageMessage(172201)
+        .exec();
     });
 
     //Level 4. 
     describe('Alpha answers A at Level 4-0', function() {
-      testHelper.userActionTest().withPhone(alphaPhone).withUserInput('A').expectNextLevelName('41A').expectNextLevelMessage(172203).exec();
+      testHelper.userActionTest().withPhone(alphaPhone)
+        .withUserInput('A')
+        .expectNextLevelName('41A')
+        .expectNextLevelMessage(172203)
+        .exec();
     });
 
     describe('Alpha answers A at Level 4-1A', function() {
-      testHelper.userActionTest().withPhone(alphaPhone).withUserInput('A').expectNextLevelName('END-LEVEL4').expectNextLevelMessage(172207).exec();
+      testHelper.userActionTest().withPhone(alphaPhone)
+        .withUserInput('A')
+        .expectNextLevelName('END-LEVEL4')
+        .expectNextLevelMessage(172207)
+        .exec();
     });
 
     describe('Beta0 answers A at Level 4-0', function() {
-      testHelper.userActionTest().withPhone(betaPhone0).withUserInput('A').expectNextLevelName('41A').expectNextLevelMessage(172203).exec();
+      testHelper.userActionTest().withPhone(betaPhone0)
+        .withUserInput('A')
+        .expectNextLevelName('41A')
+        .expectNextLevelMessage(172203)
+        .exec();
     });
 
     describe('Beta0 answers A at Level 4-1A', function() {
-      testHelper.userActionTest().withPhone(betaPhone0).withUserInput('A').expectNextLevelName('END-LEVEL4').expectNextLevelMessage(172207).exec();
+      testHelper.userActionTest().withPhone(betaPhone0)
+        .withUserInput('A')
+        .expectNextLevelName('END-LEVEL4')
+        .expectNextLevelMessage(172207)
+        .exec();
     });
 
     describe('Beta1 answers A at Level 4-0', function() {
-      testHelper.userActionTest().withPhone(betaPhone1).withUserInput('A').expectNextLevelName('41A').expectNextLevelMessage(172203).exec();
+      testHelper.userActionTest().withPhone(betaPhone1)
+        .withUserInput('A')
+        .expectNextLevelName('41A')
+        .expectNextLevelMessage(172203)
+        .exec();
     });
 
     describe('Beta1 answers A at Level 4-1A', function() {
-      testHelper.userActionTest().withPhone(betaPhone1).withUserInput('A').expectNextLevelName('END-LEVEL4').expectNextLevelMessage(172207).exec();
+      testHelper.userActionTest().withPhone(betaPhone1)
+        .withUserInput('A')
+        .expectNextLevelName('END-LEVEL4')
+        .expectNextLevelMessage(172207)
+        .exec();
     });
 
     describe('Beta2 answers A at Level 4-0', function() {
-      testHelper.userActionTest().withPhone(betaPhone2).withUserInput('A').expectNextLevelName('41A').expectNextLevelMessage(172203).exec();
+      testHelper.userActionTest().withPhone(betaPhone2)
+        .withUserInput('A')
+        .expectNextLevelName('41A')
+        .expectNextLevelMessage(172203)
+        .exec();
     });
 
     describe('Beta2 answers A at Level 4-1A', function() {
-      testHelper.userActionTest().withPhone(betaPhone2).withUserInput('A').expectNextLevelName('END-LEVEL4').expectNextLevelMessage(172207).expectEndStageName('END-LEVEL4-GROUP').expectEndStageMessage(172215).expectNextStageName('5-0').expectNextStageMessage(172219).exec();
+      testHelper.userActionTest().withPhone(betaPhone2)
+        .withUserInput('A')
+        .expectNextLevelName('END-LEVEL4')
+        .expectNextLevelMessage(172207)
+        .expectEndStageName('END-LEVEL4-GROUP')
+        .expectEndStageMessage(172215)
+        .expectNextStageName('5-0')
+        .expectNextStageMessage(172219)
+        .exec();
     });
 
     //Level 5. 
     describe('Alpha answers A at Level 5-0', function() {
-      testHelper.userActionTest().withPhone(alphaPhone).withUserInput('A').expectNextLevelName('51A').expectNextLevelMessage(172221).exec();
+      testHelper.userActionTest().withPhone(alphaPhone)
+        .withUserInput('A')
+        .expectNextLevelName('51A')
+        .expectNextLevelMessage(172221)
+        .exec();
     });
 
     describe('Alpha answers A at Level 5-1A', function() {
-      testHelper.userActionTest().withPhone(alphaPhone).withUserInput('A').expectNextLevelName('END-LEVEL5').expectNextLevelMessage(172225).exec();
+      testHelper.userActionTest().withPhone(alphaPhone)
+        .withUserInput('A')
+        .expectNextLevelName('END-LEVEL5')
+        .expectNextLevelMessage(172225)
+        .exec();
     });
 
     describe('Beta0 answers A at Level 5-0', function() {
-      testHelper.userActionTest().withPhone(betaPhone0).withUserInput('A').expectNextLevelName('51A').expectNextLevelMessage(172221).exec();
+      testHelper.userActionTest().withPhone(betaPhone0)
+        .withUserInput('A')
+        .expectNextLevelName('51A')
+        .expectNextLevelMessage(172221)
+        .exec();
     });
 
     describe('Beta0 answers A at Level 5-1A', function() {
-      testHelper.userActionTest().withPhone(betaPhone0).withUserInput('A').expectNextLevelName('END-LEVEL5').expectNextLevelMessage(172225).exec();
+      testHelper.userActionTest().withPhone(betaPhone0)
+        .withUserInput('A')
+        .expectNextLevelName('END-LEVEL5')
+        .expectNextLevelMessage(172225)
+        .exec();
     });
 
     describe('Beta1 answers A at Level 5-0', function() {
-      testHelper.userActionTest().withPhone(betaPhone1).withUserInput('A').expectNextLevelName('51A').expectNextLevelMessage(172221).exec();
+      testHelper.userActionTest().withPhone(betaPhone1)
+        .withUserInput('A')
+        .expectNextLevelName('51A')
+        .expectNextLevelMessage(172221)
+        .exec();
     });
 
     describe('Beta1 answers A at Level 5-1A', function() {
-      testHelper.userActionTest().withPhone(betaPhone1).withUserInput('A').expectNextLevelName('END-LEVEL5').expectNextLevelMessage(172225).exec();
+      testHelper.userActionTest().withPhone(betaPhone1)
+        .withUserInput('A')
+        .expectNextLevelName('END-LEVEL5')
+        .expectNextLevelMessage(172225)
+        .exec();
     });
 
     describe('Beta2 answers A at Level 5-0', function() {
-      testHelper.userActionTest().withPhone(betaPhone2).withUserInput('A').expectNextLevelName('51A').expectNextLevelMessage(172221).exec();
+      testHelper.userActionTest().withPhone(betaPhone2)
+        .withUserInput('A')
+        .expectNextLevelName('51A')
+        .expectNextLevelMessage(172221)
+        .exec();
     });
 
     describe('Beta2 answers A at Level 5-1A', function() {
-      testHelper.userActionTest().withPhone(betaPhone2).withUserInput('A').expectNextLevelName('END-LEVEL5').expectNextLevelMessage(172225).expectEndStageName('END-LEVEL5-GROUP').expectEndStageMessage(172235).expectNextStageName('6-0').expectNextStageMessage(172237).exec();
+      testHelper.userActionTest().withPhone(betaPhone2)
+        .withUserInput('A')
+        .expectNextLevelName('END-LEVEL5')
+        .expectNextLevelMessage(172225)
+        .expectEndStageName('END-LEVEL5-GROUP')
+        .expectEndStageMessage(172235)
+        .expectNextStageName('6-0')
+        .expectNextStageMessage(172237)
+        .exec();
     });
 
     //Level 6. 
     describe('Alpha answers A at Level 6-0', function() {
-      testHelper.userActionTest().withPhone(alphaPhone).withUserInput('A').expectNextLevelName('61A').expectNextLevelMessage(172239).exec();
+      testHelper.userActionTest().withPhone(alphaPhone)
+        .withUserInput('A')
+        .expectNextLevelName('61A')
+        .expectNextLevelMessage(172239)
+        .exec();
     });
 
     describe('Alpha answers A at Level 6-1A', function() {
-      testHelper.userActionTest().withPhone(alphaPhone).withUserInput('A').expectNextLevelName('END-LEVEL6').expectNextLevelMessage(172243).exec();
+      testHelper.userActionTest().withPhone(alphaPhone)
+        .withUserInput('A')
+        .expectNextLevelName('END-LEVEL6')
+        .expectNextLevelMessage(172243)
+        .exec();
     });
 
     describe('Beta0 answers A at Level 6-0', function() {
-      testHelper.userActionTest().withPhone(betaPhone0).withUserInput('A').expectNextLevelName('61A').expectNextLevelMessage(172239).exec();
+      testHelper.userActionTest().withPhone(betaPhone0)
+        .withUserInput('A')
+        .expectNextLevelName('61A')
+        .expectNextLevelMessage(172239)
+        .exec();
     });
 
     describe('Beta0 answers A at Level 6-1A', function() {
-      testHelper.userActionTest().withPhone(betaPhone0).withUserInput('A').expectNextLevelName('END-LEVEL6').expectNextLevelMessage(172243).exec();
+      testHelper.userActionTest().withPhone(betaPhone0)
+        .withUserInput('A')
+        .expectNextLevelName('END-LEVEL6')
+        .expectNextLevelMessage(172243)
+        .exec();
     });
 
     describe('Beta1 answers A at Level 6-0', function() {
-      testHelper.userActionTest().withPhone(betaPhone1).withUserInput('A').expectNextLevelName('61A').expectNextLevelMessage(172239).exec();
+      testHelper.userActionTest().withPhone(betaPhone1)
+        .withUserInput('A')
+        .expectNextLevelName('61A')
+        .expectNextLevelMessage(172239)
+        .exec();
     });
 
     describe('Beta1 answers A at Level 6-1A', function() {
-      testHelper.userActionTest().withPhone(betaPhone1).withUserInput('A').expectNextLevelName('END-LEVEL6').expectNextLevelMessage(172243).exec();
+      testHelper.userActionTest().withPhone(betaPhone1)
+        .withUserInput('A')
+        .expectNextLevelName('END-LEVEL6')
+        .expectNextLevelMessage(172243)
+        .exec();
     });
 
     describe('Beta2 answers A at Level 6-0', function() {
-      testHelper.userActionTest().withPhone(betaPhone2).withUserInput('A').expectNextLevelName('61A').expectNextLevelMessage(172239).exec();
+      testHelper.userActionTest().withPhone(betaPhone2)
+        .withUserInput('A')
+        .expectNextLevelName('61A')
+        .expectNextLevelMessage(172239)
+        .exec();
     });
 
     describe('Beta2 answers A at Level 6-1A', function() {
-      testHelper.userActionTest().withPhone(betaPhone2).withUserInput('A').expectNextLevelName('END-LEVEL6').expectNextLevelMessage(172243).expectEndStageName('END-LEVEL6-GROUP').expectEndStageMessage(172253).expectEndGameGroupMessageFormat('rankings-within-group-based').expectEndGameGroupMessage(172281).expectEndGameIndividualMessageFormat('group-success-failure-based').expectEndGameIndividualMessage(172297).exec();
+      testHelper.userActionTest().withPhone(betaPhone2)
+        .withUserInput('A')
+        .expectNextLevelName('END-LEVEL6')
+        .expectNextLevelMessage(172243)
+        .expectEndStageName('END-LEVEL6-GROUP')
+        .expectEndStageMessage(172253)
+        .expectEndGameGroupMessageFormat('rankings-within-group-based')
+        .expectEndGameGroupMessage(172281)
+        .expectEndGameIndividualMessageFormat('group-success-failure-based')
+        .expectEndGameIndividualMessage(172297)
+        .exec();
     });
   })
   
