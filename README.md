@@ -1,4 +1,4 @@
-ds-mdata-responder [![wercker status](https://app.wercker.com/status/9d555c2fca4693f2916ca44aa97da126/s "wercker status")](https://app.wercker.com/project/bykey/9d555c2fca4693f2916ca44aa97da126)
+ds-mdata-responder [![wercker status](https://app.wercker.com/status/9d555c2fca4693f2916ca44aa97da126/s "wercker status")](https://app.wercker.com/project/bykey/9d555c2fca4693f2916ca44aa97da126) [![Coverage Status](https://img.shields.io/coveralls/DoSomething/ds-mdata-responder.svg)](https://coveralls.io/r/DoSomething/ds-mdata-responder)
 ==================
 
 Handle mData requests from Mobile Commons.
