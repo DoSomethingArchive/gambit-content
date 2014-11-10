@@ -102,6 +102,12 @@ describe('ds-routing tests', function() {
    * start-campaign-gate tests
    */
   describe('Call to startCampaignGate with mdata_id=11493', function() {
+    before(function() {
+      process.env.MOBILECOMMONS_COMPANY_KEY = 'MOBILECOMMONS_COMPANY_KEY';
+      process.env.MOBILECOMMONS_AUTH_EMAIL = 'MOBILECOMMONS_AUTH_EMAIL';
+      process.env.MOBILECOMMONS_AUTH_PASS = 'MOBILECOMMONS_AUTH_PASS';
+    });
+
     it('should optin to 170139, optout of 128005', function(done) {
       var test = {
         body: {
@@ -143,6 +149,12 @@ describe('ds-routing tests', function() {
       });
 
       mcRouting.startCampaignGate(test, response);
+    });
+
+    after(function() {
+      process.env.MOBILECOMMONS_COMPANY_KEY = undefined;
+      process.env.MOBILECOMMONS_AUTH_EMAIL = undefined;
+      process.env.MOBILECOMMONS_AUTH_PASS = undefined;
     });
   });
 
