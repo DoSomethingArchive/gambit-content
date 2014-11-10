@@ -396,9 +396,7 @@ describe('Science Sleuth game being played:', function() {
 
     describe('Beta2 answers A at Level 6-1A', function() {
       testHelper.userActionTest().withPhone(betaPhone2).withUserInput('A').expectNextLevelName('END-LEVEL6').expectNextLevelMessage(172243).expectEndStageName('END-LEVEL6-GROUP').expectEndStageMessage(172253).expectEndGameGroupMessageFormat('rankings-within-group-based').expectEndGameGroupMessage(172281).expectEndGameIndividualMessageFormat('group-success-failure-based').expectEndGameIndividualMessage(172297).exec();
-
     });
-
   })
   
   after(function() {

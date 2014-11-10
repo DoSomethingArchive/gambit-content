@@ -308,7 +308,7 @@ exports.userActionTest = function() {
       // If supplied the arguments, test for the end-game message unique to 
       // individual users. 
       if (this.endGameIndivMessageFormat && this.endGameIndivMessage) {
-        it('it should send the endgame unique individual message with the format of ' + this.endGameIndivMessageFormat + ' (optin path: ' + this.endGameIndivMessage + ') to all players.', function(done) {
+        it('it should send the endgame unique individual message with the format of ' + this.endGameIndivMessageFormat + ' (optin path: ' + this.endGameIndivMessage + ') to all players, since we\'ve configured tests to have all players produce the same input.', function(done) {
           this.gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
             var playersCurrentStatus = doc.players_current_status
             var storyResults = doc.story_results;
