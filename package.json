@@ -7,6 +7,7 @@
     "coveralls": "^2.11.2",
     "express": "3.x",
     "html-entities": "^1.1.1",
+    "istanbul": "^0.3.2",
     "mobilecommons": ">=0.0.4",
     "mocha": "1.20.x",
     "mocha-lcov-reporter": "0.0.1",

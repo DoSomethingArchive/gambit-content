@@ -10,6 +10,7 @@ build:
     # Builds code coverage.
     - script: 
         name: set coveralls token
+        # Setting environmental variables. Wercker- and Git- related environmental variables are propagated by Git and Wrcker during the build process, and aren't set by us. 
         code: |
             echo service_name: wercker > .coveralls.yml
             echo repo_token: $COVERALLS_TOKEN >> .coveralls.yml
@@ -19,8 +20,11 @@ build:
             export COVERALLS_SERVICE_JOB_ID=$WERCKER_BUILD_ID
             export COVERALLS_GIT_BRANCH=$WERCKER_GIT_BRANCH
     - script: 
-        name: run Mocha tests send Istanbul coverage reports to coveralls
-        code: NODE_ENV=test istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage
+        name: run Mocha tests and then send Istanbul coverage reports to coveralls
+        code: |
+            NODE_ENV=test ./node_modules/.bin/istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec
+            cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
+            rm -rf ./coverage
 # Delivers passed build to target.
 deploy:
   steps:
