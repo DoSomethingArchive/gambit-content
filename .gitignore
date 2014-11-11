@@ -5,3 +5,7 @@ node_modules
 
 # newrelic
 newrelic_agent.log
+
+# test coverage
+.coveralls.yml
+coverage
