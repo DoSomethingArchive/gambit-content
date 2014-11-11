@@ -1,10 +1,27 @@
+# A virtual machine, operating system and set of packages installed on a stack.
 box: wercker/nodejs
+# A box that runs a database, messaging queue or other software service. 
 services:
     - wercker/mongodb
+# Series of steps in wercker pipeline. If successful, build produces a deployable package.
 build:
   steps:
     - npm-install
-    - npm-test
+    # Builds code coverage.
+    - script: 
+        name: set coveralls token
+        code: |
+            echo service_name: wercker > .coveralls.yml
+            echo repo_token: $COVERALLS_TOKEN >> .coveralls.yml
+            export COVERALLS_SERVICE_NAME=wercker
+            export COVERALLS_REPO_TOKEN=$COVERALLS_TOKEN
+            export COVERALLS_GIT_COMMIT=$WERCKER_GIT_COMMIT
+            export COVERALLS_SERVICE_JOB_ID=$WERCKER_BUILD_ID
+            export COVERALLS_GIT_BRANCH=$WERCKER_GIT_BRANCH
+    - script: 
+        name: run Mocha tests send Istanbul coverage reports to coveralls
+        code: NODE_ENV=test istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage
+# Delivers passed build to target.
 deploy:
   steps:
     #- heroku-deploy:

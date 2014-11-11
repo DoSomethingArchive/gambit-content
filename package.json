@@ -4,10 +4,12 @@
   "description": "Interface for interacting with DoSomething.org SMS experiences.",
   "dependencies": {
     "connect-multiparty": "1.1.0",
+    "coveralls": "^2.11.2",
     "express": "3.x",
     "html-entities": "^1.1.1",
     "mobilecommons": ">=0.0.4",
     "mocha": "1.20.x",
+    "mocha-lcov-reporter": "0.0.1",
     "mongoose": "~3.8.8",
     "mysql": "2.1.x",
     "newrelic": "1.11.x",
