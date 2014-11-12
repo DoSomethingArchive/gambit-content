@@ -33,8 +33,6 @@ var SGCompetitiveStoryController = function(app) {
   this.gameModel = require('../models/sgCompetitiveStory')(app);
   this.userModel = require('../models/sgUser')(app);
   this.gameConfig = app.get('competitive-stories');
-  // comment out above, comment in below to enable testing with test-endgame-message.json
-  // this.gameConfig = app.get('test-endgame-message');
 };
 
 /**
@@ -61,8 +59,12 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   }
 
   // Allows us to use the .findUserGame(obj, onUserGameFound) 
-  // helper function function. A bit hacky, mark for refactoring.
-  this.request = { body : {} };
+  // helper function function.
+  
+  this.request = request;
+  if (!this.request.body) {
+    this.request.body = {}
+  }
   this.request.body.phone = request.body.alpha_mobile;
 
   // Story ID could be in either POST or GET param.
@@ -205,10 +207,14 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
       betaOptInArray[betaOptInArray.length] = value.phone;
     })
 
-    // We opt users into these initial opt in paths only if the game type is NOT solo. 
-    if (self.createdGameDoc.game_type !== 'solo') {
-      optinGroup(self.createdGameDoc.alpha_phone, self.gameConfig[self.storyId.toString()].alpha_wait_oip, betaOptInArray, self.gameConfig[self.storyId.toString()].beta_join_ask_oip)
+    // If we're A/B testing, we opt users into the 'beta_wait_oip' here for one-touch beta opt-ins. 
+    if (self.request.query.abtest == 'true') {
+      optinGroup(self.createdGameDoc.alpha_phone, self.gameConfig[self.storyId.toString()].alpha_wait_oip, betaOptInArray, self.gameConfig[self.storyId.toString()].beta_wait_oip)
     }
+    // We opt users into these initial opt in paths only if the game type is NOT solo. 
+    else if (self.createdGameDoc.game_type !== 'solo') {
+      optinGroup(self.createdGameDoc.alpha_phone, self.gameConfig[self.storyId.toString()].alpha_wait_oip, betaOptInArray, self.gameConfig[self.storyId.toString()].beta_join_ask_oip)
+    } 
 
   },
   promiseErrorCallback('Unable to end game, either from logic based on player exit, *OR* through logic creating or updating new player docs within .createGame() function.'));
@@ -330,13 +336,14 @@ function evaluateCondition(condition, phone, gameDoc, checkResultType) {
 SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response) {
   if (typeof request.body === 'undefined'
       || typeof request.body.phone === 'undefined'
-      || typeof request.body.args === 'undefined') {
+      || (typeof request.body.args === 'undefined' && typeof request.query.args === 'undefined')) {
     response.send(406, '`phone` and `args` parameters required.');
     return false;
   }
 
   // If beta doesn't respond with 'Y', then just ignore
-  if (!messageHelper.isYesResponse(messageHelper.getFirstWord(request.body.args))) {
+  var args = request.body.args || request.query.args;
+  if (!messageHelper.isYesResponse(messageHelper.getFirstWord(args))) {
     response.send();
   }
   else {
