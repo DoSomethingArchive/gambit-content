@@ -207,14 +207,10 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
       betaOptInArray[betaOptInArray.length] = value.phone;
     })
 
-    // If we're A/B testing, we opt users into the 'beta_wait_oip' here for one-touch beta opt-ins. 
-    if (self.request.query.abtest == 'true') {
-      optinGroup(self.createdGameDoc.alpha_phone, self.gameConfig[self.storyId.toString()].alpha_wait_oip, betaOptInArray, self.gameConfig[self.storyId.toString()].beta_wait_oip)
-    }
     // We opt users into these initial opt in paths only if the game type is NOT solo. 
-    else if (self.createdGameDoc.game_type !== 'solo') {
+    if (self.createdGameDoc.game_type !== 'solo') {
       optinGroup(self.createdGameDoc.alpha_phone, self.gameConfig[self.storyId.toString()].alpha_wait_oip, betaOptInArray, self.gameConfig[self.storyId.toString()].beta_join_ask_oip)
-    } 
+    }
 
   },
   promiseErrorCallback('Unable to end game, either from logic based on player exit, *OR* through logic creating or updating new player docs within .createGame() function.'));
@@ -336,13 +332,23 @@ function evaluateCondition(condition, phone, gameDoc, checkResultType) {
 SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response) {
   if (typeof request.body === 'undefined'
       || typeof request.body.phone === 'undefined'
+      // Checking request.query.args because of the one-touch beta opt in mdata: http://goo.gl/Bh7Mxi
       || (typeof request.body.args === 'undefined' && typeof request.query.args === 'undefined')) {
     response.send(406, '`phone` and `args` parameters required.');
     return false;
   }
 
-  // If beta doesn't respond with 'Y', then just ignore
-  var args = request.body.args || request.query.args;
+  // If beta doesn't respond with 'Y', then just ignore. Checks first for .args param on request.query.
+
+  var args;
+  // Specifying both in case request.query doesn't exist. 
+  if (request.query && request.query.args) {
+    args = request.query.args; 
+  }
+  else if (request.body.args) {
+    args = request.body.args;
+  }
+
   if (!messageHelper.isYesResponse(messageHelper.getFirstWord(args))) {
     response.send();
   }
