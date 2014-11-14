@@ -361,3 +361,7 @@ exports.userActionTest = function() {
     }
   }
 }
+
+exports.checkGameEndedProperty = function() {
+  
+}
