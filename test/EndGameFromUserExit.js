@@ -7,7 +7,7 @@ var assert = require('assert')
   ;
 
 describe('Testing end game from user exit by creating two Science Sleuth games', function() {
-  var alphaName1 = 'alpha2';
+  var alphaName1 = 'alpha1';
   var alphaPhone1 = '5555550200';
   var betaName0 = 'friend0';
   var betaPhone0 = '5555550201';
@@ -252,69 +252,52 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
       };
     })
 
-    it('should send messages to all three players that Game 1 has ended.', function(done) {
+    it('should emit all game doc events, and send messages to all three players--Alpha1, Beta0, Beta1--that the game has ended.', function(done) {
+      var eventCount = 0;
+      var expectedEvents = 9;
 
-      var numberOfPlayersWhoseGameHasBeenEnded = 3;
+      // Allows access to .gameController below. 
+      var self = this;
 
-      var checkDone = function() {
-        numberOfPlayersWhoseGameHasBeenEnded --;
-        if (numberOfPlayersWhoseGameHasBeenEnded === 0) {
-          done()
+      var onEventReceived = function() {
+        eventCount++;
+        if (eventCount == expectedEvents) {
+          done();
+
+          emitter.removeAllListeners('mobilecommons-optin-test')
+          emitter.removeAllListeners('alpha-user-created');
+          emitter.removeAllListeners('beta-user-created');
+          emitter.removeAllListeners('game-mapping-created');
+          emitter.removeAllListeners('game-created');
         }
-      }
+      };
 
+      // 1 expected alpha-user-created event
+      emitter.on('alpha-user-created', onEventReceived);
+      // 3 expected beta-user-created events
+      emitter.on('beta-user-created', onEventReceived);
+      // 1 expected game-mapping-created event
+      emitter.on('game-mapping-created', function(doc) {
+        gameMappingId = doc._id;
+        onEventReceived();
+      });
+      // 1 expected game-created event
+      emitter.on('game-created', function(doc) {
+        gameId = doc._id;
+        onEventReceived();
+      });
+
+      // 3 users (different from the ones just created) should be notified that Game 1 has ended. 
       emitter.on('mobilecommons-optin-test', function(payload) {
-        if (payload.opt_in_path == this.gameController.gameConfig[storyId].game_ended_from_exit_oip) {
-          checkDone();
+        console.log('****', payload)
+        if (payload.form.opt_in_path == self.gameController.gameConfig[storyId].game_ended_from_exit_oip) {
+          onEventReceived();
         }
       })
 
-      emitter.on('game-created', function(doc) {
-        gameId = doc._id;
-      });
-
-      this.gameController.createGame(request, response);
-      done()
+      // With event listeners setup, can now create the game.
+      assert.equal(true, this.gameController.createGame(request, response));
     })
-
-    // it('should emit all game doc events', function(done) {
-    //   var eventCount = 0;
-    //   var expectedEvents = 6;
-
-    //   var onEventReceived = function() {
-    //     eventCount++;
-    //     if (eventCount == expectedEvents) {
-    //       done();
-
-    //       emitter.removeAllListeners('alpha-user-created');
-    //       emitter.removeAllListeners('beta-user-created');
-    //       emitter.removeAllListeners('game-mapping-created');
-    //       emitter.removeAllListeners('game-created');
-    //     }
-    //   };
-
-    //   // 1 expected alpha-user-created event
-    //   emitter.on('alpha-user-created', onEventReceived);
-    //   // 3 expected beta-user-created events
-    //   emitter.on('beta-user-created', onEventReceived);
-    //   // 1 expected game-mapping-created event
-    //   emitter.on('game-mapping-created', function(doc) {
-    //     gameMappingId = doc._id;
-    //     onEventReceived();
-    //   });
-    //   // 1 expected game-created event
-      // emitter.on('game-created', function(doc) {
-      //   gameId = doc._id;
-      //   onEventReceived();
-      // });
-
-    //   it('should send a message to Alpha1 that Game 1 has ended.', function(doc) {
-    //     emitter.on()
-    //   })
-
-    //   // With event listeners setup, can now create the game.
-    //   assert.equal(true, this.gameController.createGame(request, response));
-    // })
 
     describe('When Game 2 is created--inviting Beta 2 from Game 1 to Game 2--all necessary state changes occur.', function() {
       it('Game 1 should now have a game_ended property of true.', function(done) {

@@ -1334,7 +1334,7 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
         );
 
         // Message them that the game has ended.
-        optinSingleUser(players[i], self.gameConfig[gameDoc.story_id].game_ended_from_exit_oip);
+        optinSingleUser(players[playerIdx], self.gameConfig[gameDoc.story_id].game_ended_from_exit_oip);
       }
     }
 
