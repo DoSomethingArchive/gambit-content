@@ -7,8 +7,8 @@ var assert = require('assert')
   ;
 
 describe('Testing end game from user exit by creating two Science Sleuth games', function() {
-  var alpha1Name = 'alpha2';
-  var alpha1Phone = '5555550200';
+  var alphaName1 = 'alpha2';
+  var alphaPhone1 = '5555550200';
   var betaName0 = 'friend0';
   var betaPhone0 = '5555550201';
   var betaName1 = 'friend1';
@@ -17,8 +17,8 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
   var betaPhone2 = '5555550203';
   var betaName2 = 'friend2';
 
-  var alpha2Name = 'alpha2';
-  var alpha2Phone = '5555550204';
+  var alphaName2 = 'alpha2';
+  var alphaPhone2 = '5555550204';
   var betaName3 = 'friend3';
   var betaPhone3 = '5555550205';
   var betaName4 = 'friend4';
@@ -66,8 +66,8 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
       request = {
         body: {
           story_id: storyId,
-          alpha_first_name: alpha1Name,
-          alpha_mobile: alpha1Phone,
+          alpha_first_name: alphaName1,
+          alpha_mobile: alphaPhone1,
           beta_mobile_0: betaPhone0,
           beta_mobile_1: betaPhone1,
           beta_mobile_2: betaPhone2
@@ -129,7 +129,7 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
             for (var i = 0; i < doc.players_current_status.length; i++) {
               if (doc.players_current_status[i].opt_in_path == startOip) {
                 var phone = doc.players_current_status[i].phone;
-                var aPhone = messageHelper.getNormalizedPhone(alpha1Phone);
+                var aPhone = messageHelper.getNormalizedPhone(alphaPhone1);
                 var b0Phone = messageHelper.getNormalizedPhone(betaPhone0);
                 var b1Phone = messageHelper.getNormalizedPhone(betaPhone1);
                 var b2Phone = messageHelper.getNormalizedPhone(betaPhone2);
@@ -157,7 +157,7 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
 
     // Level 1. 
     describe('Alpha answers A at Level 1-0', function() {
-      testHelper.userActionTest().withPhone(alpha1Phone)
+      testHelper.userActionTest().withPhone(alphaPhone1)
         .withUserInput('A')
         .expectNextLevelName('11A')
         .expectNextLevelMessage(172149)
@@ -165,7 +165,7 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
     });
 
     describe('Alpha answers A at Level 1-1A', function() {
-      testHelper.userActionTest().withPhone(alpha1Phone)
+      testHelper.userActionTest().withPhone(alphaPhone1)
         .withUserInput('A')
         .expectNextLevelName('END-LEVEL1').expectNextLevelMessage(172153).exec();
     });
@@ -228,6 +228,9 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
           if (doc.game_ended == false) {
             done();
           }
+          // Assigning Game 1's ID to a new variable, which allows the ID of Game 2
+          // now to be assigned to gameId. A bit hacky, mark for refactoring.
+          gameOneId = gameId;
         })
       })
     })
@@ -240,8 +243,8 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
       request = {
         body: {
           story_id: storyId,
-          alpha_first_name: alpha2Name,
-          alpha_mobile: alpha2Phone,
+          alpha_first_name: alphaName2,
+          alpha_mobile: alphaPhone2,
           beta_mobile_0: betaPhone2,
           beta_mobile_1: betaPhone3,
           beta_mobile_2: betaPhone4
@@ -280,8 +283,89 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
         onEventReceived();
       });
 
+      it('should send a message to Alpha1 that Game 1 has ended.')
+
       // With event listeners setup, can now create the game.
       assert.equal(true, this.gameController.createGame(request, response));
+    })
+
+    describe('When Game 2 is created--inviting Beta 2 from Game 1 to Game 2--all necessary state changes occur.', function() {
+      it('Game 1 should now have a game_ended property of true.', function(done) {
+        this.gameController.gameModel.findOne({_id: gameOneId}, function(err, doc) {
+          if (doc.game_ended == true) {
+            done();
+          }
+          else {
+            assert(false);
+          }
+        })
+      })
+
+      it('Alpha1 should no longer have a `current_game_id` property.', function(done) {
+        this.gameController.userModel.findOne({phone: messageHelper.getNormalizedPhone(alphaPhone1)}, function(err, doc) {
+          if (doc && (!doc.current_game_id)) {
+            done()
+          }
+          else {
+            assert(false);
+          }
+        })
+      })
+
+      it('Beta0 should no longer have a `current_game_id` property.', function(done) {
+        this.gameController.userModel.findOne({phone: messageHelper.getNormalizedPhone(betaPhone0)}, function(err, doc) {
+          if (doc && (!doc.current_game_id)) {
+            done()
+          }
+          else {
+            assert(false);
+          }
+        })
+      })
+
+      it('Beta1 should no longer have a `current_game_id` property.', function(done) {
+        this.gameController.userModel.findOne({phone: messageHelper.getNormalizedPhone(betaPhone1)}, function(err, doc) {
+          if (doc && (!doc.current_game_id)) {
+            done()
+          }
+          else {
+            assert(false);
+          }
+        })
+      })
+
+      it('Beta2 (the user invited out of Game 1) should now have a `current_game_id` property referencing Game 2\'s ObjectId value.', function(done) {
+        this.gameController.userModel.findOne({phone: messageHelper.getNormalizedPhone(betaPhone2)}, function(err, doc) {
+          if (doc && doc.current_game_id.equals(gameId)) {
+            done()
+          }
+          else {
+            assert(false);
+          }
+        })
+      })
+
+      it('Beta3 should now have a `current_game_id` property referencing Game 2\'s ObjectId value.', function(done) {
+        this.gameController.userModel.findOne({phone: messageHelper.getNormalizedPhone(betaPhone3)}, function(err, doc) {
+          if (doc && doc.current_game_id.equals(gameId)) {
+            done()
+          }
+          else {
+            assert(false);
+          }
+        })
+      })
+
+      it('Beta4 should now have a `current_game_id` property referencing Game 2\'s ObjectId value.', function(done) {
+        this.gameController.userModel.findOne({phone: messageHelper.getNormalizedPhone(betaPhone4)}, function(err, doc) {
+          if (doc && doc.current_game_id.equals(gameId)) {
+            done()
+          }
+          else {
+            assert(false);
+          }
+        })
+      })
     })
 
     describe('Beta 2 joining the game', function() {
@@ -303,7 +387,7 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
             for (var i = 0; i < doc.players_current_status.length; i++) {
               if (doc.players_current_status[i].opt_in_path == startOip) {
                 var phone = doc.players_current_status[i].phone;
-                var aPhone = messageHelper.getNormalizedPhone(alpha2Phone);
+                var aPhone = messageHelper.getNormalizedPhone(alphaPhone2);
                 var b0Phone = messageHelper.getNormalizedPhone(betaPhone2);
                 var b1Phone = messageHelper.getNormalizedPhone(betaPhone3);
                 var b2Phone = messageHelper.getNormalizedPhone(betaPhone4);
@@ -335,7 +419,7 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
 
     // Level 1. 
     describe('Alpha2 answers A at Level 1-0', function() {
-      testHelper.userActionTest().withPhone(alpha2Phone)
+      testHelper.userActionTest().withPhone(alphaPhone2)
         .withUserInput('A')
         .expectNextLevelName('11A')
         .expectNextLevelMessage(172149)
@@ -343,7 +427,7 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
     });
 
     describe('Alpha2 answers A at Level 1-1A', function() {
-      testHelper.userActionTest().withPhone(alpha2Phone)
+      testHelper.userActionTest().withPhone(alphaPhone2)
         .withUserInput('A')
         .expectNextLevelName('END-LEVEL1').expectNextLevelMessage(172153).exec();
     });
@@ -399,21 +483,11 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
         .expectNextStageMessage(172165)
         .exec();
     });
-
-    describe('When Game 2 is created, Game 1\'s game_ended property is true.', function() {
-      it('Game 1 should now have a game_ended property of true.', function(done) {
-        this.gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
-          if (doc.game_ended == false) {
-            done();
-          }
-        })
-      })
-    })
   })
   
   after(function() {
     // Remove all test documents
-    this.gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(alpha1Phone)}, function() {});
+    this.gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(alphaPhone1)}, function() {});
     this.gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone0)}, function() {});
     this.gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone1)}, function() {});
     this.gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone2)}, function() {});
