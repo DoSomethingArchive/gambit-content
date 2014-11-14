@@ -3,15 +3,14 @@
  *
  */
 
-var request = require('request')
+var RequestRetry = require('node-request-retry')
   , logger = require('../app/lib/logger')
   , emitter = require('../app/eventEmitter')
   ;
 
+
 // Modifying the default Request library's request object.
-var modifiedRequest = request.defaults({
-  timeout: 120000
-});
+RequestRetry.setDefaults({timeout: 120000});
 
 /**
 * Mobile Commons profile_update API. Can be used to subscribe the user to an
@@ -57,19 +56,23 @@ exports.profile_update = function(phone, optInPathId, customFields) {
   }
 
   var trace = new Error().stack;
-  modifiedRequest.post(url, postData, function(error, response, body) {
+  var callback = function(error, response, body) {
     if (error) {
-      logger.error('Failed mobilecommons.profile_update for user phone: ' 
+      logger.error('Failed mobilecommons.profile_update for user phone: '
         + phone + ' | form data: ' + JSON.stringify(postData.form) 
         + ' | error: ' + error + ' | stack: ' + trace);
     }
     else if (response && response.statusCode != 200) {
-      logger.error('Failed mobilecommons.profile_update for user phone: ' 
-        + phone + ' | form data: ' + JSON.stringify(postData.form) 
+      logger.error('Failed mobilecommons.profile_update for user phone: '
+        + phone + ' | form data: ' + JSON.stringify(postData.form)
         + '| with code: ' + response.statusCode 
         + ' | body: ' + body + ' | stack: ' + trace);
     }
-  });
+  };
+
+  var requestRetry = new RequestRetry();
+  requestRetry.setRetryCodes([400, 408, 500]);
+  requestRetry.post(url, postData, callback);
 };
 
 /**
@@ -82,9 +85,12 @@ exports.optin = function(args) {
   var betaPhone = args.betaPhone || null;
   var alphaOptin = args.alphaOptin || 0;
   var betaOptin = args.betaOptin || 0;
+  var callback;
+  var requestRetry = new RequestRetry();
+  requestRetry.setRetryCodes([400, 408, 500]);
 
   // Need at least these in order to continue
-  if (request == null || alphaPhone == null || alphaOptin <= 0)
+  if (alphaPhone == null || alphaOptin <= 0)
     return;
 
   // If we have beta details, then create form with that beta info
@@ -114,17 +120,17 @@ exports.optin = function(args) {
     }
 
     var trace = new Error().stack;
-    modifiedRequest.post(url, payload, function(error, response, body) {
+    callback = function(error, response, body) {
       if (error) {
-        logger.error('Failed mobilecommons.optin for user: ' + alphaPhone 
-          + ' | with request payload: ' + JSON.stringify(payload) 
+        logger.error('Failed mobilecommons.optin for user: ' + alphaPhone
+          + ' | with request payload: ' + JSON.stringify(payload)
           + ' | with error: ' + JSON.stringify(error)
           + ' | stack: ' + trace);
       }
       else if (response) {
         if (response.statusCode != 200) {
-          logger.error('Failed mobilecommons.optin for user: ' + alphaPhone 
-            + ' | with request payload: ' + JSON.stringify(payload) 
+          logger.error('Failed mobilecommons.optin for user: ' + alphaPhone
+            + ' | with request payload: ' + JSON.stringify(payload)
             + ' | with code: ' + response.statusCode 
             + ' | body: ' + body + ' | stack: ' + trace);
         }
@@ -132,7 +138,9 @@ exports.optin = function(args) {
           logger.info('Success mobilecommons.optin: ', alphaOptin);
         }
       }
-    });
+    };
+
+    requestRetry.post(url, payload, callback);
   }
   // Otherwise, just execute the opt in for the alpha user
   else {
@@ -151,26 +159,27 @@ exports.optin = function(args) {
     }
 
     var trace = new Error().stack;
-    modifiedRequest.post(url, payload, function(error, response, body) {
-        if (error) {
-          logger.error('Failed mobilecommons.optin for user: ' + alphaPhone 
-            + ' | with request payload: ' + JSON.stringify(payload) 
-            + ' | with error: ' + JSON.stringify(error)
-            + ' | stack: ' + trace);
+    callback = function(error, response, body) {
+      if (error) {
+        logger.error('Failed mobilecommons.optin for user: ' + alphaPhone
+          + ' | with request payload: ' + JSON.stringify(payload)
+          + ' | with error: ' + JSON.stringify(error)
+          + ' | stack: ' + trace);
+      }
+      else if (response) {
+        if (response.statusCode != 200) {
+          logger.error('Failed mobilecommons.optin for user: ' + alphaPhone
+            + ' | with request payload: ' + JSON.stringify(payload)
+            + ' | with code: ' + response.statusCode + ' | body: '
+            + body + ' | stack: ' + trace);
         }
-        else if (response) {
-          if (response.statusCode != 200) {
-            logger.error('Failed mobilecommons.optin for user: ' + alphaPhone 
-              + ' | with request payload: ' + JSON.stringify(payload) 
-              + ' | with code: ' + response.statusCode + ' | body: ' 
-              + body + ' | stack: ' + trace);
-          }
-          else {
-            logger.info('Success mobilecommons.optin into: ', alphaOptin);
-          }
+        else {
+          logger.info('Success mobilecommons.optin into: ', alphaOptin);
         }
       }
-    );
+    };
+
+    requestRetry.post(url, payload, callback);
   }
 };
 
@@ -212,26 +221,28 @@ exports.optout = function(args) {
   }
 
   var trace = new Error().stack;
-  // Send opt-out request
-  modifiedRequest.post(url, payload, function(error, response, body) {
-      if (error) {
-        logger.error('Failed mobilecommons.optout for user: ' + phone 
-          + ' | with request payload: ' + JSON.stringify(payload.form) 
-          + ' | with error: ' + JSON.stringify(error)
-          + ' | stack: ' + trace);
+  var callback = function(error, response, body) {
+    if (error) {
+      logger.error('Failed mobilecommons.optout for user: ' + phone
+        + ' | with request payload: ' + JSON.stringify(payload.form)
+        + ' | with error: ' + JSON.stringify(error)
+        + ' | stack: ' + trace);
+    }
+    else if (response) {
+      if (response.statusCode != 200) {
+        logger.error('Failed mobilecommons.optout for user: ' + phone
+          + ' | with request payload: ' + JSON.stringify(payload.form)
+          + ' | with code: ' + response.statusCode
+          + ' | body: ' + body + ' | stack: ' + trace);
       }
-      else if (response) {
-        if (response.statusCode != 200) {
-          logger.error('Failed mobilecommons.optout for user: ' + phone 
-            + ' | with request payload: ' + JSON.stringify(payload.form) 
-            + ' | with code: ' + response.statusCode 
-            + ' | body: ' + body + ' | stack: ' + trace);
-        }
-        else {
-          logger.info('Success mobilecommons.optout from: ', campaignId);
-        }
+      else {
+        logger.info('Success mobilecommons.optout from: ', campaignId);
       }
     }
-  );
+  };
+
+  var requestRetry = new RequestRetry();
+  requestRetry.setRetryCodes([400, 408, 500]);
+  requestRetry.post(url, payload, callback);
 };
 
