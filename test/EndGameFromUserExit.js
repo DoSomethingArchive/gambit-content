@@ -35,18 +35,19 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
 
     // Dummy Express response object.
     response = {
-      send: function(code, message) {
-        if (typeof code === 'undefined') {
-          code = 200;
-        }
+      send: function(message) {
         if (typeof message === 'undefined') {
-          if (code == 200)
-            message = 'OK';
-          else
-            message = '';
+          message = '';
         }
+        console.log('Response message: ' + message);
+      },
 
-        console.log('Response: ' + code + ' - ' + message);
+      sendStatus: function(code) {
+        console.log('Response code: ' + code);
+      },
+
+      status: function(code) {
+        console.log('Response code: ' + code);
       }
     };
   })

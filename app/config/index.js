@@ -3,6 +3,8 @@ var path = require('path')
   , root_dirname = path.dirname(path.dirname(__dirname))
   , mongoose = require('mongoose')
   , stathat = require('stathat')
+  , errorHandler = require('errorhandler')
+  , bodyParser = require('body-parser')
   ;
 
 module.exports = function(app, express) {
@@ -11,17 +13,14 @@ module.exports = function(app, express) {
   app.set('port', process.env.PORT || 4711);
 
   // Parses request body and populates request.body
-  app.use(express.json());
-  app.use(express.urlencoded());
+  app.use(bodyParser.json());
+  app.use(bodyParser.urlencoded({extended: true}));
 
   // For multi-part parsing
   app.use(require('connect-multiparty')());
 
-  // Perform route lookup based on url and HTTP method
-  app.use(app.router);
-
   // Show all errors in development
-  app.use(express.errorHandler({dumpException: true, showStack: true}));
+  app.use(errorHandler());
 
   // Add static path
   app.use(express.static(path.join(root_dirname, 'public')));

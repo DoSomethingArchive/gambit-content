@@ -36,7 +36,7 @@ function shortenLink(longURL, callback) {
       catch (e) {
         // JSON.parse will throw a SyntaxError exception if data is not valid JSON
         logger.error('Invalid JSON data received from Bitly API.');
-        res.send(500, 'Invalid JSON data received from Bitly API.');
+        response.status(500).send('Invalid JSON data received from Bitly API.');
         return;
       }
     }

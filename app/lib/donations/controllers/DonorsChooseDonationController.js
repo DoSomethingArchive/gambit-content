@@ -65,7 +65,7 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
   if (typeof request.query.id === 'undefined'
       || typeof request.body.mobile === 'undefined'
       || typeof request.body.location === 'undefined') {
-    response.send(406, 'Missing required params.');
+    response.status(406).send('Missing required params.');
     return;
   }
 
@@ -330,7 +330,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
             })
           } else {
             logger.warn('Donation to proposal ' + proposalId + ' for user mobile: ' 
-              + donorInfoObject.donorPhoneNumber + 'was NOT successful. Body:' + jsonBody);
+              + donorInfoObject.donorPhoneNumber + ' was NOT successful. Body:' + jsonBody);
             sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
           }
         }
@@ -403,7 +403,7 @@ DonorsChooseDonationController.prototype.retrieveLocation = function(request, re
   if (typeof request.query.id === 'undefined'
       || typeof request.body.phone === 'undefined'
       || typeof request.body.args === 'undefined') {
-    response.send(406, 'Missing required params.');
+    response.status(406).send('Missing required params.');
     return;
   }
 

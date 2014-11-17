@@ -19,7 +19,7 @@ module.exports = MCRouting;
  */
 MCRouting.prototype.yesNoGateway = function(request, response) {
   if (request.body.args === undefined || request.body.opt_in_path_id === undefined) {
-    response.send(204);
+    response.sendStatus(204);
     return;
   }
 
@@ -39,7 +39,7 @@ MCRouting.prototype.yesNoGateway = function(request, response) {
 
   // If no path can be found, early out.
   if (path === undefined) {
-    response.send(204);
+    response.sendStatus(204);
     return;
   }
 
@@ -71,7 +71,7 @@ MCRouting.prototype.yesNoGateway = function(request, response) {
  */
 MCRouting.prototype.startCampaignGate = function(request, response) {
   if (typeof(request.body.mdata_id) === 'undefined') {
-    response.send(204);
+    response.sendStatus(204);
     return;
   }
 
@@ -99,7 +99,7 @@ MCRouting.prototype.startCampaignGate = function(request, response) {
   }
   else {
     // Config for that mData is not set.
-    response.send(501);
+    response.sendStatus(501);
   }
 };
 
@@ -109,7 +109,7 @@ MCRouting.prototype.startCampaignGate = function(request, response) {
 MCRouting.prototype.handleStartCampaignResponse = function(request, response) {
   if (typeof(request.body.opt_in_path_id) === 'undefined'
       || typeof(request.body.args) === 'undefined') {
-    response.send(204);
+    response.sendStatus(204);
     return;
   }
 
@@ -124,7 +124,7 @@ MCRouting.prototype.handleStartCampaignResponse = function(request, response) {
       || typeof(this.campaign_start_config[optinPathId].plan) === 'undefined'
       || typeof(this.campaign_start_config[optinPathId].do) === 'undefined'
       || typeof(this.campaign_start_config[optinPathId].prove) === 'undefined') {
-    response.send(501);
+    response.sendStatus(501);
     return;
   }
 

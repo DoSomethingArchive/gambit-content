@@ -31,7 +31,7 @@ Tips.prototype.deliverTips = function(request, response, mdataOverride) {
   if (typeof(request.body.mdata_id) === 'undefined' && typeof(mdataOverride) === 'undefined') {
     this.app.stathatReport('Count', 'mobilecommons: tips request: error - missing mData ID', 1);
 
-    response.send(204);
+    response.sendStatus(204);
     return;
   }
 
@@ -49,7 +49,7 @@ Tips.prototype.deliverTips = function(request, response, mdataOverride) {
       || typeof(tipConfig.name) === 'undefined'
       || typeof(tipConfig.optins) === 'undefined') {
     this.app.stathatReport('Count', 'mobilecommons: tips request: error - config not set', 1);
-    response.send(501);
+    response.sendStatus(501);
     return;
   }
 
