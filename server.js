@@ -17,7 +17,7 @@ global.appRoot = path.resolve(__dirname);
 var app = express();
 
 var config = require('./app/config')(app, express);
-var router = require('./app/router.js')(app);
+var router = require('./app/routes')(app, express);
 
 // Start server
 app.listen(app.get('port'), function() {
