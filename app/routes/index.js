@@ -1,17 +1,8 @@
-// var SGCreateFromMobileController = require('../controllers/SGCreateFromMobileController')
-//   , SGCollaborativeStoryController = require('../controllers/SGCollaborativeStoryController')
-//   , SGCompetitiveStoryController = require('../controllers/SGCompetitiveStoryController')
-//   , SGMostLikelyToController = require('../controllers/SGMostLikelyToController')
-//   , SGSoloController = require('../controllers/SGSoloController')
-//   ;
-
-var multiplayerGameRouter = require('./smsMultiplayerGame')
-
 module.exports = function(app, express) {
 
+  var multiplayerGameRouter = require('./smsMultiplayerGame')
+
   var router = express.Router(); 
-
-
 
   router.use('/sms-multiplayer-game', multiplayerGameRouter)
 

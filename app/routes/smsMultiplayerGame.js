@@ -1,5 +1,5 @@
 var express = require('express');
-var router = 
+var router = express.router();
 
 var SGCreateFromMobileController = require('../controllers/SGCreateFromMobileController')
   , SGCollaborativeStoryController = require('../controllers/SGCollaborativeStoryController')
@@ -10,9 +10,9 @@ var SGCreateFromMobileController = require('../controllers/SGCreateFromMobileCon
 
 /**
  * Guides users through creating an SMS multiplayer game from mobile.
- * Creates a game by re-POSTing to the /sms-multiplayer-game/create route below.
+ * Creates a game by re-POSTing to the /create route below. 
  */
-app.post('/sms-multiplayer-game/mobile-create', function(request, response) {
+router.post('/mobile-create', function(request, response) {
   var host = request.get('host'); // Retrieving hostname; Express parsing request.
   var controller = new SGCreateFromMobileController(app, host);
   controller.processRequest(request, response);
@@ -21,9 +21,9 @@ app.post('/sms-multiplayer-game/mobile-create', function(request, response) {
 /**
  * Creates a new one-player solo SMS game. 
  * Also creates a game by re-POSTing to the 
- * /sms-multiplayer-game/create route below. 
+ * /create route below. 
  */
-app.post('/sms-multiplayer-game/solo', function(request, response) {
+router.post('/solo', function(request, response) {
   var host = request.get('host');
   var controller = new SGSoloController(app, host);
   controller.processRequest(request, response);
@@ -62,7 +62,7 @@ function getGameController(request) {
 /**
  * Create a team SMS game.
  */
-app.post('/sms-multiplayer-game/create', function(request, response) {
+router.post('/create', function(request, response) {
   var gameController = getGameController(request);
   if (gameController == null) {
     response.status(406).send('Invalid `type` parameter.');
@@ -75,7 +75,7 @@ app.post('/sms-multiplayer-game/create', function(request, response) {
 /**
  * Beta accepts the invite to a game request.
  */
-app.post('/sms-multiplayer-game/beta-join', function(request, response) {
+router.post('/beta-join', function(request, response) {
   var gameController = getGameController(request);
   if (gameController == null) {
     response.status(406).send('Invalid `type` parameter.');
@@ -88,7 +88,7 @@ app.post('/sms-multiplayer-game/beta-join', function(request, response) {
 /**
  * Alpha manually chooses to start a game.
  */
-app.post('/sms-multiplayer-game/alpha-start', function(request, response) {
+router.post('/alpha-start', function(request, response) {
   var gameController = getGameController(request);
   if (gameController == null) {
     response.status(406).send('Invalid `type` parameter.');
@@ -101,7 +101,7 @@ app.post('/sms-multiplayer-game/alpha-start', function(request, response) {
 /**
  * A user in a game texts back an action.
  */
-app.post('/sms-multiplayer-game/user-action', function(request, response) {
+router.post('/user-action', function(request, response) {
   var gameController = getGameController(request);
   if (gameController == null) {
     response.status(406).send('Invalid `type` parameter.');
@@ -110,3 +110,5 @@ app.post('/sms-multiplayer-game/user-action', function(request, response) {
     gameController.userAction(request, response);
   }
 });
+
+module.exports = router;
