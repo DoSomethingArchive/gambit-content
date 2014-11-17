@@ -54,7 +54,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
       || typeof request.body.beta_mobile_0 === 'undefined'
       || typeof request.body.beta_mobile_1 === 'undefined'
       || typeof request.body.beta_mobile_2 === 'undefined') {
-    response.send(406, request.body);
+    response.status(406).send(request.body);
     return false;
   }
 
@@ -77,13 +77,13 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   }
 
   if (typeof this.gameConfig[this.storyId] === 'undefined') {
-    response.send(406, 'Game config not setup for story ID: ' + this.storyId);
+    response.status(406).send('Game config not setup for story ID: ' + this.storyId);
     return false;
   }
 
   var alphaPhone = messageHelper.getNormalizedPhone(request.body.alpha_mobile);
   if (!messageHelper.isValidPhone(alphaPhone)) {
-    response.send(406, 'Invalid alpha phone number.');
+    response.status(406).send('Invalid alpha phone number.');
     return false;
   }
 
@@ -114,7 +114,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   // since if the beta_mobile_x params are empty, they're populated by empty strings. 
 
   if (gameDoc.betas.length < MIN_PLAYERS_TO_INVITE) {
-    response.send(406, 'Not enough players. You need to invite at least %d to start.', MIN_PLAYERS_TO_INVITE);
+    response.status(406).send('Not enough players. You need to invite at least %d to start.', MIN_PLAYERS_TO_INVITE);
     return false;
   }
 
@@ -168,11 +168,11 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
           logger.error(err);
         }
         else {
-          // This response.send() call has been moved from outside into this 
+          // This response.sendStatus() call has been moved from outside into this 
           // async Mongoose call to ensure that upon SOLO game creation, 
           // the Alpha userModel will have been modified with the SOLO gameId before 
           // the start game logic runs (triggered by the POST to the /alpha-start route.)
-          response.send(201);
+          response.sendStatus(201);
           emitter.emit('alpha-user-created');
 
           if (raw && raw.upserted) {
@@ -334,7 +334,7 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
       || typeof request.body.phone === 'undefined'
       // Checking request.query.args because of the one-touch beta opt in mdata: http://goo.gl/Bh7Mxi
       || (typeof request.body.args === 'undefined' && typeof request.query.args === 'undefined')) {
-    response.send(406, '`phone` and `args` parameters required.');
+    response.status(406).send('`phone` and `args` parameters required.');
     return false;
   }
 
@@ -439,7 +439,7 @@ SGCompetitiveStoryController.prototype.alphaStartGame = function(request, respon
   if (typeof request.body === 'undefined'
       || typeof request.body.phone === 'undefined'
       || typeof request.body.args === 'undefined') {
-    response.send(406, '`phone` and `args` parameters required.');
+    response.status(406).send('`phone` and `args` parameters required.');
     return;
   }
 
@@ -494,7 +494,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
   if (typeof request.body === 'undefined'
       || typeof request.body.phone === 'undefined'
       || typeof request.body.args === 'undefined') {
-    response.send(406, '`phone` and `args` parameters required.');
+    response.status(406).send('`phone` and `args` parameters required.');
     return;
   }
 
@@ -704,7 +704,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
       obj.response.send();
     }
     else {
-      obj.response.send(500, 'Story configuration invalid.');
+      obj.response.status(500).send('Story configuration invalid.');
     }
   };
 
@@ -741,7 +741,7 @@ SGCompetitiveStoryController.prototype.findUserGame = function(obj, onUserGameFo
       onUserGameFound(obj, doc);
     }
     else {
-      obj.response.send(404);
+      obj.response.sendStatus(404);
     }
   };
 
@@ -759,7 +759,7 @@ SGCompetitiveStoryController.prototype.findUserGame = function(obj, onUserGameFo
       obj.gameModel.findOne({_id: doc.game_id}, onGameFound);
     }
     else {
-      obj.response.send(404);
+      obj.response.sendStatus(404);
     }
   };
 
@@ -779,7 +779,7 @@ SGCompetitiveStoryController.prototype.findUserGame = function(obj, onUserGameFo
       obj.gameMappingModel.findOne({game_id: doc.current_game_id}, onGameMappingFound);
     }
     else {
-      obj.response.send(404);
+      obj.response.sendStatus(404);
     }
   };
 

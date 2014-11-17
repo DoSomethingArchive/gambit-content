@@ -100,7 +100,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
       || typeof request.query.story_type === 'undefined'
       || typeof request.body.phone === 'undefined'
       || typeof request.body.args === 'undefined') {
-    response.send(406, 'Missing required params.');
+    response.status(406).send('Missing required params.');
     return false;
   }
 
@@ -114,12 +114,12 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
     this.gameConfig = this.app.get('competitive-stories');
   }
   else {
-    response.send(406, 'Invalid story_type.')
+    response.status(406).send('Invalid story_type.')
     return false;
   }
 
   if (typeof this.gameConfig[request.query.story_id] === 'undefined') {
-    response.send(406, 'Game config not set up for story ID: ' + request.query.story_id);
+    response.status(406).send('Game config not set up for story ID: ' + request.query.story_id);
     return false;
   }
 

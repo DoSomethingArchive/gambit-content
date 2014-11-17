@@ -33,7 +33,7 @@ SGSoloController.prototype.processRequest = function(request, response) {
 	if (typeof request.query.story_id === 'undefined'
 		|| typeof request.query.story_type === 'undefined'
     || typeof request.body.phone === 'undefined') {
-    response.send(406, 'Missing required params.');
+    response.status(406).send('Missing required params.');
     return false
   }
 

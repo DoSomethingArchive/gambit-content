@@ -65,7 +65,7 @@ module.exports = function(app) {
       controller.findProject(request, response);
     }
     else {
-      response.send(404, 'Request not available for: ' + request.params.controller);
+      response.status(404).send('Request not available for: ' + request.params.controller);
     }
   });
 
@@ -76,7 +76,7 @@ module.exports = function(app) {
       controller.retrieveEmail(request, response);
     }
     else {
-      response.send(404, 'Request not available for: ' + request.params.controller);
+      response.status(404).send('Request not available for: ' + request.params.controller);
     }
   });
 
@@ -87,7 +87,7 @@ module.exports = function(app) {
       controller.retrieveFirstName(request, response);
     }
     else {
-      response.send(404, 'Request not available for: ' + request.params.controller);
+      response.status(404).send('Request not available for: ' + request.params.controller);
     }
   });
 
@@ -98,7 +98,7 @@ module.exports = function(app) {
       controller.retrieveLocation(request, response);
     }
     else {
-      response.send(404, 'Request not available for: ' + request.params.controller);
+      response.status(404).send('Request not available for: ' + request.params.controller);
     }
   });
 };

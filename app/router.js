@@ -73,7 +73,7 @@ module.exports = function(app) {
   app.post('/sms-multiplayer-game/create', function(request, response) {
     var gameController = getGameController(request);
     if (gameController == null) {
-      response.send(406, 'Invalid `type` parameter.');
+      response.status(406).send('Invalid `type` parameter.');
     }
     else {
       gameController.createGame(request, response);
@@ -86,7 +86,7 @@ module.exports = function(app) {
   app.post('/sms-multiplayer-game/beta-join', function(request, response) {
     var gameController = getGameController(request);
     if (gameController == null) {
-      response.send(406, 'Invalid `type` parameter.');
+      response.status(406).send('Invalid `type` parameter.');
     }
     else {
       gameController.betaJoinGame(request, response);
@@ -99,7 +99,7 @@ module.exports = function(app) {
   app.post('/sms-multiplayer-game/alpha-start', function(request, response) {
     var gameController = getGameController(request);
     if (gameController == null) {
-      response.send(406, 'Invalid `type` parameter.');
+      response.status(406).send('Invalid `type` parameter.');
     }
     else {
       gameController.alphaStartGame(request, response);
@@ -112,7 +112,7 @@ module.exports = function(app) {
   app.post('/sms-multiplayer-game/user-action', function(request, response) {
     var gameController = getGameController(request);
     if (gameController == null) {
-      response.send(406, 'Invalid `type` parameter.');
+      response.status(406).send('Invalid `type` parameter.');
     }
     else {
       gameController.userAction(request, response);
