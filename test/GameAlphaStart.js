@@ -18,7 +18,7 @@ describe('Alpha-Starting a game based on the test config file:', function() {
   var storyId = 1;
 
   before('instantiating Express app, game controller, game config, dummy response', function() {
-    var app = express();
+    app = express();
     require('../app/config')(app, express);
 
     this.gameController = new SGCompetitiveStoryController(app);

@@ -27,7 +27,7 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
   var storyId = 101;
 
   before('instantiating Express app, game controller, game config, dummy response', function() {
-    var app = express();
+    app = express();
     require('../app/config')(app, express);
 
     this.gameController = new SGCompetitiveStoryController(app); 

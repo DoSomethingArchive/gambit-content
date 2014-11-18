@@ -18,7 +18,7 @@ describe('Bully Text game being played:', function() {
   var storyId = 100;
 
   before('instantiating Express app, game controller, game config, dummy response', function() {
-    var app = express();
+    app = express();
     require('../app/config')(app, express);
 
     this.gameController = new SGCompetitiveStoryController(app);
