@@ -987,7 +987,13 @@ SGCompetitiveStoryController.prototype.getEndLevelMessage = function(phone, leve
   }
 
   // Report total count of individual players reaching the end of a level
-  stathatReportCount(STATHAT_CATEGORY, 'end level (individual)', levelTag, gameDoc.story_id, 1);
+  var stathatAction = 'end level ';
+  if (phone == gameDoc.alpha_phone) {
+    stathatReportCount(STATHAT_CATEGORY, stathatAction + '(alpha)', levelTag, gameDoc.story_id, 1);
+  }
+  else {
+    stathatReportCount(STATHAT_CATEGORY, stathatAction + '(beta)', levelTag, gameDoc.story_id, 1);
+  }
 
   var storyItem = storyConfig.story[level];
   if (typeof storyItem === 'undefined') {
