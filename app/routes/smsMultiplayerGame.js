@@ -1,5 +1,5 @@
-var express = require('express');
-var router = express.router();
+var express = require('express')
+  , router = express.Router();
 
 var SGCreateFromMobileController = require('../controllers/SGCreateFromMobileController')
   , SGCollaborativeStoryController = require('../controllers/SGCollaborativeStoryController')
