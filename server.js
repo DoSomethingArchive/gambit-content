@@ -14,7 +14,7 @@ global.appRoot = path.resolve(__dirname);
 /**
  * Express Setup
  */
-var app = express();
+app = express();
 
 var config = require('./app/config')(app, express);
 var router = require('./app/router.js')(app);

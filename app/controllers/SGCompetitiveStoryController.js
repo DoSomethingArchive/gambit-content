@@ -27,6 +27,8 @@ var MIN_PLAYERS_TO_INVITE = 0;
 // when the SOLO option message is sent to the alpha.
 var TIME_UNTIL_SOLO_MESSAGE_SENT = 300000; // Five minutes is 300000.
 
+var STATHAT_CATEGORY = 'sms-games';
+
 var SGCompetitiveStoryController = function(app) {
   this.app = app;
   this.gameMappingModel = require('../models/sgGameMapping')(app);
@@ -209,14 +211,21 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
     // We opt users into these initial opt in paths only if the game type is NOT solo. 
     if (self.createdGameDoc.game_type !== 'solo') {
-      optinGroup(self.createdGameDoc.alpha_phone, self.gameConfig[self.storyId.toString()].alpha_wait_oip, betaOptInArray, self.gameConfig[self.storyId.toString()].beta_join_ask_oip)
+      optinGroup(self.createdGameDoc.alpha_phone,
+        self.gameConfig[self.storyId.toString()].alpha_wait_oip,
+        betaOptInArray,
+        self.gameConfig[self.storyId.toString()].beta_join_ask_oip);
     }
 
   },
   promiseErrorCallback('Unable to end game, either from logic based on player exit, *OR* through logic creating or updating new player docs within .createGame() function.'));
 
-  // Log to stathat... should this be 1 or 1 for each person?
-  this.app.stathatReport('Count', 'mobilecommons: create game request: success', 1);
+  // Report create game stats to StatHat
+  var stathatAction = 'create game';
+  var numPlayers = gameDoc && gameDoc.betas ? gameDoc.betas.length + 1 : 1;
+  stathatReportValue(STATHAT_CATEGORY, stathatAction, 'number of players (avg)', this.storyId, numPlayers);
+  stathatReportCount(STATHAT_CATEGORY, stathatAction, 'number of players (total)', this.storyId, numPlayers);
+  stathatReportCount(STATHAT_CATEGORY, stathatAction, 'success', this.storyId, 1);
   return true;
 };
 
@@ -662,10 +671,11 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
           }
         }
       }
+
       // If the game is over, log it to stathat.
       if (gameEnded == true) {
         gameDoc.game_ended = true;
-        obj.app.stathatReport('Count', 'mobilecommons: end game: success', 1);
+        stathatReportCount(STATHAT_CATEGORY, 'end game', 'success', gameDoc.story_id, 1);
       }
 
       // Update the player's current status in the database. (Or ALL of the players' current statuses,
@@ -896,6 +906,7 @@ SGCompetitiveStoryController.prototype.startGame = function(gameConfig, gameDoc)
 
   // Alpha
   var numPlayers = 1;
+
   // Opt in the beta users who have joined.
   for (var i = 0; i < gameDoc.betas.length; i++) {
     if (gameDoc.betas[i].invite_accepted == true) {
@@ -904,17 +915,15 @@ SGCompetitiveStoryController.prototype.startGame = function(gameConfig, gameDoc)
       // Update the beta's current status.
       gameDoc = this.updatePlayerCurrentStatus(gameDoc, gameDoc.betas[i].phone, startMessage);
 
-      // 'i' is one less than the current player.
-      numPlayers = i + 1;
+      numPlayers++;
     }
   }
 
-  // Log for each player that has accepted the invite. 
-  // 'Value' produces logs of averages, re: https://www.stathat.com/help. 
-  this.app.stathatReport('Value', 'mobilecommons: number of players', numPlayers);
-
-  // Log started game to stathat. 
-  this.app.stathatReport('Count', 'mobilecommons: start game request: success', 1);
+  // Report start game stats to StatHat
+  var stathatAction = 'start game';
+  stathatReportValue(STATHAT_CATEGORY, stathatAction, 'number of players (avg)', gameDoc.story_id, numPlayers);
+  stathatReportCount(STATHAT_CATEGORY, stathatAction, 'number of players (total)', gameDoc.story_id, numPlayers);
+  stathatReportCount(STATHAT_CATEGORY, stathatAction, 'success', this.storyId, 1);
   return gameDoc;
 };
 
@@ -957,7 +966,7 @@ SGCompetitiveStoryController.prototype.sendWaitMessages = function(gameConfig, g
  * @param phone
  *   User's phone number.
  * @param level
- *   Key to find the level's config.
+ *   Key to find the level's config. ex: END-LEVEL2
  * @param storyConfig
  *   Object defining details for the current story.
  * @param gameDoc
@@ -968,10 +977,18 @@ SGCompetitiveStoryController.prototype.sendWaitMessages = function(gameConfig, g
  * @return Boolean
  */
 SGCompetitiveStoryController.prototype.getEndLevelMessage = function(phone, level, storyConfig, gameDoc, checkResultType) {
-  // Get the level number from the end.
-  numLevel = level.slice(-1);
-  // Log which level is ending.
-  this.app.stathatReport('Value', 'mobilecommons: end level : success', numLevel);
+  var levelTag;
+  if (level === 'END-GAME') {
+    levelTag = level;
+  }
+  else {
+    // Get the level number from the end.
+    levelTag = level.slice(-1);
+  }
+
+  // Report total count of individual players reaching the end of a level
+  stathatReportCount(STATHAT_CATEGORY, 'end level (individual)', levelTag, gameDoc.story_id, 1);
+
   var storyItem = storyConfig.story[level];
   if (typeof storyItem === 'undefined') {
     return null;
@@ -1003,6 +1020,9 @@ SGCompetitiveStoryController.prototype.getEndLevelMessage = function(phone, leve
  * @return End level group message opt-in path.
  */
 SGCompetitiveStoryController.prototype.getEndLevelGroupMessage = function(endLevelGroupKey, storyConfig, gameDoc) {
+  // Report total count of groups that reach the end of a level
+  var levelTag = endLevelGroupKey.substr(-7, 1);
+  stathatReportCount(STATHAT_CATEGORY, 'end level (group)', levelTag, gameDoc.story_id, 1);
 
   var storyItem = storyConfig.story[endLevelGroupKey];
 
@@ -1480,6 +1500,22 @@ function delayedOptinSingleUser(phoneNumber, optinPath, delay, currentGameId, us
     });
   }
   setTimeout(function() { sendSMS(phoneNumber, optinPath, currentGameId, userModel); }, delay);
+}
+
+/**
+ * StatHat reporting wrapper. Organizes stat names into a "{category}: {action}: {label}: story-id={id}" structure.
+ */
+function stathatReport(type, category, action, label, storyId, num) {
+  var statname = category + ': ' + action + ': ' + label + ': ' + 'story-id=' + storyId;
+  app.stathatReport(type, statname, num);
+}
+
+function stathatReportCount(category, action, label, storyId, count) {
+  stathatReport('Count', category, action, label, storyId, count);
+}
+
+function stathatReportValue(category, action, label, storyId, value) {
+  stathatReport('Value', category, action, label, storyId, value);
 }
 
 module.exports = SGCompetitiveStoryController;
