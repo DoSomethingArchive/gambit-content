@@ -1,7 +1,10 @@
 module.exports = function(app, express) {
 
   var multiplayerGameRouter = require('./smsMultiplayerGame')
-    , donationsRouter = require('../lib/donations');
+    , donationsRouter = require('../lib/donations')
+    , pregnancyTextRouter = require('../lib/pregnancytext')
+    , dsCampaignRouter = require('../lib/ds-routing')
+    ;
 
   var router = express.Router(); 
 
@@ -15,9 +18,9 @@ module.exports = function(app, express) {
   router.use('/donations', donationsRouter);
 
   //Pregnancy Text 2014
-  require('../lib/pregnancytext')(app);
+  router.use('/pregnancy-text', pregnancyTextRouter);
 
   //Custom DS routing to Mobile Commons paths for campaigns.
-  require('../lib/ds-routing')(app);
+  router.use('/ds-routing', dsCampaignRouter);
 
 }
