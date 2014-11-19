@@ -330,7 +330,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
             })
           } else {
             logger.warn('Donation to proposal ' + proposalId + ' for user mobile: ' 
-              + donorInfoObject.donorPhoneNumber + ' was NOT successful. Body:' + jsonBody);
+              + donorInfoObject.donorPhoneNumber + ' was NOT successful. Body:' + JSON.stringify(jsonBody));
             sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
           }
         }

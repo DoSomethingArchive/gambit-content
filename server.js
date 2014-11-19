@@ -12,12 +12,12 @@ var express = require('express')
 global.appRoot = path.resolve(__dirname);
 
 /**
- * Express Setup
+ * Express Setup - note app as global variable
  */
-var app = express();
+app = express();
 
 var config = require('./app/config')(app, express);
-var router = require('./app/router.js')(app);
+var router = require('./app/routes');
 
 // Start server
 app.listen(app.get('port'), function() {

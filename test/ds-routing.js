@@ -99,9 +99,9 @@ describe('ds-routing tests', function() {
 
 
   /**
-   * start-campaign-gate tests
+   * campaign-transition tests
    */
-  describe('Call to startCampaignGate with mdata_id=11493', function() {
+  describe('Call to campaignTransition with mdata_id=11493', function() {
     before(function() {
       process.env.MOBILECOMMONS_COMPANY_KEY = 'MOBILECOMMONS_COMPANY_KEY';
       process.env.MOBILECOMMONS_AUTH_EMAIL = 'MOBILECOMMONS_AUTH_EMAIL';
@@ -125,7 +125,7 @@ describe('ds-routing tests', function() {
         optinReceived = true;
 
         if (payload.form.opt_in_path != 170139) {
-          assert(false, 'Failed start-campaign-gate with incorrect optin path. '
+          assert(false, 'Failed campaign-transition with incorrect optin path. '
             + 'Returned: ' + payload.form.optin_in_path);
         }
 
@@ -139,7 +139,7 @@ describe('ds-routing tests', function() {
         optoutReceived = true;
 
         if (payload.form.campaign != 128005) {
-          assert(false, 'Failed start-campaign-gate with incorrect optout id. '
+          assert(false, 'Failed campaign-transition with incorrect optout id. '
             + 'Returned: ' + payload.form.campaign);
         }
 
@@ -148,7 +148,7 @@ describe('ds-routing tests', function() {
         }
       });
 
-      mcRouting.startCampaignGate(test, response);
+      mcRouting.campaignTransition(test, response);
     });
 
     after(function() {

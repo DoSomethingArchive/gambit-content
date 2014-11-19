@@ -69,7 +69,7 @@ MCRouting.prototype.yesNoGateway = function(request, response) {
 /**
  * Transition users for the sign up campaign to the actual campaign.
  */
-MCRouting.prototype.startCampaignGate = function(request, response) {
+MCRouting.prototype.campaignTransition = function(request, response) {
   if (typeof(request.body.mdata_id) === 'undefined') {
     response.sendStatus(204);
     return;
