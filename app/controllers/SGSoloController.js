@@ -23,8 +23,7 @@ function sendSMS(phone, oip) {
   mobilecommons.optin(args);
 };
 
-var SGSoloController = function(app, host) {
-	this.app = app;
+var SGSoloController = function(host) {
 	this.host = host;
 }
 

@@ -4,7 +4,7 @@
 var mongoose = require('mongoose');
 var sgGameSchema = require('./sgGameSchema');
 
-var sgMostLikelyToSchema = sgGameSchema.add({
+sgGameSchema.add({
   // Array of questions the game progresses through
   questions: [{
 
@@ -23,5 +23,7 @@ var sgMostLikelyToSchema = sgGameSchema.add({
     }]
   }]
 })
+
+var sgMostLikelyToSchema = sgGameSchema;
 
 module.exports = mongoose.model('sg_mostlikelyto_game', sgMostLikelyToSchema);

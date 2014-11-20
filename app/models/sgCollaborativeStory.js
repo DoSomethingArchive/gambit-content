@@ -4,7 +4,7 @@
 var mongoose = require('mongoose');
 var sgGameSchema = require('./sgGameSchema');
 
-var sgCollaborativeStorySchema = sgGameSchema.add({
+sgGameSchema.add({
   // Last Mobile Commons opt in path delivered to the alpha player
   alpha_current_opt_in_path: Number,
 
@@ -34,5 +34,7 @@ var sgCollaborativeStorySchema = sgGameSchema.add({
     // @TODO add fields for aggregate choice logic and pinch points
   }]
 })
+
+var sgCollaborativeStorySchema = sgGameSchema;
 
 module.exports = mongoose.model('sg_collaborativestory_game', sgCollaborativeStorySchema);

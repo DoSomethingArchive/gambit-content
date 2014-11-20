@@ -14,7 +14,7 @@ var SGCreateFromMobileController = require('../controllers/SGCreateFromMobileCon
  */
 router.post('/mobile-create', function(request, response) {
   var host = request.get('host'); // Retrieving hostname; Express parsing request.
-  var controller = new SGCreateFromMobileController(app, host);
+  var controller = new SGCreateFromMobileController(host);
   controller.processRequest(request, response);
 });
 
@@ -25,7 +25,7 @@ router.post('/mobile-create', function(request, response) {
  */
 router.post('/solo', function(request, response) {
   var host = request.get('host');
-  var controller = new SGSoloController(app, host);
+  var controller = new SGSoloController(host);
   controller.processRequest(request, response);
 })
 
@@ -47,13 +47,13 @@ function getGameController(request) {
   }
 
   if (gameType === 'collaborative-story') {
-    return new SGCollaborativeStoryController(app);
+    return new SGCollaborativeStoryController;
   }
   else if (gameType === 'competitive-story') {
-    return new SGCompetitiveStoryController(app);
+    return new SGCompetitiveStoryController;
   }
   else if (gameType === 'most-likely-to') {
-    return new SGMostLikelyToController(app);
+    return new SGMostLikelyToController;
   }
 
   return null;

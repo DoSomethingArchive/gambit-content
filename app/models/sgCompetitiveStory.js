@@ -4,7 +4,7 @@
 var mongoose = require('mongoose');
 var sgGameSchema = require('./sgGameSchema');
 
-var sgCompetitiveStorySchema = sgGameSchema.add({
+sgGameSchema.add({
   // Current status of players
   players_current_status: [{
     // Player's phone number
@@ -51,4 +51,6 @@ var sgCompetitiveStorySchema = sgGameSchema.add({
   created_at: {type: Date, default: Date.now}
 });
 
-module.exports = mongoose.model('sg_competitivestory_game', sgCompetitiveStorySchema);
+var sgCompetitiveStorySchema = sgGameSchema;
+
+module.exports = mongoose.model('sg_competitivestory_game', sgCompetitiveStorySchema)
