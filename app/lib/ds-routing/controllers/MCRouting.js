@@ -3,16 +3,14 @@
  */
 
 var mobilecommons = require(appRoot + '/mobilecommons');
-var Tips = require('./Tips');
 
-var MCRouting = function(app) {
-  this.app = app;
-  this.tips_api = new Tips(app);
-  this.routing_config = require('../config/routing-config');
-  this.campaign_start_config = require('../config/campaign-start-config');
-}
+var tips = require('./Tips')
+  , Tips = new tips
+  , routing_config = require('../config/routing-config')
+  , campaign_start_config = require('../config/campaign-start-config')
+  ;
 
-module.exports = MCRouting;
+var MCRouting = function() {}
 
 /**
  * Opt user into one of two paths depending on whether the response is yes or no.
@@ -25,7 +23,7 @@ MCRouting.prototype.yesNoGateway = function(request, response) {
 
   var args = request.body.args.trim().toLowerCase();
   var incomingOptIn = parseInt(request.body.opt_in_path_id);
-  var paths = this.routing_config.yesNoPaths;
+  var paths = routing_config.yesNoPaths;
 
   // Find a path configured for the opt-in this request came from.
   var path = undefined;
@@ -76,7 +74,7 @@ MCRouting.prototype.campaignTransition = function(request, response) {
   }
 
   var mdataId = parseInt(request.body.mdata_id);
-  var transitionConfig = this.routing_config.startCampaignTransitions[mdataId];
+  var transitionConfig = routing_config.startCampaignTransitions[mdataId];
 
   if (typeof(transitionConfig) !== 'undefined'
       && typeof(transitionConfig.optin) !== 'undefined'
@@ -119,11 +117,11 @@ MCRouting.prototype.handleStartCampaignResponse = function(request, response) {
 
   // Get the config set that matches this opt_in_path_id.
   // Error out if there's no matching config.
-  if (typeof(this.campaign_start_config[optinPathId]) === 'undefined'
-      || typeof(this.campaign_start_config[optinPathId].know) === 'undefined'
-      || typeof(this.campaign_start_config[optinPathId].plan) === 'undefined'
-      || typeof(this.campaign_start_config[optinPathId].do) === 'undefined'
-      || typeof(this.campaign_start_config[optinPathId].prove) === 'undefined') {
+  if (typeof(campaign_start_config[optinPathId]) === 'undefined'
+      || typeof(campaign_start_config[optinPathId].know) === 'undefined'
+      || typeof(campaign_start_config[optinPathId].plan) === 'undefined'
+      || typeof(campaign_start_config[optinPathId].do) === 'undefined'
+      || typeof(campaign_start_config[optinPathId].prove) === 'undefined') {
     response.sendStatus(501);
     return;
   }
@@ -135,19 +133,19 @@ MCRouting.prototype.handleStartCampaignResponse = function(request, response) {
 
   // For KNOW, PLAN, and DO, use the tips lib to handle the delivery.
   if (firstWord === '1' || firstWord === 'KNOW' ) {
-    this.tips_api.deliverTips(request, response, this.campaign_start_config[optinPathId].know);
+    Tips.deliverTips(request, response, campaign_start_config[optinPathId].know);
   }
   else if (firstWord === '2' || firstWord === 'PLAN' ) {
-    this.tips_api.deliverTips(request, response, this.campaign_start_config[optinPathId].plan);
+    Tips.deliverTips(request, response, campaign_start_config[optinPathId].plan);
   }
   else if (firstWord === '3' || firstWord === 'DO' ) {
-    this.tips_api.deliverTips(request, response, this.campaign_start_config[optinPathId].do);
+    Tips.deliverTips(request, response, campaign_start_config[optinPathId].do);
   }
   // But for the PROVE option, we can just push straight to the opt in path.
   else if (firstWord === '4' || firstWord === 'PROVE' ) {
     var args = {
       alphaPhone: request.body.phone,
-      alphaOptin: this.campaign_start_config[optinPathId].prove
+      alphaOptin: campaign_start_config[optinPathId].prove
     };
 
     if (request.body.dev !== '1') {
@@ -157,3 +155,5 @@ MCRouting.prototype.handleStartCampaignResponse = function(request, response) {
 
   response.send();
 };
+
+module.exports = MCRouting;

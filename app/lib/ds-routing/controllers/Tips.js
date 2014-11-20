@@ -13,9 +13,6 @@ var tipModel = require('../models/tip')
 
 var Tips = function() {}
 
-module.exports = Tips;
-
-
 /**
  * Progress a user through a series of tips delivered via Mobile Commons opt-in paths.
  *
@@ -177,3 +174,5 @@ Tips.prototype.deliverTips = function(request, response, mdataOverride) {
 
   response.send();
 }
+
+module.exports = Tips;
