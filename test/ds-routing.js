@@ -17,7 +17,7 @@ var MCRouting = require(appRoot + '/app/lib/ds-routing/controllers/MCRouting')
 
 describe('ds-routing tests', function() {
 
-  var app = express();
+  app = express();
   require(appRoot + '/app/config')(app, express);
 
   var mcRouting = new MCRouting(app);

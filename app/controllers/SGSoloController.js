@@ -80,7 +80,7 @@ SGSoloController.prototype.processRequest = function(request, response) {
         } 
         else if (response && response.statusCode) {
           logger.info('Solo player starting game - POST to ' + startUrl + ' returned status code: ' + response.statusCode);
-          // this.app.stathatReport('Count', 'mobilecommons: start solo game request: success', 1);
+          app.stathatReport('Count', 'sms-games: start solo game: success: story_id=' + createPayload.form.story_id, 1);
         }
       })
     }
