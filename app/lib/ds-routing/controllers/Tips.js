@@ -7,11 +7,11 @@ var mobilecommons = require(appRoot + '/mobilecommons')
   , logger = require(appRoot + '/app/lib/logger')
   ;
 
-var Tips = function(app) {
-  this.app = app;
-  this.config = require('../config/tips-config');
-  this.tipModel = require('../models/tip')(app, this.config.modelName);
-}
+var tipModel = require('../models/tip')
+  , config = require('../config/tips-config')
+  ;
+
+var Tips = function() {}
 
 module.exports = Tips;
 
@@ -29,7 +29,7 @@ module.exports = Tips;
  */
 Tips.prototype.deliverTips = function(request, response, mdataOverride) {
   if (typeof(request.body.mdata_id) === 'undefined' && typeof(mdataOverride) === 'undefined') {
-    this.app.stathatReport('Count', 'mobilecommons: tips request: error - missing mData ID', 1);
+    app.stathatReport('Count', 'mobilecommons: tips request: error - missing mData ID', 1);
 
     response.sendStatus(204);
     return;
@@ -42,21 +42,16 @@ Tips.prototype.deliverTips = function(request, response, mdataOverride) {
   }
 
   // Decide tip name based on the mdata id.
-  var tipConfig = this.config.tips[mdataId];
+  var tipConfig = config.tips[mdataId];
 
   // Config error checking
   if (typeof(tipConfig) === 'undefined'
       || typeof(tipConfig.name) === 'undefined'
       || typeof(tipConfig.optins) === 'undefined') {
-    this.app.stathatReport('Count', 'mobilecommons: tips request: error - config not set', 1);
+    app.stathatReport('Count', 'mobilecommons: tips request: error - config not set', 1);
     response.sendStatus(501);
     return;
   }
-
-  var tipModel = this.tipModel;
-
-
-  var self = this; //fixes scoping issue, 'this' changes in callback of MongoDB query
 
   // Find an existing document for a user with the requesting phone number
   tipModel.findOne(
@@ -118,7 +113,7 @@ Tips.prototype.deliverTips = function(request, response, mdataOverride) {
         if (request.body.dev !== '1') {
           mobilecommons.optin(args);
 
-          self.app.stathatReport('Count', 'mobilecommons: tips request: success', 1);
+          app.stathatReport('Count', 'mobilecommons: tips request: success', 1);
         }
 
         // Update the existing doc in the database
@@ -152,7 +147,7 @@ Tips.prototype.deliverTips = function(request, response, mdataOverride) {
         if (request.body.dev !== '1') {
           mobilecommons.optin(args);
 
-          self.app.stathatReport('Count', 'mobilecommons: tips request: success', 1);
+          app.stathatReport('Count', 'mobilecommons: tips request: success', 1);
         }
 
         // Create a new doc

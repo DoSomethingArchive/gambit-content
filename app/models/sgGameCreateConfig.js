@@ -5,37 +5,29 @@
  * game creation. 
  */
 
-var mongoose = require('mongoose')
-  ;
+var mongoose = require('mongoose');
 
-var sgGameCreateConfig = function(app) {
-  var modelName = 'sg_gamecreateconfig';
+var sgGameCreateConfigSchema = new mongoose.Schema({
+  // Mobile number of the alpha user
+  alpha_mobile: {type: String, index: true},
 
-  var schema = new mongoose.Schema();
-  schema.add({
-    // Mobile number of the alpha user
-    alpha_mobile: {type: String, index: true},
+  // Name of the alpha user
+  alpha_first_name: String,
 
-    // Name of the alpha user
-    alpha_first_name: String,
+  // Mobile number of beta 1
+  beta_mobile_0: String,
 
-    // Mobile number of beta 1
-    beta_mobile_0: String,
+  // Mobile number of beta 2
+  beta_mobile_1: String,
 
-    // Mobile number of beta 2
-    beta_mobile_1: String,
+  // Mobile number of beta 3
+  beta_mobile_2: String,
 
-    // Mobile number of beta 3
-    beta_mobile_2: String,
+  // Story ID
+  story_id: Number,
 
-    // Story ID
-    story_id: Number,
+  // Type of game structure; competitive? collaborative?
+  story_type: String
+})
 
-    // Type of game structure; competitive? collaborative?
-    story_type: String
-  });
-
-  return app.getModel(modelName, schema);
-}
-
-module.exports = sgGameCreateConfig;
+module.exports = mongoose.model('sg_gamecreateconfig', sgGameCreateConfigSchema);

@@ -4,22 +4,14 @@
  * given its id.
  */
 
-var mongoose = require('mongoose')
-  ;
+var mongoose = require('mongoose');
 
-var sgGameMapping = function(app) {
-  var modelName = 'sg_gamemapping';
+var sgGameMappingSchema = new mongoose.Schema({
+  // Game ID
+  game_id: {type: mongoose.Schema.Types.ObjectId, index: true},
 
-  var schema = new mongoose.Schema();
-  schema.add({
-    // Game ID
-    game_id: {type: mongoose.Schema.Types.ObjectId, index: true},
+  // Model used for this game
+  game_model: String
+})
 
-    // Model used for this game
-    game_model: String
-  });
-
-  return app.getModel(modelName, schema);
-};
-
-module.exports = sgGameMapping;
+module.exports = mongoose.model('sg_gamemapping', sgGameMappingSchema);
