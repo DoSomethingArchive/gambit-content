@@ -99,6 +99,11 @@
             "__comments": "Love Letters 2014",
             "optin": 173835,
             "optout": 130265
+        },
+        "11829": {
+            "__comments": "Social Media Makeover 2014",
+            "optin": 171811,
+            "optout": 128991
         }
     },
     "yesNoPaths": [
@@ -259,6 +264,11 @@
             "incomingPath": 173837,
             "yes": 173839,
             "no": 173841
+        },
+        {   "__comments": "Social Media Makeover 2014",
+            "incomingPath": 171813,
+            "yes": 171815,
+            "no": 171819
         }
 
     ]
