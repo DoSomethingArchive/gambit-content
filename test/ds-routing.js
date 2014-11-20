@@ -11,17 +11,19 @@ var assert = require('assert')
 // Setting appRoot for tests
 global.appRoot = path.resolve('./');
 
-var MCRouting = require(appRoot + '/app/lib/ds-routing/controllers/MCRouting')
-  , Tips = require(appRoot + '/app/lib/ds-routing/controllers/Tips')
-  ;
-
 describe('ds-routing tests', function() {
 
   app = express();
   require(appRoot + '/app/config')(app, express);
 
+  var MCRouting = require(appRoot + '/app/lib/ds-routing/controllers/MCRouting')
+  , Tips = require(appRoot + '/app/lib/ds-routing/controllers/Tips')
+  ;
+  var tipModel = require('../app/lib/ds-routing/models/tip')
+
   var mcRouting = new MCRouting(app);
   var tips = new Tips(app);
+  tips.config = require('../app/lib/ds-routing/config/tips-config')
 
   // Dummy Express response object.
   var response = {
@@ -40,7 +42,7 @@ describe('ds-routing tests', function() {
 
   // Helper to remove a test user's `tip` document.
   var resetUserTipDoc = function() {
-    tips.tipModel.remove({phone: '15555550100'}, function() {});
+    tipModel.remove({phone: '15555550100'}, function() {});
   };
 
 

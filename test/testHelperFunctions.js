@@ -2,6 +2,11 @@ var assert = require('assert')
  , emitter = require('../app/eventEmitter')
  , messageHelper = require('../app/lib/userMessageHelpers')
  ;
+var gameMappingModel = require('../app/models/sgGameMapping')
+  , gameModel = require('../app/models/sgCompetitiveStory')
+  , userModel = require('../app/models/sgUser')
+  , gameConfig = require('../app/config/competitive-stories')
+  ;
 
 // Describe test for betas joining the game.
 exports.betaJoinGameTest = function(_phone) {
@@ -28,7 +33,7 @@ exports.betaJoinGameTest = function(_phone) {
   })
 
   it('should update the game document', function(done) {
-    this.gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
+    gameModel.findOne({_id: gameId}, function(err, doc) {
       var updated = false;
       if (!err && doc) {
         for (var i = 0; i < doc.betas.length; i++) {
@@ -164,7 +169,7 @@ exports.userActionTest = function() {
 
       it('should move user to level ' + this.nextLevelName + ' (optin path: ' + this.nextLevelMessage + ') in the game doc', function(done) {
 
-        this.gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
+        gameModel.findOne({_id: gameId}, function(err, doc) {
           var playersCurrentStatus = doc.players_current_status
           var storyResults = doc.story_results;
           var updated = false;
@@ -195,7 +200,7 @@ exports.userActionTest = function() {
       // If supplied the arguments, test for a group end-level message.
       if (this.endStageName && this.endStageMessage) {
         it('should deliver the end-level group message for ' + this.endStageName + ' to all users in group',  function(done) {
-          this.gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
+          gameModel.findOne({_id: gameId}, function(err, doc) {
             if (!err) {
               var storyResults = doc.story_results;
               var numberOfActivePlayers = doc.players_current_status.length;
@@ -218,7 +223,7 @@ exports.userActionTest = function() {
       // to the next level. 
       if (this.nextStageName && this.nextStageMessage) {
         it('should move all players to ' + this.nextStageName, function(done) {
-          this.gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
+          gameModel.findOne({_id: gameId}, function(err, doc) {
             if (!err) {
               var playersCurrentStatus = doc.players_current_status;
               var allPlayersAtNextLevel = true;
@@ -256,7 +261,7 @@ exports.userActionTest = function() {
       if (this.endGameGroupMessageFormat && this.endGameGroupMessage) {
         it('it should send the endgame group message with the format of ' + this.endGameGroupMessageFormat + ' (optin path: ' + this.endGameGroupMessage + ') to all players.', function(done) {
 
-          this.gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
+          gameModel.findOne({_id: gameId}, function(err, doc) {
             var playersCurrentStatus = doc.players_current_status
             var storyResults = doc.story_results;
             var allPlayersReceivedMessage = false;
@@ -309,7 +314,7 @@ exports.userActionTest = function() {
       // individual users. 
       if (this.endGameIndivMessageFormat && this.endGameIndivMessage) {
         it('it should send the endgame unique individual message with the format of ' + this.endGameIndivMessageFormat + ' (optin path: ' + this.endGameIndivMessage + ') to all players, since we\'ve configured tests to have all players produce the same input.', function(done) {
-          this.gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
+          gameModel.findOne({_id: gameId}, function(err, doc) {
             var playersCurrentStatus = doc.players_current_status
             var storyResults = doc.story_results;
 

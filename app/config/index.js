@@ -30,7 +30,10 @@ module.exports = function() {
   app.set('database-uri', process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder');
 
   // Opens the default mongoose database connection.
-  mongoose.connect(app.get('database-uri'));
+  if (typeof isConnectionOpen === 'undefined') {
+    mongoose.connect(app.get('database-uri'));
+    isConnectionOpen = true;
+  }
 
   // Attaches the Mongoose instance to the app global variable. 
   app.mongoose = mongoose;
