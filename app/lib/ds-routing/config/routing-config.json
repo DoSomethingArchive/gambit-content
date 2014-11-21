@@ -109,6 +109,11 @@
             "__comments": "Backpack Attack 2014",
             "optin": 174377,
             "optout": 130689
+        },
+        "11837": {
+            "__comments": "Patient Playbooks 2014",
+            "optin": 174425,
+            "optout": 130715
         }
     },
     "yesNoPaths": [
@@ -279,6 +284,11 @@
             "incomingPath": 174379,
             "yes": 174381,
             "no": 174383
+        },
+        {   "__comments": "Patient Playbooks 2014",
+            "incomingPath": 174427,
+            "yes": 174429,
+            "no": 174431
         }
 
     ]
