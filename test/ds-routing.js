@@ -14,16 +14,16 @@ global.appRoot = path.resolve('./');
 describe('ds-routing tests', function() {
 
   app = express();
-  require(appRoot + '/app/config')(app, express);
+  require(appRoot + '/app/config')();
 
   var MCRouting = require(appRoot + '/app/lib/ds-routing/controllers/MCRouting')
   , Tips = require(appRoot + '/app/lib/ds-routing/controllers/Tips')
   ;
-  var tipModel = require('../app/lib/ds-routing/models/tip')
+  var tipModel = require(appRoot + '/app/lib/ds-routing/models/tip')
 
-  var mcRouting = new MCRouting(app);
-  var tips = new Tips(app);
-  tips.config = require('../app/lib/ds-routing/config/tips-config')
+  var mcRouting = new MCRouting;
+  var tips = new Tips;
+  tips.config = require(appRoot + '/app/lib/ds-routing/config/tips-config')
 
   // Dummy Express response object.
   var response = {

@@ -1,14 +1,16 @@
 var assert = require('assert')
   , express = require('express')
   , emitter = require('../app/eventEmitter')
-  , messageHelper = require('../app/lib/userMessageHelpers')
-  , testHelper = require('./testHelperFunctions')
   , mongoose = require('mongoose')
   ;
+
 var gameMappingModel = require('../app/models/sgGameMapping')
   , gameModel = require('../app/models/sgCompetitiveStory')
   , userModel = require('../app/models/sgUser')
+  , SGCompetitiveStoryController = require('../app/controllers/SGCompetitiveStoryController')
   , gameConfig = require('../app/config/competitive-stories')
+  , messageHelper = require('../app/lib/userMessageHelpers')
+  , testHelper = require('./testHelperFunctions')
   ;
 
 describe('Bully Text game being played:', function() {
@@ -24,10 +26,9 @@ describe('Bully Text game being played:', function() {
 
   before('instantiating Express app, game controller, game config, dummy response', function() {
     app = express();
-    require('../app/config')(app, express);
-    var SGCompetitiveStoryController = require('../app/controllers/SGCompetitiveStoryController');
+    require('../app/config')();
 
-    this.gameController = new SGCompetitiveStoryController(app);
+    this.gameController = new SGCompetitiveStoryController;
 
     // Dummy Express response object. 
     response = {

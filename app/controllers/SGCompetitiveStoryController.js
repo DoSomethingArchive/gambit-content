@@ -11,7 +11,7 @@ var mobilecommons = require('../../mobilecommons')
 var gameMappingModel = require('../models/sgGameMapping')
   , gameModel = require('../models/sgCompetitiveStory')
   , userModel = require('../models/sgUser')
-  , gameConfig = app.get('competitive-stories')
+  , gameConfig = require('../config/competitive-stories')
   ;
 
 // Delay (in milliseconds) for end level group messages to be sent.
