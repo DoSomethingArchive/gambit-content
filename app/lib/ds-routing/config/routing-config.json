@@ -104,6 +104,11 @@
             "__comments": "Social Media Makeover 2014",
             "optin": 171811,
             "optout": 128991
+        },
+        "11833": {
+            "__comments": "Backpack Attack 2014",
+            "optin": 174377,
+            "optout": 130689
         }
     },
     "yesNoPaths": [
@@ -269,6 +274,11 @@
             "incomingPath": 171813,
             "yes": 171815,
             "no": 171819
+        },
+        {   "__comments": "Backpack Attack 2014",
+            "incomingPath": 174379,
+            "yes": 174381,
+            "no": 174383
         }
 
     ]
