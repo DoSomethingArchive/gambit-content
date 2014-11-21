@@ -1,9 +1,7 @@
 var assert = require('assert')
   , express = require('express')
   , emitter = require('../app/eventEmitter')
-  ;
-
-var gameMappingModel = require('../app/models/sgGameMapping')
+  , gameMappingModel = require('../app/models/sgGameMapping')
   , gameModel = require('../app/models/sgCompetitiveStory')
   , userModel = require('../app/models/sgUser')
   , SGCompetitiveStoryController = require('../app/controllers/SGCompetitiveStoryController')

@@ -17,10 +17,10 @@ describe('ds-routing tests', function() {
   require(appRoot + '/app/config')();
 
   var MCRouting = require(appRoot + '/app/lib/ds-routing/controllers/MCRouting')
-  , Tips = require(appRoot + '/app/lib/ds-routing/controllers/Tips')
-  ;
-  var tipModel = require(appRoot + '/app/lib/ds-routing/models/tip')
-
+    , Tips = require(appRoot + '/app/lib/ds-routing/controllers/Tips')
+    , tipModel = require(appRoot + '/app/lib/ds-routing/models/tip')
+    ;
+    
   var mcRouting = new MCRouting;
   var tips = new Tips;
   tips.config = require(appRoot + '/app/lib/ds-routing/config/tips-config')

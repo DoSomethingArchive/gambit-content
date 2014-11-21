@@ -4,8 +4,8 @@
 
 var mobilecommons = require(appRoot + '/mobilecommons');
 
-var tips = require('./Tips')
-  , Tips = new tips
+var Tips = require('./Tips')
+  , tips = new Tips
   , routing_config = require('../config/routing-config')
   , campaign_start_config = require('../config/campaign-start-config')
   ;
@@ -133,13 +133,13 @@ MCRouting.prototype.handleStartCampaignResponse = function(request, response) {
 
   // For KNOW, PLAN, and DO, use the tips lib to handle the delivery.
   if (firstWord === '1' || firstWord === 'KNOW' ) {
-    Tips.deliverTips(request, response, campaign_start_config[optinPathId].know);
+    tips.deliverTips(request, response, campaign_start_config[optinPathId].know);
   }
   else if (firstWord === '2' || firstWord === 'PLAN' ) {
-    Tips.deliverTips(request, response, campaign_start_config[optinPathId].plan);
+    tips.deliverTips(request, response, campaign_start_config[optinPathId].plan);
   }
   else if (firstWord === '3' || firstWord === 'DO' ) {
-    Tips.deliverTips(request, response, campaign_start_config[optinPathId].do);
+    tips.deliverTips(request, response, campaign_start_config[optinPathId].do);
   }
   // But for the PROVE option, we can just push straight to the opt in path.
   else if (firstWord === '4' || firstWord === 'PROVE' ) {

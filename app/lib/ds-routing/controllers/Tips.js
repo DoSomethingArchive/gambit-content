@@ -5,9 +5,7 @@
 var mobilecommons = require(appRoot + '/mobilecommons')
   , mongoose = require('mongoose')
   , logger = require(appRoot + '/app/lib/logger')
-  ;
-
-var tipModel = require('../models/tip')
+  , tipModel = require('../models/tip')
   , config = require('../config/tips-config')
   ;
 
