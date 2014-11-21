@@ -99,6 +99,21 @@
             "__comments": "Love Letters 2014",
             "optin": 173835,
             "optout": 130265
+        },
+        "11829": {
+            "__comments": "Social Media Makeover 2014",
+            "optin": 171811,
+            "optout": 128991
+        },
+        "11833": {
+            "__comments": "Backpack Attack 2014",
+            "optin": 174377,
+            "optout": 130689
+        },
+        "11837": {
+            "__comments": "Patient Playbooks 2014",
+            "optin": 174425,
+            "optout": 130715
         }
     },
     "yesNoPaths": [
@@ -259,6 +274,21 @@
             "incomingPath": 173837,
             "yes": 173839,
             "no": 173841
+        },
+        {   "__comments": "Social Media Makeover 2014",
+            "incomingPath": 171813,
+            "yes": 171815,
+            "no": 171819
+        },
+        {   "__comments": "Backpack Attack 2014",
+            "incomingPath": 174379,
+            "yes": 174381,
+            "no": 174383
+        },
+        {   "__comments": "Patient Playbooks 2014",
+            "incomingPath": 174427,
+            "yes": 174429,
+            "no": 174431
         }
 
     ]
