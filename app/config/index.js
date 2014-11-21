@@ -53,29 +53,6 @@ module.exports = function() {
     );
   };
 
-  /**
-   * Helper function to retrieve a Mongoose model.
-   *
-   * @param modelName
-   *   String of the name of the model
-   * @param schema
-   *   Mongoose schema to create a model with
-   *
-   * @return Mongoose model
-   */
-  // app.getModel = function(modelName, schema) {
-  //   // If a model by this name has already been created, return it.
-  //   var modelNames = dbConnection.modelNames();
-  //   for (var i = 0; i < modelNames.length; i++) {
-  //     if (modelName == modelNames[i]) {
-  //       return dbConnection.model(modelName);
-  //     }
-  //   }
-
-  //   // If no existing model is found, create a new one.
-  //   return dbConnection.model(modelName, schema);
-  // };
-
   // Read through .json configs in the config folder and set to app variables
   fs.readdirSync('./app/config').forEach(function(file) {
     if (file != path.basename(__filename)) {

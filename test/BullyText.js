@@ -1,7 +1,6 @@
 var assert = require('assert')
   , express = require('express')
   , emitter = require('../app/eventEmitter')
-  , mongoose = require('mongoose')
   ;
 
 var gameMappingModel = require('../app/models/sgGameMapping')
@@ -24,30 +23,7 @@ describe('Bully Text game being played:', function() {
   var betaPhone2 = '5555550203';
   var storyId = 100;
 
-  before('instantiating Express app, game controller, game config, dummy response', function() {
-    app = express();
-    require('../app/config')();
-
-    this.gameController = new SGCompetitiveStoryController;
-
-    // Dummy Express response object. 
-    response = {
-      send: function(message) {
-        if (typeof message === 'undefined') {
-          message = '';
-        }
-        console.log('Response message: ' + message);
-      },
-
-      sendStatus: function(code) {
-        console.log('Response code: ' + code);
-      },
-
-      status: function(code) {
-        console.log('Response code: ' + code);
-      }
-    };
-  })
+  testHelper.gameAppSetup();
 
   describe('Creating a BullyText game', function() {
     var request;

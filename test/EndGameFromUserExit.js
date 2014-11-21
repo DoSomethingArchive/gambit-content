@@ -1,7 +1,6 @@
 var assert = require('assert')
   , express = require('express')
   , emitter = require('../app/eventEmitter')
-  , mongoose = require('mongoose')
   ;
 
 var gameMappingModel = require('../app/models/sgGameMapping')
@@ -33,30 +32,7 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
 
   var storyId = 101;
 
-  before('instantiating Express app, game controller, game config, dummy response', function() {
-    app = express();
-    require('../app/config')();
-
-    this.gameController = new SGCompetitiveStoryController; 
-
-    // Dummy Express response object.
-    response = {
-      send: function(message) {
-        if (typeof message === 'undefined') {
-          message = '';
-        }
-        console.log('Response message: ' + message);
-      },
-
-      sendStatus: function(code) {
-        console.log('Response code: ' + code);
-      },
-
-      status: function(code) {
-        console.log('Response code: ' + code);
-      }
-    };
-  })
+  testHelper.gameAppSetup();
 
   describe('Creating Science Sleuth Game 1', function() {
     var request;

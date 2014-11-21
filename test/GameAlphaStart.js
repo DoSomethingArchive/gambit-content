@@ -1,7 +1,6 @@
 var assert = require('assert')
   , express = require('express')
   , emitter = require('../app/eventEmitter')
-  , mongoose = require('mongoose')
   ;
 
 var gameMappingModel = require('../app/models/sgGameMapping')
@@ -26,30 +25,7 @@ describe('Alpha-Starting a Bully Text game:', function() {
   var betaPhone2 = '5555550103';
   var storyId = 100;
 
-  before('instantiating Express app, game controller, game config, dummy response', function() {
-    app = express();
-    require('../app/config')();
-
-    this.gameController = new SGCompetitiveStoryController;
-
-    // Dummy Express response object.
-    response = {
-      send: function(message) {
-        if (typeof message === 'undefined') {
-          message = '';
-        }
-        console.log('Response message: ' + message);
-      },
-
-      sendStatus: function(code) {
-        console.log('Response code: ' + code);
-      },
-
-      status: function(code) {
-        console.log('Response code: ' + code);
-      }
-    };
-  })
+  testHelper.gameAppSetup();
 
   describe('Creating a Competitive Story game based on the test config file', function() {
     var request;
@@ -150,51 +126,8 @@ describe('Alpha-Starting a Bully Text game:', function() {
     })
   })
 
-// Describe test for betas joining the game.
-  var betaJoinGameTest = function(_phone) {
-    var request;
-    var phone = _phone;
-    before(function() {
-      phone = messageHelper.getNormalizedPhone(phone);
-      request = {
-        body: {
-          phone: phone,
-          args: 'Y'
-        }
-      }
-    })
-
-    it('should emit game-updated event', function(done) {
-      emitter.on('game-updated', function() {
-        done();
-        emitter.removeAllListeners('game-updated');
-      });
-
-      // Join beta user to the game.
-      this.gameController.betaJoinGame(request, response);
-    })
-
-    it('should update the game document', function(done) {
-      gameModel.findOne({_id: gameId}, function(err, doc) {
-        var updated = false;
-        if (!err && doc) {
-          for (var i = 0; i < doc.betas.length; i++) {
-            if (doc.betas[i].phone == phone && doc.betas[i].invite_accepted) {
-              updated = true;
-              done();
-            }
-          }
-        }
-
-        if (!updated) { assert(false); }
-      })
-    })
-    it('should send a Mobile Commons opt-in to Beta(' + phone + ')')
-    it('should send a Mobile Commons opt-in to Alpha')
-  };
-
   describe('Beta 1 joining the game', function() {
-    betaJoinGameTest(betaPhone1);
+    testHelper.betaJoinGameTest(betaPhone1);
   })
 
   describe('Alpha starting the game', function() {

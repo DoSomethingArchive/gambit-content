@@ -1,12 +1,43 @@
 var assert = require('assert')
- , emitter = require('../app/eventEmitter')
- , messageHelper = require('../app/lib/userMessageHelpers')
- ;
+  , express = require('express')
+  , emitter = require('../app/eventEmitter')
+  ;
+
 var gameMappingModel = require('../app/models/sgGameMapping')
   , gameModel = require('../app/models/sgCompetitiveStory')
   , userModel = require('../app/models/sgUser')
+  , SGCompetitiveStoryController = require('../app/controllers/SGCompetitiveStoryController')
   , gameConfig = require('../app/config/competitive-stories')
+  , messageHelper = require('../app/lib/userMessageHelpers')
   ;
+
+// Provides necessary setup conditions before game tests. 
+exports.gameAppSetup = function() {
+  before('instantiating Express app, game controller, game config, dummy response', function() {
+    app = express();
+    require('../app/config')();
+
+    this.gameController = new SGCompetitiveStoryController;
+
+    // Dummy Express response object.
+    response = {
+      send: function(message) {
+        if (typeof message === 'undefined') {
+          message = '';
+        }
+        console.log('Response message: ' + message);
+      },
+
+      sendStatus: function(code) {
+        console.log('Response code: ' + code);
+      },
+
+      status: function(code) {
+        console.log('Response code: ' + code);
+      }
+    };
+  })
+}
 
 // Describe test for betas joining the game.
 exports.betaJoinGameTest = function(_phone) {
@@ -47,8 +78,6 @@ exports.betaJoinGameTest = function(_phone) {
       if (!updated) assert(false);
     })
   })
-  it('should send a Mobile Commons opt-in to Beta(' + phone + ')')
-  it('should send a Mobile Commons opt-in to Alpha')
 };
 
 /**
