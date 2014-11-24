@@ -2,6 +2,8 @@ var mobilecommons = require('../../../../mobilecommons')
   , emitter = require('../../../eventEmitter')
   , userModel = require('../models/sgUser')
   , gameModel = require('../models/sgCompetitiveStory')
+  , utility = require('./gameUtilities')
+  ;
 
 /**
  * Schedule a message to be sent to a SINGLE user via a Mobile Commons optin.
@@ -123,21 +125,8 @@ module.exports.giveSoloOptionAfterDelay = function(gameId, gameModel, oip, delay
       if ((!aBetaHasJoined) && (doc.game_type !== 'solo')) {
         optinSingleUser(doc.alpha_phone, _oip);
       }
-    }, promiseErrorCallback('Unable to find game.'));
+    }, utility.promiseErrorCallback('Unable to find game.'));
   };
 
   setTimeout(function(){ checkIfBetaJoined(gameId, gameModel, oip) }, delay);
-}
-
-/**
- * The following two functions are for handling Mongoose Promise chain errors.
- */
-function promiseErrorCallback(message) {
-  return onPromiseErrorCallback.bind({message: message});
-}
-
-function onPromiseErrorCallback(err) {
-  if (err) {
-    logger.error(this.message + '\n', err.stack);
-  }
 }

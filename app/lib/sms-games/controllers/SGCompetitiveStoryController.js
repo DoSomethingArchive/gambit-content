@@ -11,6 +11,7 @@ var mobilecommons = require('../../../../mobilecommons')
   , userModel = require('../models/sgUser')
   , gameConfig = require('../config/competitive-stories')
   , message = require('./gameMessageHelpers')
+  , utility = require('./gameUtilities')
   ;
 
 // Delay (in milliseconds) for end level group messages to be sent.
@@ -124,7 +125,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     var config = gameConfig[doc.story_id];
 
     // Sets a time to ask the alpha if she wants to play a solo game.
-    scheduleSoloMessage(doc._id, gameModel, gameConfig[self.storyId].ask_solo_play, TIME_UNTIL_SOLO_MESSAGE_SENT);
+    message.giveSoloOptionAfterDelay(doc._id, gameModel, gameConfig[self.storyId].ask_solo_play, TIME_UNTIL_SOLO_MESSAGE_SENT);
 
     // Create game id to game type mapping.
     gameMappingModel.create(
@@ -149,7 +150,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
     return userModel.find(findCondition).exec();
   },
-  promiseErrorCallback('Unable to create player game docs within .createGame() function.')).then(function(playerDocs) {
+  utility.promiseErrorCallback('Unable to create player game docs within .createGame() function.')).then(function(playerDocs) {
 
     // End games that these players were previously in.
     self._endGameFromPlayerExit(playerDocs);
@@ -212,14 +213,14 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     }
 
   },
-  promiseErrorCallback('Unable to end game, either from logic based on player exit, *OR* through logic creating or updating new player docs within .createGame() function.'));
+  utility.promiseErrorCallback('Unable to end game, either from logic based on player exit, *OR* through logic creating or updating new player docs within .createGame() function.'));
 
   // Report create game stats to StatHat
   var stathatAction = 'create game';
   var numPlayers = gameDoc && gameDoc.betas ? gameDoc.betas.length + 1 : 1;
-  stathatReportValue(STATHAT_CATEGORY, stathatAction, 'number of players (avg)', this.storyId, numPlayers);
-  stathatReportCount(STATHAT_CATEGORY, stathatAction, 'number of players (total)', this.storyId, numPlayers);
-  stathatReportCount(STATHAT_CATEGORY, stathatAction, 'success', this.storyId, 1);
+  utility.stathatReportValue(STATHAT_CATEGORY, stathatAction, 'number of players (avg)', this.storyId, numPlayers);
+  utility.stathatReportCount(STATHAT_CATEGORY, stathatAction, 'number of players (total)', this.storyId, numPlayers);
+  utility.stathatReportCount(STATHAT_CATEGORY, stathatAction, 'success', this.storyId, 1);
   return true;
 };
 
@@ -565,7 +566,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
       // If the game is over, log it to stathat.
       if (gameEnded == true) {
         gameDoc.game_ended = true;
-        stathatReportCount(STATHAT_CATEGORY, 'end game', 'success', gameDoc.story_id, 1);
+        utility.stathatReportCount(STATHAT_CATEGORY, 'end game', 'success', gameDoc.story_id, 1);
       }
 
       // Update the player's current status in the database. (Or ALL of the players' current statuses,
@@ -811,9 +812,9 @@ SGCompetitiveStoryController.prototype.startGame = function(config, gameDoc) {
 
   // Report start game stats to StatHat
   var stathatAction = 'start game';
-  stathatReportValue(STATHAT_CATEGORY, stathatAction, 'number of players (avg)', gameDoc.story_id, numPlayers);
-  stathatReportCount(STATHAT_CATEGORY, stathatAction, 'number of players (total)', gameDoc.story_id, numPlayers);
-  stathatReportCount(STATHAT_CATEGORY, stathatAction, 'success', this.storyId, 1);
+  utility.stathatReportValue(STATHAT_CATEGORY, stathatAction, 'number of players (avg)', gameDoc.story_id, numPlayers);
+  utility.stathatReportCount(STATHAT_CATEGORY, stathatAction, 'number of players (total)', gameDoc.story_id, numPlayers);
+  utility.stathatReportCount(STATHAT_CATEGORY, stathatAction, 'success', this.storyId, 1);
   return gameDoc;
 };
 
@@ -879,10 +880,10 @@ SGCompetitiveStoryController.prototype.getEndLevelMessage = function(phone, leve
   // Report total count of individual players reaching the end of a level
   var stathatAction = 'end level ';
   if (phone == gameDoc.alpha_phone) {
-    stathatReportCount(STATHAT_CATEGORY, stathatAction + '(alpha)', levelTag, gameDoc.story_id, 1);
+    utility.stathatReportCount(STATHAT_CATEGORY, stathatAction + '(alpha)', levelTag, gameDoc.story_id, 1);
   }
   else {
-    stathatReportCount(STATHAT_CATEGORY, stathatAction + '(beta)', levelTag, gameDoc.story_id, 1);
+    utility.stathatReportCount(STATHAT_CATEGORY, stathatAction + '(beta)', levelTag, gameDoc.story_id, 1);
   }
 
   var storyItem = storyConfig.story[level];
@@ -893,7 +894,7 @@ SGCompetitiveStoryController.prototype.getEndLevelMessage = function(phone, leve
   // Determine next opt in path based on player's choices vs conditions.
   var nextOip = null;
   for (var i = 0; i < storyItem.choices.length; i++) {
-    if (evaluateCondition(storyItem.choices[i].conditions, phone, gameDoc, checkResultType)) {
+    if (utility.evaluateCondition(storyItem.choices[i].conditions, phone, gameDoc, checkResultType)) {
       nextOip = storyItem.choices[i].next;
       break;
     }
@@ -918,7 +919,7 @@ SGCompetitiveStoryController.prototype.getEndLevelMessage = function(phone, leve
 SGCompetitiveStoryController.prototype.getEndLevelGroupMessage = function(endLevelGroupKey, storyConfig, gameDoc) {
   // Report total count of groups that reach the end of a level
   var levelTag = endLevelGroupKey.substr(-7, 1);
-  stathatReportCount(STATHAT_CATEGORY, 'end level (group)', levelTag, gameDoc.story_id, 1);
+  utility.stathatReportCount(STATHAT_CATEGORY, 'end level (group)', levelTag, gameDoc.story_id, 1);
 
   var storyItem = storyConfig.story[endLevelGroupKey];
 
@@ -933,7 +934,7 @@ SGCompetitiveStoryController.prototype.getEndLevelGroupMessage = function(endLev
     var phone = gameDoc.players_current_status[i].phone;
     for (var j = 0; j < storyItem.choices.length; j++) {
       var conditions = storyItem.choices[j].conditions;
-      if (evaluateCondition(conditions, phone, gameDoc, 'answer')) {
+      if (utility.evaluateCondition(conditions, phone, gameDoc, 'answer')) {
         choiceCounter[j]++;
         break;
       }
@@ -1253,174 +1254,8 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
         message.singleUser(players[playerIdx], gameConfig[gameDoc.story_id].game_ended_from_exit_oip);
       }
     }
-
   },
-  promiseErrorCallback('Unable to end player game docs within _endGameFromPlayerExit function.'));
+  utility.promiseErrorCallback('Unable to end player game docs within _endGameFromPlayerExit function.'));
 };
-
-/**
- * The following two functions are for handling Mongoose Promise chain errors.
- */
-function promiseErrorCallback(message) {
-  return onPromiseErrorCallback.bind({message: message});
-}
-
-function onPromiseErrorCallback(err) {
-  if (err) {
-    logger.error(this.message + '\n', err.stack);
-  }
-}
-
-/**
- * Schedule a message to be sent to ask Alpha if she wants to play solo.
- *
- * @param gameId
- *   Game ID of the game to check.
- * @param gameModel
- *   Mongoose model to search with.
- * @param oip
- *   Solo-play opt-in path.
- */
-function scheduleSoloMessage(gameId, gameModel, oip) {
-  var checkIfBetaJoined = function(_gameId, _gameModel, _oip) {
-    var findGame = _gameModel.findById(_gameId).exec();
-    findGame.then(function(doc) {
-      var aBetaHasJoined = false;
-      for (var i = 0; i < doc.betas.length; i++) {
-        if (doc.betas[i].invite_accepted == true) {
-          aBetaHasJoined = true;
-          break;
-        }
-      }
-      // If no Betas have joined and the game-type is NOT solo, ask the alpha
-      // if she wants to play SOLO.
-      if ((!aBetaHasJoined) && (doc.game_type !== 'solo')) {
-        message.singleUser(doc.alpha_phone, _oip);
-      }
-    }, promiseErrorCallback('Unable to find game.'));
-  };
-
-  setTimeout(function(){ checkIfBetaJoined(gameId, gameModel, oip) }, TIME_UNTIL_SOLO_MESSAGE_SENT);
-}
-
-/**
- * StatHat reporting wrapper. Organizes stat names into a "{category}: {action}: {label}: story-id={id}" structure.
- */
-function stathatReport(type, category, action, label, storyId, num) {
-  var statname = category + ': ' + action + ': ' + label + ': ' + 'story-id=' + storyId;
-  app.stathatReport(type, statname, num);
-}
-
-function stathatReportCount(category, action, label, storyId, count) {
-  stathatReport('Count', category, action, label, storyId, count);
-}
-
-function stathatReportValue(category, action, label, storyId, value) {
-  stathatReport('Value', category, action, label, storyId, value);
-}
-
-/**
- * Method for passing object data into a delegate.
- *
- * @param obj
- *   The object to apply to the 'this' value in the delegate.
- * @param delegate
- *   The function delegate.
- */
-function createCallback(obj, delegate) {
-  return function() {
-    delegate.apply(obj, arguments);
-  }
-};
-
-/**
- * Evalutes whether or not a player's story results match a given condition.
- *
- * @param condition
- *   Logic object
- * @param phone
- *   Phone number of player to check
- * @param gameDoc
- *   Document for the current game.
- * @param checkResultType
- *   What property the conditions are checking against. Either "oip" or "answer".
- *
- * @return Boolean
- */
-function evaluateCondition(condition, phone, gameDoc, checkResultType) {
-
-  /**
-   * Check if the player has provided a given answer in this game.
-   *
-   * @param result
-   *   The result to check against.
-   *
-   * @return Boolean
-   */
-  var checkUserResult = function(result) {
-    for (var i = 0; i < gameDoc.story_results.length; i++) {
-      if (gameDoc.story_results[i].phone == phone) {
-        if (checkResultType == 'oip' && gameDoc.story_results[i].oip == result) {
-          return true;
-        }
-        else if (checkResultType == 'answer' && gameDoc.story_results[i].answer == result) {
-          return true;
-        }
-      }
-    }
-
-    return false;
-  };
-
-  /**
-   * Recursive function to evaluate $and/$or logic objects. These objects are
-   * arrays of some combination of strings (which are user answers) and more
-   * logic objects.
-   *
-   *   ie:
-   *     "$or": [string | logic object, ...]
-   *     "$and": [string | logic object, ...]
-   *
-   * @param obj
-   *   Logic object.
-   *
-   * @return Boolean
-   */
-  var evalObj = function(obj) {
-    var result = false;
-
-    if (obj['$or']) {
-
-      var conditions = obj['$or'];
-      for (var i = 0; i < conditions.length; i++) {
-        // If anything is true, then result is true.
-        if ((typeof conditions[i] === 'string' && checkUserResult(conditions[i])) ||
-            (typeof conditions[i] === 'object' && evalObj(conditions[i]))) {
-          result = true;
-          break;
-        }
-      }
-
-    }
-    else if (obj['$and']) {
-
-      result = true;
-      var conditions = obj['$and'];
-      for (var i = 0; i < conditions.length; i++) {
-        // If anything is false, then result is false.
-        if ((typeof conditions[i] === 'string' && !checkUserResult(conditions[i])) ||
-            (typeof conditions[i] === 'object' && !evalObj(conditions[i]))) {
-          result = false;
-          break;
-        }
-      }
-
-    }
-
-    return result;
-  };
-
-  return evalObj(condition);
-}
 
 module.exports = SGCompetitiveStoryController;
