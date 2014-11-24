@@ -33,7 +33,7 @@ var TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR = 'zip' // 'zip' or 'state'. Our retrie
   , CITY_SCHOOLNAME_CHARLIMIT = 79; // Limit for the number of characters we have in this OIP: https://secure.mcommons.com/campaigns/128427/opt_in_paths/170623
 
 var mobilecommons = require('../../../../mobilecommons')
-  , messageHelper = require('../../userMessageHelpers')
+  , smsHelper = require('../../smsHelpers')
   , requestHttp = require('request')
   , dc_config = require('../config/donorschoose')
   , Q = require('q')
@@ -186,7 +186,7 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
  */
 DonorsChooseDonationController.prototype.retrieveEmail = function(request, response) {
 
-  var userSubmittedEmail = messageHelper.getFirstWord(request.body.args);
+  var userSubmittedEmail = smsHelper.getFirstWord(request.body.args);
   var updateObject = { $set: { donation_complete: true }};
   var apiInfoObject = {
     'apiUrl':       DONATE_API_URL,
@@ -357,7 +357,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
 DonorsChooseDonationController.prototype.retrieveFirstName = function(request, response) {
 
   var config = dc_config[request.query.id];
-  var userSubmittedName = messageHelper.getFirstWord(request.body.args);
+  var userSubmittedName = smsHelper.getFirstWord(request.body.args);
   var req = request;
 
   if (containsNaughtyWords(userSubmittedName) || !userSubmittedName) {
@@ -410,7 +410,7 @@ DonorsChooseDonationController.prototype.retrieveLocation = function(request, re
   response.send();
 
   var config = dc_config[request.query.id];
-  var location = messageHelper.getFirstWord(request.body.args);
+  var location = smsHelper.getFirstWord(request.body.args);
 
   if (TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR == 'zip') {
     if (!isValidZip(location)) {

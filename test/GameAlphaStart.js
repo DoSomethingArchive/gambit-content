@@ -6,7 +6,7 @@ var assert = require('assert')
   , userModel = require('../app/lib/sms-games/models/sgUser')
   , SGCompetitiveStoryController = require('../app/lib/sms-games/controllers/SGCompetitiveStoryController')
   , gameConfig = require('../app/lib/sms-games/config/competitive-stories')
-  , messageHelper = require('../app/lib/userMessageHelpers')
+  , smsHelper = require('../app/lib/smsHelpers')
   , testHelper = require('./testHelperFunctions')
   ;
 
@@ -77,7 +77,7 @@ describe('Alpha-Starting a Bully Text game:', function() {
     });
 
     it('should add sg_user doc for alpha user', function(done) {
-      var phone = messageHelper.getNormalizedPhone(alphaPhone);
+      var phone = smsHelper.getNormalizedPhone(alphaPhone);
       userModel.find({phone: phone}, function(err, docs) {
         if (!err && docs.length > 0) { done(); }
         else { assert(false); }
@@ -85,7 +85,7 @@ describe('Alpha-Starting a Bully Text game:', function() {
     })
 
     it('should add sg_user doc for beta0 user', function(done) {
-      var phone = messageHelper.getNormalizedPhone(betaPhone0);
+      var phone = smsHelper.getNormalizedPhone(betaPhone0);
       userModel.find({phone: phone}, function(err, docs) {
         if (!err && docs.length > 0) { done(); }
         else { assert(false); }
@@ -93,7 +93,7 @@ describe('Alpha-Starting a Bully Text game:', function() {
     })
 
     it('should add sg_user doc for beta1 user', function(done) {
-      var phone = messageHelper.getNormalizedPhone(betaPhone1);
+      var phone = smsHelper.getNormalizedPhone(betaPhone1);
       userModel.find({phone: phone}, function(err, docs) {
         if (!err && docs.length > 0) { done(); }
         else { assert(false); }
@@ -101,7 +101,7 @@ describe('Alpha-Starting a Bully Text game:', function() {
     })
 
     it('should add sg_user doc for beta2 user', function(done) {
-      var phone = messageHelper.getNormalizedPhone(betaPhone2);
+      var phone = smsHelper.getNormalizedPhone(betaPhone2);
       userModel.find({phone: phone}, function(err, docs) {
         if (!err && docs.length > 0) { done(); }
         else { assert(false); }
@@ -130,7 +130,7 @@ describe('Alpha-Starting a Bully Text game:', function() {
   describe('Alpha starting the game', function() {
     var request;
     before(function() {
-      phone = messageHelper.getNormalizedPhone(alphaPhone);
+      phone = smsHelper.getNormalizedPhone(alphaPhone);
       request = {
         body: {
           phone: phone,
@@ -158,10 +158,10 @@ describe('Alpha-Starting a Bully Text game:', function() {
             var phone = doc.players_current_status[i].phone;
             var currPath = doc.players_current_status[i].opt_in_path;
 
-            var aPhone = messageHelper.getNormalizedPhone(alphaPhone);
-            var b0Phone = messageHelper.getNormalizedPhone(betaPhone0);
-            var b1Phone = messageHelper.getNormalizedPhone(betaPhone1);
-            var b2Phone = messageHelper.getNormalizedPhone(betaPhone2);
+            var aPhone = smsHelper.getNormalizedPhone(alphaPhone);
+            var b0Phone = smsHelper.getNormalizedPhone(betaPhone0);
+            var b1Phone = smsHelper.getNormalizedPhone(betaPhone1);
+            var b2Phone = smsHelper.getNormalizedPhone(betaPhone2);
 
             if (phone == b0Phone || phone == b2Phone) {
               assert(false, 'Beta users sent message when they shouldn\'t have received any.');
@@ -183,10 +183,10 @@ describe('Alpha-Starting a Bully Text game:', function() {
 
   after(function() {
     // Remove all test documents
-    userModel.remove({phone: messageHelper.getNormalizedPhone(alphaPhone)}, function() {});
-    userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone0)}, function() {});
-    userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone1)}, function() {});
-    userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone2)}, function() {});
+    userModel.remove({phone: smsHelper.getNormalizedPhone(alphaPhone)}, function() {});
+    userModel.remove({phone: smsHelper.getNormalizedPhone(betaPhone0)}, function() {});
+    userModel.remove({phone: smsHelper.getNormalizedPhone(betaPhone1)}, function() {});
+    userModel.remove({phone: smsHelper.getNormalizedPhone(betaPhone2)}, function() {});
     gameMappingModel.remove({_id: gameMappingId}, function() {});
     gameModel.remove({_id: gameId}, function() {});
     this.gameController = null;

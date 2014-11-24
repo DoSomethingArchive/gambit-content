@@ -10,7 +10,6 @@
  */
 
 var mobilecommons = require('../../../../mobilecommons')
- , messageHelper = require('../../userMessageHelpers')
  , requestHttp = require('request')
  , logger = require('../../logger')
  ;

@@ -6,7 +6,7 @@ var assert = require('assert')
   , userModel = require('../app/lib/sms-games/models/sgUser')
   , SGCompetitiveStoryController = require('../app/lib/sms-games/controllers/SGCompetitiveStoryController')
   , gameConfig = require('../app/lib/sms-games/config/competitive-stories')
-  , messageHelper = require('../app/lib/userMessageHelpers')
+  , smsHelper = require('../app/lib/smsHelpers')
   , testHelper = require('./testHelperFunctions')
   ;
 
@@ -102,10 +102,10 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
             for (var i = 0; i < doc.players_current_status.length; i++) {
               if (doc.players_current_status[i].opt_in_path == startOip) {
                 var phone = doc.players_current_status[i].phone;
-                var aPhone = messageHelper.getNormalizedPhone(alphaPhone1);
-                var b0Phone = messageHelper.getNormalizedPhone(betaPhone0);
-                var b1Phone = messageHelper.getNormalizedPhone(betaPhone1);
-                var b2Phone = messageHelper.getNormalizedPhone(betaPhone2);
+                var aPhone = smsHelper.getNormalizedPhone(alphaPhone1);
+                var b0Phone = smsHelper.getNormalizedPhone(betaPhone0);
+                var b1Phone = smsHelper.getNormalizedPhone(betaPhone1);
+                var b2Phone = smsHelper.getNormalizedPhone(betaPhone2);
                 if (phone == aPhone)
                   alphaStarted = true;
                 else if (phone == b0Phone)
@@ -213,7 +213,7 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
       })
 
       it('Alpha1 should no longer have a `current_game_id` property.', function(done) {
-        userModel.findOne({phone: messageHelper.getNormalizedPhone(alphaPhone1)}, function(err, doc) {
+        userModel.findOne({phone: smsHelper.getNormalizedPhone(alphaPhone1)}, function(err, doc) {
           if (doc && (!doc.current_game_id)) {
             done()
           }
@@ -224,7 +224,7 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
       })
 
       it('Beta0 should no longer have a `current_game_id` property.', function(done) {
-        userModel.findOne({phone: messageHelper.getNormalizedPhone(betaPhone0)}, function(err, doc) {
+        userModel.findOne({phone: smsHelper.getNormalizedPhone(betaPhone0)}, function(err, doc) {
           if (doc && (!doc.current_game_id)) {
             done()
           }
@@ -235,7 +235,7 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
       })
 
       it('Beta1 should no longer have a `current_game_id` property.', function(done) {
-        userModel.findOne({phone: messageHelper.getNormalizedPhone(betaPhone1)}, function(err, doc) {
+        userModel.findOne({phone: smsHelper.getNormalizedPhone(betaPhone1)}, function(err, doc) {
           if (doc && (!doc.current_game_id)) {
             done()
           }
@@ -246,7 +246,7 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
       })
 
       it('Beta2 (the user invited out of Game 1) should now have a `current_game_id` property referencing Game 2\'s ObjectId value.', function(done) {
-        userModel.findOne({phone: messageHelper.getNormalizedPhone(betaPhone2)}, function(err, doc) {
+        userModel.findOne({phone: smsHelper.getNormalizedPhone(betaPhone2)}, function(err, doc) {
           if (doc && doc.current_game_id.equals(gameId)) {
             done()
           }
@@ -257,7 +257,7 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
       })
 
       it('Beta3 should now have a `current_game_id` property referencing Game 2\'s ObjectId value.', function(done) {
-        userModel.findOne({phone: messageHelper.getNormalizedPhone(betaPhone3)}, function(err, doc) {
+        userModel.findOne({phone: smsHelper.getNormalizedPhone(betaPhone3)}, function(err, doc) {
           if (doc && doc.current_game_id.equals(gameId)) {
             done()
           }
@@ -268,7 +268,7 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
       })
 
       it('Beta4 should now have a `current_game_id` property referencing Game 2\'s ObjectId value.', function(done) {
-        userModel.findOne({phone: messageHelper.getNormalizedPhone(betaPhone4)}, function(err, doc) {
+        userModel.findOne({phone: smsHelper.getNormalizedPhone(betaPhone4)}, function(err, doc) {
           if (doc && doc.current_game_id.equals(gameId)) {
             done()
           }
@@ -282,13 +282,13 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
   
   after(function() {
     // Remove all test documents.
-    userModel.remove({phone: messageHelper.getNormalizedPhone(alphaPhone1)}, function() {});
-    userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone0)}, function() {});
-    userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone1)}, function() {});
-    userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone2)}, function() {});
-    userModel.remove({phone: messageHelper.getNormalizedPhone(alphaPhone2)}, function() {});
-    userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone3)}, function() {});
-    userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone4)}, function() {});
+    userModel.remove({phone: smsHelper.getNormalizedPhone(alphaPhone1)}, function() {});
+    userModel.remove({phone: smsHelper.getNormalizedPhone(betaPhone0)}, function() {});
+    userModel.remove({phone: smsHelper.getNormalizedPhone(betaPhone1)}, function() {});
+    userModel.remove({phone: smsHelper.getNormalizedPhone(betaPhone2)}, function() {});
+    userModel.remove({phone: smsHelper.getNormalizedPhone(alphaPhone2)}, function() {});
+    userModel.remove({phone: smsHelper.getNormalizedPhone(betaPhone3)}, function() {});
+    userModel.remove({phone: smsHelper.getNormalizedPhone(betaPhone4)}, function() {});
     gameMappingModel.remove({_id: gameMappingId}, function() {});
     gameModel.remove({_id: gameId}, function() {});
     gameModel.remove({_id: gameOneId}, function() {});
