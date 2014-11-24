@@ -1,10 +1,10 @@
 var express = require('express')
   , router = express.Router();
 
-var multiplayerGameRouter = require('./smsMultiplayerGame')
-  , donationsRouter = require('../lib/donations')
-  , pregnancyTextRouter = require('../lib/pregnancytext')
-  , dsCampaignRouter = require('../lib/ds-routing')
+var multiplayerGameRouter = require('./lib/sms-games')
+  , donationsRouter = require('./lib/donations')
+  , pregnancyTextRouter = require('./lib/pregnancytext')
+  , dsCampaignRouter = require('./lib/ds-routing')
   ;
 
 // Directs all requests to the top-level router. 

@@ -1,11 +1,11 @@
 var express = require('express')
   , router = express.Router();
 
-var SGCreateFromMobileController = require('../controllers/SGCreateFromMobileController')
-  , SGCollaborativeStoryController = require('../controllers/SGCollaborativeStoryController')
-  , SGCompetitiveStoryController = require('../controllers/SGCompetitiveStoryController')
-  , SGMostLikelyToController = require('../controllers/SGMostLikelyToController')
-  , SGSoloController = require('../controllers/SGSoloController')
+var SGCreateFromMobileController = require('./controllers/SGCreateFromMobileController')
+  , SGCollaborativeStoryController = require('./controllers/SGCollaborativeStoryController')
+  , SGCompetitiveStoryController = require('./controllers/SGCompetitiveStoryController')
+  , SGMostLikelyToController = require('./controllers/SGMostLikelyToController')
+  , SGSoloController = require('./controllers/SGSoloController')
   ;
 
 /**
