@@ -6,34 +6,27 @@ var mobilecommons = require('../../mobilecommons')
   , messageHelper = require('../lib/userMessageHelpers')
   , emitter = require('../eventEmitter')
   , logger = require('../lib/logger')
-  ;
-
-var gameMappingModel = require('../models/sgGameMapping')
+  , gameMappingModel = require('../models/sgGameMapping')
   , gameModel = require('../models/sgCompetitiveStory')
   , userModel = require('../models/sgUser')
   , gameConfig = require('../config/competitive-stories')
   ;
 
 // Delay (in milliseconds) for end level group messages to be sent.
-var END_LEVEL_GROUP_MESSAGE_DELAY = 15000;
-
+var END_LEVEL_GROUP_MESSAGE_DELAY = 15000
 // Delay (in milliseconds) for next level start messages to be sent.
-var NEXT_LEVEL_START_DELAY = 30000;
-
+  , NEXT_LEVEL_START_DELAY = 30000
 // Delay (in milliseconds) for end game universal group messages to be sent.
-var UNIVERSAL_GROUP_ENDGAME_MESSAGE_DELAY = 23000;
-
+  , UNIVERSAL_GROUP_ENDGAME_MESSAGE_DELAY = 23000
 // Maximum number of players that can be invited into a game.
-var MAX_PLAYERS_TO_INVITE = 3;
-
+  , MAX_PLAYERS_TO_INVITE = 3
 // Minimum number of players required to create and/or start a game.
-var MIN_PLAYERS_TO_INVITE = 0;
-
-// The time interval between when a multiplayer game is created and 
-// when the SOLO option message is sent to the alpha.
-var TIME_UNTIL_SOLO_MESSAGE_SENT = 300000; // Five minutes is 300000.
-
-var STATHAT_CATEGORY = 'sms-games';
+  , MIN_PLAYERS_TO_INVITE = 0
+// The time interval between when a multiplayer game is created and when the SOLO option message is sent to the alpha.
+  , TIME_UNTIL_SOLO_MESSAGE_SENT = 300000 // Five minutes is 300000.
+// StatHat analytics marker. 
+  , STATHAT_CATEGORY = 'sms-games'
+  ;
 
 var SGCompetitiveStoryController = function() {};
 
