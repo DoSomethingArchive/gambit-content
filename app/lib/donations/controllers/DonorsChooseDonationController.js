@@ -42,10 +42,9 @@ var mobilecommons = require('../../../../mobilecommons')
   , Entities = require('html-entities').AllHtmlEntities
   ;
 
-function DonorsChooseDonationController(app) {
-  this.app = app;
-  this.donationModel = require('../models/DonationInfo')(app);
-};
+var donationModel = require('../models/DonationInfo');
+
+function DonorsChooseDonationController() {};
 
 /**
  * Resource name identifier. Routes will use this to specify the controller to use.
@@ -160,7 +159,7 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
       // .profile_update call placed within the donationModel.create() callback to 
       // ensure that the ORIGINAL DOCUMENT IS CREATED before the user texts back 
       // their name and attempts to find the  document to be updated. 
-      self.donationModel.create(currentDonationInfo).then(function(doc) {
+      donationModel.create(currentDonationInfo).then(function(doc) {
         mobilecommons.profile_update(request.body.mobile, config.found_project_ask_name, mobileCommonsCustomFields); // Arguments: phone, optInPathId, customFields.
         logger.info('Doc retrieved:', doc._id.toString(), ' - Updating Mobile Commons profile with:', mobileCommonsCustomFields);
       }, promiseErrorCallback('Unable to create donation document for user mobile: ' + req.body.mobile));
@@ -205,7 +204,7 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
     updateObject['$set'].email = userSubmittedEmail;
   }
   
-  this.donationModel.findOneAndUpdate(
+  donationModel.findOneAndUpdate(
     {
       $and : [
         { mobile: request.body.phone },
@@ -364,7 +363,7 @@ DonorsChooseDonationController.prototype.retrieveFirstName = function(request, r
     userSubmittedName = 'Anonymous';
   }
 
-  this.donationModel.findOneAndUpdate(
+  donationModel.findOneAndUpdate(
     {
       $and : [
         { mobile: request.body.phone },

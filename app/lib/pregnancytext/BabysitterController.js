@@ -1,37 +1,36 @@
 var mobilecommons = require('../../../mobilecommons')
+  , config = require('./babysitter-config');
   ;
 
 /**
  * Interface for guiding the babysitter aspect of Pregnancy Text 2014.
  */
-var Babysitter = function(app) {
-  this.app = app;
-  this.config = require('./babysitter-config');
+var Babysitter = function() {
 
   /**
    * The Mobile Commons opt-in path a parent gets pushed to when he sends a
    * babysitter invitation.
    */
-  this.optinParentOnInviteAlpha = this.config.optinParentOnInviteAlpha;
-  this.optinParentOnInviteBeta = this.config.optinParentOnInviteBeta;
+  this.optinParentOnInviteAlpha = config.optinParentOnInviteAlpha;
+  this.optinParentOnInviteBeta = config.optinParentOnInviteBeta;
 
   /**
    * The Mobile Commons campaign id for parents without a babysitter. When a
    * a babysitter invite is sent, parents get opted out of this campaign.
    */
-  this.campaignIdParentNoBsAlpha = this.config.campaignIdParentNoBsAlpha;
-  this.campaignIdParentNoBsBeta = this.config.campaignIdParentNoBsBeta;
-  this.campaignIdParentNoBsResurrected = this.config.campaignIdParentNoBsResurrected;
+  this.campaignIdParentNoBsAlpha = config.campaignIdParentNoBsAlpha;
+  this.campaignIdParentNoBsBeta = config.campaignIdParentNoBsBeta;
+  this.campaignIdParentNoBsResurrected = config.campaignIdParentNoBsResurrected;
 
   /**
    * The Mobile Commons opt-in path a babysitter gets pushed to on the invite.
    */
-  this.optinBsOnInvite = this.config.optinBsOnInvite;
+  this.optinBsOnInvite = config.optinBsOnInvite;
 
   /**
    * Array of generic response Mobile Commons opt-in paths.
    */
-  this.genericResponses = this.config.genericResponses;
+  this.genericResponses = config.genericResponses;
 
 }
 

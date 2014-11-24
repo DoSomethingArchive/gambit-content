@@ -1,45 +1,36 @@
 /**
  * Model for tracking user data needed for submitting a donation.
  */
+var mongoose = require('mongoose');
 
-var mongoose = require('mongoose')
-  ;
+var donationInfoSchema = new mongoose.Schema({
+  // User's mobile number
+  mobile: {type: String, index: true},
 
-function DonationInfo(app) {
-  var modelName = 'donation_info';
+  // User's email
+  email: String,
 
-  var schema  = new mongoose.Schema();
-  schema.add({
-    // User's mobile number
-    mobile: {type: String, index: true},
+  // User's first name
+  first_name: String,
 
-    // User's email
-    email: String,
+  // User's state or zipcode - depends on campaign
+  location: String,
 
-    // User's first name
-    first_name: String,
+  // Timestamp. 
+  created_at: {type: Date, default: Date.now},
 
-    // User's state or zipcode - depends on campaign
-    location: String,
+  // Project ID
+  project_id: Number,
 
-    // Timestamp. 
-    created_at: {type: Date, default: Date.now},
+  // Project URL
+  project_url: String, 
 
-    // Project ID
-    project_id: Number,
+  // Flag for donation completed. Flipped to 'true' when 
+  // retrieveEmail() is called, which itself calls submitDonation(). 
+  // Note that the flag is flipped *before* the donation is successfully 
+  // processed; this is safe because we will redirect the user to restart
+  // the donation flow if anything goes wrong. 
+  donation_complete: false,  
+})
 
-    // Project URL
-    project_url: String, 
-
-    // Flag for donation completed. Flipped to 'true' when 
-    // retrieveEmail() is called, which itself calls submitDonation(). 
-    // Note that the flag is flipped *before* the donation is successfully 
-    // processed; this is safe because we will redirect the user to restart
-    // the donation flow if anything goes wrong. 
-    donation_complete: false,
-  });
-
-  return app.getModel(modelName, schema);
-}
-
-module.exports = DonationInfo;
+module.exports = mongoose.model('donation_info', donationInfoSchema);

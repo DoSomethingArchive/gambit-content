@@ -1,8 +1,12 @@
 var assert = require('assert')
   , express = require('express')
   , emitter = require('../app/eventEmitter')
-  , messageHelper = require('../app/lib/userMessageHelpers')
+  , gameMappingModel = require('../app/models/sgGameMapping')
+  , gameModel = require('../app/models/sgCompetitiveStory')
+  , userModel = require('../app/models/sgUser')
   , SGCompetitiveStoryController = require('../app/controllers/SGCompetitiveStoryController')
+  , gameConfig = require('../app/config/competitive-stories')
+  , messageHelper = require('../app/lib/userMessageHelpers')
   , testHelper = require('./testHelperFunctions')
   ;
 
@@ -17,39 +21,7 @@ describe('Science Sleuth game being played:', function() {
   var betaPhone2 = '5555550203';
   var storyId = 101;
 
-  before('instantiating Express app, game controller, game config, dummy response', function() {
-    app = express();
-    require('../app/config')(app, express);
-
-    this.gameController = new SGCompetitiveStoryController(app);
-
-    // Reassigning the this.gameConfig property of the controller we just
-    // instantiated to use our test config file. 
-    this.gameController.gameConfig = require('../app/config/competitive-stories');
-    // Because of the unique scope of the before() hook, 
-    // the variables below weren't actually used/reassigned in testing. 
-    // They're defined much lower, globally. 
-    // var gameId = 2;
-    // var gameMappingId = 2;
-
-    // Dummy Express response object.
-    response = {
-      send: function(message) {
-        if (typeof message === 'undefined') {
-          message = '';
-        }
-        console.log('Response message: ' + message);
-      },
-
-      sendStatus: function(code) {
-        console.log('Response code: ' + code);
-      },
-
-      status: function(code) {
-        console.log('Response code: ' + code);
-      }
-    };
-  })
+  testHelper.gameAppSetup();
 
   describe('Creating a Science Sleuth game', function() {
     var request;
@@ -104,7 +76,7 @@ describe('Science Sleuth game being played:', function() {
 
     it('should add sg_user doc for alpha user', function(done) {
       var phone = messageHelper.getNormalizedPhone(alphaPhone);
-      this.gameController.userModel.find({phone: phone}, function(err, docs) {
+      userModel.find({phone: phone}, function(err, docs) {
         if (!err && docs.length > 0) { done(); }
         else { assert(false); }
       })
@@ -112,7 +84,7 @@ describe('Science Sleuth game being played:', function() {
 
     it('should add sg_user doc for beta0 user', function(done) {
       var phone = messageHelper.getNormalizedPhone(betaPhone0);
-      this.gameController.userModel.find({phone: phone}, function(err, docs) {
+      userModel.find({phone: phone}, function(err, docs) {
         if (!err && docs.length > 0) { done(); }
         else { assert(false); }
       })
@@ -120,7 +92,7 @@ describe('Science Sleuth game being played:', function() {
 
     it('should add sg_user doc for beta1 user', function(done) {
       var phone = messageHelper.getNormalizedPhone(betaPhone1);
-      this.gameController.userModel.find({phone: phone}, function(err, docs) {
+      userModel.find({phone: phone}, function(err, docs) {
         if (!err && docs.length > 0) { done(); }
         else { assert(false); }
       })
@@ -128,28 +100,28 @@ describe('Science Sleuth game being played:', function() {
 
     it('should add sg_user doc for beta2 user', function(done) {
       var phone = messageHelper.getNormalizedPhone(betaPhone2);
-      this.gameController.userModel.find({phone: phone}, function(err, docs) {
+      userModel.find({phone: phone}, function(err, docs) {
         if (!err && docs.length > 0) { done(); }
         else { assert(false); }
       })
     })
 
     it('should add a sg_gamemapping document', function(done) {
-      this.gameController.gameMappingModel.find({_id: gameMappingId}, function(err, docs) {
+      gameMappingModel.find({_id: gameMappingId}, function(err, docs) {
         if (!err && docs.length > 0) { done(); }
         else { assert(false); }
       })
     })
 
     it('should add a sg_competitivestory_game document', function(done) {
-      this.gameController.gameModel.find({_id: gameId}, function(err, docs) {
+      gameModel.find({_id: gameId}, function(err, docs) {
         if (!err && docs.length > 0) { done(); }
         else { assert(false); }
       })
     })
 
     it('should have a sg_competitivestory_game document with Science Sleuth\'s story_id of 101', function(done) {
-      this.gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
+      gameModel.findOne({_id: gameId}, function(err, doc) {
         if (!err && doc.story_id == 101) { done(); }
         else { assert(false); }
       })
@@ -168,8 +140,8 @@ describe('Science Sleuth game being played:', function() {
 
       it('should auto-start the game', function(done) {
         var alphaStarted = beta0Started = beta1Started = beta2Started = false; // Chaining assignment operators. They all are set to false. 
-        var startOip = this.gameController.gameConfig[storyId].story_start_oip;
-        this.gameController.gameModel.findOne({_id: gameId}, function(err, doc) {
+        var startOip = gameConfig[storyId].story_start_oip;
+        gameModel.findOne({_id: gameId}, function(err, doc) {
           if (!err && doc) {
             for (var i = 0; i < doc.players_current_status.length; i++) {
               if (doc.players_current_status[i].opt_in_path == startOip) {
@@ -194,8 +166,6 @@ describe('Science Sleuth game being played:', function() {
           done();
         })
       })
-
-      it('should send the start message to all players')
     })
 
     // Gameplay. 
@@ -617,12 +587,12 @@ describe('Science Sleuth game being played:', function() {
   
   after(function() {
     // Remove all test documents
-    this.gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(alphaPhone)}, function() {});
-    this.gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone0)}, function() {});
-    this.gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone1)}, function() {});
-    this.gameController.userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone2)}, function() {});
-    this.gameController.gameMappingModel.remove({_id: gameMappingId}, function() {});
-    this.gameController.gameModel.remove({_id: gameId}, function() {});
+    userModel.remove({phone: messageHelper.getNormalizedPhone(alphaPhone)}, function() {});
+    userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone0)}, function() {});
+    userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone1)}, function() {});
+    userModel.remove({phone: messageHelper.getNormalizedPhone(betaPhone2)}, function() {});
+    gameMappingModel.remove({_id: gameMappingId}, function() {});
+    gameModel.remove({_id: gameId}, function() {});
     this.gameController = null;
   })
 })

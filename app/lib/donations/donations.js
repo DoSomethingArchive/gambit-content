@@ -29,7 +29,7 @@ var DonorsChoose = require('./controllers/DonorsChooseDonationController')
 function loadController(controllerName) {
   if (implementsInterface(DonorsChoose.prototype) &&
       controllerName == DonorsChoose.prototype.resourceName) {
-    return new DonorsChoose(app);
+    return new DonorsChoose();
   }
 
   // @todo Support for additional controllers can be added using the same logic.

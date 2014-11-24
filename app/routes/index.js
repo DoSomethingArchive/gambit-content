@@ -8,7 +8,7 @@ var multiplayerGameRouter = require('./smsMultiplayerGame')
   ;
 
 // Directs all requests to the top-level router. 
-app.use('/', router)
+app.use('/', router);
 
 // Directs multiplayer game requests to the appropriate router. 
 router.use('/sms-multiplayer-game', multiplayerGameRouter);

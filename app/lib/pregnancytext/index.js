@@ -8,7 +8,7 @@ var express = require('express')
 var Babysitter = require('./BabysitterController')
   ;
 
-var babysitter = new Babysitter(app);
+var babysitter = new Babysitter;
 
 router.post('/send-babysitter-invite-alpha', function(req, res) {
   babysitter.onSendBabysitterInvite(req, res, babysitter.optinParentOnInviteAlpha,

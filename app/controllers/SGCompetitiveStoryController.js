@@ -8,6 +8,12 @@ var mobilecommons = require('../../mobilecommons')
   , logger = require('../lib/logger')
   ;
 
+var gameMappingModel = require('../models/sgGameMapping')
+  , gameModel = require('../models/sgCompetitiveStory')
+  , userModel = require('../models/sgUser')
+  , gameConfig = require('../config/competitive-stories')
+  ;
+
 // Delay (in milliseconds) for end level group messages to be sent.
 var END_LEVEL_GROUP_MESSAGE_DELAY = 15000;
 
@@ -29,13 +35,7 @@ var TIME_UNTIL_SOLO_MESSAGE_SENT = 300000; // Five minutes is 300000.
 
 var STATHAT_CATEGORY = 'sms-games';
 
-var SGCompetitiveStoryController = function(app) {
-  this.app = app;
-  this.gameMappingModel = require('../models/sgGameMapping')(app);
-  this.gameModel = require('../models/sgCompetitiveStory')(app);
-  this.userModel = require('../models/sgUser')(app);
-  this.gameConfig = app.get('competitive-stories');
-};
+var SGCompetitiveStoryController = function() {};
 
 /**
  * Setup and update documents for a new Competitive Story game.
@@ -78,7 +78,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     this.storyId = request.query.story_id;
   }
 
-  if (typeof this.gameConfig[this.storyId] === 'undefined') {
+  if (typeof gameConfig[this.storyId] === 'undefined') {
     response.status(406).send('Game config not setup for story ID: ' + this.storyId);
     return false;
   }
@@ -124,17 +124,17 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   var self = this;
 
   // Save game to the database.
-  var game = this.gameModel.create(gameDoc);
+  var game = gameModel.create(gameDoc);
   game.then(function(doc) {
     emitter.emit('game-created', doc);
-    var config = self.gameConfig[doc.story_id];
+    var config = gameConfig[doc.story_id];
 
     // Sets a time to ask the alpha if she wants to play a solo game.
-    scheduleSoloMessage(doc._id, self.gameModel, self.gameConfig[self.storyId].ask_solo_play);
+    scheduleSoloMessage(doc._id, gameModel, gameConfig[self.storyId].ask_solo_play);
 
     // Create game id to game type mapping.
-    self.gameMappingModel.create(
-      {game_id: doc._id, game_model: self.gameModel.modelName},
+    gameMappingModel.create(
+      {game_id: doc._id, game_model: gameModel.modelName},
       function(err, doc) {
         if (err) {
           logger.error(err);
@@ -153,7 +153,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     // Allowing us to use the created saved doc in the function called with the promise. 
     self.createdGameDoc = doc;
 
-    return self.userModel.find(findCondition).exec();
+    return userModel.find(findCondition).exec();
   },
   promiseErrorCallback('Unable to create player game docs within .createGame() function.')).then(function(playerDocs) {
 
@@ -161,7 +161,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     self._endGameFromPlayerExit(playerDocs);
 
     // Upsert the document for the alpha user.
-    self.userModel.update(
+    userModel.update(
       {phone: self.createdGameDoc.alpha_phone},
       {$set: {phone: self.createdGameDoc.alpha_phone, current_game_id: self.createdGameDoc._id, updated_at: Date.now()}},
       {upsert: true}, // Creates a new doc when no doc matches the query criteria via '.update()'.
@@ -185,7 +185,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
     self.createdGameDoc.betas.forEach(function(value, index, set) {
       // Upsert user document for the beta.
-      self.userModel.update(
+      userModel.update(
         {phone: value.phone},
         {$set: {phone: value.phone, current_game_id: self.createdGameDoc._id, updated_at: Date.now()}},     
         {upsert: true},
@@ -212,9 +212,9 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     // We opt users into these initial opt in paths only if the game type is NOT solo. 
     if (self.createdGameDoc.game_type !== 'solo') {
       optinGroup(self.createdGameDoc.alpha_phone,
-        self.gameConfig[self.storyId.toString()].alpha_wait_oip,
+        gameConfig[self.storyId.toString()].alpha_wait_oip,
         betaOptInArray,
-        self.gameConfig[self.storyId.toString()].beta_join_ask_oip);
+        gameConfig[self.storyId.toString()].beta_join_ask_oip);
     }
 
   },
@@ -372,7 +372,7 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
       // If the game's already started, notify the user and exit.
       if (doc.game_started || doc.game_ended) {
         // Good place to notify betas about ALPHA SOLO keywords for opt-in-paths. 
-        optinSingleUser(obj.request.body.phone, obj.gameConfig[doc.story_id].game_in_progress_oip);
+        optinSingleUser(obj.request.body.phone, gameConfig[doc.story_id].game_in_progress_oip);
         obj.response.send();
         return;
       }
@@ -398,18 +398,18 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
       // If all have joined, then start the game.
       if (allJoined) {
         doc.game_started = true;
-        doc = obj.startGame(obj.gameConfig, doc);
+        doc = obj.startGame(gameConfig, doc);
         obj.response.send();
       }
       // If we're still waiting on people, send appropriate messages to the recently
       // joined beta and alpha users.
       else {
-        doc = obj.sendWaitMessages(obj.gameConfig, doc, obj.joiningBetaPhone);
+        doc = obj.sendWaitMessages(gameConfig, doc, obj.joiningBetaPhone);
         obj.response.send();
       }
 
       // Save the doc in the database with the betas and current status updates.
-      obj.gameModel.update(
+      gameModel.update(
         {_id: doc._id},
         {$set: {
           betas: doc.betas,
@@ -464,11 +464,11 @@ SGCompetitiveStoryController.prototype.alphaStartGame = function(request, respon
     var execAlphaStartGame = function(obj, doc) {
       // Start the game.
       doc.game_started = true;
-      doc = obj.startGame(obj.gameConfig, doc);
+      doc = obj.startGame(gameConfig, doc);
       obj.response.send();
 
       // Save the doc in the database with the current status updates.
-      obj.gameModel.update(
+      gameModel.update(
         {_id: doc._id},
         {$set: {
           players_current_status: doc.players_current_status,
@@ -527,7 +527,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
     }
 
     // Get the story config.
-    var storyConfig = obj.gameConfig[doc.story_id];
+    var storyConfig = gameConfig[doc.story_id];
 
     // Check if user response is valid.
     var choiceIndex = -1;
@@ -626,7 +626,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
             // Send group the end level message. The end level group message is sent 
             // SECOND of all the messages in the execUserAction() function call.
 
-            delayedOptinSingleUser(playerPhone, groupOptin, END_LEVEL_GROUP_MESSAGE_DELAY, gameDoc._id, obj.userModel);
+            delayedOptinSingleUser(playerPhone, groupOptin, END_LEVEL_GROUP_MESSAGE_DELAY, gameDoc._id, userModel);
             gameDoc = obj.addPathToStoryResults(gameDoc, playerPhone, groupOptin);
           }
 
@@ -662,7 +662,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
             // Sends individual user the next level message. The next level message
             // (or if at end-game, end-game unique individual message)
             // is sent LAST in the execUserAction() function call.
-            delayedOptinSingleUser(playerPhone, nextPath, NEXT_LEVEL_START_DELAY, gameDoc._id, obj.userModel);
+            delayedOptinSingleUser(playerPhone, nextPath, NEXT_LEVEL_START_DELAY, gameDoc._id, userModel);
 
             gameDoc = obj.addPathToStoryResults(gameDoc, playerPhone, nextPath);
 
@@ -680,7 +680,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
 
       // Update the player's current status in the database. (Or ALL of the players' current statuses,
       // if we're at the end-level or end-game situation.)
-      obj.gameModel.update(
+      gameModel.update(
         {_id: doc._id},
         {$set: {
           players_current_status: gameDoc.players_current_status,
@@ -764,9 +764,9 @@ SGCompetitiveStoryController.prototype.findUserGame = function(obj, onUserGameFo
       logger.error(err);
     }
 
-    if (doc && doc.game_model == obj.gameModel.modelName) {
+    if (doc && doc.game_model == gameModel.modelName) {
       // Find the game via its id.
-      obj.gameModel.findOne({_id: doc.game_id}, onGameFound);
+      gameModel.findOne({_id: doc.game_id}, onGameFound);
     }
     else {
       obj.response.sendStatus(404);
@@ -786,7 +786,7 @@ SGCompetitiveStoryController.prototype.findUserGame = function(obj, onUserGameFo
       var gameId = doc.current_game_id;
 
       // Find the game model to determine what game collection to search over.
-      obj.gameMappingModel.findOne({game_id: doc.current_game_id}, onGameMappingFound);
+      gameMappingModel.findOne({game_id: doc.current_game_id}, onGameMappingFound);
     }
     else {
       obj.response.sendStatus(404);
@@ -797,7 +797,7 @@ SGCompetitiveStoryController.prototype.findUserGame = function(obj, onUserGameFo
    * 1) First step in the process of finding the user's game - find the user document. 
    * http://mongoosejs.com/docs/queries.html
    */
-  obj.userModel.findOne(
+  userModel.findOne(
     {phone: messageHelper.getNormalizedPhone(obj.request.body.phone)},
     onUserFound
   );
@@ -887,16 +887,16 @@ SGCompetitiveStoryController.prototype.updateStoryResults = function(gameDoc, ph
 /**
  * Start the game.
  *
- * @param gameConfig
+ * @param config
  *   Config object with game story details.
  * @param gameDoc
  *   Game document for users to start the game for.
  *
  * @return Updated game document.
  */
-SGCompetitiveStoryController.prototype.startGame = function(gameConfig, gameDoc) {
+SGCompetitiveStoryController.prototype.startGame = function(config, gameDoc) {
   // Get the starting opt in path from the game config.
-  var startMessage = gameConfig[gameDoc.story_id].story_start_oip;
+  var startMessage = config[gameDoc.story_id].story_start_oip;
 
   // Opt in the alpha user.
   optinSingleUser(gameDoc.alpha_phone, startMessage);
@@ -931,7 +931,7 @@ SGCompetitiveStoryController.prototype.startGame = function(gameConfig, gameDoc)
  * Send messages to the alpha and recently joined beta user about the pending
  * game status.
  *
- * @param gameConfig
+ * @param config
  *   Config object with game story details.
  * @param gameDoc
  *   Game document for users of the pending game.
@@ -940,9 +940,9 @@ SGCompetitiveStoryController.prototype.startGame = function(gameConfig, gameDoc)
  *
  * @return Updated game document.
  */
-SGCompetitiveStoryController.prototype.sendWaitMessages = function(gameConfig, gameDoc, betaPhone) {
-  var alphaMessage = gameConfig[gameDoc.story_id].alpha_start_ask_oip;
-  var betaMessage = gameConfig[gameDoc.story_id].beta_wait_oip;
+SGCompetitiveStoryController.prototype.sendWaitMessages = function(config, gameDoc, betaPhone) {
+  var alphaMessage = config[gameDoc.story_id].alpha_start_ask_oip;
+  var betaMessage = config[gameDoc.story_id].beta_wait_oip;
 
   // Send message to alpha asking if they want to start now.
   optinSingleUser(gameDoc.alpha_phone, alphaMessage);
@@ -1206,7 +1206,7 @@ SGCompetitiveStoryController.prototype.handleGroupEndGameMessage = function(stor
 
       // If the game has ended, the universal group endgame message is
       // sent THIRD (or second-last) of all the messages in execUserAction().
-      delayedOptinSingleUser(currentPlayer, nextPathForAllPlayers, UNIVERSAL_GROUP_ENDGAME_MESSAGE_DELAY, gameDoc._id, this.userModel);
+      delayedOptinSingleUser(currentPlayer, nextPathForAllPlayers, UNIVERSAL_GROUP_ENDGAME_MESSAGE_DELAY, gameDoc._id, userModel);
 
       gameDoc = this.updatePlayerCurrentStatus(gameDoc, currentPlayer, nextPathForAllPlayers);
       gameDoc = this.addPathToStoryResults(gameDoc, currentPlayer, nextPathForAllPlayers);
@@ -1273,7 +1273,7 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
   }
 
   var self = this;
-  var promise = this.gameModel.find(findCondition).exec();
+  var promise = gameModel.find(findCondition).exec();
   promise.then(function(docs) {
 
     // For each game still in progress...
@@ -1336,7 +1336,7 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
       }
 
       // Update game documents as having ended.
-      self.gameModel.update(
+      gameModel.update(
         {_id: gameDoc._id},
         {$set: {game_ended: true}},
         function(err, num, raw) {
@@ -1349,7 +1349,7 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
       // For players who were in ended games...
       for (var playerIdx = 0; playerIdx < players.length; playerIdx++) {
         // Remove the current_game_id from their document.
-        self.userModel.update(
+        userModel.update(
           {phone: players[playerIdx]},
           {$unset: {current_game_id: 1}},
           function(err, num, raw) {
@@ -1360,7 +1360,7 @@ SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerD
         );
 
         // Message them that the game has ended.
-        optinSingleUser(players[playerIdx], self.gameConfig[gameDoc.story_id].game_ended_from_exit_oip);
+        optinSingleUser(players[playerIdx], gameConfig[gameDoc.story_id].game_ended_from_exit_oip);
       }
     }
 

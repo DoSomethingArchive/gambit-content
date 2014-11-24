@@ -11,10 +11,10 @@ var mobilecommons = require('../../mobilecommons/mobilecommons')
   , logger = require('../lib/logger')
   ;
 
-var SGCreateFromMobileController = function(app, host) {
-  this.app = app;
+var configModel = require('../models/sgGameCreateConfig');
+
+var SGCreateFromMobileController = function(host) {
   this.host = host;
-  this.configModel = require('../models/sgGameCreateConfig')(app);
 };
 
 /**
@@ -111,7 +111,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
   // @todo When collaborative and most-likely-to games happen, set configs here.
   // Verify game type and id are valid.
   if (request.query.story_type == 'competitive-story') {
-    this.gameConfig = this.app.get('competitive-stories');
+    this.gameConfig = app.get('competitive-stories');
   }
   else {
     response.status(406).send('Invalid story_type.')
@@ -129,7 +129,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
   self.response = response;
 
   // Query for an existing game creation config doc.
-  var queryConfig = this.configModel.findOne({alpha_mobile: request.body.phone});
+  var queryConfig = configModel.findOne({alpha_mobile: request.body.phone});
   var promiseConfig = queryConfig.exec();
   promiseConfig.then(function(configDoc) {
 
@@ -146,7 +146,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
         game_type: (self.request.query.game_type || '')
       };
 
-      return self.configModel.create(doc);
+      return configModel.create(doc);
     }
     // If a document is found, then process the user message.
     else {
@@ -238,7 +238,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
  *   The document with updated data.
  */
 SGCreateFromMobileController.prototype._updateDocument = function(configDoc) {
-  this.configModel.update(
+  configModel.update(
     {alpha_mobile: configDoc.alpha_mobile},
     {$set: {
       beta_mobile_0: configDoc.beta_mobile_0 ? configDoc.beta_mobile_0 : null,
@@ -263,7 +263,7 @@ SGCreateFromMobileController.prototype._updateDocument = function(configDoc) {
  *   Alpha mobile number.
  */
 SGCreateFromMobileController.prototype._removeDocument = function(phone) {
-  this.configModel.remove(
+  configModel.remove(
     {alpha_mobile: phone},
     function(err, num) {
       if (err) {
