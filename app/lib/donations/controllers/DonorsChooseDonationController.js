@@ -44,7 +44,10 @@ var mobilecommons = require('../../../../mobilecommons')
 
 var donationModel = require('../models/DonationInfo');
 
-function DonorsChooseDonationController() {};
+function DonorsChooseDonationController() {
+  this.host; // Used to store reference to application host.
+  this.resourceName; // Resource name identifier. Specifies controller to route. 
+};
 
 /**
  * Resource name identifier. Routes will use this to specify the controller to use.
@@ -69,8 +72,6 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
   }
 
   var config = dc_config[request.query.id];
-  // Allows for referencing of 'this' within callbacks below. 
-  var self = this; 
 
   // Checking to see if the location param is a zip code or a state,
   // and assigning query params accordingly. 
