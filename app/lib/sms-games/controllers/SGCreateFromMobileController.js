@@ -5,16 +5,19 @@
  * Not used for SOLO mobile game creation, though. (See SGSoloController.js.)
  */
 
-var mobilecommons = require('../../mobilecommons/mobilecommons')
-  , messageHelper = require('../lib/userMessageHelpers')
+var mobilecommons = require('../../../../mobilecommons')
+  , messageHelper = require('../../userMessageHelpers')
   , requestHttp = require('request')
-  , logger = require('../lib/logger')
+  , logger = require('../../logger')
+  , competitiveStoryConfig = require('../config/competitive-stories')
+  , configModel = require('../models/sgGameCreateConfig')
   ;
 
-var configModel = require('../models/sgGameCreateConfig');
+var gameConfig;
 
 var SGCreateFromMobileController = function(host) {
-  this.host = host;
+  this.host = host; // Reference for application host. 
+  this.game_type; // Flag for type of game (competitive, collaborative). Currently used. 
 };
 
 /**
@@ -111,22 +114,23 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
   // @todo When collaborative and most-likely-to games happen, set configs here.
   // Verify game type and id are valid.
   if (request.query.story_type == 'competitive-story') {
-    this.gameConfig = app.get('competitive-stories');
+    gameConfig = competitiveStoryConfig;
   }
   else {
     response.status(406).send('Invalid story_type.')
     return false;
   }
 
-  if (typeof this.gameConfig[request.query.story_id] === 'undefined') {
+  if (typeof gameConfig[request.query.story_id] === 'undefined') {
     response.status(406).send('Game config not set up for story ID: ' + request.query.story_id);
     return false;
   }
 
-  var self = this;
-  self.storyConfig = this.gameConfig[request.query.story_id];
-  self.request = request;
-  self.response = response;
+  var self = this
+    , request = request
+    , response = response
+    , storyConfig = gameConfig[request.query.story_id];
+    ;
 
   // Query for an existing game creation config doc.
   var queryConfig = configModel.findOne({alpha_mobile: request.body.phone});
@@ -139,18 +143,18 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
     if (configDoc == null) {
       // We don't ask for the first name yet, so just saving it as phone for now.
       var doc = {
-        alpha_mobile: self.request.body.phone,
-        alpha_first_name: self.request.body.phone,
-        story_id: self.request.query.story_id,
-        story_type: self.request.query.story_type,
-        game_type: (self.request.query.game_type || '')
+        alpha_mobile: request.body.phone,
+        alpha_first_name: request.body.phone,
+        story_id: request.query.story_id,
+        story_type: request.query.story_type,
+        game_type: (request.query.game_type || '')
       };
 
       return configModel.create(doc);
     }
     // If a document is found, then process the user message.
     else {
-      var message = self.request.body.args;
+      var message = request.body.args;
       // Create the game if we have at least one beta number.
       // If the alpha responds 'Y' to the 'create game now?' query. 
       if (messageHelper.isYesResponse(message)) {
@@ -161,7 +165,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
         }
         else {
           // Send the "not enough players" message.
-          sendSMS(configDoc.alpha_mobile, self.storyConfig.mobile_create.not_enough_players_oip);
+          sendSMS(configDoc.alpha_mobile, storyConfig.mobile_create.not_enough_players_oip);
         }
       }
       else if (isPhoneNumber(message)) {
@@ -172,7 +176,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
           self._updateDocument(configDoc);
 
           // Then ask for beta_mobile_1.
-          sendSMS(configDoc.alpha_mobile, self.storyConfig.mobile_create.ask_beta_1_oip);
+          sendSMS(configDoc.alpha_mobile, storyConfig.mobile_create.ask_beta_1_oip);
         }
         // If we haven't saved the 2nd beta number yet, save it to beta_mobile_1.
         else if (!configDoc.beta_mobile_1) {
@@ -180,7 +184,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
           self._updateDocument(configDoc);
 
           // Then ask for beta_mobile_2.
-          sendSMS(configDoc.alpha_mobile, self.storyConfig.mobile_create.ask_beta_2_oip);
+          sendSMS(configDoc.alpha_mobile, storyConfig.mobile_create.ask_beta_2_oip);
         }
         // At this point, this is the last number we need. So, create the game.
         else {
@@ -192,7 +196,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
       }
       else {
         // Send the "invalid response" message.
-        sendSMS(configDoc.alpha_mobile, self.storyConfig.mobile_create.invalid_mobile_oip);
+        sendSMS(configDoc.alpha_mobile, storyConfig.mobile_create.invalid_mobile_oip);
       }
 
       throw new ErrorAbortPromiseChain();
@@ -205,7 +209,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
     // config model has just been newly successfully created.
     if (configDoc) {
       // User should have responded with beta_mobile_0.
-      var message = self.request.body.args;
+      var message = request.body.args;
       if (isPhoneNumber(message)) {
         // Update doc with beta_mobile_0 number.
         // var doc = modelConfig._doc;
@@ -213,11 +217,11 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
         self._updateDocument(configDoc);
 
         // Send next message asking for beta_mobile_1.
-        sendSMS(configDoc.alpha_mobile, self.storyConfig.mobile_create.ask_beta_1_oip);
+        sendSMS(configDoc.alpha_mobile, storyConfig.mobile_create.ask_beta_1_oip);
       }
       else {
         // If user responded with something else, ask for a valid phone number.
-        sendSMS(configDoc.alpha_mobile, self.storyConfig.mobile_create.invalid_mobile_oip);
+        sendSMS(configDoc.alpha_mobile, storyConfig.mobile_create.invalid_mobile_oip);
       }
     }  
 

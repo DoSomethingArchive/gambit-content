@@ -1,15 +1,14 @@
 var assert = require('assert')
   , express = require('express')
   , emitter = require('../app/eventEmitter')
-  , gameMappingModel = require('../app/models/sgGameMapping')
-  , gameModel = require('../app/models/sgCompetitiveStory')
-  , userModel = require('../app/models/sgUser')
-  , SGCompetitiveStoryController = require('../app/controllers/SGCompetitiveStoryController')
-  , gameConfig = require('../app/config/competitive-stories')
+  , gameMappingModel = require('../app/lib/sms-games/models/sgGameMapping')
+  , gameModel = require('../app/lib/sms-games/models/sgCompetitiveStory')
+  , userModel = require('../app/lib/sms-games/models/sgUser')
+  , SGCompetitiveStoryController = require('../app/lib/sms-games/controllers/SGCompetitiveStoryController')
+  , gameConfig = require('../app/lib/sms-games/config/competitive-stories')
   , messageHelper = require('../app/lib/userMessageHelpers')
   , testHelper = require('./testHelperFunctions')
   ;
-
 
 describe('Alpha-Starting a Bully Text game:', function() {
   // Test players' details.

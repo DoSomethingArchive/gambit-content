@@ -9,10 +9,10 @@
  *   Opt-in path to subscribe to.
  */
 
-var mobilecommons = require('../../mobilecommons/mobilecommons')
- , messageHelper = require('../lib/userMessageHelpers')
+var mobilecommons = require('../../../../mobilecommons')
+ , messageHelper = require('../../userMessageHelpers')
  , requestHttp = require('request')
- , logger = require('../lib/logger')
+ , logger = require('../../logger')
  ;
 
 function sendSMS(phone, oip) {
