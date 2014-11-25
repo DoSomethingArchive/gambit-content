@@ -1,7 +1,10 @@
 var mobilecommons = require('../../../../mobilecommons')
   , emitter = require('../../../eventEmitter')
-  , userModel = require('../models/sgUser')
+  , logger = require('../../logger')
   , gameModel = require('../models/sgCompetitiveStory')
+  , userModel = require('../models/sgUser')
+  , gameConfig = require('../config/competitive-stories')
+  , message = require('./gameMessageHelpers')
   , utility = require('./gameUtilities')
   , record = require('./gameRecordHelpers')
   ;
@@ -178,7 +181,7 @@ module.exports = {
    *   Player documents for players leaving a game.
    */
 
-  SGCompetitiveStoryControllerPROTOTYPE_endGameFromPlayerExit : function(playerDocs) {
+  endGameFromPlayerExit : function(playerDocs) {
     if (playerDocs.length == 0) {
       return;
     }

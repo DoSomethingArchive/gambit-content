@@ -152,7 +152,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   utility.promiseErrorCallback('Unable to create player game docs within .createGame() function.')).then(function(playerDocs) {
 
     // End games that these players were previously in.
-    self._endGameFromPlayerExit(playerDocs);
+    message.endGameFromPlayerExit(playerDocs);
 
     // Upsert the document for the alpha user.
     userModel.update(
@@ -736,126 +736,6 @@ SGCompetitiveStoryController.prototype.startGame = function(config, gameDoc) {
   utility.stathatReportCount(STATHAT_CATEGORY, stathatAction, 'number of players (total)', gameDoc.story_id, numPlayers);
   utility.stathatReportCount(STATHAT_CATEGORY, stathatAction, 'success', this.storyId, 1);
   return gameDoc;
-};
-
-/**
- * End a game due to a player exiting it.
- *
- * @param playerDocs
- *   Player documents for players leaving a game.
- */
-
-SGCompetitiveStoryController.prototype._endGameFromPlayerExit = function(playerDocs) {
-  if (playerDocs.length == 0) {
-    return;
-  }
-
-  // Using the user documents found before and stored inside the playerDocs array, 
-  // we find all games the players were previously in.
-  var findCondition = {};
-  for (var i = 0; i < playerDocs.length; i++) {
-    if (typeof findCondition['$or'] === 'undefined') {
-      findCondition['$or'] = [];
-    }
-
-    // Because we're using the current_game_id from the playerDocs found before
-    // the .then() callback, this might not cause asynchronous problems.
-    findCondition['$or'][i] = {_id: playerDocs[i].current_game_id};
-  }
-
-  var self = this;
-  var promise = gameModel.find(findCondition).exec();
-  promise.then(function(docs) {
-
-    // For each game still in progress...
-    for (var i = 0; i < docs.length; i++) {
-
-      var gameDoc = docs[i];
-
-      // Skip games that have already ended.
-      var skipGame = false;
-      if (gameDoc.game_ended) {
-        skipGame = true;
-      }
-      // Skip games where the player is not in the game.
-      else {
-        var noActivePlayerInGame = true;
-        for (var j = 0; j < playerDocs.length; j++) {
-          if (playerDocs[j].current_game_id.equals(gameDoc._id) == false) {
-            continue;
-          }
-
-          if (playerDocs[j].phone == gameDoc.alpha_phone) {
-            noActivePlayerInGame = false;
-            continue;
-          }
-
-          for (var k = 0; k < gameDoc.betas.length; k++) {
-            if (playerDocs[j].phone == gameDoc.betas[k].phone && gameDoc.betas[k].invite_accepted) {
-              noActivePlayerInGame = false;
-              continue;
-            }
-          }
-        }
-
-        if (noActivePlayerInGame) {
-          skipGame = true;
-        }
-      }
-
-      if (skipGame) {
-        continue;
-      }
-
-      // Find users to message that the game has ended. Note that this messages all users in 
-      // games created before the game model's .game_ended property was implemented. 
-      var players = [];
-      for (var j = 0; j < gameDoc.players_current_status.length; j++) {
-
-        // Do not send this message to the users who've been invited out of their game.
-        var doNotMessage = false;
-        for (var k = 0; k < playerDocs.length; k++) {
-          if (gameDoc.players_current_status[j].phone == playerDocs[k].phone) { 
-            doNotMessage = true;
-            break;
-          }
-        }
-
-        if (!doNotMessage) {
-          players[players.length] = gameDoc.players_current_status[j].phone;
-        }
-      }
-
-      // Update game documents as having ended.
-      gameModel.update(
-        {_id: gameDoc._id},
-        {$set: {game_ended: true}},
-        function(err, num, raw) {
-          if (err) {
-            logger.error(err);
-          }
-        }
-      );
-
-      // For players who were in ended games...
-      for (var playerIdx = 0; playerIdx < players.length; playerIdx++) {
-        // Remove the current_game_id from their document.
-        userModel.update(
-          {phone: players[playerIdx]},
-          {$unset: {current_game_id: 1}},
-          function(err, num, raw) {
-            if (err) {
-              logger.error(err);
-            }
-          }
-        );
-
-        // Message them that the game has ended.
-        message.singleUser(players[playerIdx], gameConfig[gameDoc.story_id].game_ended_from_exit_oip);
-      }
-    }
-  },
-  utility.promiseErrorCallback('Unable to end player game docs within _endGameFromPlayerExit function.'));
 };
 
 module.exports = SGCompetitiveStoryController;
