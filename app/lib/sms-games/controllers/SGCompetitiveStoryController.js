@@ -12,6 +12,7 @@ var mobilecommons = require('../../../../mobilecommons')
   , gameConfig = require('../config/competitive-stories')
   , message = require('./gameMessageHelpers')
   , utility = require('./gameUtilities')
+  , record = require('./gameRecordHelpers')
   ;
 
 // Delay (in milliseconds) for end level group messages to be sent.
@@ -461,19 +462,21 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
       // and getUniqueIndivEndGameMessage() because they use the story_results array in the
       // game document to determine what the next message should be.
       var gameDoc = doc;
-      gameDoc = obj.updateStoryResults(gameDoc, userPhone, currentOip, choiceKey);
+      gameDoc = record.updatedStoryResults(gameDoc, userPhone, currentOip, choiceKey);
 
       // Progress player to the next message.
       nextOip = storyItem.choices[choiceIndex].next;
       // Update the game document with player's current status.
-      gameDoc = obj.updatePlayerCurrentStatus(gameDoc, userPhone, nextOip);
+      gameDoc = record.updatedPlayerStatus(gameDoc, userPhone, nextOip);
 
       // Player has reached the end of a level.
       if (typeof nextOip === 'string' && nextOip.match(/^END-LEVEL/)) {
         var level = nextOip;
         nextOip = obj.getEndLevelMessage(userPhone, level, storyConfig, gameDoc, 'answer');
-        gameDoc = obj.updatePlayerCurrentStatus(gameDoc, userPhone, nextOip);
-        gameDoc = obj.addPathToStoryResults(gameDoc, userPhone, nextOip);
+        gameDoc = record.updatedPlayerStatus(gameDoc, userPhone, nextOip);
+
+        // why is OIP null here?????
+        gameDoc = record.updatedStoryResults(gameDoc, userPhone, nextOip);
 
         // Check if all players are waiting in an end-level state.
         var readyForNextLevel = true;
@@ -518,7 +521,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
             // SECOND of all the messages in the execUserAction() function call.
 
             message.singleUserWithDelay(playerPhone, groupOptin, END_LEVEL_GROUP_MESSAGE_DELAY, gameDoc._id, userModel);
-            gameDoc = obj.addPathToStoryResults(gameDoc, playerPhone, groupOptin);
+            gameDoc = record.updatedStoryResults(gameDoc, playerPhone, groupOptin);
           }
 
           // Note: Doing this `gameEnded` for loop separately from the end-level message so
@@ -555,10 +558,10 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
             // is sent LAST in the execUserAction() function call.
             message.singleUserWithDelay(playerPhone, nextPath, NEXT_LEVEL_START_DELAY, gameDoc._id, userModel);
 
-            gameDoc = obj.addPathToStoryResults(gameDoc, playerPhone, nextPath);
+            gameDoc = record.updatedStoryResults(gameDoc, playerPhone, nextPath);
 
             // Update player's current status to the end game or next level message.
-            gameDoc = obj.updatePlayerCurrentStatus(gameDoc, playerPhone, nextPath);
+            gameDoc = record.updatedPlayerStatus(gameDoc, playerPhone, nextPath);
           }
         }
       }
@@ -695,87 +698,6 @@ SGCompetitiveStoryController.prototype.findUserGame = function(obj, onUserGameFo
 };
 
 /**
- * Updates the game document with the player's current status.
- *
- * @param gameDoc
- *   Game document to modify.
- * @param phone
- *   Phone number of the player to update.
- * @param currentPath
- *   Current opt in path that the user is on.
- *
- * @return Updated game document.
- */
-SGCompetitiveStoryController.prototype.updatePlayerCurrentStatus = function(gameDoc, phone, currentPath) {
-  var updated = false;
-  for (var i = 0; i < gameDoc.players_current_status.length; i++) {
-    if (gameDoc.players_current_status[i].phone == phone) {
-      gameDoc.players_current_status[i].opt_in_path = currentPath;
-      gameDoc.players_current_status[i].updated_at = Date.now();
-      updated = true;
-    }
-  }
-
-  if (!updated) {
-    var idx = gameDoc.players_current_status.length;
-    gameDoc.players_current_status[idx] = {};
-    gameDoc.players_current_status[idx].phone = phone;
-    gameDoc.players_current_status[idx].opt_in_path = currentPath;
-    gameDoc.players_current_status[idx].updated_at = Date.now();
-  }
-
-  return gameDoc;
-};
-
-/**
- * Add to the story_results array of a game document.
- *
- * @param gameDoc
- *   Game document to modify.
- * @param phone
- *   Phone number of the player to add a result for.
- * @param oip
- *   Opt in path to add.
- *
- * @return Updated game document.
- */
-SGCompetitiveStoryController.prototype.addPathToStoryResults = function(gameDoc, phone, oip) {
-  var idx = gameDoc.story_results.length;
-  gameDoc.story_results[idx] = {};
-  gameDoc.story_results[idx].oip = oip;
-  gameDoc.story_results[idx].phone = phone;
-  gameDoc.story_results[idx].created_at = Date.now();
-
-  return gameDoc;
-}
-
-/**
- * Adds a story_results item to the game document.
- *
- * @param gameDoc
- *   Game document to modify.
- * @param phone
- *   Phone number of the player to update.
- * @param oip
- *   Opt in path that the user submitted an answer for.
- * @param answer
- *   User's answer.
- *
- * @return Updated game document.
- */
-SGCompetitiveStoryController.prototype.updateStoryResults = function(gameDoc, phone, oip, answer) {
-  var index = gameDoc.story_results.length;
-
-  gameDoc.story_results[index] = {};
-  gameDoc.story_results[index].oip = oip;
-  gameDoc.story_results[index].phone = phone;
-  gameDoc.story_results[index].answer = answer;
-  gameDoc.story_results[index].created_at = Date.now();
-
-  return gameDoc;
-};
-
-/**
  * Start the game.
  *
  * @param config
@@ -793,7 +715,7 @@ SGCompetitiveStoryController.prototype.startGame = function(config, gameDoc) {
   message.singleUser(gameDoc.alpha_phone, startMessage);
 
   // Update the alpha's current status.
-  gameDoc = this.updatePlayerCurrentStatus(gameDoc, gameDoc.alpha_phone, startMessage);
+  gameDoc = record.updatedPlayerStatus(gameDoc, gameDoc.alpha_phone, startMessage);
 
   // Alpha
   var numPlayers = 1;
@@ -804,7 +726,7 @@ SGCompetitiveStoryController.prototype.startGame = function(config, gameDoc) {
       message.singleUser(gameDoc.betas[i].phone, startMessage);
 
       // Update the beta's current status.
-      gameDoc = this.updatePlayerCurrentStatus(gameDoc, gameDoc.betas[i].phone, startMessage);
+      gameDoc = record.updatedPlayerStatus(gameDoc, gameDoc.betas[i].phone, startMessage);
 
       numPlayers++;
     }
@@ -839,13 +761,13 @@ SGCompetitiveStoryController.prototype.sendWaitMessages = function(config, gameD
   message.singleUser(gameDoc.alpha_phone, alphaMessage);
 
   // Update the alpha's current status.
-  gameDoc = this.updatePlayerCurrentStatus(gameDoc, gameDoc.alpha_phone, alphaMessage);
+  gameDoc = record.updatedPlayerStatus(gameDoc, gameDoc.alpha_phone, alphaMessage);
 
   // Send the waiting message to the beta user.
   message.singleUser(betaPhone, betaMessage);
 
   // Update the beta's current status.
-  gameDoc = this.updatePlayerCurrentStatus(gameDoc, betaPhone, betaMessage);
+  gameDoc = record.updatedPlayerStatus(gameDoc, betaPhone, betaMessage);
 
   return gameDoc;
 };
@@ -1002,7 +924,7 @@ SGCompetitiveStoryController.prototype.getIndivRankEndGameMessage = function(pho
       tempPlayerSuccessObject[gameDoc.players_current_status[i].phone] = 0;
     }
 
-    // Counts the number of levels each user has successfully passed.
+    // Counts the ,number of levels each user has successfully passed.
     for (var i = 0; i < indivLevelSuccessOips.length; i++) {
       for (var j = 0; j < gameDoc.story_results.length; j++) {
         if (indivLevelSuccessOips[i] === gameDoc.story_results[j].oip) {
@@ -1099,8 +1021,8 @@ SGCompetitiveStoryController.prototype.handleGroupEndGameMessage = function(stor
       // sent THIRD (or second-last) of all the messages in execUserAction().
       message.singleUserWithDelay(currentPlayer, nextPathForAllPlayers, UNIVERSAL_GROUP_ENDGAME_MESSAGE_DELAY, gameDoc._id, userModel);
 
-      gameDoc = this.updatePlayerCurrentStatus(gameDoc, currentPlayer, nextPathForAllPlayers);
-      gameDoc = this.addPathToStoryResults(gameDoc, currentPlayer, nextPathForAllPlayers);
+      gameDoc = record.updatedPlayerStatus(gameDoc, currentPlayer, nextPathForAllPlayers);
+      gameDoc = record.updatedStoryResults(gameDoc, currentPlayer, nextPathForAllPlayers);
     }
   }
   return gameDoc;
