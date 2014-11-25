@@ -5,6 +5,12 @@ var mobilecommons = require('../../../../mobilecommons')
   , utility = require('./gameUtilities')
   ;
 
+// StatHat analytics marker. 
+var STATHAT_CATEGORY = 'sms-games'
+// Delay (in milliseconds) for end game universal group messages to be sent.
+  , UNIVERSAL_GROUP_ENDGAME_MESSAGE_DELAY = 23000
+  ;
+
 module.exports = {
   /**
    * Schedule a message to be sent to a SINGLE user via a Mobile Commons optin.
@@ -164,292 +170,298 @@ module.exports = {
     return gameDoc;
   },
 
-  /**
-   * Get the end-level opt-in path to send to a user based on the user's answers
-   * and the defined criteria in the story.
-   *
-   * @param phone
-   *   User's phone number.
-   * @param level
-   *   Key to find the level's config. ex: END-LEVEL2
-   * @param storyConfig
-   *   Object defining details for the current story.
-   * @param gameDoc
-   *   Document for the current game.
-   * @param checkResultType
-   *   What property the conditions are checking against. Either "oip" or "answer".
-   *
-   * @return Boolean
-   */
-  SGCompetitiveStoryControllerPROTOTYPEgetEndLevelMessage : function(phone, level, storyConfig, gameDoc, checkResultType) {
-    var levelTag;
-    if (level === 'END-GAME') {
-      levelTag = level;
-    }
-    else {
-      // Get the level number from the end.
-      levelTag = level.slice(-1);
-    }
-
-    // Report total count of individual players reaching the end of a level
-    var stathatAction = 'end level ';
-    if (phone == gameDoc.alpha_phone) {
-      utility.stathatReportCount(STATHAT_CATEGORY, stathatAction + '(alpha)', levelTag, gameDoc.story_id, 1);
-    }
-    else {
-      utility.stathatReportCount(STATHAT_CATEGORY, stathatAction + '(beta)', levelTag, gameDoc.story_id, 1);
-    }
-
-    var storyItem = storyConfig.story[level];
-    if (typeof storyItem === 'undefined') {
-      return null;
-    }
-
-    // Determine next opt in path based on player's choices vs conditions.
-    var nextOip = null;
-    for (var i = 0; i < storyItem.choices.length; i++) {
-      if (utility.evaluateCondition(storyItem.choices[i].conditions, phone, gameDoc, checkResultType)) {
-        nextOip = storyItem.choices[i].next;
-        break;
-      }
-    }
-
-    return nextOip;
-  },
-
-  /**
-   * Evaluates and returns the opt-in path for the message to be sent to the entire
-   * group at the end of a level.
-   *
-   * @param endLevelGroupKey
-   *   String key (ex: "END-LEVEL1-GROUP") to find details on how to evaluate the end level group message.
-   * @param storyConfig
-   *   Object defining details for the current story.
-   * @param gameDoc
-   *   Document for the current game.
-   *
-   * @return End level group message opt-in path.
-   */
-  SGCompetitiveStoryControllerPROTOTYPEgetEndLevelGroupMessage : function(endLevelGroupKey, storyConfig, gameDoc) {
-    // Report total count of groups that reach the end of a level
-    var levelTag = endLevelGroupKey.substr(-7, 1);
-    utility.stathatReportCount(STATHAT_CATEGORY, 'end level (group)', levelTag, gameDoc.story_id, 1);
-
-    var storyItem = storyConfig.story[endLevelGroupKey];
-
-    // Initializing values to 0
-    var choiceCounter = [];
-    for (var i = 0; i < storyItem.choices.length; i++) {
-      choiceCounter[i] = 0;
-    }
-
-    // Evaluate which condition players match
-    for (var i = 0; i < gameDoc.players_current_status.length; i++) {
-      var phone = gameDoc.players_current_status[i].phone;
-      for (var j = 0; j < storyItem.choices.length; j++) {
-        var conditions = storyItem.choices[j].conditions;
-        if (utility.evaluateCondition(conditions, phone, gameDoc, 'answer')) {
-          choiceCounter[j]++;
-          break;
+  end : {
+    level : {
+      /**
+       * Get the end-level opt-in path to send to a user based on the user's answers
+       * and the defined criteria in the story.
+       *
+       * @param phone
+       *   User's phone number.
+       * @param level
+       *   Key to find the level's config. ex: END-LEVEL2
+       * @param storyConfig
+       *   Object defining details for the current story.
+       * @param gameDoc
+       *   Document for the current game.
+       * @param checkResultType
+       *   What property the conditions are checking against. Either "oip" or "answer".
+       *
+       * @return Boolean
+       */
+      indiv: function(phone, level, storyConfig, gameDoc, checkResultType) {
+        var levelTag;
+        if (level === 'END-GAME') {
+          levelTag = level;
         }
-      }
-    }
+        else {
+          // Get the level number from the end.
+          levelTag = level.slice(-1);
+        }
 
-    // Find out which condition was matched the most
-    var selectChoice = -1;
-    var maxCount = -1;
-    for (var i = 0; i < choiceCounter.length; i++) {
-      if (choiceCounter[i] > maxCount) {
-        selectChoice = i;
-        maxCount = choiceCounter[i];
-      }
-    }
-    return storyItem.choices[selectChoice].next;
-  },
+        // Report total count of individual players reaching the end of a level
+        var stathatAction = 'end level ';
+        if (phone == gameDoc.alpha_phone) {
+          utility.stathatReportCount(STATHAT_CATEGORY, stathatAction + '(alpha)', levelTag, gameDoc.story_id, 1);
+        }
+        else {
+          utility.stathatReportCount(STATHAT_CATEGORY, stathatAction + '(beta)', levelTag, gameDoc.story_id, 1);
+        }
 
-  /**
-   * Gets the unique, individual end game message for a particular user
-   *
-   * @param phone
-   *   User's phone number.
-   * @param storyConfig
-   *   Object defining details for the current story.
-   * @param gameDoc
-   *   Document for the current game.
-   *
-   * @return End game individual message opt-in path
-   */
-  SGCompetitiveStoryControllerPROTOTYPEgetUniqueIndivEndGameMessage : function(phone, storyConfig, gameDoc) {
-    var indivMessageEndGameFormat = storyConfig['endgame_config']['indiv-message-end-game-format'];
-    if (indivMessageEndGameFormat == 'individual-decision-based') {
-      return this.getEndLevelMessage(phone, 'END-GAME', storyConfig, gameDoc, 'answer');
-    }
-    else if (indivMessageEndGameFormat == 'rankings-within-group-based') {
-      return this.getIndivRankEndGameMessage(phone, storyConfig, gameDoc);
-    }
-    else {
-      logger.error('This story has an indeterminate endgame format.');
-    }
-  },
+        var storyItem = storyConfig.story[level];
+        if (typeof storyItem === 'undefined') {
+          return null;
+        }
 
-  /**
-  * Calculates the ranking of all players; returns appropriate ranking oip.
-  * 
-  * @param phone
-  *   User's phone number.
-  * @param storyConfig
-  *   Object defining details for the current story.
-  * @param gameDoc
-  *   Document for the current game.
-  * 
-  * @return End game individual ranking opt-in-path. 
-  */
-
-  SGCompetitiveStoryControllerPROTOTYPEgetIndivRankEndGameMessage : function(phone, storyConfig, gameDoc) {
-    var gameDoc = gameDoc;
-    // If we haven't run the ranking calculation before. 
-    if (!gameDoc.players_current_status[0].rank) {
-      var tempPlayerSuccessObject = {};
-      var indivLevelSuccessOips = storyConfig.story['END-GAME']['indiv-level-success-oips'];
-      // Populates the tempPlayerSuccess object with all the players. 
-      for (var i = 0; i < gameDoc.players_current_status.length; i++) {
-        tempPlayerSuccessObject[gameDoc.players_current_status[i].phone] = 0;
-      }
-
-      // Counts the number of levels each user has successfully passed.
-      for (var i = 0; i < indivLevelSuccessOips.length; i++) {
-        for (var j = 0; j < gameDoc.story_results.length; j++) {
-          if (indivLevelSuccessOips[i] === gameDoc.story_results[j].oip) {
-            tempPlayerSuccessObject[gameDoc.story_results[j].phone]++;
+        // Determine next opt in path based on player's choices vs conditions.
+        var nextOip = null;
+        for (var i = 0; i < storyItem.choices.length; i++) {
+          if (utility.evaluateCondition(storyItem.choices[i].conditions, phone, gameDoc, checkResultType)) {
+            nextOip = storyItem.choices[i].next;
+            break;
           }
         }
-      }
+        return nextOip;
+      },
+      /**
+       * Evaluates and returns the opt-in path for the message to be sent to the entire
+       * group at the end of a level.
+       *
+       * @param endLevelGroupKey
+       *   String key (ex: "END-LEVEL1-GROUP") to find details on how to evaluate the end level group message.
+       * @param storyConfig
+       *   Object defining details for the current story.
+       * @param gameDoc
+       *   Document for the current game.
+       *
+       * @return End level group message opt-in path.
+       */
+      group : function(endLevelGroupKey, storyConfig, gameDoc) {
+        // Report total count of groups that reach the end of a level
+        var levelTag = endLevelGroupKey.substr(-7, 1);
+        utility.stathatReportCount(STATHAT_CATEGORY, 'end level (group)', levelTag, gameDoc.story_id, 1);
 
-      // Converts success count into an array. 
-      var playerRankArray = [];
-      for (var playerPhoneNumber in tempPlayerSuccessObject) {
-        if (tempPlayerSuccessObject.hasOwnProperty(playerPhoneNumber)) {
-          var playerSuccessObject = {'phone': playerPhoneNumber, 'levelSuccesses': tempPlayerSuccessObject[playerPhoneNumber]};
-          playerRankArray.push(playerSuccessObject);
-        }
-      }
+        var storyItem = storyConfig.story[endLevelGroupKey];
 
-      // Sorts players by number of levels successfully completed,
-      // least number of levels completed to most number of levels.
-      playerRankArray.sort(function(playerA, playerB){
-        if (playerA.levelSuccesses > playerB.levelSuccesses) {
-          return 1;
-        } 
-        else if (playerA.levelSuccesses < playerB.levelSuccesses) {
-          return -1;
-        } 
-        else {
-          return 0;
+        // Initializing values to 0
+        var choiceCounter = [];
+        for (var i = 0; i < storyItem.choices.length; i++) {
+          choiceCounter[i] = 0;
         }
-      })
 
-      // Adds each user's rank to the gameDoc,
-      // indicating ties for first and second place.
-      var FIRST_PLACE_NUMERAL = 1;
-      var LAST_PLACE_NUMERAL = 4;
-      for (var i = FIRST_PLACE_NUMERAL; i <= LAST_PLACE_NUMERAL; i++) {
-        if (!playerRankArray.length) {
-          break;
-        }
-        var nextRank = [];
-        nextRank.push(playerRankArray.pop());
-        // If there's a tie.
-        while ((playerRankArray.length) && (nextRank[0].levelSuccesses == playerRankArray.slice(-1)[0].levelSuccesses)) {
-          nextRank.push(playerRankArray.pop());
-        }
-        for (var j = 0; j < nextRank.length; j++) {
-          for (var k = 0; k < gameDoc.players_current_status.length; k++) {
-            if (gameDoc.players_current_status[k].phone == nextRank[j].phone) {
-              // We only record and signify ties for first and second place.
-              if (nextRank.length > 1 && (i === 1||i === 2)) {
-                gameDoc.players_current_status[k].rank = i + '-tied';
-              } 
-              else {
-                gameDoc.players_current_status[k].rank = i;  
-              }
+        // Evaluate which condition players match
+        for (var i = 0; i < gameDoc.players_current_status.length; i++) {
+          var phone = gameDoc.players_current_status[i].phone;
+          for (var j = 0; j < storyItem.choices.length; j++) {
+            var conditions = storyItem.choices[j].conditions;
+            if (utility.evaluateCondition(conditions, phone, gameDoc, 'answer')) {
+              choiceCounter[j]++;
+              break;
             }
           }
         }
-      }
-    }
-    
-    // Returns the opt in path for the indicated user's ranking. 
-    for (var i = 0; i < gameDoc.players_current_status.length; i++) {
-      if (gameDoc.players_current_status[i].phone === phone) {
-        var playerRanking = gameDoc.players_current_status[i].rank;
-        return storyConfig.story['END-GAME']['indiv-rank-oips'][playerRanking];
-      }
-    }
-    return false;
-  },
 
-  /**
-   * 1) Checks the group endgame format of a game, on based on that:
-   * 2) Retrieves the group endgame message,
-   * 3) Sends that message to all game players,
-   * 4) Updates the gamedoc's storyResults and players' current status
-   * 5) Returns the updated gamedoc.
-   *
-   * @param storyConfig
-   *   JSON object defining details for the current story.
-   * @param gameDoc
-   *  document for the current game
-   *
-   * @return The updated gamedoc.
-   */
-  SGCompetitiveStoryControllerPROTOTYPEhandleGroupEndGameMessage : function(storyConfig, gameDoc) {
-    if (storyConfig['endgame_config']['group-message-end-game-format'] == 'group-success-failure-based') {
-      var nextPathForAllPlayers = this.getUniversalGroupEndGameMessage(storyConfig, gameDoc)
-      // Iterating through all players, enrolling them in this new OIP.
-      for (var j = 0; j < gameDoc.players_current_status.length; j ++) {
-        var currentPlayer = gameDoc.players_current_status[j].phone;
-
-        // If the game has ended, the universal group endgame message is
-        // sent THIRD (or second-last) of all the messages in execUserAction().
-        message.singleUserWithDelay(currentPlayer, nextPathForAllPlayers, UNIVERSAL_GROUP_ENDGAME_MESSAGE_DELAY, gameDoc._id, userModel);
-
-        gameDoc = this.updatePlayerCurrentStatus(gameDoc, currentPlayer, nextPathForAllPlayers);
-        gameDoc = this.addPathToStoryResults(gameDoc, currentPlayer, nextPathForAllPlayers);
-      }
-    }
-    return gameDoc;
-  },
-
-  /**
-   * Gets the universal end game message to be sent to a group.
-   *
-   * @param storyConfig
-   *   JSON object defining details for the current story.
-   * @param gameDoc
-   *  document for the current game
-   *
-   * @return The oip of the final group message.
-   */
-  SGCompetitiveStoryControllerPROTOTYPEgetUniversalGroupEndGameMessage : function(storyConfig, gameDoc) {
-    // An array of oips which represent group end-level impact paths.
-    var groupLevelSuccessOips = storyConfig.story['END-GAME']['group-level-success-oips'];
-
-    // A hash. Key --> number of levels where group successfully received
-    // impact condition; value --> end-level oip that number of levels unlocks,
-    // which is sent to all players.
-    var groupSuccessFailureOips = storyConfig.story['END-GAME']['group-success-failure-oips'];
-    var levelSuccessCounter = 0;
-
-    // Iterates through the user action documents in story results.
-    for (var i = 0; i < groupLevelSuccessOips.length; i++) {
-      for (var j = 0; j < gameDoc.story_results.length; j++) {
-        if (groupLevelSuccessOips[i] === gameDoc.story_results[j]['oip']) {
-          levelSuccessCounter++;
-          break;
+        // Find out which condition was matched the most
+        var selectChoice = -1;
+        var maxCount = -1;
+        for (var i = 0; i < choiceCounter.length; i++) {
+          if (choiceCounter[i] > maxCount) {
+            selectChoice = i;
+            maxCount = choiceCounter[i];
+          }
         }
+        return storyItem.choices[selectChoice].next;
       }
+    },
+
+    game : {
+      /**
+       * Gets the unique, individual end game message for a particular user
+       *
+       * @param phone
+       *   User's phone number.
+       * @param storyConfig
+       *   Object defining details for the current story.
+       * @param gameDoc
+       *   Document for the current game.
+       *
+       * @return End game individual message opt-in path
+       */
+      indiv : function(phone, storyConfig, gameDoc) {
+        var indivMessageEndGameFormat = storyConfig['endgame_config']['indiv-message-end-game-format'];
+        if (indivMessageEndGameFormat == 'individual-decision-based') {
+          return module.exports.end.level.indiv(phone, 'END-GAME', storyConfig, gameDoc, 'answer');
+        }
+        else if (indivMessageEndGameFormat == 'rankings-within-group-based') {
+          return _getEndGameRankMessage(phone, storyConfig, gameDoc);
+        }
+        else {
+          logger.error('This story has an indeterminate endgame format.');
+        }
+
+        /**
+        * Calculates the ranking of all players; returns appropriate ranking oip for indiv player.
+        * 
+        * @param phone
+        *   User's phone number.
+        * @param storyConfig
+        *   Object defining details for the current story.
+        * @param gameDoc
+        *   Document for the current game.
+        * 
+        * @return End game individual ranking opt-in-path. 
+        */
+
+        function _getEndGameRankMessage(phone, storyConfig, gameDoc) {
+          var gameDoc = gameDoc;
+          // If we haven't run the ranking calculation before. 
+          if (!gameDoc.players_current_status[0].rank) {
+            var tempPlayerSuccessObject = {};
+            var indivLevelSuccessOips = storyConfig.story['END-GAME']['indiv-level-success-oips'];
+            // Populates the tempPlayerSuccess object with all the players. 
+            for (var i = 0; i < gameDoc.players_current_status.length; i++) {
+              tempPlayerSuccessObject[gameDoc.players_current_status[i].phone] = 0;
+            }
+
+            // Counts the number of levels each user has successfully passed.
+            for (var i = 0; i < indivLevelSuccessOips.length; i++) {
+              for (var j = 0; j < gameDoc.story_results.length; j++) {
+                if (indivLevelSuccessOips[i] === gameDoc.story_results[j].oip) {
+                  tempPlayerSuccessObject[gameDoc.story_results[j].phone]++;
+                }
+              }
+            }
+
+            // Converts success count into an array. 
+            var playerRankArray = [];
+            for (var playerPhoneNumber in tempPlayerSuccessObject) {
+              if (tempPlayerSuccessObject.hasOwnProperty(playerPhoneNumber)) {
+                var playerSuccessObject = {'phone': playerPhoneNumber, 'levelSuccesses': tempPlayerSuccessObject[playerPhoneNumber]};
+                playerRankArray.push(playerSuccessObject);
+              }
+            }
+
+            // Sorts players by number of levels successfully completed,
+            // least number of levels completed to most number of levels.
+            playerRankArray.sort(function(playerA, playerB){
+              if (playerA.levelSuccesses > playerB.levelSuccesses) {
+                return 1;
+              } 
+              else if (playerA.levelSuccesses < playerB.levelSuccesses) {
+                return -1;
+              } 
+              else {
+                return 0;
+              }
+            })
+
+            // Adds each user's rank to the gameDoc,
+            // indicating ties for first and second place.
+            var FIRST_PLACE_NUMERAL = 1;
+            var LAST_PLACE_NUMERAL = 4;
+            for (var i = FIRST_PLACE_NUMERAL; i <= LAST_PLACE_NUMERAL; i++) {
+              if (!playerRankArray.length) {
+                break;
+              }
+              var nextRank = [];
+              nextRank.push(playerRankArray.pop());
+              // If there's a tie.
+              while ((playerRankArray.length) && (nextRank[0].levelSuccesses == playerRankArray.slice(-1)[0].levelSuccesses)) {
+                nextRank.push(playerRankArray.pop());
+              }
+              for (var j = 0; j < nextRank.length; j++) {
+                for (var k = 0; k < gameDoc.players_current_status.length; k++) {
+                  if (gameDoc.players_current_status[k].phone == nextRank[j].phone) {
+                    // We only record and signify ties for first and second place.
+                    if (nextRank.length > 1 && (i === 1||i === 2)) {
+                      gameDoc.players_current_status[k].rank = i + '-tied';
+                    } 
+                    else {
+                      gameDoc.players_current_status[k].rank = i;  
+                    }
+                  }
+                }
+              }
+            }
+          }
+          
+          // Returns the opt in path for the indicated user's ranking. 
+          for (var i = 0; i < gameDoc.players_current_status.length; i++) {
+            if (gameDoc.players_current_status[i].phone === phone) {
+              var playerRanking = gameDoc.players_current_status[i].rank;
+              return storyConfig.story['END-GAME']['indiv-rank-oips'][playerRanking];
+            }
+          }
+          return false;
+        }
+      },
+
+      /**
+       * 1) Checks the group endgame format of a game, on based on that:
+       * 2) Retrieves the group endgame message,
+       * 3) Sends that message to all game players,
+       * 4) Updates the gamedoc's storyResults and players' current status
+       * 5) Returns the updated gamedoc.
+       *
+       * @param storyConfig
+       *   JSON object defining details for the current story.
+       * @param gameDoc
+       *  document for the current game
+       *
+       * @return The updated gamedoc.
+       */
+      group : function(storyConfig, gameDoc) {
+        if (storyConfig['endgame_config']['group-message-end-game-format'] == 'group-success-failure-based') {
+          var nextPathForAllPlayers = _getUniversalEndGameGroupMessage(storyConfig, gameDoc)
+          // Iterating through all players, enrolling them in this new OIP.
+          for (var j = 0; j < gameDoc.players_current_status.length; j ++) {
+            var currentPlayer = gameDoc.players_current_status[j].phone;
+
+            // If the game has ended, the universal group endgame message is
+            // sent THIRD (or second-last) of all the messages in execUserAction().
+            message.singleUserWithDelay(currentPlayer, nextPathForAllPlayers, UNIVERSAL_GROUP_ENDGAME_MESSAGE_DELAY, gameDoc._id, userModel);
+
+            gameDoc = this.updatePlayerCurrentStatus(gameDoc, currentPlayer, nextPathForAllPlayers);
+            gameDoc = this.addPathToStoryResults(gameDoc, currentPlayer, nextPathForAllPlayers);
+          }
+        }
+        return gameDoc;
+
+        /**
+         * Gets the universal end game message to be sent to a group.
+         *
+         * @param storyConfig
+         *   JSON object defining details for the current story.
+         * @param gameDoc
+         *  document for the current game
+         *
+         * @return The oip of the final group message.
+         */
+        function _getUniversalEndGameGroupMessage(storyConfig, gameDoc) {
+          // An array of oips which represent group end-level impact paths.
+          var groupLevelSuccessOips = storyConfig.story['END-GAME']['group-level-success-oips'];
+
+          // A hash. Key --> number of levels where group successfully received
+          // impact condition; value --> end-level oip that number of levels unlocks,
+          // which is sent to all players.
+          var groupSuccessFailureOips = storyConfig.story['END-GAME']['group-success-failure-oips'];
+          var levelSuccessCounter = 0;
+
+          // Iterates through the user action documents in story results.
+          for (var i = 0; i < groupLevelSuccessOips.length; i++) {
+            for (var j = 0; j < gameDoc.story_results.length; j++) {
+              if (groupLevelSuccessOips[i] === gameDoc.story_results[j]['oip']) {
+                levelSuccessCounter++;
+                break;
+              }
+            }
+          }
+          return groupSuccessFailureOips[levelSuccessCounter];
+        }
+
+      },
+
     }
-    return groupSuccessFailureOips[levelSuccessCounter];
   },
 
   /**
