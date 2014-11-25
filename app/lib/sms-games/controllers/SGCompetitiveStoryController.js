@@ -19,8 +19,6 @@ var mobilecommons = require('../../../../mobilecommons')
 var END_LEVEL_GROUP_MESSAGE_DELAY = 15000
 // Delay (in milliseconds) for next level start messages to be sent.
   , NEXT_LEVEL_START_DELAY = 30000
-// Delay (in milliseconds) for end game universal group messages to be sent.
-  , UNIVERSAL_GROUP_ENDGAME_MESSAGE_DELAY = 23000
 // Maximum number of players that can be invited into a game.
   , MAX_PLAYERS_TO_INVITE = 3
 // Minimum number of players required to create and/or start a game.
@@ -296,7 +294,7 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
       // If we're still waiting on people, send appropriate messages to the recently
       // joined beta and alpha users.
       else {
-        doc = obj.sendWaitMessages(gameConfig, doc, obj.joiningBetaPhone);
+        doc = message.wait(gameConfig, doc, obj.joiningBetaPhone);
         obj.response.send();
       }
 
@@ -540,7 +538,7 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
               if (!gameEnded){
                 // Sends universal GROUP endgame message (sent THIRD,
                 // or second-last); updates gamedoc.
-                gameDoc = obj.handleGroupEndGameMessage(storyConfig, gameDoc);
+                gameDoc = message.end.game.group(storyConfig, gameDoc);
               }
               gameEnded = true;
               // This is setting the next OIP to the INDIVIDUAL end-game message.
@@ -738,102 +736,6 @@ SGCompetitiveStoryController.prototype.startGame = function(config, gameDoc) {
   utility.stathatReportCount(STATHAT_CATEGORY, stathatAction, 'number of players (total)', gameDoc.story_id, numPlayers);
   utility.stathatReportCount(STATHAT_CATEGORY, stathatAction, 'success', this.storyId, 1);
   return gameDoc;
-};
-
-/**
- * Send messages to the alpha and recently joined beta user about the pending
- * game status.
- *
- * @param config
- *   Config object with game story details.
- * @param gameDoc
- *   Game document for users of the pending game.
- * @param betaPhone
- *   Phone number of the recently joined beta to send a message to.
- *
- * @return Updated game document.
- */
-SGCompetitiveStoryController.prototype.sendWaitMessages = function(config, gameDoc, betaPhone) {
-  var alphaMessage = config[gameDoc.story_id].alpha_start_ask_oip;
-  var betaMessage = config[gameDoc.story_id].beta_wait_oip;
-
-  // Send message to alpha asking if they want to start now.
-  message.singleUser(gameDoc.alpha_phone, alphaMessage);
-
-  // Update the alpha's current status.
-  gameDoc = record.updatedPlayerStatus(gameDoc, gameDoc.alpha_phone, alphaMessage);
-
-  // Send the waiting message to the beta user.
-  message.singleUser(betaPhone, betaMessage);
-
-  // Update the beta's current status.
-  gameDoc = record.updatedPlayerStatus(gameDoc, betaPhone, betaMessage);
-
-  return gameDoc;
-};
-
-/**
- * 1) Checks the group endgame format of a game, on based on that:
- * 2) Retrieves the group endgame message,
- * 3) Sends that message to all game players,
- * 4) Updates the gamedoc's storyResults and players' current status
- * 5) Returns the updated gamedoc.
- *
- * @param storyConfig
- *   JSON object defining details for the current story.
- * @param gameDoc
- *  document for the current game
- *
- * @return The updated gamedoc.
- */
-SGCompetitiveStoryController.prototype.handleGroupEndGameMessage = function(storyConfig, gameDoc) {
-  if (storyConfig['endgame_config']['group-message-end-game-format'] == 'group-success-failure-based') {
-    var nextPathForAllPlayers = this.getUniversalGroupEndGameMessage(storyConfig, gameDoc)
-    // Iterating through all players, enrolling them in this new OIP.
-    for (var j = 0; j < gameDoc.players_current_status.length; j ++) {
-      var currentPlayer = gameDoc.players_current_status[j].phone;
-
-      // If the game has ended, the universal group endgame message is
-      // sent THIRD (or second-last) of all the messages in execUserAction().
-      message.singleUserWithDelay(currentPlayer, nextPathForAllPlayers, UNIVERSAL_GROUP_ENDGAME_MESSAGE_DELAY, gameDoc._id, userModel);
-
-      gameDoc = record.updatedPlayerStatus(gameDoc, currentPlayer, nextPathForAllPlayers);
-      gameDoc = record.updatedStoryResults(gameDoc, currentPlayer, nextPathForAllPlayers);
-    }
-  }
-  return gameDoc;
-}
-
-/**
- * Gets the universal end game message to be sent to a group.
- *
- * @param storyConfig
- *   JSON object defining details for the current story.
- * @param gameDoc
- *  document for the current game
- *
- * @return The oip of the final group message.
- */
-SGCompetitiveStoryController.prototype.getUniversalGroupEndGameMessage = function(storyConfig, gameDoc) {
-  // An array of oips which represent group end-level impact paths.
-  var groupLevelSuccessOips = storyConfig.story['END-GAME']['group-level-success-oips'];
-
-  // A hash. Key --> number of levels where group successfully received
-  // impact condition; value --> end-level oip that number of levels unlocks,
-  // which is sent to all players.
-  var groupSuccessFailureOips = storyConfig.story['END-GAME']['group-success-failure-oips'];
-  var levelSuccessCounter = 0;
-
-  // Iterates through the user action documents in story results.
-  for (var i = 0; i < groupLevelSuccessOips.length; i++) {
-    for (var j = 0; j < gameDoc.story_results.length; j++) {
-      if (groupLevelSuccessOips[i] === gameDoc.story_results[j]['oip']) {
-        levelSuccessCounter++;
-        break;
-      }
-    }
-  }
-  return groupSuccessFailureOips[levelSuccessCounter];
 };
 
 /**
