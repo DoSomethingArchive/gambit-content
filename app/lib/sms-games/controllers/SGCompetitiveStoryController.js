@@ -56,6 +56,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   // helper function function.
   
   this.request = request;
+  this.response = response;
   if (!this.request.body) {
     this.request.body = {}
   }
@@ -153,47 +154,36 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     message.endGameFromPlayerExit(playerDocs);
 
     // Upsert the document for the alpha user.
-    userModel.update(
-      {phone: self.createdGameDoc.alpha_phone},
-      {$set: {phone: self.createdGameDoc.alpha_phone, current_game_id: self.createdGameDoc._id, updated_at: Date.now()}},
-      {upsert: true}, // Creates a new doc when no doc matches the query criteria via '.update()'.
-      function(err, num, raw) {
-        if (err) {
-          logger.error(err);
-        }
-        else {
-          // This response.sendStatus() call has been moved from outside into this 
-          // async Mongoose call to ensure that upon SOLO game creation, 
-          // the Alpha userModel will have been modified with the SOLO gameId before 
-          // the start game logic runs (triggered by the POST to the /alpha-start route.)
-          response.sendStatus(201);
-          emitter.emit('alpha-user-created');
+    // userModel.update(
+    //   {phone: self.createdGameDoc.alpha_phone},
+    //   {$set: {phone: self.createdGameDoc.alpha_phone, current_game_id: self.createdGameDoc._id, updated_at: Date.now()}},
+    //   {upsert: true}, // Creates a new doc when no doc matches the query criteria via '.update()'.
+    //   function(err, num, raw) {
+    //     if (err) {
+    //       logger.error(err);
+    //     }
+    //     else {
+    //       // This response.sendStatus() call has been moved from outside into this 
+    //       // async Mongoose call to ensure that upon SOLO game creation, 
+    //       // the Alpha userModel will have been modified with the SOLO gameId before 
+    //       // the start game logic runs (triggered by the POST to the /alpha-start route.)
+    //       response.sendStatus(201);
+    //       emitter.emit('alpha-user-created');
 
-          if (raw && raw.upserted) {
-            logger.info('Alpha user upserted: ', JSON.stringify(raw.upserted));
-          }
-        }
-      });
+    //       if (raw && raw.upserted) {
+    //         logger.info('Alpha user upserted: ', JSON.stringify(raw.upserted));
+    //       }
+    //     }
+    //   });
+
+    createPlayer(self.createdGameDoc.alpha_phone, self.createdGameDoc._id, 'alpha-user-created', 'Alpha user upserted: ').exec()
+
+    .then(function() { self.response.sendStatus(201) }, 
+      utility.promiseErrorCallback(err));
 
     self.createdGameDoc.betas.forEach(function(value, index, set) {
       // Upsert user document for the beta.
-      userModel.update(
-        {phone: value.phone},
-        {$set: {phone: value.phone, current_game_id: self.createdGameDoc._id, updated_at: Date.now()}},     
-        {upsert: true},
-        function(err, num, raw) {
-          if (err) {
-            logger.error(err);
-          }
-          else {
-            emitter.emit('beta-user-created');
-
-            if (raw && raw.upserted) {
-              logger.info('Beta user upserted: ', JSON.stringify(raw.upserted));
-            }
-          }
-        }
-      );
+      createPlayer(value.phone, self.createdGameDoc._id, 'beta-user-created', 'Beta user upserted: ').exec();
     });
 
     var betaOptInArray = []; // Extract phone number for Mobile Commons opt in.
@@ -219,7 +209,30 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   utility.stathatReportCount(STATHAT_CATEGORY, stathatAction, 'number of players (total)', this.storyId, numPlayers);
   utility.stathatReportCount(STATHAT_CATEGORY, stathatAction, 'success', this.storyId, 1);
   return true;
+
+  function createPlayer(phone, docId, emitterMessage, loggerMessage) {
+    return userModel.update(
+      {phone: phone},
+      {$set: {phone: phone, current_game_id: docId, updated_at: Date.now()}},     
+      {upsert: true},
+      function(err, num, raw) {
+        if (err) {
+          logger.error(err);
+        }
+        else {
+          emitter.emit(emitterMessage);
+
+          if (raw && raw.upserted) {
+            logger.info(loggerMessage, JSON.stringify(raw.upserted));
+          }
+        }
+      }
+    );
+  }
+
 };
+
+
 
 /**
  * @todo consider moving all of the join game behavior to a parent class SGGameController
