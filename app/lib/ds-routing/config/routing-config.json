@@ -114,6 +114,16 @@
             "__comments": "Patient Playbooks 2014",
             "optin": 174425,
             "optout": 130715
+        },
+        "11847": {
+            "__comments": "Baby, It's Cold Inside 2014",
+            "optin": 174541,
+            "optout": 130799
+        },
+        "11851": {
+            "__comments": "Search For Specs 2014",
+            "optin": 174571,
+            "optout": 130821
         }
     },
     "yesNoPaths": [
@@ -289,6 +299,16 @@
             "incomingPath": 174427,
             "yes": 174429,
             "no": 174431
+        },
+        {   "__comments": "Baby, It's Cold Inside 2014",
+            "incomingPath": 174543,
+            "yes": 174545,
+            "no": 174547
+        },
+        {   "__comments": "Search For Specs 2014",
+            "incomingPath": 174573,
+            "yes": 174575,
+            "no": 174577
         }
 
     ]
