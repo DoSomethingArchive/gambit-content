@@ -362,47 +362,21 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
  *   Callback to execute when the user's game is found.
  */
 SGCompetitiveStoryController.prototype.findUserGame = function(obj, onUserGameFound) {
-
+  
   /**
-   * 4) Last callback in the chain. Called when a user's game document is found.
+   * 1) First step in the process of finding the user's game - find the user document. 
+   * http://mongoosejs.com/docs/queries.html
    */
-  var onGameFound = function(err, doc) {
-    if (err) {
-      logger.error(err);
-    }
-
-    if (doc) {
-      logger.log('debug', 'Game doc found:\n', doc);
-      onUserGameFound(obj, doc);
-    }
-    else {
-      obj.response.sendStatus(404);
-    }
-  };
-
-  /**
-   * 3) When a user's game is found in the mapping collection, we then know
-   * which collection to search for the game on.
-   */
-  var onGameMappingFound = function(err, doc) {
-    if (err) {
-      logger.error(err);
-    }
-
-    if (doc && doc.game_model == gameModel.modelName) {
-      // Find the game via its id.
-      gameModel.findOne({_id: doc.game_id}, onGameFound);
-    }
-    else {
-      obj.response.sendStatus(404);
-    }
-  };
+  userModel.findOne(
+    {phone: smsHelper.getNormalizedPhone(obj.request.body.phone)},
+    onUserFound
+  );
 
   /**
    * 2) When a user's document is found, use the game id in the user's
    * document to then find the collection to search for the game in.
    */
-  var onUserFound = function(err, doc) {
+  function onUserFound(err, doc) {
     if (err) {
       logger.error(err);
     }
@@ -419,13 +393,39 @@ SGCompetitiveStoryController.prototype.findUserGame = function(obj, onUserGameFo
   };
 
   /**
-   * 1) First step in the process of finding the user's game - find the user document. 
-   * http://mongoosejs.com/docs/queries.html
+   * 3) When a user's game is found in the mapping collection, we then know
+   * which collection to search for the game on.
    */
-  userModel.findOne(
-    {phone: smsHelper.getNormalizedPhone(obj.request.body.phone)},
-    onUserFound
-  );
+  function onGameMappingFound(err, doc) {
+    if (err) {
+      logger.error(err);
+    }
+
+    if (doc && doc.game_model == gameModel.modelName) {
+      // Find the game via its id.
+      gameModel.findOne({_id: doc.game_id}, onGameFound);
+    }
+    else {
+      obj.response.sendStatus(404);
+    }
+  };
+
+  /**
+   * 4) Last callback in the chain. Called when a user's game document is found.
+   */
+  function onGameFound(err, doc) {
+    if (err) {
+      logger.error(err);
+    }
+
+    if (doc) {
+      logger.log('debug', 'Game doc found:\n', doc);
+      onUserGameFound(obj, doc);
+    }
+    else {
+      obj.response.sendStatus(404);
+    }
+  };
 };
 
 module.exports = SGCompetitiveStoryController;
