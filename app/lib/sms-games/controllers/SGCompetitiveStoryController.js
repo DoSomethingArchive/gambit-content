@@ -53,9 +53,9 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   }
 
   // Allows us to use the .findUserGame(obj, onUserGameFound) 
-  // helper function function.
-  
+  // helper function.
   this.request = request;
+  this.response = response;
   if (!this.request.body) {
     this.request.body = {}
   }
@@ -153,47 +153,15 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     message.endGameFromPlayerExit(playerDocs);
 
     // Upsert the document for the alpha user.
-    userModel.update(
-      {phone: self.createdGameDoc.alpha_phone},
-      {$set: {phone: self.createdGameDoc.alpha_phone, current_game_id: self.createdGameDoc._id, updated_at: Date.now()}},
-      {upsert: true}, // Creates a new doc when no doc matches the query criteria via '.update()'.
-      function(err, num, raw) {
-        if (err) {
-          logger.error(err);
-        }
-        else {
-          // This response.sendStatus() call has been moved from outside into this 
-          // async Mongoose call to ensure that upon SOLO game creation, 
-          // the Alpha userModel will have been modified with the SOLO gameId before 
-          // the start game logic runs (triggered by the POST to the /alpha-start route.)
-          response.sendStatus(201);
-          emitter.emit('alpha-user-created');
+    // This response.sendStatus() call fires after the async Mongoose call returns
+    // so that upon SOLO game creation, the Alpha userModel will have been modified 
+    // with the SOLO gameId before the start game logic runs 
+    // (triggered by the POST to the /alpha-start route.)
+    createPlayer(self.createdGameDoc.alpha_phone, self.createdGameDoc._id, 'alpha-user-created', function(){ self.response.sendStatus(201); });
 
-          if (raw && raw.upserted) {
-            logger.info('Alpha user upserted: ', JSON.stringify(raw.upserted));
-          }
-        }
-      });
-
+    // Upsert user documents for the betas.
     self.createdGameDoc.betas.forEach(function(value, index, set) {
-      // Upsert user document for the beta.
-      userModel.update(
-        {phone: value.phone},
-        {$set: {phone: value.phone, current_game_id: self.createdGameDoc._id, updated_at: Date.now()}},     
-        {upsert: true},
-        function(err, num, raw) {
-          if (err) {
-            logger.error(err);
-          }
-          else {
-            emitter.emit('beta-user-created');
-
-            if (raw && raw.upserted) {
-              logger.info('Beta user upserted: ', JSON.stringify(raw.upserted));
-            }
-          }
-        }
-      );
+      createPlayer(value.phone, self.createdGameDoc._id, 'beta-user-created');
     });
 
     var betaOptInArray = []; // Extract phone number for Mobile Commons opt in.
@@ -219,6 +187,23 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   utility.stathatReportCount(STATHAT_CATEGORY, stathatAction, 'number of players (total)', this.storyId, numPlayers);
   utility.stathatReportCount(STATHAT_CATEGORY, stathatAction, 'success', this.storyId, 1);
   return true;
+
+  function createPlayer(phone, docId, emitterMessage, onSuccess) {
+    userModel.update(
+      {phone: phone},
+      {$set: {phone: phone, current_game_id: docId, updated_at: Date.now()}},     
+      {upsert: true}
+    ).exec().then(function(num, raw) {
+      emitter.emit(emitterMessage);
+      if (raw && raw.upserted) {
+        logger.info(emitterMessage, JSON.stringify(raw.upserted));
+      }
+      if (typeof onSuccess === 'function') {
+        onSuccess();
+      }
+    }, utility.promiseErrorCallback('Unable to create player, this event did not happen: ' + emitterMessage)
+    )
+  }
 };
 
 /**
