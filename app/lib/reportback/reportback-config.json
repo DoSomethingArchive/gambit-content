@@ -1,12 +1,12 @@
 {
   "test": {
-    "ask-photo": 100,
-    "ask-quantity": 101,
-    "ask-why": 102,
-    "ask-caption": 103,
-    "message-complete": 104,
-    "message-not-a-photo": 105,
-    "optout-campaign-id": 200,
-    "campaign-completed-id": 201
+    "ask_photo": 100,
+    "ask_quantity": 101,
+    "ask_why": 102,
+    "ask_caption": 103,
+    "message_complete": 104,
+    "message_not_a_photo": 105,
+    "campaign_optout_id": 200,
+    "campaign_completed_id": 201
   }
 }

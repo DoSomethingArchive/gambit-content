@@ -11,7 +11,7 @@ var express = require('express')
 router.post('/:campaign', function(request, response) {
   var campaign;
   var phone;
-  var funcName;
+  var requestData;
   
   // Check that we have a config setup for this campaign
   campaign = request.params.campaign;
@@ -24,7 +24,14 @@ router.post('/:campaign', function(request, response) {
         return onDocumentFound(doc, phone, campaign);
       })
       .then(function(doc) {
-        nextStep(doc, phone, campaign);
+        requestData = {
+          campaign: campaign,
+          phone: phone,
+          args: request.body.args,
+          mms_image_url: request.body.mms_image_url,
+          profile_first_completed_campaign_id: request.body.profile_first_completed_campaign_id
+        };
+        handleUserResponse(doc, requestData);
       });
 
     response.send();
@@ -40,7 +47,7 @@ module.exports = router;
  * Find the current report back document for a user.
  *
  * @param phone
- *   Phone number of user.
+ *   Phone number of user
  */
 function findDocument(phone) {
   return model.findOne({'phone': phone}).exec();
@@ -50,11 +57,11 @@ function findDocument(phone) {
  * Called when findDocument is complete.
  *
  * @param doc
- *   Document found, if any.
+ *   Document found, if any
  * @param phone
- *   Phone number of user.
+ *   Phone number of user
  * @param campaign
- *   Campaign endpoint.
+ *   Campaign endpoint
  */
 function onDocumentFound(doc, phone, campaign) {
   if (doc) {
@@ -66,9 +73,18 @@ function onDocumentFound(doc, phone, campaign) {
   }
 }
 
-function nextStep(doc, phone, campaign) {
+/**
+ * Determine what data we just received from the user based on the state of the
+ * user's report back document.
+ *
+ * @param doc
+ *   User's report back document
+ * @param data
+ *   Data from the user's request
+ */
+function handleUserResponse(doc, data) {
   if (!doc.photo) {
-    receivePhoto();
+    receivePhoto(doc, data);
   }
   else if (!doc.quantity) {
     receiveQuantity();
@@ -78,42 +94,90 @@ function nextStep(doc, phone, campaign) {
   }
 }
 
-function receivePhoto() {
+/**
+ * Process request for user who has sent a photo.
+ *
+ * @param doc
+ *   User's report back document
+ * @param data
+ *   Data from the user's request
+ */
+function receivePhoto(doc, data) {
+  var photoUrl = data.mms_image_url;
+  if (!photoUrl) {
+    mobilecommons.profile_update(data.phone, config[data.campaign].message_not_a_photo);
+  }
+  else {
+    model.update(
+      {_id: doc._id},
+      {'$set': {photo: photoUrl}});
 
+    mobilecommons.profile_update(data.phone, config[data.campaign].ask_quantity);
+  }
 }
 
-function receiveQuantity() {
+/**
+ * Process request for user who is answering with a quantity.
+ *
+ * @param doc
+ *   User's report back document
+ * @param data
+ *   Data from the user's request
+ */
+function receiveQuantity(doc, data) {
+  var answer = data.args;
+  model.update(
+    {_id: doc._id},
+    {'$set': {quantity: answer}});
 
+  mobilecommons.profile_update(data.phone, config[data.campaign].ask_why);
 }
 
-function receiveWhyImportant() {
+/**
+ * Process request for user who is answering why this is important.
+ *
+ * @param doc
+ *   User's report back document
+ * @param data
+ *   Data from the user's request
+ */
+function receiveWhyImportant(doc, data) {
+  var answer = data.args;
+  model.update(
+    {_id: doc._id},
+    {'$set': {why_important: answer}});
 
+  doc.why_important = answer;
+  completeReportBack(doc, data);
 }
 
-function receiveCaption() {
+/**
+ * Complete the report back flow.
+ *
+ * @param doc
+ *   User's report back document
+ * @param data
+ *   Data from the user's request
+ */
+function completeReportBack(doc, data) {
+  var customFields = {};
+  var campaignConfig = config[data.campaign];
 
-}
+  // @todo send POST request to ds.org reportback endpoint
 
-function completeReportBack() {
+  // If this is the first campaign a user's completed, save it
+  if (data.profile_first_completed_campaign_id) {
+    customFields.profile_first_completed_campaign_id = campaignConfig.campaign_completed_id;
+  }
 
-}
+  // Send message to user that their report back is complete
+  mobilecommons.profile_update(data.phone, campaignConfig.message_complete, customFields);
 
-function sendPhotoNotReceived() {
-
-}
-
-function sendComplete() {
-
-}
-
-function sendQuantity() {
-
-}
-
-function sendWhyImportant() {
-
-}
-
-function sendCaption() {
-
+  // Opt user out of campaign, if specified
+  if (config[data.campaign].campaign_optout_id) {
+    mobilecommons.optout({
+      phone: data.phone,
+      campaignId: campaignConfig.campaign_optout_id
+    });
+  }
 }
