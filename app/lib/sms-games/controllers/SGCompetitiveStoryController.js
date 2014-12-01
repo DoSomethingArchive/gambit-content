@@ -237,7 +237,6 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
   else {
     // Object for callbacks to reference.
     var self = this;
-    self.joiningBetaPhone = request.body.phone;
     self.request = request;
     self.response = response;
 
