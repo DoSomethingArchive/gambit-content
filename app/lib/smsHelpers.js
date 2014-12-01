@@ -12,7 +12,7 @@ var logger = require('./logger')
  */
 module.exports.getNormalizedPhone = function(phone) {
   if (typeof phone === 'undefined') {
-    logger.error('userMessageHelpers.getNormalizedPhone has been passed an undefined phone value.', console.trace());
+    logger.error('smsHelper.getNormalizedPhone has been passed an undefined phone value.', console.trace());
   }
   var newPhone = phone.replace(/\D/g, '');
   if (newPhone.length === 10) {
@@ -90,3 +90,5 @@ module.exports.isYesResponse = function(message) {
     return false;
   }
 }
+
+

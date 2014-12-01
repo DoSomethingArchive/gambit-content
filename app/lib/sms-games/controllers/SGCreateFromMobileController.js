@@ -6,7 +6,7 @@
  */
 
 var mobilecommons = require('../../../../mobilecommons')
-  , messageHelper = require('../../userMessageHelpers')
+  , smsHelper = require('../../smsHelpers')
   , requestHttp = require('request')
   , logger = require('../../logger')
   , competitiveStoryConfig = require('../config/competitive-stories')
@@ -62,7 +62,7 @@ function createGame(gameConfig, host) {
  * @param Boolean
  */
 function isPhoneNumber(message) {
-  return messageHelper.isValidPhone(messageHelper.getNormalizedPhone(message));
+  return smsHelper.isValidPhone(smsHelper.getNormalizedPhone(message));
 };
 
 /**
@@ -157,8 +157,8 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
       var message = request.body.args;
       // Create the game if we have at least one beta number.
       // If the alpha responds 'Y' to the 'create game now?' query. 
-      if (messageHelper.isYesResponse(message)) {
-        if (configDoc.beta_mobile_0 && messageHelper.isValidPhone(configDoc.beta_mobile_0)) {
+      if (smsHelper.isYesResponse(message)) {
+        if (configDoc.beta_mobile_0 && smsHelper.isValidPhone(configDoc.beta_mobile_0)) {
           // While it may seem that the two calls below may produce asynchronous weirdness, they don't. 
           createGame(configDoc, self.host);
           self._removeDocument(configDoc.alpha_mobile);
@@ -169,7 +169,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
         }
       }
       else if (isPhoneNumber(message)) {
-        var betaMobile = messageHelper.getNormalizedPhone(message);
+        var betaMobile = smsHelper.getNormalizedPhone(message);
         // If we haven't saved a beta number yet, save it to beta_mobile_0.
         if (!configDoc.beta_mobile_0) {
           configDoc.beta_mobile_0 = betaMobile;
@@ -213,7 +213,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
       if (isPhoneNumber(message)) {
         // Update doc with beta_mobile_0 number.
         // var doc = modelConfig._doc;
-        configDoc.beta_mobile_0 = messageHelper.getNormalizedPhone(message);
+        configDoc.beta_mobile_0 = smsHelper.getNormalizedPhone(message);
         self._updateDocument(configDoc);
 
         // Send next message asking for beta_mobile_1.

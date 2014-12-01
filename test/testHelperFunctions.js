@@ -6,7 +6,7 @@ var assert = require('assert')
   , userModel = require('../app/lib/sms-games/models/sgUser')
   , SGCompetitiveStoryController = require('../app/lib/sms-games/controllers/SGCompetitiveStoryController')
   , gameConfig = require('../app/lib/sms-games/config/competitive-stories')
-  , messageHelper = require('../app/lib/userMessageHelpers')
+  , smsHelper = require('../app/lib/smsHelpers')
   ;
 
 // Provides necessary setup conditions before game tests. 
@@ -42,7 +42,7 @@ exports.betaJoinGameTest = function(_phone) {
   var request;
   var phone = _phone;
   before(function() {
-    phone = messageHelper.getNormalizedPhone(phone);
+    phone = smsHelper.getNormalizedPhone(phone);
     request = {
       body: {
         phone: phone,
@@ -174,7 +174,7 @@ exports.userActionTest = function() {
       var request;
       var self = this;
       before(function() {
-        phone = messageHelper.getNormalizedPhone(self.phone);
+        phone = smsHelper.getNormalizedPhone(self.phone);
         request = {
           body: {
             phone: self.phone, 
