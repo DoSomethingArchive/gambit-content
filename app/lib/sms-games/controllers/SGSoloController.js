@@ -75,7 +75,7 @@ SGSoloController.prototype.processRequest = function(request, response) {
   }
 
   this.createSoloGame(request.get('host'), request.query.story_id, request.query.story_type, request.body.phone);
-  
+
   response.send();
 }
 

@@ -7,6 +7,7 @@ var mobilecommons = require('../../../../mobilecommons')
   , message = require('./gameMessageHelpers')
   , utility = require('./gameUtilities')
   , record = require('./gameRecordHelpers')
+  , SGSoloController = require('./SGSoloController')
   ;
 
 // StatHat analytics marker. 
@@ -306,8 +307,11 @@ function endGameFromPlayerExit(playerDocs) {
           }
         );
 
-        // Message them that the game has ended.
+        // Message them that the game has ended, and we're opting them into a solo game.
         module.exports.singleUser(players[playerIdx], gameConfig[gameDoc.story_id].game_ended_from_exit_oip);
+        var soloController = new SGSoloController;
+        // Hard coding. Bad. Find some way to access hostname without a request. 
+        soloController.createSoloGame(app.hostName, gameDoc.story_id, 'competitive-story', players[playerIdx]);
       }
     }
   },
