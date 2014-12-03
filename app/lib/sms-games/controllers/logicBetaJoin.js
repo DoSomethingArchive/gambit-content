@@ -3,6 +3,9 @@ var emitter = require('../../../eventEmitter')
   , gameModel = require('../models/sgCompetitiveStory')
   , gameConfig = require('../config/competitive-stories')
   , message = require('./gameMessageHelpers')
+  , SGSoloController = require('./SGSoloController')
+  // After player attempts to join a started game, delay before she's opted into a solo game. 
+  , BETA_TO_SOLO_AFTER_GAME_ALREADY_STARTED_DELAY = 5000
   ;
 
 /**
@@ -11,18 +14,25 @@ var emitter = require('../../../eventEmitter')
  * game if all players are joined.
  */
 module.exports = function(obj, doc) {
+  var joiningBetaPhone = obj.request.body.phone;
 
   // If the game's already started, notify the user and exit.
   if (doc.game_started || doc.game_ended) {
-    // Good place to notify betas about ALPHA SOLO keywords for opt-in-paths. 
-    message.singleUser(obj.request.body.phone, gameConfig[doc.story_id].game_in_progress_oip);
+    // Notifies beta that the game has already started, but we're automatically
+    // opting her into a solo game. 
+    message.singleUser(joiningBetaPhone, gameConfig[doc.story_id].game_in_progress_oip);
+    var soloController = new SGSoloController;
+    setTimeout(
+      function() {
+        soloController.createSoloGame(obj.request.get('host'), doc.story_id, 'competitive-story', joiningBetaPhone)
+      } , BETA_TO_SOLO_AFTER_GAME_ALREADY_STARTED_DELAY);
     obj.response.send();
     return;
   }
 
   // Update game doc marking this beta as having joined the game
   for (var i = 0; i < doc.betas.length; i++) {
-    if (doc.betas[i].phone == obj.joiningBetaPhone) {
+    if (doc.betas[i].phone == joiningBetaPhone) {
       doc.betas[i].invite_accepted = true;
       break;
     }
@@ -47,7 +57,7 @@ module.exports = function(obj, doc) {
   // If we're still waiting on people, send appropriate messages to the recently
   // joined beta and alpha users.
   else {
-    doc = message.wait(gameConfig, doc, obj.joiningBetaPhone);
+    doc = message.wait(gameConfig, doc, joiningBetaPhone);
     obj.response.send();
   }
 

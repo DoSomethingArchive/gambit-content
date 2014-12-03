@@ -9,56 +9,37 @@
  *   Opt-in path to subscribe to.
  */
 
-var mobilecommons = require('../../../../mobilecommons')
- , requestHttp = require('request')
+var requestHttp = require('request')
  , logger = require('../../logger')
  ;
-
-function sendSMS(phone, oip) {
-  var args = {
-    alphaPhone: phone,
-    alphaOptin: oip
-  };
-  mobilecommons.optin(args);
-};
 
 var SGSoloController = function(host) {
 	this.host = host;
 }
 
-SGSoloController.prototype.processRequest = function(request, response) {
-
-	if (typeof request.query.story_id === 'undefined'
-		|| typeof request.query.story_type === 'undefined'
-    || typeof request.body.phone === 'undefined') {
-    response.status(406).send('Missing required params.');
-    return false
-  }
-
+SGSoloController.prototype.createSoloGame = function(hostUrl, storyId, storyType, phone, delay) {
+  var createUrl = 'http://' + hostUrl + '/sms-multiplayer-game/create'; 
   var createPayload = {
     form: {
-      story_id: request.query.story_id,
-      story_type: request.query.story_type,
+      story_id: storyId,
+      story_type: storyType,
       game_type: 'solo',
-      alpha_mobile: request.body.phone,
-      alpha_first_name: request.body.phone, // We didn't ask for user's name, saving it as phone for now.
+      alpha_mobile: phone,
+      alpha_first_name: phone, // We didn't ask for user's name, saving it as phone for now.
       beta_mobile_0: '',
       beta_mobile_1: '',
       beta_mobile_2: ''
     }
   }
-
-  var createUrl = 'http://' + this.host + '/sms-multiplayer-game/create'; 
-
+  
+  var startUrl = 'http://' + hostUrl + '/sms-multiplayer-game/alpha-start';
   var startPayload = {
     form: {
       args: 'Y',
-      phone: request.body.phone, 
-      story_type: request.query.story_type
+      phone: phone, 
+      story_type: storyType
     }
   }
-
-  var startUrl = 'http://' + this.host + '/sms-multiplayer-game/alpha-start';
 
   // POST request to create game. 
   requestHttp.post(createUrl, createPayload, function(err, response, body) {
@@ -83,6 +64,18 @@ SGSoloController.prototype.processRequest = function(request, response) {
       })
     }
   })
+}
+
+SGSoloController.prototype.processRequest = function(request, response) {
+  if (typeof request.query.story_id === 'undefined'
+    || typeof request.query.story_type === 'undefined'
+    || typeof request.body.phone === 'undefined') {
+    response.status(406).send('Missing required params.');
+    return false;
+  }
+
+  this.createSoloGame(request.get('host'), request.query.story_id, request.query.story_type, request.body.phone);
+  
   response.send();
 }
 
