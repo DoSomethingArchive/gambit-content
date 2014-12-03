@@ -8,6 +8,7 @@ var mobilecommons = require('../../../../mobilecommons')
   , utility = require('./gameUtilities')
   , record = require('./gameRecordHelpers')
   , SGSoloController = require('./SGSoloController')
+  , BETA_TO_SOLO_AFTER_GAME_ENDED_FROM_PLAYER_EXIT_DELAY = 5000
   ;
 
 // StatHat analytics marker. 
@@ -204,7 +205,7 @@ function wait(config, gameDoc, betaPhone) {
  */
 function endGameFromPlayerExit(playerDocs) {
   if (playerDocs.length == 0) {
-    return;
+    return; 
   }
 
   // Using the user documents found before and stored inside the playerDocs array, 
@@ -296,9 +297,10 @@ function endGameFromPlayerExit(playerDocs) {
 
       // For players who were in ended games...
       for (var playerIdx = 0; playerIdx < players.length; playerIdx++) {
+        var currentPlayerPhone = players[playerIdx];
         // Remove the current_game_id from their document.
         userModel.update(
-          {phone: players[playerIdx]},
+          {phone: currentPlayerPhone},
           {$unset: {current_game_id: 1}},
           function(err, num, raw) {
             if (err) {
@@ -308,10 +310,13 @@ function endGameFromPlayerExit(playerDocs) {
         );
 
         // Message them that the game has ended, and we're opting them into a solo game.
-        module.exports.singleUser(players[playerIdx], gameConfig[gameDoc.story_id].game_ended_from_exit_oip);
+        module.exports.singleUser(currentPlayerPhone, gameConfig[gameDoc.story_id].game_ended_from_exit_oip);
         var soloController = new SGSoloController;
-        // Hard coding. Bad. Find some way to access hostname without a request. 
-        soloController.createSoloGame(app.hostName, gameDoc.story_id, 'competitive-story', players[playerIdx]);
+        setTimeout(
+          function() {
+            soloController.createSoloGame(app.hostName, gameDoc.story_id, 'competitive-story', currentPlayerPhone) 
+          }, BETA_TO_SOLO_AFTER_GAME_ENDED_FROM_PLAYER_EXIT_DELAY
+        );
       }
     }
   },
