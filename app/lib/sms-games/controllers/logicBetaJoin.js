@@ -4,6 +4,8 @@ var emitter = require('../../../eventEmitter')
   , gameConfig = require('../config/competitive-stories')
   , message = require('./gameMessageHelpers')
   , SGSoloController = require('./SGSoloController')
+  // After player attempts to join a started game, delay before she's opted into a solo game. 
+  , BETA_TO_SOLO_AFTER_GAME_ALREADY_STARTED_DELAY = 5000
   ;
 
 /**
@@ -20,7 +22,10 @@ module.exports = function(obj, doc) {
     // opting her into a solo game. 
     message.singleUser(joiningBetaPhone, gameConfig[doc.story_id].game_in_progress_oip);
     var soloController = new SGSoloController;
-    soloController.createSoloGame(obj.request.get('host'), doc.story_id, 'competitive-story', joiningBetaPhone);
+    setTimeout(
+      function() {
+        soloController.createSoloGame(obj.request.get('host'), doc.story_id, 'competitive-story', joiningBetaPhone)
+      } , BETA_TO_SOLO_AFTER_GAME_ALREADY_STARTED_DELAY);
     obj.response.send();
     return;
   }

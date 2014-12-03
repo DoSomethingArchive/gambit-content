@@ -9,8 +9,7 @@
  *   Opt-in path to subscribe to.
  */
 
-var mobilecommons = require('../../../../mobilecommons')
- , requestHttp = require('request')
+var requestHttp = require('request')
  , logger = require('../../logger')
  ;
 
@@ -18,7 +17,7 @@ var SGSoloController = function(host) {
 	this.host = host;
 }
 
-SGSoloController.prototype.createSoloGame = function(hostUrl, storyId, storyType, phone) {
+SGSoloController.prototype.createSoloGame = function(hostUrl, storyId, storyType, phone, delay) {
   var createUrl = 'http://' + hostUrl + '/sms-multiplayer-game/create'; 
   var createPayload = {
     form: {
@@ -68,9 +67,8 @@ SGSoloController.prototype.createSoloGame = function(hostUrl, storyId, storyType
 }
 
 SGSoloController.prototype.processRequest = function(request, response) {
-
-	if (typeof request.query.story_id === 'undefined'
-		|| typeof request.query.story_type === 'undefined'
+  if (typeof request.query.story_id === 'undefined'
+    || typeof request.query.story_type === 'undefined'
     || typeof request.body.phone === 'undefined') {
     response.status(406).send('Missing required params.');
     return false;
