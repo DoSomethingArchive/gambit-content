@@ -6,10 +6,14 @@ if (process.env.NODE_ENV == 'production') {
 var express = require('express')
     , path = require('path')
     , logger = require('./app/lib/logger')
+    , http = require('http')
     ;
 
 // Set application root to global namespace
 global.appRoot = path.resolve(__dirname);
+
+// Default is 5. Increasing # of concurrent sockets per host.
+http.globalAgent.maxSockets = 20;
 
 /**
  * Express Setup - note app as global variable
