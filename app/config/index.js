@@ -29,6 +29,14 @@ module.exports = function() {
   // Set the database URI this app will use.
   app.set('database-uri', process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder');
 
+  // @TODO: Find a better way of passing the host URL to SGSoloController.createSoloGame()
+  // Specify app host URL. 
+  if (process.env.NODE_ENV == 'production') {
+    app.hostName = 'ds-mdata-responder.jit.su';
+  } else {
+    app.hostName = 'localhost:' + app.get('port');
+  }
+
   // Only opens connection if its state is disconnected.
   if (mongoose.connection.readyState === 0) {
     mongoose.connect(app.get('database-uri'));
