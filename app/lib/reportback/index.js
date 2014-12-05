@@ -6,6 +6,8 @@ var express = require('express')
   , router = express.Router()
   , config = require('./reportback-config.json')
   , model = require('./reportbackModel')
+  , mobilecommons = require('../../../mobilecommons')
+  , emitter = require('../../eventEmitter')
   ;
 
 router.post('/:campaign', function(request, response) {
@@ -87,10 +89,10 @@ function handleUserResponse(doc, data) {
     receivePhoto(doc, data);
   }
   else if (!doc.quantity) {
-    receiveQuantity();
+    receiveQuantity(doc, data);
   }
   else if(!doc.why_important) {
-    receiveWhyImportant();
+    receiveWhyImportant(doc, data);
   }
 }
 
@@ -109,8 +111,13 @@ function receivePhoto(doc, data) {
   }
   else {
     model.update(
-      {_id: doc._id},
-      {'$set': {photo: photoUrl}});
+      {phone: data.phone},
+      {'$set': {photo: photoUrl}},
+      function(err, num, raw) {
+        if (!err) {
+          emitter.emit(emitter.events.reportbackModelUpdate);
+        }
+      });
 
     mobilecommons.profile_update(data.phone, config[data.campaign].ask_quantity);
   }
@@ -127,8 +134,13 @@ function receivePhoto(doc, data) {
 function receiveQuantity(doc, data) {
   var answer = data.args;
   model.update(
-    {_id: doc._id},
-    {'$set': {quantity: answer}});
+    {phone: data.phone},
+    {'$set': {quantity: answer}},
+    function(err, num, raw) {
+      if (!err) {
+        emitter.emit(emitter.events.reportbackModelUpdate);
+      }
+    });
 
   mobilecommons.profile_update(data.phone, config[data.campaign].ask_why);
 }
@@ -144,8 +156,13 @@ function receiveQuantity(doc, data) {
 function receiveWhyImportant(doc, data) {
   var answer = data.args;
   model.update(
-    {_id: doc._id},
-    {'$set': {why_important: answer}});
+    {phone: data.phone},
+    {'$set': {why_important: answer}},
+    function(err, num, raw) {
+      if (!err) {
+        emitter.emit(emitter.events.reportbackModelUpdate);
+      }
+    });
 
   doc.why_important = answer;
   completeReportBack(doc, data);
@@ -180,4 +197,21 @@ function completeReportBack(doc, data) {
       campaignId: campaignConfig.campaign_optout_id
     });
   }
+}
+
+
+
+/**
+ *
+ * Exposing private functions for tests.
+ *
+ */
+if (process.env.NODE_ENV === 'test') {
+  module.exports.findDocument = findDocument;
+  module.exports.onDocumentFound = onDocumentFound;
+  module.exports.handleUserResponse = handleUserResponse;
+  module.exports.receivePhoto = receivePhoto;
+  module.exports.receiveQuantity = receiveQuantity;
+  module.exports.receiveWhyImportant = receiveWhyImportant;
+  module.exports.completeReportBack = completeReportBack;
 }
