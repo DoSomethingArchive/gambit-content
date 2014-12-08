@@ -4,6 +4,7 @@ var emitter = require('../../../eventEmitter')
   , gameConfig = require('../config/competitive-stories')
   , message = require('./gameMessageHelpers')
   , SGSoloController = require('./SGSoloController')
+  , startGame = require('./logicGameStart')
   // After player attempts to join a started game, delay before she's opted into a solo game. 
   , BETA_TO_SOLO_AFTER_GAME_ALREADY_STARTED_DELAY = 5000
   ;
@@ -51,7 +52,7 @@ module.exports = function(obj, doc) {
   // If all have joined, then start the game.
   if (allJoined) {
     doc.game_started = true;
-    doc = obj.startGame(doc);
+    doc = startGame(doc);
     obj.response.send();
   }
   // If we're still waiting on people, send appropriate messages to the recently

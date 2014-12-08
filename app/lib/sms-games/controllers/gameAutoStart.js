@@ -2,51 +2,11 @@ var gameModel = require('../models/sgCompetitiveStory')
   , Q = require('q')
   , logger = require('../../logger')
   , utility = require('./gameUtilities')
-  , SGCompetitiveStoryController = require('./SGCompetitiveStoryController')
-  ;
+  , SGSoloController = require('./SGSoloController')
+  , emitter = require('../../../eventEmitter')
+  , startGame = require('./logicGameStart');
 
 var AUTO_START_GAME_DELAY = 300000;
-
-/**
- * Checks database for state of game, returns object of player state.
- *
- * @param gameId
- *   ID of game document. 
- * @returns gameCreateDirectiveObject
- *   key-value pairs { player : joinState }
- */
-
-// It's either going to be 1) creating an alpha-solo game, or 2) starting the multiplayer game. What object should I return?
-
-{gameType: solo / multi, players: [playerPhone, playerPhone, playerPhone]}
-
-// Or maybe playerIds? Which is simpler?
-
-var checkPlayerJoinState = function(gameId) {
-  gameModel.findById(gameId).exec().then(function(doc) {
-    var betas = doc.betas;
-    for (var i = 0; i < betas.length; i ++) {
-      if (doc.betas[i].invite_accepted == true) {
-        SGCompetitiveStoryController.startGame();
-      }
-    }
-
-
-  }, utility.promiseErrorCallback('Unable to find game for autoStart.'))
-
-}
-
-/**
- * Based on the gameCreateDirectiveObject, either creates and starts an alpha-solo game or starts a multiplayer game.
- *
- * @param gameCreateDirectiveObject
- *   Contains information about which type of game should be created.
- * @param response
- *   Express response object.
- */
-var createAndStartSoloOrStartMulti = function(gameCreateDirectiveObject) {
-
-}
 
 /**
  * Checks game status. If any number of betas have joined, automatically starts the game. 
@@ -55,8 +15,46 @@ var createAndStartSoloOrStartMulti = function(gameCreateDirectiveObject) {
  * @param gameId
  *   ID of game document. 
  */
-var autoStartGame = function(gameId) {
-  // checkPlayerJoinState(gameId).then(createAndStartSoloOrStartMulti);
+var gameAutoStart = function(gameId) {
+
+  var createAndStartSoloOrStartMulti = function(gameId) {
+    gameModel.findById(gameId, function(err, doc) {
+      if (err) {
+        console.log(err)
+      } 
+      else {
+        var betas = doc.betas;
+        for (var i = 0; i < betas.length; i ++) {
+          if (doc.betas[i].invite_accepted == true) {
+            doc = startGame(doc);
+            console.log(doc);
+            gameModel.update(
+              {_id: doc._id},
+              {$set: {
+                betas: doc.betas,
+                game_started: doc.game_started,
+                players_current_status: doc.players_current_status
+              }},
+              function(err, num, raw) {
+                if (err) {
+                  logger.error(err);
+                }
+                else {
+                  emitter.emit('game-updated');
+                  logger.info('Multiplayer game auto-starting. Updating game doc:', doc._id.toString());
+                }
+              }
+            );
+            return;
+          }
+        }
+        var soloController = new SGSoloController;
+        soloController.createSoloGame(app.hostName, doc.story_id, 'competitive-story', doc.alpha_phone);
+      }
+    })
+  }
+
+  setTimeout(function() { createAndStartSoloOrStartMulti(gameId) }, AUTO_START_GAME_DELAY);
 }
 
-module.exports = setTimeout(autoStartGame, AUTO_START_GAME_DELAY);
+module.exports = gameAutoStart;
