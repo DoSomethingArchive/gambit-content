@@ -51,7 +51,7 @@ module.exports = function(obj, doc) {
   // If all have joined, then start the game.
   if (allJoined) {
     doc.game_started = true;
-    doc = obj.startGame(gameConfig, doc);
+    doc = obj.startGame(doc);
     obj.response.send();
   }
   // If we're still waiting on people, send appropriate messages to the recently

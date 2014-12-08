@@ -124,6 +124,8 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     // Sets a time to ask the alpha if she wants to play a solo game.
     message.giveSoloOptionAfterDelay(doc._id, gameModel, gameConfig[self.storyId].ask_solo_play, TIME_UNTIL_SOLO_MESSAGE_SENT);
 
+    // ** Great place to put in gameAutoStart() function call. 
+
     // Create game id to game type mapping.
     gameMappingModel.create(
       {game_id: doc._id, game_model: gameModel.modelName},
@@ -257,9 +259,9 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
  *
  * @return Updated game document.
  */
-SGCompetitiveStoryController.prototype.startGame = function(config, gameDoc) {
+SGCompetitiveStoryController.prototype.startGame = function(gameDoc) {
   // Get the starting opt in path from the game config.
-  var startMessage = config[gameDoc.story_id].story_start_oip;
+  var startMessage = gameConfig[gameDoc.story_id].story_start_oip;
 
   // Opt in the alpha user.
   message.singleUser(gameDoc.alpha_phone, startMessage);
