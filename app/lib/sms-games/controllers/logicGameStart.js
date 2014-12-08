@@ -14,7 +14,6 @@ var gameConfig = require('../config/competitive-stories')
  * @return Updated game document.
  */
 var startGame = function(gameDoc) {
-  console.log('starting game');
   // Get the starting opt in path from the game config.
   var startMessage = gameConfig[gameDoc.story_id].story_start_oip;
 

@@ -20,14 +20,13 @@ var gameAutoStart = function(gameId) {
   var createAndStartSoloOrStartMulti = function(gameId) {
     gameModel.findById(gameId, function(err, doc) {
       if (err) {
-        console.log(err)
+        logger.error('Error in running auto-start game function for gameId: ' + gameId + ' Error: ' + err);
       } 
       else {
         var betas = doc.betas;
         for (var i = 0; i < betas.length; i ++) {
           if (doc.betas[i].invite_accepted == true) {
             doc = startGame(doc);
-            console.log(doc);
             gameModel.update(
               {_id: doc._id},
               {$set: {
