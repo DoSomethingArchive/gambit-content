@@ -5,7 +5,7 @@ var emitter = require('../../../eventEmitter')
   , message = require('./gameMessageHelpers')
   , SGSoloController = require('./SGSoloController')
   // After player attempts to join a started game, delay before she's opted into a solo game. 
-  , BETA_TO_SOLO_AFTER_GAME_ALREADY_STARTED_DELAY = 5000
+  , BETA_TO_SOLO_AFTER_GAME_ALREADY_STARTED_DELAY = 3000
   ;
 
 /**
