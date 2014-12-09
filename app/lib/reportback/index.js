@@ -67,7 +67,7 @@ function findDocument(phone) {
  */
 function onDocumentFound(doc, phone, campaign) {
   if (doc) {
-    return;
+    return doc;
   }
   else {
     // Create a document if none was found
@@ -180,7 +180,21 @@ function completeReportBack(doc, data) {
   var customFields = {};
   var campaignConfig = config[data.campaign];
 
-  // @todo send POST request to ds.org reportback endpoint
+  // @todo Retrieve user UID or create an account to get one
+
+  // Submit report back with data from the reportback doc
+  var rbData = {
+    nid: campaignConfig.campaign_nid,
+    uid: 21,
+    quantity: doc.quantity,
+    why_participated: doc.why_important,
+    file_url: doc.photo
+  };
+
+  var dscontentapi = require('../ds-content-api')();
+  dscontentapi.campaignsReportback(rbData, function(err, response, body) {
+    console.log(body);
+  });
 
   // If this is the first campaign a user's completed, save it
   if (data.profile_first_completed_campaign_id) {

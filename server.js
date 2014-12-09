@@ -17,7 +17,7 @@ global.appRoot = path.resolve(__dirname);
 http.globalAgent.maxSockets = 20;
 
 // Authenticate app with the DS content API.
-dscontentapi.login(
+dscontentapi.userLogin(
   process.env.DS_CONTENT_API_USERNAME,
   process.env.DS_CONTENT_API_PASSWORD,
   function(err, response, body) {

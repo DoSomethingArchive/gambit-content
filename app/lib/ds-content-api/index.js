@@ -1,4 +1,5 @@
 var request = require('request')
+  , crypto = require('crypto')
   ;
 
 var BASE_URL;
@@ -16,21 +17,77 @@ module.exports = function() {
   }
 
   return {
-    login: login,
-    logout: logout,
+    userCreate: userCreate,
+    userLogin: userLogin,
+    userLogout: userLogout,
     authToken: authToken,
-    reportBack: reportBack,
+    campaignsReportback: campaignsReportback,
     systemConnect: systemConnect
   };
 };
 
 /**
+ * Create user
+ */
+function userCreate(createData, callback) {
+  var hashPassword = crypto.createHmac('sha1', process.env.DS_CONTENT_API_PASSWORD_KEY)
+    .update(createData.phone)
+    .digest('hex')
+    .substring(0,6);
+
+  var body = {
+    email: createData.phone + '@mobile',
+    password: hashPassword,
+    phone: createData.phone
+  };
+
+  if (createData.birthdate) {
+    body.birthdate = createData.birthdate;
+  }
+
+  if (createData.first_name) {
+    body.first_name = createData.first_name;
+  }
+
+  if (createData.last_name) {
+    body.last_name = createData.last_name;
+  }
+
+  if (createData.user_registration_source) {
+    body.user_registration_source = createData.user_registration_source;
+  }
+
+  var options = {
+    url: BASE_URL + '/users',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    },
+    body: body,
+    json: true
+  };
+
+  var _callback = onUserCreate;
+  if (typeof callback === 'function') {
+    _callback = onUserCreate.bind({customCallback: callback});
+  }
+
+  request(options, _callback);
+}
+
+function onUserCreate(err, response, body) {
+  if (this.customCallback === 'function') {
+    this.customCallback(err, response, body);
+  }
+}
+
+/**
  * Login
  */
-function login(username, password, callback) {
-  var url = BASE_URL + '/auth/login';
+function userLogin(username, password, callback) {
   var options = {
-    url: url,
+    url: BASE_URL + '/auth/login',
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -43,15 +100,15 @@ function login(username, password, callback) {
     json: true
   };
 
-  var _callback = onLogin;
+  var _callback = onUserLogin;
   if (typeof callback === 'function') {
-    _callback = onLogin.bind({customCallback: callback});
+    _callback = onUserLogin.bind({customCallback: callback});
   }
 
   request(options, _callback);
 }
 
-function onLogin(err, response, body) {
+function onUserLogin(err, response, body) {
   if (err) {
     console.log(err);
   }
@@ -72,7 +129,7 @@ function onLogin(err, response, body) {
 /**
  * Logout
  */
-function logout(callback) {
+function userLogout(callback) {
   var options = {
     url: BASE_URL + '/auth/logout',
     method: 'POST',
@@ -83,15 +140,15 @@ function logout(callback) {
     }
   };
 
-  var _callback = onLogout;
+  var _callback = onUserLogout;
   if (typeof callback === 'function') {
-    _callback = onLogout.bind({customCallback: callback});
+    _callback = onUserLogout.bind({customCallback: callback});
   }
 
   request(options, _callback);
 }
 
-function onLogout(err, response, body) {
+function onUserLogout(err, response, body) {
   if (err) {
     console.log(err);
   }
@@ -127,11 +184,11 @@ function onAuthToken(err, response, body) {
     console.log(err);
   }
   else {
-    var jsonBody = JSON.parse(body)
-    console.log('AUTH TOKEN');
-    console.log(jsonBody);
-
     global.dscontentapi.token = jsonBody.token;
+  }
+
+  if (typeof this.customCallback === 'function') {
+    this.customCallback(err, response, body);
   }
 }
 
@@ -169,13 +226,14 @@ function onSystemConnect(err, response, body) {
 /**
  * Submit a report back.
  */
-function reportBack(rbData, callback) {
-  var nid = 1334;
-  var uid = 21;
-  var quantity = 10;
-  var why = '(test string)';
-  var fileurl = 'http://www.howtodrawmanga3d.com/sites/default/files/styles/related-content/public/hiroshi/thumbnails/how_draw_pikachu.jpg';
-  var caption = '';
+function campaignsReportback(rbData, callback) {
+  var nid = rbData.nid;
+  var body = {
+    uid: rbData.uid,
+    quantity: rbData.quantity,
+    why_participated: rbData.why_participated,
+    file_url: rbData.file_url
+  };
 
   var options = {
     url: BASE_URL + '/campaigns/' + nid + '/reportback',
@@ -186,25 +244,19 @@ function reportBack(rbData, callback) {
       'X-CSRF-Token': global.dscontentapi.token,
       'Cookie': global.dscontentapi.session_name + '=' + global.dscontentapi.sessid
     },
-    body: {
-      uid: 21,
-      quantity: quantity,
-      why_participated: why,
-      file_url: fileurl,
-      caption: caption
-    },
+    body: body,
     json: true
   };
 
-  var _callback = onReportBack;
+  var _callback = onCampaignsReportback;
   if (typeof callback === 'function') {
-    _callback = onReportBack.bind({customCallback: callback});
+    _callback = onCampaignsReportback.bind({customCallback: callback});
   }
 
   request(options, _callback);
 }
 
-function onReportBack(err, response, body) {
+function onCampaignsReportback(err, response, body) {
   if (err) {
     console.log(err);
   }
