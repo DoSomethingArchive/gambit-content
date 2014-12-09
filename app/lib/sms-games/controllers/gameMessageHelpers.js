@@ -8,7 +8,7 @@ var mobilecommons = require('../../../../mobilecommons')
   , utility = require('./gameUtilities')
   , record = require('./gameRecordHelpers')
   , SGSoloController = require('./SGSoloController')
-  , BETA_TO_SOLO_AFTER_GAME_ENDED_FROM_PLAYER_EXIT_DELAY = 5000
+  , BETA_TO_SOLO_AFTER_GAME_ENDED_FROM_PLAYER_EXIT_DELAY = 3000
   ;
 
 // StatHat analytics marker. 
