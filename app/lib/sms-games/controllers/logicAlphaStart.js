@@ -1,7 +1,7 @@
 var emitter = require('../../../eventEmitter')
   , logger = require('../../logger')
   , gameModel = require('../models/sgCompetitiveStory')
-  , startGame = require('./logicGameStart')
+  , start = require('./logicGameStart')
   ;
 
 /**
@@ -10,8 +10,7 @@ var emitter = require('../../../eventEmitter')
  */
 module.exports = function(obj, doc) {
   // Start the game.
-  doc.game_started = true;
-  doc = startGame(doc);
+  doc = start.game(doc);
   obj.response.send();
 
   // Save the doc in the database with the current status updates.

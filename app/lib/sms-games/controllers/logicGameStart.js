@@ -1,19 +1,28 @@
 var gameConfig = require('../config/competitive-stories')
+  , gameModel = require('../models/sgCompetitiveStory')
   , message = require('./gameMessageHelpers')
   , utility = require('./gameUtilities')
   , record = require('./gameRecordHelpers')
+  , logger = require('../../logger')
+  , SGSoloController = require('./SGSoloController')
+  , emitter = require('../../../eventEmitter')
   , STATHAT_CATEGORY = 'sms-games'
-  ;
+  , AUTO_START_GAME_DELAY = 5000;
+
+module.exports = {
+  game : startGame,
+  auto : autoStartGame
+}
 
 /**
  * Starts the game.
  *
  * @param gameDoc
- *   Game document for users to start the game for.
+ *   Game document of the game we're starting.
  *
- * @return Updated game document.
+ * @return Game document, updated with the requisite state changes.
  */
-var startGame = function(gameDoc) {
+function startGame(gameDoc) {
   // Get the starting opt in path from the game config.
   var startMessage = gameConfig[gameDoc.story_id].story_start_oip;
 
@@ -22,6 +31,9 @@ var startGame = function(gameDoc) {
 
   // Update the alpha's current status.
   gameDoc = record.updatedPlayerStatus(gameDoc, gameDoc.alpha_phone, startMessage);
+
+  // Mark the game as having started. 
+  gameDoc.game_started = true;
 
   // Alpha
   var numPlayers = 1;
@@ -46,4 +58,50 @@ var startGame = function(gameDoc) {
   return gameDoc;
 };
 
-module.exports = startGame;
+/**
+ * Checks game status. If any number of betas have joined, automatically starts the game. 
+ * If no betas have joined, creates and starts a solo game for the alpha. 
+ *
+ * @param gameId
+ *   ID of game document. 
+ */
+function autoStartGame(gameId) {
+
+  function createAndStartSoloOrStartMulti(gameId) {
+    gameModel.findById(gameId, function(err, doc) {
+      if (err) {
+        logger.error('Error in running auto-start game function for gameId: ' + gameId + ' Error: ' + err);
+      }
+      else {
+        var betas = doc.betas;
+        for (var i = 0; i < betas.length; i ++) {
+          if (doc.betas[i].invite_accepted == true) {
+            doc = startGame(doc);
+            gameModel.update(
+              {_id: doc._id},
+              {$set: {
+                betas: doc.betas,
+                game_started: doc.game_started,
+                players_current_status: doc.players_current_status
+              }},
+              function(err, num, raw) {
+                if (err) {
+                  logger.error(err);
+                }
+                else {
+                  emitter.emit('game-updated');
+                  logger.info('Multiplayer game auto-starting. Updating game doc:', doc._id.toString());
+                }
+              }
+            );
+            return;
+          }
+        }
+        var soloController = new SGSoloController;
+        soloController.createSoloGame(app.hostName, doc.story_id, 'competitive-story', doc.alpha_phone);
+      }
+    })
+  }
+
+  setTimeout(function() { createAndStartSoloOrStartMulti(gameId) }, AUTO_START_GAME_DELAY);
+}

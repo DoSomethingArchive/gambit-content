@@ -15,7 +15,7 @@ var smsHelper = require('../../smsHelpers')
   , userActionLogic = require('./logicUserAction')
   , betaJoinLogic = require('./logicBetaJoin')
   , alphaStartLogic = require('./logicAlphaStart')
-  , gameAutoStart = require('./gameAutoStart')
+  , start = require('./logicGameStart')
   ;
 
 // Maximum number of players that can be invited into a game.
@@ -127,7 +127,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
     // Automatically starts game after specified delay, or opts alpha into solo play.
     if (doc.game_type != "solo") {
-      gameAutoStart(doc._id);
+      start.auto(doc._id);
     }
   
     // Create game id to game type mapping.
