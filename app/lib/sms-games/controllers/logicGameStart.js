@@ -7,7 +7,8 @@ var gameConfig = require('../config/competitive-stories')
   , SGSoloController = require('./SGSoloController')
   , emitter = require('../../../eventEmitter')
   , STATHAT_CATEGORY = 'sms-games'
-  , AUTO_START_GAME_DELAY = 300000;
+  // , AUTO_START_GAME_DELAY = 300000;
+  , AUTO_START_GAME_DELAY = 5000;
 
 module.exports = {
   game : startGame,
@@ -73,32 +74,42 @@ function autoStartGame(gameId) {
         logger.error('Error in running auto-start game function for gameId: ' + gameId + ' Error: ' + err);
       }
       else {
+
+        var isMultiplayer = false;
         var betas = doc.betas;
+
         for (var i = 0; i < betas.length; i ++) {
           if (doc.betas[i].invite_accepted == true) {
-            doc = startGame(doc);
-            gameModel.update(
-              {_id: doc._id},
-              {$set: {
-                betas: doc.betas,
-                game_started: doc.game_started,
-                players_current_status: doc.players_current_status
-              }},
-              function(err, num, raw) {
-                if (err) {
-                  logger.error(err);
-                }
-                else {
-                  emitter.emit('game-updated');
-                  logger.info('Multiplayer game auto-starting. Updating game doc:', doc._id.toString());
-                }
-              }
-            );
-            return;
+            isMultiplayer = true;
+            break;
           }
         }
-        var soloController = new SGSoloController;
-        soloController.createSoloGame(app.hostName, doc.story_id, 'competitive-story', doc.alpha_phone);
+
+        if (isMultiplayer) {
+          doc = startGame(doc);
+          gameModel.update(
+            {_id: doc._id},
+            {$set: {
+              betas: doc.betas,
+              game_started: doc.game_started,
+              players_current_status: doc.players_current_status
+            }},
+            function(err, num, raw) {
+              if (err) {
+                logger.error(err);
+              }
+              else {
+                emitter.emit('game-updated');
+                logger.info('Multiplayer game auto-starting. Updating game doc:', doc._id.toString());
+              }
+            }
+          );
+        }
+        else {
+          var soloController = new SGSoloController;
+          soloController.createSoloGame(app.hostName, doc.story_id, 'competitive-story', doc.alpha_phone);
+        }
+
       }
     })
   }
