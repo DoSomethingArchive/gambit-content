@@ -27,7 +27,7 @@ module.exports = function() {
 /**
  * Login
  */
-function login(callback) {
+function login(username, password, callback) {
   var url = BASE_URL + '/auth/login';
   var options = {
     url: url,
@@ -37,8 +37,8 @@ function login(callback) {
       'Accept': 'application/json'
     },
     body: {
-      username: process.env.DS_CONTENT_API_USERNAME,
-      password: process.env.DS_CONTENT_API_PASSWORD
+      username: username,
+      password: password
     },
     json: true
   };
