@@ -1,5 +1,6 @@
 var request = require('request')
   , crypto = require('crypto')
+  , logger = require('../logger')
   ;
 
 var BASE_URL;
@@ -31,14 +32,14 @@ module.exports = function() {
  */
 function userCreate(createData, callback) {
   var hashPassword = crypto.createHmac('sha1', process.env.DS_CONTENT_API_PASSWORD_KEY)
-    .update(createData.phone)
+    .update(createData.mobile)
     .digest('hex')
     .substring(0,6);
 
   var body = {
-    email: createData.phone + '@mobile',
+    email: createData.email,
     password: hashPassword,
-    phone: createData.phone
+    mobile: createData.mobile
   };
 
   if (createData.birthdate) {
@@ -77,7 +78,11 @@ function userCreate(createData, callback) {
 }
 
 function onUserCreate(err, response, body) {
-  if (this.customCallback === 'function') {
+  if (err) {
+    logger.error(err);
+  }
+
+  if (typeof this.customCallback === 'function') {
     this.customCallback(err, response, body);
   }
 }
@@ -110,7 +115,7 @@ function userLogin(username, password, callback) {
 
 function onUserLogin(err, response, body) {
   if (err) {
-    console.log(err);
+    logger.error(err);
   }
   else if (response && response.statusCode == 200) {
     global.dscontentapi.sessid = body.sessid;
@@ -118,7 +123,7 @@ function onUserLogin(err, response, body) {
     global.dscontentapi.token = body.token;
   }
   else {
-    console.log('Failed to authenticate to DS content API');
+    logger.error('Failed to authenticate to DS content API');
   }
 
   if (typeof this.customCallback === 'function') {
@@ -150,7 +155,7 @@ function userLogout(callback) {
 
 function onUserLogout(err, response, body) {
   if (err) {
-    console.log(err);
+    logger.error(err);
   }
 
   if (typeof this.customCallback === 'function') {
@@ -181,7 +186,7 @@ function authToken(callback) {
 
 function onAuthToken(err, response, body) {
   if (err) {
-    console.log(err);
+    logger.error(err);
   }
   else {
     global.dscontentapi.token = jsonBody.token;
@@ -215,7 +220,7 @@ function systemConnect(callback) {
 
 function onSystemConnect(err, response, body) {
   if (err) {
-    console.log(err);
+    logger.error(err);
   }
 
   if (typeof this.customCallback === 'function') {
@@ -258,7 +263,7 @@ function campaignsReportback(rbData, callback) {
 
 function onCampaignsReportback(err, response, body) {
   if (err) {
-    console.log(err);
+    logger.error(err);
   }
 
   if (typeof this.customCallback === 'function') {

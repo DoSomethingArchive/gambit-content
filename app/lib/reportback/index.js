@@ -8,6 +8,8 @@ var express = require('express')
   , model = require('./reportbackModel')
   , mobilecommons = require('../../../mobilecommons')
   , emitter = require('../../eventEmitter')
+  , logger = require('../logger')
+  , dscontentapi = require('../ds-content-api')();
   ;
 
 router.post('/:campaign', function(request, response) {
@@ -91,7 +93,7 @@ function handleUserResponse(doc, data) {
   else if (!doc.quantity) {
     receiveQuantity(doc, data);
   }
-  else if(!doc.why_important) {
+  else if (!doc.why_important) {
     receiveWhyImportant(doc, data);
   }
 }
@@ -180,21 +182,14 @@ function completeReportBack(doc, data) {
   var customFields = {};
   var campaignConfig = config[data.campaign];
 
-  // @todo Retrieve user UID or create an account to get one
-
-  // Submit report back with data from the reportback doc
-  var rbData = {
-    nid: campaignConfig.campaign_nid,
-    uid: 21,
-    quantity: doc.quantity,
-    why_participated: doc.why_important,
-    file_url: doc.photo
-  };
-
-  var dscontentapi = require('../ds-content-api')();
-  dscontentapi.campaignsReportback(rbData, function(err, response, body) {
-    console.log(body);
-  });
+  // If user already has an account, submit the report back
+  if (/* @todo we have user uid */ false) {
+    submitReportBack(uid, doc, data);
+  }
+  // If user doesn't exist, create the user first, then submit a report back
+  else {
+    createUserThenReportBack(doc, data);
+  }
 
   // If this is the first campaign a user's completed, save it
   if (data.profile_first_completed_campaign_id) {
@@ -211,6 +206,61 @@ function completeReportBack(doc, data) {
       campaignId: campaignConfig.campaign_optout_id
     });
   }
+}
+
+/**
+ * Create a user account and then submit report back for the new user.
+ *
+ * @param doc
+ *   User's report back document
+ * @param data
+ *   Data from the user's request
+ */
+function createUserThenReportBack(doc, data) {
+  var userData = {
+    email: data.phone + '@mobile',
+    mobile: data.phone,
+    user_registration_source: process.env.DS_CONTENT_API_USER_REGISTRATION_SOURCE
+  };
+
+  // Create user account
+  dscontentapi.userCreate(userData, function(err, response, body) {
+    // Then submit report back with the newly created UID
+    if (body && body.uid) {
+      logger.info('Successfully created a user for: ' + data.phone);
+      submitReportBack(body.uid, doc, data);
+    }
+    else {
+      logger.error('Unable to create a user for: ' + data.phone);
+    }
+  });
+}
+
+/**
+ * Submit a report back.
+ *
+ * @param uid
+ *   User ID
+ * @param doc
+ *   User's report back document
+ * @param data
+ *   Data from the user's request
+ */
+function submitReportBack(uid, doc, data) {
+  var campaignConfig = config[data.campaign];
+  var rbData = {
+    nid: campaignConfig.campaign_nid,
+    uid: uid,
+    quantity: doc.quantity,
+    why_participated: doc.why_important,
+    file_url: doc.photo
+  };
+
+  dscontentapi.campaignsReportback(rbData, function(err, response, body) {
+    if (!err && body && body.length > 0) {
+      logger.info('Successfully submitted report back. rbid: ' + body[0]);
+    }
+  });
 }
 
 
