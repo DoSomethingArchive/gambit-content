@@ -122,12 +122,14 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     emitter.emit('game-created', doc);
     var config = gameConfig[doc.story_id];
 
-    // Sets a time to ask the alpha if she wants to play a solo game.
-    message.giveSoloOptionAfterDelay(doc._id, gameModel, gameConfig[self.storyId].ask_solo_play, TIME_UNTIL_SOLO_MESSAGE_SENT);
-
+    // doc.story_id check added in order to A/B test auto-start functionality. 
+    if (doc.game_type != "solo" && doc.story_id == 102) {
     // Automatically starts game after specified delay, or opts alpha into solo play.
-    if (doc.game_type != "solo") {
       start.auto(doc._id);
+    }
+    else {
+      // Sets a time to ask the alpha if she wants to play a solo game.
+      message.giveSoloOptionAfterDelay(doc._id, gameModel, gameConfig[self.storyId].ask_solo_play, TIME_UNTIL_SOLO_MESSAGE_SENT);
     }
   
     // Create game id to game type mapping.
