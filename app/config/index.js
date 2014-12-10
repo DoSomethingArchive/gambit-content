@@ -6,6 +6,7 @@ var path = require('path')
   , stathat = require('stathat')
   , errorHandler = require('errorhandler')
   , bodyParser = require('body-parser')
+  , tipsConfig = require('../lib/ds-routing/config/tipsConfigModel');
   ;
 
 module.exports = function() {
@@ -62,22 +63,22 @@ module.exports = function() {
   };
 
   // Read through .json configs in the config folder and set to app variables
-  fs.readdirSync('./app/config').forEach(function(file) {
-    if (file != path.basename(__filename)) {
+  // fs.readdirSync('./app/config').forEach(function(file) {
+  //   if (file != path.basename(__filename)) {
 
-      var name = file.substr(0, file.lastIndexOf('.'))
-      var ext = file.substr(file.lastIndexOf('.'));
-      if (ext === '.json') {
-        var data = fs.readFileSync(root_dirname + '/app/config/' + file);
+  //     var name = file.substr(0, file.lastIndexOf('.'))
+  //     var ext = file.substr(file.lastIndexOf('.'));
+  //     if (ext === '.json') {
+  //       var data = fs.readFileSync(root_dirname + '/app/config/' + file);
 
-        app.set(
-          name,
-          JSON.parse(data)
-        );
+  //       app.set(
+  //         name,
+  //         JSON.parse(data)
+  //       );
 
-        // Example:  app.get('mongo') will have the json object from app/config/mongo.json
-      }
+  //       // Example:  app.get('mongo') will have the json object from app/config/mongo.json
+  //     }
 
-    }
-  });
+  //   }
+  // });
 }
