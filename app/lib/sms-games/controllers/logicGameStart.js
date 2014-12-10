@@ -7,8 +7,7 @@ var gameConfig = require('../config/competitive-stories')
   , SGSoloController = require('./SGSoloController')
   , emitter = require('../../../eventEmitter')
   , STATHAT_CATEGORY = 'sms-games'
-  // , AUTO_START_GAME_DELAY = 300000;
-  , AUTO_START_GAME_DELAY = 5000;
+  , AUTO_START_GAME_DELAY = 300000;
 
 module.exports = {
   game : startGame,
