@@ -182,14 +182,8 @@ function completeReportBack(doc, data) {
   var customFields = {};
   var campaignConfig = config[data.campaign];
 
-  // If user already has an account, submit the report back
-  if (/* @todo we have user uid */ false) {
-    submitReportBack(uid, doc, data);
-  }
-  // If user doesn't exist, create the user first, then submit a report back
-  else {
-    createUserThenReportBack(doc, data);
-  }
+  // Start report back submission requests by first finding the user
+  findUserUidThenReportBack(doc, data);
 
   // If this is the first campaign a user's completed, save it
   if (data.profile_first_completed_campaign_id) {
@@ -209,6 +203,73 @@ function completeReportBack(doc, data) {
 }
 
 /**
+ * Find the user's UID based on the phone number. Submit the report back if a user
+ * is found. Otherwise, create a user first then submit the report back.
+ *
+ * @param doc
+ *   User's report back document
+ * @param data
+ *   Data from the user's request
+ */
+function findUserUidThenReportBack(doc, data) {
+  var phone;
+  var userData;
+  var context;
+
+  // Remove the international code (users typically don't include it when entering their number)
+  if (data.phone.length == 11) {
+    phone = data.phone.substr(1);
+  }
+
+  userData = {
+    mobile: phone
+  };
+
+  context = {
+    data: data,
+    doc: doc,
+    isInitialSearch: true
+  };
+
+  dscontentapi.userGet(userData, onFindUserUid.bind(context));
+}
+
+function onFindUserUid(err, response, body) {
+  var context;
+
+  // Variables bound to the callback
+  var data = this.data;
+  var doc = this.doc;
+  var isInitialSearch = this.isInitialSearch;
+
+  var jsonBody = JSON.parse(body);
+  if (jsonBody.length == 0) {
+    // If the initial search couldn't find the user, search again with country code.
+    if (isInitialSearch) {
+      userData = {
+        mobile: data.phone
+      };
+
+      context = {
+        data: data,
+        doc: doc,
+        isInitialSearch: false,
+      };
+
+      dscontentapi.userGet(userData, onFindUserUid.bind(context));
+    }
+    // If we still can't find the user, create an account and then submit report back.
+    else {
+      createUserThenReportBack(doc, data);
+    }
+  }
+  else {
+    // User account found. Submit the report back.
+    submitReportBack(jsonBody[0].uid, doc, data);
+  }
+}
+
+/**
  * Create a user account and then submit report back for the new user.
  *
  * @param doc
@@ -217,9 +278,17 @@ function completeReportBack(doc, data) {
  *   Data from the user's request
  */
 function createUserThenReportBack(doc, data) {
-  var userData = {
-    email: data.phone + '@mobile',
-    mobile: data.phone,
+  var phone;
+  var userData;
+
+  // Strip the international code for user registration data
+  if (data.phone.length == 11) {
+    phone = data.phone.substr(1);
+  }
+
+  userData = {
+    email: phone + '@mobile',
+    mobile: phone,
     user_registration_source: process.env.DS_CONTENT_API_USER_REGISTRATION_SOURCE
   };
 
@@ -227,11 +296,11 @@ function createUserThenReportBack(doc, data) {
   dscontentapi.userCreate(userData, function(err, response, body) {
     // Then submit report back with the newly created UID
     if (body && body.uid) {
-      logger.info('Successfully created a user for: ' + data.phone);
+      logger.info('Successfully created a user for: ' + phone);
       submitReportBack(body.uid, doc, data);
     }
     else {
-      logger.error('Unable to create a user for: ' + data.phone);
+      logger.error('Unable to create a user for: ' + phone);
     }
   });
 }
