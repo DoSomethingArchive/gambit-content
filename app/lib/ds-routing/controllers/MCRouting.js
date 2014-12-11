@@ -6,8 +6,9 @@ var mobilecommons = rootRequire('mobilecommons');
 
 var Tips = require('./Tips')
   , tips = new Tips
-  , routing_config = require('../config/routing-config')
-  , campaign_start_config = require('../config/campaign-start-config')
+  , start_campaign_transitions_config = require('../config/start-campaign-transitions')
+  , yes_no_paths_config = require('../config/yes-no-paths')
+  , campaign_start_config = require('../config/campaign-start')
   ;
 
 var MCRouting = function() {}
@@ -23,7 +24,7 @@ MCRouting.prototype.yesNoGateway = function(request, response) {
 
   var args = request.body.args.trim().toLowerCase();
   var incomingOptIn = parseInt(request.body.opt_in_path_id);
-  var paths = routing_config.yesNoPaths;
+  var paths = yes_no_paths_config.yesNoPaths;
 
   // Find a path configured for the opt-in this request came from.
   var path = undefined;
@@ -74,7 +75,7 @@ MCRouting.prototype.campaignTransition = function(request, response) {
   }
 
   var mdataId = parseInt(request.body.mdata_id);
-  var transitionConfig = routing_config.startCampaignTransitions[mdataId];
+  var transitionConfig = start_campaign_transitions_config.startCampaignTransitions[mdataId];
 
   if (typeof(transitionConfig) !== 'undefined'
       && typeof(transitionConfig.optin) !== 'undefined'

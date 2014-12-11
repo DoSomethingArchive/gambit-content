@@ -6,7 +6,7 @@ var mongoose = require('mongoose')
   , mobilecommons = rootRequire('mobilecommons')
   , logger = rootRequire('app/lib/logger')
   , tipModel = require('../models/tip')
-  , config = require('../config/tips-config')
+  , config = require('../config/tips')
   ;
 
 var Tips = function() {}
