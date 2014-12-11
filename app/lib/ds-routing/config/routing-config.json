@@ -124,6 +124,11 @@
             "__comments": "Search For Specs 2014",
             "optin": 174571,
             "optout": 130821
+        },
+         "11867": {
+            "__comments": "Ryan's Playbooks 2014",
+            "optin": 174359,
+            "optout": 130683
         }
     },
     "yesNoPaths": [
@@ -309,6 +314,11 @@
             "incomingPath": 174573,
             "yes": 174575,
             "no": 174577
+        },
+        {   "__comments": "Ryan's Playbooks 2014",
+            "incomingPath": 174361,
+            "yes": 174363,
+            "no": 174365
         }
 
     ]
