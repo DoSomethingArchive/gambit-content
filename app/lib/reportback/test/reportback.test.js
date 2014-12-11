@@ -28,7 +28,7 @@ function test() {
     before(createTestDoc);
 
     it('should find the document', function(done) {
-      reportback.findDocument(TEST_PHONE)
+      reportback.findDocument(TEST_PHONE, TEST_CAMPAIGN_CONFIG.endpoint)
         .then(function(doc) {
           if (doc) {
             done();

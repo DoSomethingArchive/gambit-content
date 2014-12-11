@@ -32,7 +32,7 @@ router.post('/:campaign', function(request, response) {
     phone = request.body.phone;
     
     // Find document for this user 
-    findDocument(phone)
+    findDocument(phone, campaignConfig.endpoint)
       .then(function(doc) {
         return onDocumentFound(doc, phone, campaignConfig);
       })
@@ -61,9 +61,11 @@ module.exports = router;
  *
  * @param phone
  *   Phone number of user
+ * @param endpoint
+ *   Campaign endpoint identifier
  */
-function findDocument(phone) {
-  return model.findOne({'phone': phone}).exec();
+function findDocument(phone, endpoint) {
+  return model.findOne({'phone': phone, 'campaign': endpoint}).exec();
 }
 
 /**
@@ -335,6 +337,9 @@ function submitReportBack(uid, doc, data) {
   dscontentapi.campaignsReportback(rbData, function(err, response, body) {
     if (!err && body && body.length > 0) {
       logger.info('Successfully submitted report back. rbid: ' + body[0]);
+
+      // Remove the report back doc when complete
+      model.remove({phone: data.phone, campaign: data.campaignConfig.endpoint}).exec();
     }
   });
 }
