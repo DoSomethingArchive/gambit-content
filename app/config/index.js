@@ -6,11 +6,7 @@ var path = require('path')
   , stathat = require('stathat')
   , errorHandler = require('errorhandler')
   , bodyParser = require('body-parser')
-  // , tipsConfigModel = require('../lib/ds-routing/config/tipsConfigModel')
-  // , competitiveStoryConfigModel = require('../lib/sms-games/config/competitiveStoryConfigModel')
-  // , donorschooseConfigModel = require('../lib/donations/config/donorschooseConfigModel')
-  // , campaignStartConfigModel = require('../lib/sms-games-config/campaignStartConfigModel')
-  // , 
+  , configLoader = require('./configLoader')
   ;
 
 module.exports = function() {
@@ -31,8 +27,11 @@ module.exports = function() {
   // Add static path
   app.use(express.static(path.join(root_dirname, 'public')));
 
-  // Set the database URI this app will use.
-  app.set('database-uri', process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder');
+  // Set the database URI this app will use for SMS operations.
+  app.set('operations-database-uri', process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder');
+
+  // Set the database URI this app will use to retrieve SMS config files.
+  app.set('config-database-uri', process.env.CONFIG_DB_URI || 'mongodb://localhost/config')
 
   // @TODO: Find a better way of passing the host URL to SGSoloController.createSoloGame()
   // Specify app host URL. 
@@ -44,8 +43,11 @@ module.exports = function() {
 
   // Only opens connection if its state is disconnected.
   if (mongoose.connection.readyState === 0) {
-    mongoose.connect(app.get('database-uri'));
+    mongoose.connect(app.get('operations-database-uri'));
   }
+
+  // Imports config files and attaches to the app object in memory. 
+  app.config = configLoader();
 
   /**
    * Global stathat reporting wrapper function

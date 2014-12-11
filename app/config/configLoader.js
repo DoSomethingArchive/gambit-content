@@ -3,7 +3,7 @@
  * object in memory. 
  */
 
-// var tipsConfigModel = require('../lib/ds-routing/config/tipsConfigModel')
+var tipsConfigModel = require('../lib/ds-routing/config/tipsConfigModel')
   // , connectionOperations = require('./connectionOperations')
   // , connectionConfig = require('./connectionConfig')
   // , competitiveStoryConfigModel = require('../lib/sms-games/config/competitiveStoryConfigModel')
@@ -21,8 +21,6 @@ var configLoader = function() {
 
   // some kind of loop, running through all the xxxConfigModels to .find() all the configDocs, attach those docs to the 
 
-  for (var i = 0; i < )
-
   tipsConfigModel.find({}, function(err, docs) {
     if (err) {
       logger.error('Error retrieving responder config files. Error: ' + err);
@@ -32,7 +30,6 @@ var configLoader = function() {
       return docs;
     }
   })
-
   // donationInfoModel.find({}, function(err, docs) {
   //   if (err) {
   //     logger.error('Error retrieving responder config files. Error: ' + err);
@@ -42,7 +39,6 @@ var configLoader = function() {
   //     // return docs;
   //   }
   // })
-
 }
 
 module.exports = configLoader;
