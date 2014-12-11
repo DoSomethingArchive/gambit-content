@@ -6,7 +6,11 @@ var path = require('path')
   , stathat = require('stathat')
   , errorHandler = require('errorhandler')
   , bodyParser = require('body-parser')
-  , tipsConfig = require('../lib/ds-routing/config/tipsConfigModel');
+  // , tipsConfigModel = require('../lib/ds-routing/config/tipsConfigModel')
+  // , competitiveStoryConfigModel = require('../lib/sms-games/config/competitiveStoryConfigModel')
+  // , donorschooseConfigModel = require('../lib/donations/config/donorschooseConfigModel')
+  // , campaignStartConfigModel = require('../lib/sms-games-config/campaignStartConfigModel')
+  // , 
   ;
 
 module.exports = function() {
@@ -61,6 +65,11 @@ module.exports = function() {
       function(status, json) {}
     );
   };
+
+  app.configs = {};
+
+  app.getConfigs = function() {};
+
 
   // Read through .json configs in the config folder and set to app variables
   // fs.readdirSync('./app/config').forEach(function(file) {
