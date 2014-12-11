@@ -19,6 +19,7 @@ module.exports = function() {
 
   return {
     userCreate: userCreate,
+    userGet: userGet,
     userLogin: userLogin,
     userLogout: userLogout,
     authToken: authToken,
@@ -88,6 +89,45 @@ function onUserCreate(err, response, body) {
 }
 
 /**
+ * Get user
+ */
+function userGet(userData, callback) {
+  var options = {
+    url: BASE_URL + '/users',
+    method: 'GET',
+    headers: {
+      'Accept': 'application/json',
+      'Cookie': global.dscontentapi.session_name + '=' + global.dscontentapi.sessid,
+      'X-CSRF-Token': global.dscontentapi.token
+    }
+  };
+
+  if (userData.email) {
+    options.url += '?parameters[email]=' + encodeURIComponent(userData.email);
+  }
+  else if (userData.mobile) {
+    options.url += '?parameters[mobile]=' + userData.mobile;
+  }
+
+  var _callback = onUserGet;
+  if (typeof callback === 'function') {
+    _callback = onUserGet.bind({customCallback: callback});
+  }
+
+  request(options, _callback)
+}
+
+function onUserGet(err, response, body) {
+  if (err) {
+    logger.error(err);
+  }
+
+  if (typeof this.customCallback === 'function') {
+    this.customCallback(err, response, body);
+  }
+}
+
+/**
  * Login
  */
 function userLogin(username, password, callback) {
@@ -141,6 +181,7 @@ function userLogout(callback) {
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      'Cookie': global.dscontentapi.session_name + '=' + global.dscontentapi.sessid,
       'X-CSRF-Token': global.dscontentapi.token
     }
   };
@@ -172,7 +213,8 @@ function authToken(callback) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Accept': 'application/json'
+      'Accept': 'application/json',
+      'Cookie': global.dscontentapi.session_name + '=' + global.dscontentapi.sessid
     }
   };
 
@@ -189,7 +231,12 @@ function onAuthToken(err, response, body) {
     logger.error(err);
   }
   else {
-    global.dscontentapi.token = jsonBody.token;
+    if (typeof body === 'string') {
+      global.dscontentapi.token = JSON.parse(body).token;
+    }
+    else if (typeof body === 'object') {
+      global.dscontentapi.token = body.token;
+    }
   }
 
   if (typeof this.customCallback === 'function') {
@@ -246,8 +293,8 @@ function campaignsReportback(rbData, callback) {
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      'X-CSRF-Token': global.dscontentapi.token,
-      'Cookie': global.dscontentapi.session_name + '=' + global.dscontentapi.sessid
+      'Cookie': global.dscontentapi.session_name + '=' + global.dscontentapi.sessid,
+      'X-CSRF-Token': global.dscontentapi.token
     },
     body: body,
     json: true
