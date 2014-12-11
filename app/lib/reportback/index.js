@@ -121,7 +121,7 @@ function receivePhoto(doc, data) {
         }
       });
 
-    mobilecommons.profile_update(data.phone, config[data.campaign].ask_quantity);
+    mobilecommons.profile_update(data.phone, config[data.campaign].message_quantity);
   }
 }
 
@@ -144,7 +144,7 @@ function receiveQuantity(doc, data) {
       }
     });
 
-  mobilecommons.profile_update(data.phone, config[data.campaign].ask_why);
+  mobilecommons.profile_update(data.phone, config[data.campaign].message_why);
 }
 
 /**

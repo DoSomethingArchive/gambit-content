@@ -1,12 +1,11 @@
 {
   "test": {
-    "ask_photo": 100,
-    "ask_quantity": 101,
-    "ask_why": 102,
-    "ask_caption": 103,
-    "message_complete": 104,
-    "message_not_a_photo": 105,
-    "campaign_optout_id": 200,
-    "campaign_completed_id": 201
+    "message_quantity": 170497,
+    "message_why": 170499,
+    "message_complete": 170501,
+    "message_not_a_photo": 170495,
+    "campaign_optout_id": 113693,
+    "campaign_completed_id": 113693,
+    "campaign_nid": 1334
   }
 }
