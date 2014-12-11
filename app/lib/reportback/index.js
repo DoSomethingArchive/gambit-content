@@ -14,22 +14,31 @@ var express = require('express')
 
 router.post('/:campaign', function(request, response) {
   var campaign;
+  var campaignConfig;
   var phone;
   var requestData;
+  var i;
   
   // Check that we have a config setup for this campaign
   campaign = request.params.campaign;
-  if (typeof config[request.params.campaign] !== 'undefined') {
+  for (i = 0; i < config.length; i++) {
+    if (config[i].endpoint == campaign) {
+      campaignConfig = config[i];
+      break;
+    }
+  }
+
+  if (typeof campaignConfig !== 'undefined') {
     phone = request.body.phone;
     
     // Find document for this user 
     findDocument(phone)
       .then(function(doc) {
-        return onDocumentFound(doc, phone, campaign);
+        return onDocumentFound(doc, phone, campaignConfig);
       })
       .then(function(doc) {
         requestData = {
-          campaign: campaign,
+          campaignConfig: campaignConfig,
           phone: phone,
           args: request.body.args,
           mms_image_url: request.body.mms_image_url,
@@ -64,16 +73,16 @@ function findDocument(phone) {
  *   Document found, if any
  * @param phone
  *   Phone number of user
- * @param campaign
- *   Campaign endpoint
+ * @param campaignConfig
+ *   Campaign config
  */
-function onDocumentFound(doc, phone, campaign) {
+function onDocumentFound(doc, phone, campaignConfig) {
   if (doc) {
     return doc;
   }
   else {
     // Create a document if none was found
-    return model.create({'phone': phone, 'campaign': campaign});
+    return model.create({'phone': phone, 'campaign': campaignConfig.endpoint});
   }
 }
 
@@ -109,7 +118,7 @@ function handleUserResponse(doc, data) {
 function receivePhoto(doc, data) {
   var photoUrl = data.mms_image_url;
   if (!photoUrl) {
-    mobilecommons.profile_update(data.phone, config[data.campaign].message_not_a_photo);
+    mobilecommons.profile_update(data.phone, data.campaignConfig.message_not_a_photo);
   }
   else {
     model.update(
@@ -121,7 +130,7 @@ function receivePhoto(doc, data) {
         }
       });
 
-    mobilecommons.profile_update(data.phone, config[data.campaign].message_quantity);
+    mobilecommons.profile_update(data.phone, data.campaignConfig.message_quantity);
   }
 }
 
@@ -144,7 +153,7 @@ function receiveQuantity(doc, data) {
       }
     });
 
-  mobilecommons.profile_update(data.phone, config[data.campaign].message_why);
+  mobilecommons.profile_update(data.phone, data.campaignConfig.message_why);
 }
 
 /**
@@ -180,24 +189,23 @@ function receiveWhyImportant(doc, data) {
  */
 function completeReportBack(doc, data) {
   var customFields = {};
-  var campaignConfig = config[data.campaign];
 
   // Start report back submission requests by first finding the user
   findUserUidThenReportBack(doc, data);
 
   // If this is the first campaign a user's completed, save it
   if (data.profile_first_completed_campaign_id) {
-    customFields.profile_first_completed_campaign_id = campaignConfig.campaign_completed_id;
+    customFields.profile_first_completed_campaign_id = data.campaignConfig.campaign_completed_id;
   }
 
   // Send message to user that their report back is complete
-  mobilecommons.profile_update(data.phone, campaignConfig.message_complete, customFields);
+  mobilecommons.profile_update(data.phone, data.campaignConfig.message_complete, customFields);
 
   // Opt user out of campaign, if specified
-  if (config[data.campaign].campaign_optout_id) {
+  if (data.campaignConfig.campaign_optout_id) {
     mobilecommons.optout({
       phone: data.phone,
-      campaignId: campaignConfig.campaign_optout_id
+      campaignId: data.campaignConfig.campaign_optout_id
     });
   }
 }
@@ -316,9 +324,8 @@ function createUserThenReportBack(doc, data) {
  *   Data from the user's request
  */
 function submitReportBack(uid, doc, data) {
-  var campaignConfig = config[data.campaign];
   var rbData = {
-    nid: campaignConfig.campaign_nid,
+    nid: data.campaignConfig.campaign_nid,
     uid: uid,
     quantity: doc.quantity,
     why_participated: doc.why_important,
