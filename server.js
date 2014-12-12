@@ -7,6 +7,7 @@ var express = require('express')
     , path = require('path')
     , logger = require('./app/lib/logger')
     , http = require('http')
+    , dscontentapi = require('./app/lib/ds-content-api')()
     ;
 
 // Set application root to global namespace
@@ -14,6 +15,19 @@ global.appRoot = path.resolve(__dirname);
 
 // Default is 5. Increasing # of concurrent sockets per host.
 http.globalAgent.maxSockets = 20;
+
+// Authenticate app with the DS content API.
+dscontentapi.userLogin(
+  process.env.DS_CONTENT_API_USERNAME,
+  process.env.DS_CONTENT_API_PASSWORD,
+  function(err, response, body) {
+    if (response && response.statusCode == 200) {
+      logger.info('Successfully logged in to DS content API.',
+        '\n\tsessid: ' + body.sessid,
+        '\n\tsession_name: ' + body.session_name,
+        '\n\ttoken: ' + body.token);
+    }
+  });
 
 /**
  * Express Setup - note app as global variable

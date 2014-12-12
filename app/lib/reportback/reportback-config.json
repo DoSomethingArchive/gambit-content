@@ -1,0 +1,22 @@
+[
+  {
+    "endpoint": "test",
+    "message_quantity": 170497,
+    "message_why": 170499,
+    "message_complete": 170501,
+    "message_not_a_photo": 170495,
+    "campaign_optout_id": 113693,
+    "campaign_completed_id": 113693,
+    "campaign_nid": 1334
+  },
+  {
+    "endpoint": "searchforspecs2014",
+    "message_quantity": 174581,
+    "message_why": 174583,
+    "message_complete": 174585,
+    "message_not_a_photo": 174579,
+    "campaign_optout_id": 130823,
+    "campaign_completed_id": 130825,
+    "campaign_nid": 4264
+  }
+]
