@@ -34,23 +34,27 @@ router.post('/:campaign', function(request, response) {
     // Find document for this user 
     findDocument(phone, campaignConfig.endpoint)
       .then(function(doc) {
-        return onDocumentFound(doc, phone, campaignConfig);
-      })
+          return onDocumentFound(doc, phone, campaignConfig);
+        }, function(err) {
+          logger.error('Error from reportback.findDocument:', err);
+        })
       .then(function(doc) {
-        requestData = {
-          campaignConfig: campaignConfig,
-          phone: phone,
-          args: request.body.args,
-          mms_image_url: request.body.mms_image_url,
-          profile_first_completed_campaign_id: request.body.profile_first_completed_campaign_id
-        };
-        handleUserResponse(doc, requestData);
-      });
+          requestData = {
+            campaignConfig: campaignConfig,
+            phone: phone,
+            args: request.body.args,
+            mms_image_url: request.body.mms_image_url,
+            profile_first_completed_campaign_id: request.body.profile_first_completed_campaign_id
+          };
+          handleUserResponse(doc, requestData);
+        }, function(err) {
+          logger.error('Error from reportback.onDocumentFound:', err);
+        });
 
     response.send();
   }
   else {
-    response.status(404).send('Request not available for ' + request.params.campain);
+    response.status(404).send('Request not available for ' + request.params.campaign);
   }
 });
 

@@ -20,7 +20,10 @@ var rbSchema = new mongoose.Schema({
   why_important: String,
   
   // Caption for the photo
-  caption: String
+  caption: String,
+
+  // Timestamp
+  started_at: {type: Date, default: Date.now}
 });
 
 module.exports = mongoose.model('reportbacks', rbSchema);
