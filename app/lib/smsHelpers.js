@@ -1,4 +1,4 @@
-var logger = require('./logger')
+var logger = rootRequire('app/lib/logger')
   ;
 
 /**

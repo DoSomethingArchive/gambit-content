@@ -1,4 +1,4 @@
-var mobilecommons = require('../../../mobilecommons')
+var mobilecommons = rootRequire('mobilecommons')
   , config = require('./babysitter-config');
   ;
 

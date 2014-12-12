@@ -3,27 +3,23 @@
  */
 
 var assert = require('assert')
-  , path = require('path')
   , express = require('express')
-  , emitter = require('../app/eventEmitter')
+  , emitter = rootRequire('app/eventEmitter')
   ;
-
-// Setting appRoot for tests
-global.appRoot = path.resolve('./');
 
 describe('ds-routing tests', function() {
 
   app = express();
-  require(appRoot + '/app/config')();
+  rootRequire('app/config')();
 
-  var MCRouting = require(appRoot + '/app/lib/ds-routing/controllers/MCRouting')
-    , Tips = require(appRoot + '/app/lib/ds-routing/controllers/Tips')
-    , tipModel = require(appRoot + '/app/lib/ds-routing/models/tip')
+  var MCRouting = rootRequire('app/lib/ds-routing/controllers/MCRouting')
+    , Tips = rootRequire('app/lib/ds-routing/controllers/Tips')
+    , tipModel = rootRequire('app/lib/ds-routing/models/tip')
     ;
     
   var mcRouting = new MCRouting;
   var tips = new Tips;
-  tips.config = require(appRoot + '/app/lib/ds-routing/config/tips-config')
+  tips.config = rootRequire('app/lib/ds-routing/config/tips-config')
 
   // Dummy Express response object.
   var response = {

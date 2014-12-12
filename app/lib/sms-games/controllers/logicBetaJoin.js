@@ -1,5 +1,5 @@
-var emitter = require('../../../eventEmitter')
-  , logger = require('../../logger')
+var emitter = rootRequire('app/eventEmitter')
+  , logger = rootRequire('app/lib/logger')
   , gameModel = require('../models/sgCompetitiveStory')
   , gameConfig = require('../config/competitive-stories')
   , message = require('./gameMessageHelpers')

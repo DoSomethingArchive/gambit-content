@@ -1,6 +1,6 @@
 var request = require('request')
   , crypto = require('crypto')
-  , logger = require('../logger')
+  , logger = rootRequire('app/lib/logger')
   ;
 
 var BASE_URL;

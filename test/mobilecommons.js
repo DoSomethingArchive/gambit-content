@@ -3,8 +3,8 @@
  */
 
 var assert = require('assert')
-  , mobilecommons = require('../mobilecommons')
-  , emitter = require('../app/eventEmitter')
+  , mobilecommons = rootRequire('mobilecommons')
+  , emitter = rootRequire('app/eventEmitter')
   ;
 
 var setMobileCommonsTestCredentials = function() {

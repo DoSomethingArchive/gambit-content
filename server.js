@@ -1,3 +1,8 @@
+// Wrapper around require to set relative path at app root
+global.rootRequire = function(name) {
+  return require(__dirname + '/' + name);
+}
+
 // Nodejitsu specifies NODE_ENV='production' by default
 if (process.env.NODE_ENV == 'production') {
   require('newrelic');
@@ -5,13 +10,10 @@ if (process.env.NODE_ENV == 'production') {
 
 var express = require('express')
     , path = require('path')
-    , logger = require('./app/lib/logger')
     , http = require('http')
-    , dscontentapi = require('./app/lib/ds-content-api')()
+    , logger = rootRequire('app/lib/logger')
+    , dscontentapi = rootRequire('app/lib/ds-content-api')()
     ;
-
-// Set application root to global namespace
-global.appRoot = path.resolve(__dirname);
 
 // Default is 5. Increasing # of concurrent sockets per host.
 http.globalAgent.maxSockets = 20;

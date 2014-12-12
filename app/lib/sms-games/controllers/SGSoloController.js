@@ -10,7 +10,7 @@
  */
 
 var requestHttp = require('request')
- , logger = require('../../logger')
+ , logger = rootRequire('app/lib/logger')
  ;
 
 var SGSoloController = function(host) {

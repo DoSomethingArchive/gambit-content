@@ -2,9 +2,9 @@
  * Game controller for the Competitive Story template.
  */
 
-var smsHelper = require('../../smsHelpers')
-  , emitter = require('../../../eventEmitter')
-  , logger = require('../../logger')
+var smsHelper = rootRequire('app/lib/smsHelpers')
+  , emitter = rootRequire('app/eventEmitter')
+  , logger = rootRequire('app/lib/logger')
   , gameMappingModel = require('../models/sgGameMapping')
   , gameModel = require('../models/sgCompetitiveStory')
   , userModel = require('../models/sgUser')

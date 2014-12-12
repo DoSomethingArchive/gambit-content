@@ -32,17 +32,18 @@ var TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR = 'zip' // 'zip' or 'state'. Our retrie
   , DONATE_API_URL = donorsChooseDonationBaseURL + donorsChooseApiKey
   , CITY_SCHOOLNAME_CHARLIMIT = 79; // Limit for the number of characters we have in this OIP: https://secure.mcommons.com/campaigns/128427/opt_in_paths/170623
 
-var mobilecommons = require('../../../../mobilecommons')
-  , smsHelper = require('../../smsHelpers')
+var Q = require('q')
   , requestHttp = require('request')
-  , dc_config = require('../config/donorschoose')
-  , Q = require('q')
-  , shortenLink = require('../../bitly')
-  , logger = require('../../logger')
   , Entities = require('html-entities').AllHtmlEntities
+  , logger = rootRequire('app/lib/logger')
+  . mobilecommons = rootRequire('mobilecommons')
+  , smsHelper = rootRequire('app/lib/smsHelpers')
+  , shortenLink = rootRequire('app/lib/bitly')
   ;
 
-var donationModel = require('../models/DonationInfo');
+var dc_config = require('../config/donorschoose')
+  , donationModel = require('../models/DonationInfo')
+  ;
 
 function DonorsChooseDonationController() {
   this.host; // Used to store reference to application host.

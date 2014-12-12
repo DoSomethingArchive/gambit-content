@@ -5,10 +5,10 @@
  * Not used for SOLO mobile game creation, though. (See SGSoloController.js.)
  */
 
-var mobilecommons = require('../../../../mobilecommons')
-  , smsHelper = require('../../smsHelpers')
-  , requestHttp = require('request')
-  , logger = require('../../logger')
+var requestHttp = require('request')
+  , mobilecommons = rootRequire('mobilecommons')
+  , smsHelper = rootRequire('app/lib/smsHelpers')
+  , logger = rootRequire('app/lib/logger')
   , competitiveStoryConfig = require('../config/competitive-stories')
   , configModel = require('../models/sgGameCreateConfig')
   ;

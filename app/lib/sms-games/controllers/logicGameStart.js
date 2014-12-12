@@ -3,9 +3,9 @@ var gameConfig = require('../config/competitive-stories')
   , message = require('./gameMessageHelpers')
   , utility = require('./gameUtilities')
   , record = require('./gameRecordHelpers')
-  , logger = require('../../logger')
   , SGSoloController = require('./SGSoloController')
-  , emitter = require('../../../eventEmitter')
+  , emitter = rootRequire('app/eventEmitter')
+  , logger = rootRequire('app/lib/logger')
   , STATHAT_CATEGORY = 'sms-games'
   , AUTO_START_GAME_DELAY = 300000;
 
