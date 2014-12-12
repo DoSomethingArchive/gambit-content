@@ -36,7 +36,7 @@ var Q = require('q')
   , requestHttp = require('request')
   , Entities = require('html-entities').AllHtmlEntities
   , logger = rootRequire('app/lib/logger')
-  . mobilecommons = rootRequire('mobilecommons')
+  , mobilecommons = rootRequire('mobilecommons')
   , smsHelper = rootRequire('app/lib/smsHelpers')
   , shortenLink = rootRequire('app/lib/bitly')
   ;
