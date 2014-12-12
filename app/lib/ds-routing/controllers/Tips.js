@@ -2,9 +2,9 @@
  * Tips API
  */
 
-var mobilecommons = require(appRoot + '/mobilecommons')
-  , mongoose = require('mongoose')
-  , logger = require(appRoot + '/app/lib/logger')
+var mongoose = require('mongoose')
+  , mobilecommons = rootRequire('mobilecommons')
+  , logger = rootRequire('app/lib/logger')
   , tipModel = require('../models/tip')
   , config = require('../config/tips-config')
   ;

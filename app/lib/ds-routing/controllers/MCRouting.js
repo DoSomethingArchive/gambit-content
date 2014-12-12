@@ -2,7 +2,7 @@
  * Custom DS routing.
  */
 
-var mobilecommons = require(appRoot + '/mobilecommons');
+var mobilecommons = rootRequire('mobilecommons');
 
 var Tips = require('./Tips')
   , tips = new Tips

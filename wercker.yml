@@ -22,7 +22,7 @@ build:
     - script: 
         name: run Mocha tests and then send Istanbul coverage reports to coveralls
         code: |
-            NODE_ENV=test ./node_modules/.bin/istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec
+            NODE_ENV=test ./node_modules/.bin/istanbul cover ./node_modules/mocha/bin/_mocha test/_init.test.js --report lcovonly -- -R spec
             cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
             rm -rf ./coverage
 # Delivers passed build to target.

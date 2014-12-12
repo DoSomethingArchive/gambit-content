@@ -12,7 +12,7 @@
  */
 
 var requestHttp = require('request')
-  , logger = require('../logger')
+  , logger = rootRequire('app/lib/logger')
   ;
 
 var bitlyToken = (process.env.BITLY_GENERIC_ACCESS_TOKEN || null);

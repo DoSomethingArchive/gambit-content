@@ -4,8 +4,8 @@
  */
 
 var RequestRetry = require('node-request-retry')
-  , logger = require('../app/lib/logger')
-  , emitter = require('../app/eventEmitter')
+  , logger = rootRequire('app/lib/logger')
+  , emitter = rootRequire('app/eventEmitter')
   ;
 
 

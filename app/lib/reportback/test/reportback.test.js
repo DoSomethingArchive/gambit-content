@@ -2,7 +2,7 @@ var assert = require('assert')
   , reportback = require('../')
   , config = require('../reportback-config.json')
   , model = require('../reportbackModel')
-  , emitter = require('../../../eventEmitter')
+  , emitter = rootRequire('app/eventEmitter')
   ;
 
 function test() {

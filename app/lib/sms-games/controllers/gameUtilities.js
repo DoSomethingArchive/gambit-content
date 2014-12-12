@@ -1,4 +1,4 @@
-var logger = require('../../logger')
+var logger = rootRequire('app/lib/logger')
 
 var stathatReport = function(type, category, action, label, storyId, num) {
   var statname = category + ': ' + action + ': ' + label + ': ' + 'story-id=' + storyId;

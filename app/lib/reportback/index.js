@@ -6,10 +6,10 @@ var express = require('express')
   , router = express.Router()
   , config = require('./reportback-config.json')
   , model = require('./reportbackModel')
-  , mobilecommons = require('../../../mobilecommons')
-  , emitter = require('../../eventEmitter')
-  , logger = require('../logger')
-  , dscontentapi = require('../ds-content-api')();
+  , mobilecommons = rootRequire('mobilecommons')
+  , emitter = rootRequire('app/eventEmitter')
+  , logger = rootRequire('app/lib/logger')
+  , dscontentapi = rootRequire('app/lib/ds-content-api')();
   ;
 
 router.post('/:campaign', function(request, response) {
