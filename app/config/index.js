@@ -50,6 +50,8 @@ module.exports = function() {
   // Imports config files and attaches to the app object in memory. 
   app.config = configLoader();
 
+  app.findConfig = 
+
   /**
    * Global stathat reporting wrapper function
    *
