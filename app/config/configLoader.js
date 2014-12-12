@@ -30,6 +30,7 @@ var configLoader = function() {
       return docs;
     }
   })
+
   // donationInfoModel.find({}, function(err, docs) {
   //   if (err) {
   //     logger.error('Error retrieving responder config files. Error: ' + err);

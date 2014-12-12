@@ -42,9 +42,10 @@ module.exports = function() {
   }
 
   // Only opens connection if its state is disconnected.
-  if (mongoose.connection.readyState === 0) {
-    mongoose.connect(app.get('operations-database-uri'));
-  }
+  // Now this only applies to the default connection, not to the two new connections being opened. 
+  // if (mongoose.connection.readyState === 0) {
+  //   mongoose.connect(app.get('operations-database-uri'));
+  // }
 
   // Imports config files and attaches to the app object in memory. 
   app.config = configLoader();

@@ -42,8 +42,10 @@ var Q = require('q')
   ;
 
 var dc_config = require('../config/donorschoose')
-  , donationModel = require('../models/DonationInfo')
-  ;
+  , connectionOperations = require('../../../config/connectionOperations')
+  , donationModel = require('../models/DonationInfo')(connectionOperations);
+// @TODO: add some kind of reference to retrieve the donations config 
+// var donationConfigModel = require('../')
 
 function DonorsChooseDonationController() {
   this.host; // Used to store reference to application host.
