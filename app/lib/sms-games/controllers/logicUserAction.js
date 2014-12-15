@@ -20,13 +20,13 @@ var END_LEVEL_GROUP_MESSAGE_DELAY = 15000
  * Callback after user's game is found. Determines how to progress the user
  * forward in the story based on her answer.
  */
-module.exports = function(obj, doc) {
+module.exports = function(request, doc) {
   var gameDoc = doc;
   // Uppercase and only get first word of user's response.
-  var userFirstWord = smsHelper.getFirstWord(obj.request.body.args.toUpperCase());
+  var userFirstWord = smsHelper.getFirstWord(request.body.args.toUpperCase());
 
   // Find player's current status.
-  var userPhone = smsHelper.getNormalizedPhone(obj.request.body.phone);
+  var userPhone = smsHelper.getNormalizedPhone(request.body.phone);
   var currentOip = 0;
   for (var i = 0; i < doc.players_current_status.length; i++) {
     if (doc.players_current_status[i].phone == userPhone) {
@@ -132,11 +132,9 @@ module.exports = function(obj, doc) {
   // in the logicUserAction() function call.
   if (userPhone && nextOip) {
     message.singleUser(userPhone, nextOip);
-
-    obj.response.send();
   }
   else {
-    obj.response.status(500).send('Story configuration invalid.');
+    logger.error('Story configuration invalid. phone: ' + userPhone + ' story_id: ' + doc.story_id);
   }
 };
 

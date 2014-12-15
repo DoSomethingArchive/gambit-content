@@ -53,26 +53,17 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     return false;
   }
 
-  // Allows us to use the .findUserGame(obj, onUserGameFound) 
-  // helper function.
-  this.request = request;
-  this.response = response;
-  if (!this.request.body) {
-    this.request.body = {}
-  }
-  this.request.body.phone = request.body.alpha_mobile;
-
   // Story ID could be in either POST or GET param.
-  this.storyId = null;
+  var storyId = null;
   if (typeof request.body.story_id !== 'undefined') {
-    this.storyId = request.body.story_id;
+    storyId = request.body.story_id;
   }
   else if (typeof request.query.story_id !== 'undefined') {
-    this.storyId = request.query.story_id;
+    storyId = request.query.story_id;
   }
 
-  if (typeof gameConfig[this.storyId] === 'undefined') {
-    response.status(406).send('Game config not setup for story ID: ' + this.storyId);
+  if (typeof gameConfig[storyId] === 'undefined') {
+    response.status(406).send('Game config not setup for story ID: ' + storyId);
     return false;
   }
 
@@ -84,7 +75,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
   // Compile a new game document.
   var gameDoc = {
-    story_id: this.storyId,
+    story_id: storyId,
     alpha_name: request.body.alpha_first_name,
     alpha_phone: alphaPhone,
     betas: [],
@@ -113,8 +104,11 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     return false;
   }
 
+  // All settings checkout so far. Respond to user first before asynchronously creating the game
+  response.sendStatus(201);
+
   // Closure variable to use through chained callbacks.
-  var self = this;
+  var self = {};
 
   // Save game to the database.
   var game = gameModel.create(gameDoc);
@@ -124,12 +118,12 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
     // doc.story_id check added in order to A/B test auto-start functionality. 
     if (doc.game_type != "solo" && doc.story_id == 201) {
-    // Automatically starts game after specified delay, or opts alpha into solo play.
+      // Automatically starts game after specified delay, or opts alpha into solo play.
       start.auto(doc._id);
     }
     else {
       // Sets a time to ask the alpha if she wants to play a solo game.
-      message.giveSoloOptionAfterDelay(doc._id, gameModel, gameConfig[self.storyId].ask_solo_play, TIME_UNTIL_SOLO_MESSAGE_SENT);
+      message.giveSoloOptionAfterDelay(doc._id, gameModel, gameConfig[doc.story_id].ask_solo_play, TIME_UNTIL_SOLO_MESSAGE_SENT);
     }
   
     // Create game id to game type mapping.
@@ -165,7 +159,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     // so that upon SOLO game creation, the Alpha userModel will have been modified 
     // with the SOLO gameId before the start game logic runs 
     // (triggered by the POST to the /alpha-start route.)
-    createPlayer(self.createdGameDoc.alpha_phone, self.createdGameDoc._id, 'alpha-user-created', function(){ self.response.sendStatus(201); });
+    createPlayer(self.createdGameDoc.alpha_phone, self.createdGameDoc._id, 'alpha-user-created');
 
     // Upsert user documents for the betas.
     self.createdGameDoc.betas.forEach(function(value, index, set) {
@@ -180,9 +174,9 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     // We opt users into these initial opt in paths only if the game type is NOT solo. 
     if (self.createdGameDoc.game_type !== 'solo') {
       message.group(self.createdGameDoc.alpha_phone,
-        gameConfig[self.storyId.toString()].alpha_wait_oip,
+        gameConfig[self.createdGameDoc.story_id.toString()].alpha_wait_oip,
         betaOptInArray,
-        gameConfig[self.storyId.toString()].beta_join_ask_oip);
+        gameConfig[self.createdGameDoc.story_id.toString()].beta_join_ask_oip);
     }
 
   },
@@ -191,12 +185,12 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   // Report create game stats to StatHat
   var stathatAction = 'create game';
   var numPlayers = gameDoc && gameDoc.betas ? gameDoc.betas.length + 1 : 1;
-  utility.stathatReportValue(STATHAT_CATEGORY, stathatAction, 'number of players (avg)', this.storyId, numPlayers);
-  utility.stathatReportCount(STATHAT_CATEGORY, stathatAction, 'number of players (total)', this.storyId, numPlayers);
-  utility.stathatReportCount(STATHAT_CATEGORY, stathatAction, 'success', this.storyId, 1);
+  utility.stathatReportValue(STATHAT_CATEGORY, stathatAction, 'number of players (avg)', storyId, numPlayers);
+  utility.stathatReportCount(STATHAT_CATEGORY, stathatAction, 'number of players (total)', storyId, numPlayers);
+  utility.stathatReportCount(STATHAT_CATEGORY, stathatAction, 'success', storyId, 1);
   return true;
 
-  function createPlayer(phone, docId, emitterMessage, onSuccess) {
+  function createPlayer(phone, docId, emitterMessage) {
     userModel.update(
       {phone: phone},
       {$set: {phone: phone, current_game_id: docId, updated_at: Date.now()}},     
@@ -205,9 +199,6 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
       emitter.emit(emitterMessage);
       if (raw && raw.upserted) {
         logger.info(emitterMessage, JSON.stringify(raw.upserted));
-      }
-      if (typeof onSuccess === 'function') {
-        onSuccess();
       }
     }, utility.promiseErrorCallback('Unable to create player, this event did not happen: ' + emitterMessage)
     )
@@ -239,19 +230,12 @@ SGCompetitiveStoryController.prototype.betaJoinGame = function(request, response
     args = request.body.args;
   }
 
-  if (!smsHelper.isYesResponse(smsHelper.getFirstWord(args))) {
-    response.send();
-  }
-  else {
-    // Object for callbacks to reference.
-    var self = this;
-    self.request = request;
-    self.response = response;
-
+  if (smsHelper.isYesResponse(smsHelper.getFirstWord(args))) {
     // Finds the beta user's game and calls execBetaJoinGame() when found.
-    this.findUserGame(self, betaJoinLogic);
+    this.findUserGame(request, betaJoinLogic);
   }
 
+  response.send();
   return true;
 };
 
@@ -267,18 +251,12 @@ SGCompetitiveStoryController.prototype.alphaStartGame = function(request, respon
   }
 
   // If alpha doesn't respond with 'Y', then just ignore
-  if (!smsHelper.isYesResponse(smsHelper.getFirstWord(request.body.args))) {
-    response.send();
+  if (smsHelper.isYesResponse(smsHelper.getFirstWord(request.body.args))) {
+    // Otherwise, find the alpha user's game and call execAlphaStartGame() when found.
+    this.findUserGame(request, alphaStartLogic);
   }
-  else {
-    // Object for callbacks to reference.
-    var self = this;
-    self.request = request;
-    self.response = response;
 
-    // Finds the alpha user's game and calls execAlphaStartGame() when found.
-    this.findUserGame(self, alphaStartLogic);
-  }
+  response.send();
 };
 
 /**
@@ -292,32 +270,27 @@ SGCompetitiveStoryController.prototype.userAction = function(request, response) 
     return;
   }
 
-  // Object for callbacks to reference.
-  var self = this;
-  self.request = request;
-  self.response = response;
-
   // Finds the user's game and calls execUserAction() when found.
-  this.findUserGame(self, userActionLogic);
-
+  this.findUserGame(request, userActionLogic);
+  response.send();
 };
 
 /**
  * Finds a user's game.
  *
- * @param obj
- *   Reference object for callbacks.
+ * @param request
+ *   Request object.
  * @param onUserGameFound
  *   Callback to execute when the user's game is found.
  */
-SGCompetitiveStoryController.prototype.findUserGame = function(obj, onUserGameFound) {
+SGCompetitiveStoryController.prototype.findUserGame = function(request, onUserGameFound) {
   
   /**
    * 1) First step in the process of finding the user's game - find the user document. 
    * http://mongoosejs.com/docs/queries.html
    */
   userModel.findOne(
-    {phone: smsHelper.getNormalizedPhone(obj.request.body.phone)},
+    {phone: smsHelper.getNormalizedPhone(request.body.phone)},
     onUserFound
   );
 
@@ -337,7 +310,7 @@ SGCompetitiveStoryController.prototype.findUserGame = function(obj, onUserGameFo
       gameMappingModel.findOne({game_id: doc.current_game_id}, onGameMappingFound);
     }
     else {
-      obj.response.sendStatus(404);
+      logger.error('SGCompetitiveStoryController.onUserFound - no doc found for: ' + phone);
     }
   };
 
@@ -355,7 +328,8 @@ SGCompetitiveStoryController.prototype.findUserGame = function(obj, onUserGameFo
       gameModel.findOne({_id: doc.game_id}, onGameFound);
     }
     else {
-      obj.response.sendStatus(404);
+      logger.error('SGCompetitiveStoryController.onGameMappingFound - no doc found for'
+                    + ' phone: ' + phone + ' model: ' + gameModel.modelName);
     }
   };
 
@@ -369,10 +343,10 @@ SGCompetitiveStoryController.prototype.findUserGame = function(obj, onUserGameFo
 
     if (doc) {
       logger.log('debug', 'Game doc found:\n', doc);
-      onUserGameFound(obj, doc);
+      onUserGameFound(request, doc);
     }
     else {
-      obj.response.sendStatus(404);
+      logger.error('SGCompetitiveStoryController.onGameFound - no doc found for: ' + phone);
     }
   };
 };

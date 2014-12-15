@@ -8,10 +8,9 @@ var emitter = rootRequire('app/eventEmitter')
  * Callback after alpha's game is found. Handles an alpha choosing to start
  * the game before all players have joined.
  */
-module.exports = function(obj, doc) {
+module.exports = function(request, doc) {
   // Start the game.
   doc = start.game(doc);
-  obj.response.send();
 
   // Save the doc in the database with the current status updates.
   gameModel.update(
