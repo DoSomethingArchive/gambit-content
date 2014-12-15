@@ -6,7 +6,6 @@ var path = require('path')
   , stathat = require('stathat')
   , errorHandler = require('errorhandler')
   , bodyParser = require('body-parser')
-  , configLoader = require('./configLoader')
   ;
 
 module.exports = function() {
@@ -41,17 +40,6 @@ module.exports = function() {
     app.hostName = 'localhost:' + app.get('port');
   }
 
-  // Only opens connection if its state is disconnected.
-  // Now this only applies to the default connection, not to the two new connections being opened. 
-  // if (mongoose.connection.readyState === 0) {
-  //   mongoose.connect(app.get('operations-database-uri'));
-  // }
-
-  // Imports config files and attaches to the app object in memory. 
-  app.config = configLoader();
-
-  app.findConfig = 
-
   /**
    * Global stathat reporting wrapper function
    *
@@ -70,29 +58,4 @@ module.exports = function() {
       function(status, json) {}
     );
   };
-
-  app.configs = {};
-
-  app.getConfigs = function() {};
-
-
-  // Read through .json configs in the config folder and set to app variables
-  // fs.readdirSync('./app/config').forEach(function(file) {
-  //   if (file != path.basename(__filename)) {
-
-  //     var name = file.substr(0, file.lastIndexOf('.'))
-  //     var ext = file.substr(file.lastIndexOf('.'));
-  //     if (ext === '.json') {
-  //       var data = fs.readFileSync(root_dirname + '/app/config/' + file);
-
-  //       app.set(
-  //         name,
-  //         JSON.parse(data)
-  //       );
-
-  //       // Example:  app.get('mongo') will have the json object from app/config/mongo.json
-  //     }
-
-  //   }
-  // });
 }
