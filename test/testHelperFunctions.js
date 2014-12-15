@@ -13,8 +13,6 @@ var assert = require('assert')
 // Provides necessary setup conditions before game tests. 
 exports.gameAppSetup = function() {
   before('instantiating Express app, game controller, game config, dummy response', function() {
-    app = express();
-    require('../app/config')();
 
     this.gameController = new SGCompetitiveStoryController;
 
