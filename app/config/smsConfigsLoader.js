@@ -10,8 +10,6 @@ var configObject = {}
   , numberOfModelsRemaining = configModelArray.length
   ;
 
-console.log('within smsConfigsLoader.js');
-
 /*
  * Imports the responder's configuration files and returns them through a callback. 
  *
@@ -20,13 +18,9 @@ console.log('within smsConfigsLoader.js');
  */
 var smsConfigsLoader = function(_callback) {
   callback = _callback;
-  console.log("smsConfigsLoader has been called: " + configModelArray.length);
   for (var i = 0; i < configModelArray.length; i++) {
     var modelName = configModelArray[i].modelName;
-    console.log('model name: ' + modelName);
     configModelArray[i].find({}, function(err, docs) {
-      console.log('within callback of mongo call')
-
       if (err) {
         logger.error('Error retrieving responder config files for the model: ' + configModelArray[i].modelName + '. Error: ' + err);
       }
@@ -40,7 +34,6 @@ var smsConfigsLoader = function(_callback) {
 }
 
 function onRetrievedConfig() {
-  console.log("onRetrievedConfig has been called");
   numberOfModelsRemaining --
   if (numberOfModelsRemaining == 0) {
     callback(configObject);

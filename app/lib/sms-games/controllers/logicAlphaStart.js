@@ -1,6 +1,7 @@
 var emitter = rootRequire('app/eventEmitter')
   , logger = rootRequire('app/lib/logger')
-  , gameModel = require('../models/sgCompetitiveStory')
+  , connectionOperations = rootRequire('app/config/connectionOperations')
+  , gameModel = rootRequire('app/lib/sms-games/models/sgCompetitiveStory')(connectionOperations)
   , start = require('./logicGameStart')
   ;
 

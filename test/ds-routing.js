@@ -16,7 +16,6 @@ describe('ds-routing tests', function() {
     
   var mcRouting = new MCRouting;
   var tips = new Tips;
-  // tips.config = rootRequire('app/lib/ds-routing/config/tips-config')
 
   // Dummy Express response object.
   var response = {
@@ -174,7 +173,6 @@ describe('ds-routing tests', function() {
           emitter.removeAllListeners(emitter.events.mcOptinTest);
 
           var expected = app.getConfig('tips_config', 10673).optins;
-          console.log('****expected', expected)
           if (expected.indexOf(payload.form.opt_in_path) >= 0) {
             done();
           }

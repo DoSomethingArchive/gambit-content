@@ -11,8 +11,6 @@ var tipSchema = new mongoose.Schema({
   }]
 })
 
-// module.exports = mongoose.model('tip', tipSchema);
-
 module.exports = function(connection) {
   return connection.model('tip', tipSchema);
 }

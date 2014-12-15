@@ -5,52 +5,22 @@ global.rootRequire = function(name) {
   return require(rootDir + '/' + name);
 }
 
-console.log('**** hoisdf')
-
-
 describe('Running all responder tests', function() {
-  // before(function () {
-    var express = require('express');
-    app = express();
-    // console.log('***app object', JSON.stringify(app))
+  var express = require('express');
+  app = express();
 
-    var appConfig = rootRequire('app/config')()
-      , smsConfigsLoader = rootRequire('app/config/smsConfigsLoader')
-
-    // app.getConfig = function(modelName, id) {
-    //   var configArray = this.configs[modelName];
-    //   for (var i = 0; i < configArray.length; i ++) {
-    //     if (configArray[i]._id == id) {
-    //       return configArray[i];
-    //     }
-    //   }
-    //   logger.error('Unable to find requested config document for config model: ' + modelName + ' with id: ' + id);
-    // }
-
-
-  // })
-
-  // smsConfigsLoader(function(configObject) {
-  //   console.log('****hello config object', configObject)
-
-  //   console.log('***app object', JSON.stringify(app))
-  //   app.configs = configObject;
-  //   // done();
-  // });
+  var appConfig = rootRequire('app/config')()
+    , smsConfigsLoader = rootRequire('app/config/smsConfigsLoader');
 
   it('loads the sms configuration documents into memory from the database', function(done) {
     smsConfigsLoader(function(configObject) {
-      console.log('****hello config object', configObject)
-
-      console.log('***app object', JSON.stringify(app))
       app.configs = configObject;
       done();
     });
   });
 
   it('runs all the responder tests', function() {
-    console.log('within ****');
-    // require('./BullyText.js');
+    require('./BullyText.js');
     require('./ds-routing.js');
     // require('./EndGameFromUserExit.js');
     // require('./GameAlphaStart');
@@ -58,8 +28,4 @@ describe('Running all responder tests', function() {
     // require('./mobilecommons.js');
     // require('./ScienceSleuth.js');
   })
-
-
-
-
 });

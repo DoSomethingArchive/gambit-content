@@ -1,5 +1,6 @@
 var gameConfig = require('../config/competitive-stories')
-  , gameModel = require('../models/sgCompetitiveStory')
+  , connectionOperations = rootRequire('app/config/connectionOperations')
+  , gameModel = rootRequire('app/lib/sms-games/models/sgCompetitiveStory')(connectionOperations)
   , message = require('./gameMessageHelpers')
   , utility = require('./gameUtilities')
   , record = require('./gameRecordHelpers')
