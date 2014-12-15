@@ -26,4 +26,6 @@ var rbSchema = new mongoose.Schema({
   started_at: {type: Date, default: Date.now}
 });
 
-module.exports = mongoose.model('reportbacks', rbSchema);
+module.exports = function(connection) {
+  return connection.model('reportbacks', rbSchema);
+}
