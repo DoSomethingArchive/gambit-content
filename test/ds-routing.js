@@ -5,21 +5,18 @@
 var assert = require('assert')
   , express = require('express')
   , emitter = rootRequire('app/eventEmitter')
+  , connectionOperations = rootRequire('app/config/connectionOperations')
   ;
 
 describe('ds-routing tests', function() {
-
-  app = express();
-  rootRequire('app/config')();
-
   var MCRouting = rootRequire('app/lib/ds-routing/controllers/MCRouting')
     , Tips = rootRequire('app/lib/ds-routing/controllers/Tips')
-    , tipModel = rootRequire('app/lib/ds-routing/models/tip')
+    , tipModel = rootRequire('app/lib/ds-routing/models/tip')(connectionOperations)
     ;
     
   var mcRouting = new MCRouting;
   var tips = new Tips;
-  tips.config = rootRequire('app/lib/ds-routing/config/tips-config')
+  // tips.config = rootRequire('app/lib/ds-routing/config/tips-config')
 
   // Dummy Express response object.
   var response = {
@@ -176,7 +173,8 @@ describe('ds-routing tests', function() {
         emitter.on(emitter.events.mcOptinTest, function(payload) {
           emitter.removeAllListeners(emitter.events.mcOptinTest);
 
-          var expected = tips.config.tips['10673'].optins;
+          var expected = app.getConfig('tips_config', 10673).optins;
+          console.log('****expected', expected)
           if (expected.indexOf(payload.form.opt_in_path) >= 0) {
             done();
           }
@@ -202,7 +200,7 @@ describe('ds-routing tests', function() {
         emitter.on(emitter.events.mcOptinTest, function(payload) {
           emitter.removeAllListeners(emitter.events.mcOptinTest);
 
-          var expected = tips.config.tips['10663'].optins;
+          var expected = app.getConfig('tips_config', 10663).optins;
           if (expected.indexOf(payload.form.opt_in_path) >= 0) {
             done();
           }
@@ -228,7 +226,7 @@ describe('ds-routing tests', function() {
         emitter.on(emitter.events.mcOptinTest, function(payload) {
           emitter.removeAllListeners(emitter.events.mcOptinTest);
 
-          var expected = tips.config.tips['10243'].optins;
+          var expected = app.getConfig('tips_config', 10243).optins;
           if (expected.indexOf(payload.form.opt_in_path) >= 0) {
             done();
           }
@@ -287,7 +285,7 @@ describe('ds-routing tests', function() {
       emitter.on(emitter.events.mcOptinTest, function(payload) {
         emitter.removeAllListeners(emitter.events.mcOptinTest);
 
-        var expected = tips.config.tips['9521'].optins;
+        var expected = app.getConfig('tips_config', 9521).optins;
         if (expected.indexOf(payload.form.opt_in_path) >= 0) {
           done();
         }

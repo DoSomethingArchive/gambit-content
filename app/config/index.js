@@ -40,6 +40,17 @@ module.exports = function() {
     app.hostName = 'localhost:' + app.get('port');
   }
 
+  // app.getConfig = function(modelName, id) {
+  //   console.log("within app.getConfig****")
+  //   var configArray = this.configs[modelName];
+  //   for (var i = 0; i < configArray.length; i ++) {
+  //     if (configArray[i]._id == id) {
+  //       return configArray[i];
+  //     }
+  //   }
+  //   logger.error('Unable to find requested config document for config model: ' + modelName + ' with id: ' + id);
+  // }
+
   /**
    * Global stathat reporting wrapper function
    *
