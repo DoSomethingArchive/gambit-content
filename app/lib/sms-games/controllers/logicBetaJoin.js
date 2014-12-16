@@ -14,8 +14,8 @@ var emitter = rootRequire('app/eventEmitter')
  * game-pending messages if all players haven't joined yet, or auto-start the
  * game if all players are joined.
  */
-module.exports = function(obj, doc) {
-  var joiningBetaPhone = obj.request.body.phone;
+module.exports = function(request, doc) {
+  var joiningBetaPhone = request.body.phone;
 
   // If the game's already started, notify the user and exit.
   if (doc.game_started || doc.game_ended) {
@@ -25,9 +25,8 @@ module.exports = function(obj, doc) {
     var soloController = new SGSoloController;
     setTimeout(
       function() {
-        soloController.createSoloGame(obj.request.get('host'), doc.story_id, 'competitive-story', joiningBetaPhone)
+        soloController.createSoloGame(request.get('host'), doc.story_id, 'competitive-story', joiningBetaPhone)
       } , BETA_TO_SOLO_AFTER_GAME_ALREADY_STARTED_DELAY);
-    obj.response.send();
     return;
   }
 
@@ -52,13 +51,11 @@ module.exports = function(obj, doc) {
   // If all have joined, then start the game.
   if (allJoined) {
     doc = start.game(doc);
-    obj.response.send();
   }
   // If we're still waiting on people, send appropriate messages to the recently
   // joined beta and alpha users.
   else {
     doc = message.wait(gameConfig, doc, joiningBetaPhone);
-    obj.response.send();
   }
 
   // Save the doc in the database with the betas and current status updates.
