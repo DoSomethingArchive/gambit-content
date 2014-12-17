@@ -1,7 +1,8 @@
 var connectionOperations = require('./connectionOperations')
   , connectionConfig = require('./connectionConfig')
   , configModelArray = [
-      require('../lib/ds-routing/config/tipsConfigModel')(connectionConfig)
+      rootRequire('app/lib/ds-routing/config/tipsConfigModel')(connectionConfig)
+    , rootRequire('app/lib/donations/models/donorschooseConfigModel')(connectionConfig)
     ]
   ;
 
@@ -19,16 +20,15 @@ var configObject = {}
 var smsConfigsLoader = function(_callback) {
   callback = _callback;
   for (var i = 0; i < configModelArray.length; i++) {
-    var modelName = configModelArray[i].modelName;
     configModelArray[i].find({}, function(err, docs) {
       if (err) {
-        logger.error('Error retrieving responder config files for the model: ' + configModelArray[i].modelName + '. Error: ' + err);
+        logger.error('Error retrieving responder config files. Error: ' + err);
       }
       else {
+        var modelName = docs[0].__proto__.constructor.modelName;
         configObject[modelName] = docs;
+        onRetrievedConfig();
       }
-
-      onRetrievedConfig();
     })
   }
 }

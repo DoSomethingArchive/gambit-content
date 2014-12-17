@@ -1,11 +1,6 @@
-/**
- * Configuration for a Donors Choose donation flow.
- *
- * @todo Configs should be migrated into a MongoDB collection instead.
- */
-
-var config = {
-  "101": {
+[
+  {
+    "_id": 101,
     "__comments": "Science Sleuth 2014 EndGame Donation Flow",
     "start_donation_flow" : 170621,
     "invalid_state_oip": 172545,
@@ -15,6 +10,4 @@ var config = {
     "donate_complete": 170627,
     "error_direct_user_to_restart": 172601
   }
-};
-
-module.exports = config;
+]
