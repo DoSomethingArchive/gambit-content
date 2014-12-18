@@ -9,11 +9,11 @@ if (process.env.NODE_ENV == 'production') {
 }
 
 var express = require('express')
-    , path = require('path')
-    , http = require('http')
-    , logger = rootRequire('app/lib/logger')
-    , dscontentapi = rootRequire('app/lib/ds-content-api')()
-    ;
+  , path = require('path')
+  , http = require('http')
+  , logger = rootRequire('app/lib/logger')
+  , dscontentapi = rootRequire('app/lib/ds-content-api')()
+  ;
 
 // Default is 5. Increasing # of concurrent sockets per host.
 http.globalAgent.maxSockets = 20;
@@ -36,10 +36,15 @@ dscontentapi.userLogin(
  */
 app = express();
 
-var config = require('./app/config')();
-var router = require('./app/router');
+var appConfig = require('./app/config')()
+  , router = require('./app/router')
+  , smsConfigsLoader = require('./app/config/smsConfigsLoader')
+  ;
 
-// Start server
-app.listen(app.get('port'), function() {
-  logger.log('info', 'Express server listening on port %d in %s mode...\n\n', app.get('port'), app.settings.env);
-});
+// Retrieves all SMS config files before starting server.
+smsConfigsLoader(function(configObject) {
+  app.configs = configObject;
+  app.listen(app.get('port'), function() {
+    logger.log('info', 'Express server listening on port %d in %s mode...\n\n', app.get('port'), app.settings.env);
+  });
+})

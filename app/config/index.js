@@ -26,8 +26,11 @@ module.exports = function() {
   // Add static path
   app.use(express.static(path.join(root_dirname, 'public')));
 
-  // Set the database URI this app will use.
-  app.set('database-uri', process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder');
+  // Set the database URI this app will use for SMS operations.
+  app.set('operations-database-uri', process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder');
+
+  // Set the database URI this app will use to retrieve SMS config files.
+  app.set('config-database-uri', process.env.CONFIG_DB_URI || 'mongodb://localhost/config')
 
   // @TODO: Find a better way of passing the host URL to SGSoloController.createSoloGame()
   // Specify app host URL. 
@@ -35,11 +38,6 @@ module.exports = function() {
     app.hostName = 'ds-mdata-responder.jit.su';
   } else {
     app.hostName = 'localhost:' + app.get('port');
-  }
-
-  // Only opens connection if its state is disconnected.
-  if (mongoose.connection.readyState === 0) {
-    mongoose.connect(app.get('database-uri'));
   }
 
   /**
@@ -60,24 +58,4 @@ module.exports = function() {
       function(status, json) {}
     );
   };
-
-  // Read through .json configs in the config folder and set to app variables
-  fs.readdirSync('./app/config').forEach(function(file) {
-    if (file != path.basename(__filename)) {
-
-      var name = file.substr(0, file.lastIndexOf('.'))
-      var ext = file.substr(file.lastIndexOf('.'));
-      if (ext === '.json') {
-        var data = fs.readFileSync(root_dirname + '/app/config/' + file);
-
-        app.set(
-          name,
-          JSON.parse(data)
-        );
-
-        // Example:  app.get('mongo') will have the json object from app/config/mongo.json
-      }
-
-    }
-  });
 }

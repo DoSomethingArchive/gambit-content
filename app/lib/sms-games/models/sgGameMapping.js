@@ -14,4 +14,6 @@ var sgGameMappingSchema = new mongoose.Schema({
   game_model: String
 })
 
-module.exports = mongoose.model('sg_gamemapping', sgGameMappingSchema);
+module.exports = function(connection) {
+  return connection.model('sg_gamemapping', sgGameMappingSchema);
+}

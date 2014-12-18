@@ -1,9 +1,10 @@
 var assert = require('assert')
   , express = require('express')
   , emitter = require('../app/eventEmitter')
-  , gameMappingModel = require('../app/lib/sms-games/models/sgGameMapping')
-  , gameModel = require('../app/lib/sms-games/models/sgCompetitiveStory')
-  , userModel = require('../app/lib/sms-games/models/sgUser')
+  , connectionOperations = rootRequire('app/config/connectionOperations')
+  , gameMappingModel = rootRequire('app/lib/sms-games/models/sgGameMapping')(connectionOperations)
+  , gameModel = rootRequire('app/lib/sms-games/models/sgCompetitiveStory')(connectionOperations)
+  , userModel = rootRequire('app/lib/sms-games/models/sgUser')(connectionOperations)
   , SGCompetitiveStoryController = require('../app/lib/sms-games/controllers/SGCompetitiveStoryController')
   , gameConfig = require('../app/lib/sms-games/config/competitive-stories')
   , smsHelper = require('../app/lib/smsHelpers')
@@ -12,8 +13,6 @@ var assert = require('assert')
 // Provides necessary setup conditions before game tests. 
 exports.gameAppSetup = function() {
   before('instantiating Express app, game controller, game config, dummy response', function() {
-    app = express();
-    require('../app/config')();
 
     this.gameController = new SGCompetitiveStoryController;
 

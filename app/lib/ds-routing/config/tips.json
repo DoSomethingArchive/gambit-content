@@ -1,0 +1,202 @@
+[
+  {
+    "_id": 11355,
+    "__comments": "Birthday Mail 2014 - DO (SEND)",
+    "name": "birthdaymail2014-do",
+    "optins": [
+      169225,
+      169227,
+      169235
+    ]
+  },
+  {
+    "_id": 11351,
+    "__comments": "Birthday Mail 2014 - KNOW",
+    "name": "birthdaymail2014-know",
+    "optins": [
+      169153,
+      169155,
+      169157,
+      169159,
+      169161
+    ]
+  },
+  { "_id": 11349,
+    "__comments": "Birthday Mail 2014 - PLAN",
+    "name": "birthdaymail2014-plan",
+    "optins": [
+      169137,
+      169141,
+      169143,
+      169145,
+      169315,
+      169147
+    ]
+  },
+  { "_id": 9521,
+    "__comments": "Fifth Harmony #ImABoss 2014 - KNOW",
+    "name": "imaboss2014-know",
+    "optins": [
+      168565,
+      168567,
+      168569,
+      168571,
+      168573
+    ]
+  },
+  { "_id": 9531,
+    "__comments": "Fifth Harmony #ImABoss 2014 - PLAN",
+    "name": "imaboss2014-plan",
+    "optins": [
+      168575,
+      168577,
+      168579,
+      168581
+    ]
+  },
+  { "_id": 9541,
+    "__comments": "Fifth Harmony #ImABoss 2014 - DO",
+    "name": "imaboss2014-do",
+    "optins": [
+      168583,
+      168585,
+      168587
+    ]
+  },
+  { "_id": 10673,
+    "__comments": "Thumb Wars 2014 - KNOW tips.",
+    "name": "thumbwars2014-know",
+    "optins": [
+      167263,
+      167265,
+      167269,
+      167271
+    ]
+  },
+  { "_id": 10663,
+    "__comments": "Thumb Wars 2014 - PLAN tips.",
+    "name": "thumbwars2014-plan",
+    "optins": [
+      167273,
+      167275,
+      167277
+    ]
+  },
+  { "_id": 10243,
+    "__comments": "Thumb Wars 2014 - DO tips.",
+    "name": "thumbwars2014-do",
+    "optins": [
+      167279,
+      167281,
+      167283
+    ]
+  },
+  { "_id": 10413,
+    "__comments": "Comeback Clothes 2014 - Poster",
+    "name": "comebackclothes2014-poster",
+    "optins": [
+      166167,
+      166147,
+      166149,
+      166151,
+      166153,
+      166169
+    ]
+  },
+  { "_id": 10921,
+    "__comments": "Thumb Wars SMS 2014 - FUN flow",
+    "name": "thumbwars2014-sms-fun",
+    "optins": [
+      168119,
+      168121,
+      168123,
+      168125,
+      168127,
+      168129,
+      168131,
+      168133,
+      168135,
+      168137
+    ]
+  },
+  { "_id": 10923,
+    "__comments": "Thumb Wars SMS 2014 - DRAMA flow",
+    "name": "thumbwars2014-sms-drama",
+    "optins": [
+      168141,
+      168143,
+      168145,
+      168147,
+      168149,
+      168151,
+      168153,
+      168155,
+      168157,
+      168159,
+      168181,
+      168391
+    ]
+  },
+  { "_id": 10925,
+    "__comments": "Thumb Wars SMS 2014 - FACT flow",
+    "name": "thumbwars2014-sms-fact",
+    "optins": [
+      168161,
+      168163,
+      168165,
+      168167,
+      168169,
+      168171,
+      168173,
+      168395
+    ]
+  },
+  { "_id": 11145,
+    "__comments": "Pregnancy Text - WAIT",
+    "name": "pregtext2014-wait",
+    "optins": [
+      165699,
+      165701,
+      165703,
+      165707,
+      165709,
+      165711,
+      165713,
+      165715,
+      165717,
+      165719
+    ]
+  },
+  { "_id": 11147,
+    "__comments": "Pregnancy Text - SAFE",
+    "name": "pregtext2014-safe",
+    "optins": [
+      165683,
+      165685,
+      165687,
+      165689,
+      165691,
+      165693,
+      165695,
+      165697
+    ]
+  },
+  { "_id": 11151,
+    "__comments": "Pregnancy Text - RIGHTS",
+    "name": "pregtext2014-rights",
+    "optins": [
+      165671,
+      165673,
+      165675
+    ]
+  },
+  { "_id": 11149,
+    "__comments": "Pregnancy Text - PARENT Tips",
+    "name": "pregtext2014-parent",
+    "optins": [
+      165677,
+      165679,
+      165681
+    ]
+  }
+]

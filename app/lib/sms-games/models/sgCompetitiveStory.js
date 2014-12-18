@@ -53,4 +53,6 @@ sgGameSchema.add({
 
 var sgCompetitiveStorySchema = sgGameSchema;
 
-module.exports = mongoose.model('sg_competitivestory_game', sgCompetitiveStorySchema)
+module.exports = function(connection) {
+  return connection.model('sg_competitivestory_game', sgCompetitiveStorySchema);
+}

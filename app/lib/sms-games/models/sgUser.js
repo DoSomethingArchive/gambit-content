@@ -15,4 +15,6 @@ var sgUserSchema = new mongoose.Schema({
   current_game_id: mongoose.Schema.Types.ObjectId
 })
 
-module.exports = mongoose.model('sg_user', sgUserSchema);
+module.exports = function(connection) {
+  return connection.model('sg_user', sgUserSchema);
+}
