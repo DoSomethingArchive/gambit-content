@@ -13,8 +13,7 @@ describe('Running all responder tests', function() {
     , smsConfigsLoader = rootRequire('app/config/smsConfigsLoader');
 
   it('loads the sms configuration documents into memory from the database', function(done) {
-    smsConfigsLoader(function(configObject) {
-      app.configs = configObject;
+    smsConfigsLoader(function() {
       done();
     });
   });

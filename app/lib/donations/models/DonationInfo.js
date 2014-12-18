@@ -36,5 +36,3 @@ var donationInfoSchema = new mongoose.Schema({
 module.exports = function(connection) {
   return connection.model('donation_info', donationInfoSchema);
 }
-
-// module.exports = mongoose.model('donation_info', donationInfoSchema);

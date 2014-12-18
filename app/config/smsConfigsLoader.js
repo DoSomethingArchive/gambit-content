@@ -24,7 +24,7 @@ var smsConfigsLoader = function(_callback) {
       if (err) {
         logger.error('Error retrieving responder config files. Error: ' + err);
       }
-      else {
+      else if (docs.length > 0) {
         var modelName = docs[0].__proto__.constructor.modelName;
         configObject[modelName] = docs;
         onRetrievedConfig();
@@ -36,7 +36,8 @@ var smsConfigsLoader = function(_callback) {
 function onRetrievedConfig() {
   numberOfModelsRemaining --
   if (numberOfModelsRemaining == 0) {
-    callback(configObject);
+    app.configs = configObject;
+    callback();
   }
 }
 
@@ -53,7 +54,7 @@ function onRetrievedConfig() {
  */
 app.getConfig = function(modelName, id) {
   var configArray = this.configs[modelName];
-  for (var i = 0; i < configArray.length; i ++) {
+  for (var i = 0; i < configArray.length; i++) {
     if (configArray[i]._id == id) {
       return configArray[i];
     }

@@ -19,6 +19,10 @@ build:
             export COVERALLS_GIT_COMMIT=$WERCKER_GIT_COMMIT
             export COVERALLS_SERVICE_JOB_ID=$WERCKER_BUILD_ID
             export COVERALLS_GIT_BRANCH=$WERCKER_GIT_BRANCH
+    - script:
+        name: seeds config database with SMS config data 
+        code: |
+            sh seed.sh
     - script: 
         name: run Mocha tests and then send Istanbul coverage reports to coveralls
         code: |

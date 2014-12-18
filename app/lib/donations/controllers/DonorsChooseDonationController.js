@@ -41,7 +41,7 @@ var Q = require('q')
   , shortenLink = rootRequire('app/lib/bitly')
   ;
 
-var connectionOperations = require('../../../config/connectionOperations')
+var connectionOperations = rootRequire('app/config/connectionOperations')
   , donationModel = require('../models/DonationInfo')(connectionOperations);
 // @TODO: add some kind of reference to retrieve the donations config 
 // var donationConfigModel = require('../')
