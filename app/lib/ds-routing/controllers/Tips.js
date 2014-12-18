@@ -5,8 +5,8 @@
 var mongoose = require('mongoose')
   , mobilecommons = rootRequire('mobilecommons')
   , logger = rootRequire('app/lib/logger')
-  , tipModel = require('../models/tip')
-  , config = require('../config/tips-config')
+  , connectionOperations = rootRequire('app/config/connectionOperations')
+  , tipModel = require('../models/tip')(connectionOperations);
   ;
 
 var Tips = function() {}
@@ -37,7 +37,7 @@ Tips.prototype.deliverTips = function(request, response, mdataOverride) {
   }
 
   // Decide tip name based on the mdata id.
-  var tipConfig = config.tips[mdataId];
+  var tipConfig = app.getConfig('tips_config', mdataId);
 
   // Config error checking
   if (typeof(tipConfig) === 'undefined'
@@ -141,7 +141,6 @@ Tips.prototype.deliverTips = function(request, response, mdataOverride) {
 
         if (request.body.dev !== '1') {
           mobilecommons.optin(args);
-
           app.stathatReport('Count', 'mobilecommons: tips request: success', 1);
         }
 

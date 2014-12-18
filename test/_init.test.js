@@ -5,14 +5,26 @@ global.rootRequire = function(name) {
   return require(rootDir + '/' + name);
 }
 
-var express = require('express');
-app = express();
-rootRequire('app/config')();
+describe('Running all responder tests', function() {
+  var express = require('express');
+  app = express();
 
-require('./BullyText.js');
-require('./ds-routing.js');
-require('./EndGameFromUserExit.js');
-require('./GameAlphaStart');
-require('./lib.test.js');
-require('./mobilecommons.js');
-require('./ScienceSleuth.js');
+  var appConfig = rootRequire('app/config')()
+    , smsConfigsLoader = rootRequire('app/config/smsConfigsLoader');
+
+  it('loads the sms configuration documents into memory from the database', function(done) {
+    smsConfigsLoader(function() {
+      done();
+    });
+  });
+
+  it('runs all the responder tests', function() {
+    require('./BullyText.js');
+    require('./ds-routing.js');
+    require('./EndGameFromUserExit.js');
+    require('./GameAlphaStart');
+    require('./lib.test.js');
+    require('./mobilecommons.js');
+    require('./ScienceSleuth.js');
+  })
+});

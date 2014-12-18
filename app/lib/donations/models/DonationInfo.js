@@ -33,4 +33,6 @@ var donationInfoSchema = new mongoose.Schema({
   donation_complete: false,  
 })
 
-module.exports = mongoose.model('donation_info', donationInfoSchema);
+module.exports = function(connection) {
+  return connection.model('donation_info', donationInfoSchema);
+}

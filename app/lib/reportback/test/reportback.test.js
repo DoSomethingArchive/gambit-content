@@ -1,7 +1,8 @@
 var assert = require('assert')
   , reportback = require('../')
   , config = require('../reportback-config.json')
-  , model = require('../reportbackModel')
+  , connectionOperations = rootRequire('app/config/connectionOperations')
+  , model = require('../reportbackModel')(connectionOperations)
   , emitter = rootRequire('app/eventEmitter')
   ;
 
