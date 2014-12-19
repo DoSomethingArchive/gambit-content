@@ -156,10 +156,6 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     message.endGameFromPlayerExit(playerDocs);
 
     // Upsert the document for the alpha user.
-    // This response.sendStatus() call fires after the async Mongoose call returns
-    // so that upon SOLO game creation, the Alpha userModel will have been modified 
-    // with the SOLO gameId before the start game logic runs 
-    // (triggered by the POST to the /alpha-start route.)
     createPlayer(self.createdGameDoc.alpha_phone, self.createdGameDoc._id, 'alpha-user-created');
 
     // Upsert user documents for the betas.
@@ -311,7 +307,7 @@ SGCompetitiveStoryController.prototype.findUserGame = function(request, onUserGa
       gameMappingModel.findOne({game_id: doc.current_game_id}, onGameMappingFound);
     }
     else {
-      logger.error('SGCompetitiveStoryController.onUserFound - no doc found for: ' + phone);
+      logger.error('SGCompetitiveStoryController.onUserFound - no doc found for: ' + request.body.phone);
     }
   };
 
@@ -330,7 +326,7 @@ SGCompetitiveStoryController.prototype.findUserGame = function(request, onUserGa
     }
     else {
       logger.error('SGCompetitiveStoryController.onGameMappingFound - no doc found for'
-                    + ' phone: ' + phone + ' model: ' + gameModel.modelName);
+                    + ' phone: ' + request.body.phone + ' model: ' + gameModel.modelName);
     }
   };
 
@@ -347,7 +343,7 @@ SGCompetitiveStoryController.prototype.findUserGame = function(request, onUserGa
       onUserGameFound(request, doc);
     }
     else {
-      logger.error('SGCompetitiveStoryController.onGameFound - no doc found for: ' + phone);
+      logger.error('SGCompetitiveStoryController.onGameFound - no doc found for: ' + request.body.phone);
     }
   };
 };
