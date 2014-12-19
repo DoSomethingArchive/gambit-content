@@ -7,4 +7,5 @@ if [ -n "$WERCKER_MONGODB_HOST"] -a -n "$WERCKER_MONGODB_PORT" ]; then
 else 
   mongoimport --db config --collection donorschoose_configs < app/lib/donations/config/donorschoose.json --jsonArray
   mongoimport --db config --collection tips_configs < app/lib/ds-routing/config/tips.json --jsonArray
+  mongoimport --db config --collection campaign_start_configs < app/lib/ds-routing/config/campaign-start.json --jsonArray
 fi

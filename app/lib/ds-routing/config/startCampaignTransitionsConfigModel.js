@@ -4,9 +4,9 @@
  */
 var mongoose = require('mongoose');
 
-var donorschooseConfigSchema = new mongoose.Schema({
+var startCampaignTransitionsConfigSchema = new mongoose.Schema({
 
-  // Reassigning the _id value. 
+  // Reassigning the _id value to the unique id of the mData which controls the tips flow. Automatically indexed. 
   _id : Number,
 
   // Contextual information about the donorschoose donation flow. 
@@ -36,5 +36,5 @@ var donorschooseConfigSchema = new mongoose.Schema({
 })
 
 module.exports = function(connection) {
-  return connection.model('donorschoose_config', donorschooseConfigSchema);
+  return connection.model('start_campaign_transitions_config', startCampaignTransitionsConfigSchema);
 }

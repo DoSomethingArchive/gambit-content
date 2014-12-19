@@ -3,6 +3,7 @@ var connectionOperations = require('./connectionOperations')
   , configModelArray = [
       rootRequire('app/lib/ds-routing/config/tipsConfigModel')(connectionConfig)
     , rootRequire('app/lib/donations/models/donorschooseConfigModel')(connectionConfig)
+    , rootRequire('app/lib/ds-routing/config/campaignStartConfigModel')(connectionConfig)
     ]
   ;
 
