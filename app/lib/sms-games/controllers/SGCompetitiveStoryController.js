@@ -54,6 +54,9 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     return false;
   }
 
+  // Necessary for response.sendStatus() call within createUser() callback. 
+  this.response = response;
+
   // Story ID could be in either POST or GET param.
   var storyId = null;
   if (typeof request.body.story_id !== 'undefined') {
@@ -105,11 +108,8 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     return false;
   }
 
-  // All settings checkout so far. Respond to user first before asynchronously creating the game
-  response.sendStatus(201);
-
   // Closure variable to use through chained callbacks.
-  var self = {};
+  var self = this;
 
   // Save game to the database.
   var game = gameModel.create(gameDoc);
@@ -160,7 +160,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     // so that upon SOLO game creation, the Alpha userModel will have been modified 
     // with the SOLO gameId before the start game logic runs 
     // (triggered by the POST to the /alpha-start route.)
-    createPlayer(self.createdGameDoc.alpha_phone, self.createdGameDoc._id, 'alpha-user-created');
+    createPlayer(self.createdGameDoc.alpha_phone, self.createdGameDoc._id, 'alpha-user-created', function(){ self.response.sendStatus(201); });
 
     // Upsert user documents for the betas.
     self.createdGameDoc.betas.forEach(function(value, index, set) {
@@ -191,7 +191,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   utility.stathatReportCount(STATHAT_CATEGORY, stathatAction, 'success', storyId, 1);
   return true;
 
-  function createPlayer(phone, docId, emitterMessage) {
+  function createPlayer(phone, docId, emitterMessage, onSuccess) {
     userModel.update(
       {phone: phone},
       {$set: {phone: phone, current_game_id: docId, updated_at: Date.now()}},     
@@ -200,6 +200,9 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
       emitter.emit(emitterMessage);
       if (raw && raw.upserted) {
         logger.info(emitterMessage, JSON.stringify(raw.upserted));
+      }
+      if (typeof onSuccess === 'function') {
+        onSuccess();
       }
     }, utility.promiseErrorCallback('Unable to create player, this event did not happen: ' + emitterMessage)
     )
@@ -311,7 +314,7 @@ SGCompetitiveStoryController.prototype.findUserGame = function(request, onUserGa
       gameMappingModel.findOne({game_id: doc.current_game_id}, onGameMappingFound);
     }
     else {
-      logger.error('SGCompetitiveStoryController.onUserFound - no doc found for: ' + phone);
+      logger.error('SGCompetitiveStoryController.onUserFound - no doc found for: ' + request.body.phone);
     }
   };
 
@@ -330,7 +333,7 @@ SGCompetitiveStoryController.prototype.findUserGame = function(request, onUserGa
     }
     else {
       logger.error('SGCompetitiveStoryController.onGameMappingFound - no doc found for'
-                    + ' phone: ' + phone + ' model: ' + gameModel.modelName);
+                    + ' phone: ' + request.body.phone + ' model: ' + gameModel.modelName);
     }
   };
 
@@ -347,7 +350,7 @@ SGCompetitiveStoryController.prototype.findUserGame = function(request, onUserGa
       onUserGameFound(request, doc);
     }
     else {
-      logger.error('SGCompetitiveStoryController.onGameFound - no doc found for: ' + phone);
+      logger.error('SGCompetitiveStoryController.onGameFound - no doc found for: ' + request.body.phone);
     }
   };
 };

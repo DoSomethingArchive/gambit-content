@@ -34,7 +34,7 @@ var smsConfigsLoader = function(_callback) {
 }
 
 function onRetrievedConfig() {
-  numberOfModelsRemaining --
+  numberOfModelsRemaining--
   if (numberOfModelsRemaining == 0) {
     app.configs = configObject;
     callback();
