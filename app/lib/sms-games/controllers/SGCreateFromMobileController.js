@@ -10,7 +10,8 @@ var requestHttp = require('request')
   , smsHelper = rootRequire('app/lib/smsHelpers')
   , logger = rootRequire('app/lib/logger')
   , competitiveStoryConfig = require('../config/competitive-stories')
-  , configModel = require('../models/sgGameCreateConfig')
+  , connectionOperations = rootRequire('app/config/connectionOperations')
+  , configModel = require('../models/sgGameCreateConfig')(connectionOperations)
   ;
 
 var gameConfig;

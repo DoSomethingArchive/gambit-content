@@ -30,4 +30,6 @@ var sgGameCreateConfigSchema = new mongoose.Schema({
   story_type: String
 })
 
-module.exports = mongoose.model('sg_gamecreateconfig', sgGameCreateConfigSchema);
+module.exports = function(connection) {
+  return connection.model('sg_gamecreateconfig', sgGameCreateConfigSchema);
+}
