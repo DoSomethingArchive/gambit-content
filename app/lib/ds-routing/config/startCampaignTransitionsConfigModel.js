@@ -1,37 +1,24 @@
 /**
- * Model for the DonorsChoose SMS configuration document. Each 
- * object corresponds to one DonorsChoose donation endgame flow.
+ * Model for the start campaign transitions configuration document. Each 
+ * object corresponds to one campaign's transition flow which a) opts the 
+ * user out of the campaign's introductory conversation, and b) opts the 
+ * user into the main conversation of the campaign. 
  */
 var mongoose = require('mongoose');
 
 var startCampaignTransitionsConfigSchema = new mongoose.Schema({
 
-  // Reassigning the _id value to the unique id of the mData which controls the tips flow. Automatically indexed. 
+  // Reassigning the _id value to the unique id of the mData which controls this campaign transitions flow. 
   _id : Number,
 
-  // Contextual information about the donorschoose donation flow. 
+  // Which campaign this config doc corresponds to. 
   __comments: String,
 
-  // OIP which begins the donation. 
-  start_donation_flow: Number,
+  // OIP of the main campaign conversation we're opting the user into. 
+  optin: Number,
 
-  // Error notification OIP. 
-  invalid_state_oip: Number,
-
-  // Error notification OIP. 
-  invalid_zip_oip: Number,
-
-  // OIP sent after DonorsChoose project found. 
-  found_project_ask_name: Number,
-
-  // OIP sent asking for email address to complete transaction. 
-  received_name_ask_email: Number,
-
-  // OIP sent after donation is complete. 
-  donate_complete: Number,
-
-  // Error notification OIP. 
-  error_direct_user_to_restart: Number
+  // OIP of the intro campaign conversation we're opting the user out of. 
+  optout: Number
 
 })
 

@@ -4,6 +4,7 @@ var connectionOperations = require('./connectionOperations')
       rootRequire('app/lib/ds-routing/config/tipsConfigModel')(connectionConfig)
     , rootRequire('app/lib/donations/models/donorschooseConfigModel')(connectionConfig)
     , rootRequire('app/lib/ds-routing/config/campaignStartConfigModel')(connectionConfig)
+    , rootRequire('app/lib/')
     ]
   ;
 
