@@ -16,7 +16,7 @@ var express = require('express')
   ;
 
 // Default is 5. Increasing # of concurrent sockets per host.
-http.globalAgent.maxSockets = 20;
+http.globalAgent.maxSockets = 100;
 
 // Authenticate app with the DS content API.
 dscontentapi.userLogin(
