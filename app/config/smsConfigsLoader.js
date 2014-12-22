@@ -5,6 +5,7 @@ var connectionOperations = require('./connectionOperations')
     , rootRequire('app/lib/donations/models/donorschooseConfigModel')(connectionConfig)
     , rootRequire('app/lib/ds-routing/config/campaignStartConfigModel')(connectionConfig)
     , rootRequire('app/lib/ds-routing/config/startCampaignTransitionsConfigModel')(connectionConfig)
+    , rootRequire('app/lib/ds-routing/config/yesNoPathsConfigModel')(connectionConfig)
     ]
   ;
 

@@ -1,12 +1,11 @@
 /**
- * Custom DS routing.
+ * Custom DS routing for transition logic within and between Mobile Commons campaigns.
  */
 
 var mobilecommons = rootRequire('mobilecommons');
 
 var Tips = require('./Tips')
   , tips = new Tips
-  , yes_no_paths_config = require('../config/yes-no-paths')
   ;
 
 var MCRouting = function() {}
@@ -22,17 +21,7 @@ MCRouting.prototype.yesNoGateway = function(request, response) {
 
   var args = request.body.args.trim().toLowerCase();
   var incomingOptIn = parseInt(request.body.opt_in_path_id);
-  var paths = yes_no_paths_config.yesNoPaths;
-
-  // Find a path configured for the opt-in this request came from.
-  var path = undefined;
-  for (var i = 0; i < paths.length; i++) {
-    var p = paths[i];
-    if (p.incomingPath === incomingOptIn) {
-      path = p;
-      break;
-    }
-  }
+  var path = app.getConfig('yes_no_paths_config', incomingOptIn)
 
   // If no path can be found, early out.
   if (path === undefined) {
