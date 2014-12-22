@@ -6,9 +6,7 @@ var mobilecommons = rootRequire('mobilecommons');
 
 var Tips = require('./Tips')
   , tips = new Tips
-  , start_campaign_transitions_config = require('../config/start-campaign-transitions')
   , yes_no_paths_config = require('../config/yes-no-paths')
-  , campaign_start_config = require('../config/campaign-start')
   ;
 
 var MCRouting = function() {}
@@ -75,7 +73,7 @@ MCRouting.prototype.campaignTransition = function(request, response) {
   }
 
   var mdataId = parseInt(request.body.mdata_id);
-  var transitionConfig = start_campaign_transitions_config.startCampaignTransitions[mdataId];
+  var transitionConfig = app.getConfig('start_campaign_transitions_config', mdataId);
 
   if (typeof(transitionConfig) !== 'undefined'
       && typeof(transitionConfig.optin) !== 'undefined'
