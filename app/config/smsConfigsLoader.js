@@ -6,6 +6,7 @@ var connectionOperations = require('./connectionOperations')
     , rootRequire('app/lib/ds-routing/config/campaignStartConfigModel')(connectionConfig)
     , rootRequire('app/lib/ds-routing/config/startCampaignTransitionsConfigModel')(connectionConfig)
     , rootRequire('app/lib/ds-routing/config/yesNoPathsConfigModel')(connectionConfig)
+    , rootRequire('app/lib/pregnancytext/babysitterConfigModel')(connectionConfig)
     ]
   ;
 

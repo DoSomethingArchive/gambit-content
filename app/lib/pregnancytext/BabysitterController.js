@@ -1,37 +1,18 @@
 var mobilecommons = rootRequire('mobilecommons')
-  , config = require('./babysitter-config');
+  , pregnancyTextId = 101
   ;
 
 /**
  * Interface for guiding the babysitter aspect of Pregnancy Text 2014.
  */
 var Babysitter = function() {
-
-  /**
-   * The Mobile Commons opt-in path a parent gets pushed to when he sends a
-   * babysitter invitation.
-   */
-  this.optinParentOnInviteAlpha = config.optinParentOnInviteAlpha;
-  this.optinParentOnInviteBeta = config.optinParentOnInviteBeta;
-
-  /**
-   * The Mobile Commons campaign id for parents without a babysitter. When a
-   * a babysitter invite is sent, parents get opted out of this campaign.
-   */
-  this.campaignIdParentNoBsAlpha = config.campaignIdParentNoBsAlpha;
-  this.campaignIdParentNoBsBeta = config.campaignIdParentNoBsBeta;
-  this.campaignIdParentNoBsResurrected = config.campaignIdParentNoBsResurrected;
-
-  /**
-   * The Mobile Commons opt-in path a babysitter gets pushed to on the invite.
-   */
-  this.optinBsOnInvite = config.optinBsOnInvite;
-
-  /**
-   * Array of generic response Mobile Commons opt-in paths.
-   */
-  this.genericResponses = config.genericResponses;
-
+  this.optinParentOnInviteAlpha;
+  this.optinParentOnInviteBeta;
+  this.campaignIdParentNoBsAlpha;
+  this.campaignIdParentNoBsBeta;
+  this.campaignIdParentNoBsResurrected;
+  this.optinBsOnInvite;
+  this.genericResponses;
 }
 
 module.exports = Babysitter;
@@ -119,6 +100,34 @@ Babysitter.prototype.sendGenericResponse = function(phone) {
  * Alpha user is sending a Beta number to invite and become a babysitter.
  */
 Babysitter.prototype.onSendBabysitterInvite = function(request, response, optinParent, optoutId) {
+
+  var config = app.getConfig('babysitter_config', pregnancyTextId);
+
+  /**
+   * The Mobile Commons opt-in path a parent gets pushed to when he sends a
+   * babysitter invitation.
+   */
+  this.optinParentOnInviteAlpha = config.optinParentOnInviteAlpha;
+  this.optinParentOnInviteBeta = config.optinParentOnInviteBeta;
+
+  /**
+   * The Mobile Commons campaign id for parents without a babysitter. When a
+   * a babysitter invite is sent, parents get opted out of this campaign.
+   */
+  this.campaignIdParentNoBsAlpha = config.campaignIdParentNoBsAlpha;
+  this.campaignIdParentNoBsBeta = config.campaignIdParentNoBsBeta;
+  this.campaignIdParentNoBsResurrected = config.campaignIdParentNoBsResurrected;
+
+  /**
+   * The Mobile Commons opt-in path a babysitter gets pushed to on the invite.
+   */
+  this.optinBsOnInvite = config.optinBsOnInvite;
+
+  /**
+   * Array of generic response Mobile Commons opt-in paths.
+   */
+  this.genericResponses = config.genericResponses;
+
   var alpha = request.body.phone;
 
   // Validate and retrieve the beta's phone number from the message body.

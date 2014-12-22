@@ -1,14 +1,17 @@
-{
-  "optinParentOnInviteAlpha": 165619,
-  "optinParentOnInviteBeta": 165765,
-  "campaignIdParentNoBsAlpha": 124863,
-  "campaignIdParentNoBsBeta": 124945,
-  "campaignIdParentNoBsResurrected": 125051,
-  "optinBsOnInvite": 165851,
-  "genericResponses": [
-    165647,
-    165649,
-    165651,
-    165653
-  ]
-}
+[
+  {
+    "_id": 101,
+    "optinParentOnInviteAlpha": 165619,
+    "optinParentOnInviteBeta": 165765,
+    "campaignIdParentNoBsAlpha": 124863,
+    "campaignIdParentNoBsBeta": 124945,
+    "campaignIdParentNoBsResurrected": 125051,
+    "optinBsOnInvite": 165851,
+    "genericResponses": [
+      165647,
+      165649,
+      165651,
+      165653
+    ]
+  }
+]
