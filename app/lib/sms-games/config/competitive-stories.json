@@ -1355,19 +1355,19 @@
       "END-LEVEL4": {
         "choices": [
           {
-            "next": 173997,
+            "next": 173993, 
             "conditions": {"$and": ["L41A", "L42C"]}
           },
           {
-            "next": 173999,
+            "next": 173995,
             "conditions": {"$and": ["L41A", "L42D"]}
           },
           {
-            "next": 174001,
+            "next": 173997,
             "conditions": {"$and": ["L41B", "L42C"]}
           },
           {
-            "next": 174003,
+            "next": 173999,
             "conditions": {"$and": ["L41B", "L42D"]}
           }
         ]
@@ -1375,32 +1375,32 @@
       "END-LEVEL4-GROUP": {
         "choices": [
           {
-            "next": 174005,
+            "next": 174001, 
             "conditions": { "$and": ["L42C"] }
           },
           {
-            "next": 174007,
+            "next": 174003, 
             "conditions": { "$and": ["L42D"] }
           }
         ],
-        "next_level": 174009
+        "next_level": 174005
       },
-      "174009": {
+      "174005": {
         "__comments": "Level 5-0",
         "choices": [
           {
             "key": "L51A",
-            "next": 174011,
+            "next": 174007,
             "valid_answers": ["A"]
           },
           {
             "key": "L51B",
-            "next": 174013,
+            "next": 174009,
             "valid_answers": ["B"]
           }
         ]
       },
-      "174011": {
+      "174007": {
         "__comments": "Level 5-1A",
         "choices": [
           {
@@ -1415,7 +1415,7 @@
           }
         ]
       },
-      "174013": {
+      "174009": {
         "__comments": "Level 5-1B",
         "choices": [
           {
@@ -1433,19 +1433,19 @@
       "END-LEVEL5": {
         "choices": [
           {
-            "next": 174015,
+            "next": 174011,
             "conditions": {"$and": ["L51A", "L52C"]}
           },
           {
-            "next": 174017,
+            "next": 174013,
             "conditions": {"$and": ["L51A", "L52D"]}
           },
           {
-            "next": 174019,
+            "next": 174015,
             "conditions": {"$and": ["L51B", "L52C"]}
           },
           {
-            "next": 174021,
+            "next": 174017,
             "conditions": {"$and": ["L51B", "L52D"]}
           }
         ]
@@ -1453,32 +1453,32 @@
       "END-LEVEL5-GROUP": {
         "choices": [
           {
-            "next": 174023,
+            "next": 174019,
             "conditions": { "$and": ["L52D"] }
           },
           {
-            "next": 174025,
+            "next": 174021,
             "conditions": { "$and": ["L52C"] }
           }
         ],
-        "next_level": 174027
+        "next_level": 174023
       },
-      "174027": {
+      "174023": {
         "__comments": "Level 6-0",
         "choices": [
           {
             "key": "L61A",
-            "next": 174029,
+            "next": 174025,
             "valid_answers": ["A"]
           },
           {
             "key": "L61B",
-            "next": 174031,
+            "next": 174027,
             "valid_answers": ["B"]
           }
         ]
       },
-      "174029": {
+      "174025": {
         "__comments": "Level 6-1A",
         "choices": [
           {
@@ -1493,7 +1493,7 @@
           }
         ]
       },
-      "174031": {
+      "174027": {
         "__comments": "Level 6-1B",
         "choices": [
           {
@@ -1511,11 +1511,11 @@
       "END-LEVEL6": {
         "choices": [
           {
-            "next": 174033,
+            "next": 174029,
             "conditions": {"$and": ["L61A", "L62C"]}
           },
           {
-            "next": 174035,
+            "next": 174031,
             "conditions": {"$and": ["L61A", "L62D"]}
           },
           {
@@ -1523,7 +1523,7 @@
             "conditions": {"$and": ["L61B", "L62C"]}
           },
           {
-            "next": 174039,
+            "next": 174033,
             "conditions": {"$and": ["L61B", "L62D"]}
           }
         ]
@@ -1531,11 +1531,11 @@
       "END-LEVEL6-GROUP": {
         "choices": [
           {
-            "next": 174041,
+            "next": 174037,
             "conditions": { "$or": [{"$and": ["L61A", "L62D"]}, {"$and": ["L61B", "L62C"]}] }
           },
           {
-            "next": 174043,
+            "next": 174039,
             "conditions": { "$or": [{"$and": ["L61A", "L62C"]}, {"$and": ["L61B", "L62D"]}] }
           }
         ],
