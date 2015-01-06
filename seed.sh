@@ -15,6 +15,8 @@ if [ -n "$WERCKER_MONGODB_HOST"] -a -n "$WERCKER_MONGODB_PORT" ]; then
 
   mongoimport --host $WERCKER_MONGODB_HOST --port $WERCKER_MONGODB_PORT --db config --collection babysitter_configs < app/lib/pregnancytext/babysitter-config.json --jsonArray
 
+  mongoimport --host $WERCKER_MONGODB_HOST --port $WERCKER_MONGODB_PORT --db config --collection competitive_stories_configs < app/lib/sms-games/config/competitive-stories.json --jsonArray
+
 else
 
   mongoimport --db config --collection donorschoose_configs < app/lib/donations/config/donorschoose.json --jsonArray
@@ -28,5 +30,7 @@ else
   mongoimport --db config --collection yes_no_paths_configs < app/lib/ds-routing/config/yes-no-paths.json --jsonArray
 
   mongoimport --db config --collection babysitter_configs < app/lib/pregnancytext/babysitter-config.json --jsonArray
+
+  mongoimport --db config --collection competitive_stories_configs < app/lib/sms-games/config/competitive-stories.json --jsonArray
 
 fi
