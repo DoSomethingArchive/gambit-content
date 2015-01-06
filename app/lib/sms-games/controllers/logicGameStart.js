@@ -73,7 +73,7 @@ function autoStartGame(gameId) {
       if (err) {
         logger.error('Error in running auto-start game function for gameId: ' + gameId + ' Error: ' + err);
       }
-      else {
+      else if (doc.game_started !== true) {
 
         var isMultiplayer = false;
         var betas = doc.betas;
