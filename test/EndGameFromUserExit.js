@@ -6,7 +6,6 @@ var assert = require('assert')
   , gameModel = rootRequire('app/lib/sms-games/models/sgCompetitiveStory')(connectionOperations)
   , userModel = rootRequire('app/lib/sms-games/models/sgUser')(connectionOperations)
   , SGCompetitiveStoryController = rootRequire('app/lib/sms-games/controllers/SGCompetitiveStoryController')
-  , gameConfig = rootRequire('app/lib/sms-games/config/competitive-stories')
   , smsHelper = rootRequire('app/lib/smsHelpers')
   , testHelper = require('./testHelperFunctions')
   ;
@@ -30,6 +29,7 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
   var betaPhone4 = '5555550206';
 
   var storyId = 101;
+  var gameConfig = app.getConfig('competitive_stories_config', storyId)
 
   testHelper.gameAppSetup();
 
@@ -97,7 +97,7 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
 
       it('should auto-start the game', function(done) {
         var alphaStarted = beta0Started = beta1Started = beta2Started = false; // Chaining assignment operators. They all are set to false. 
-        var startOip = gameConfig[storyId].story_start_oip;
+        var startOip = gameConfig.story_start_oip;
         gameModel.findOne({_id: gameId}, function(err, doc) {
           if (!err && doc) {
             for (var i = 0; i < doc.players_current_status.length; i++) {
@@ -192,7 +192,7 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
 
       // 3 users (different from the ones just created) should be notified that Game 1 has ended. 
       emitter.on('mobilecommons-optin-test', function(payload) {
-        if (payload.form.opt_in_path == gameConfig[storyId].game_ended_from_exit_oip) {
+        if (payload.form.opt_in_path == gameConfig.game_ended_from_exit_oip) {
           onEventReceived();
         }
       })

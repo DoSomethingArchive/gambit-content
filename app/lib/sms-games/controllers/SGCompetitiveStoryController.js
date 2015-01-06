@@ -9,7 +9,6 @@ var smsHelper = rootRequire('app/lib/smsHelpers')
   , gameMappingModel = rootRequire('app/lib/sms-games/models/sgGameMapping')(connectionOperations)
   , gameModel = rootRequire('app/lib/sms-games/models/sgCompetitiveStory')(connectionOperations)
   , userModel = rootRequire('app/lib/sms-games/models/sgUser')(connectionOperations)
-  , gameConfig = require('../config/competitive-stories')
   , message = require('./gameMessageHelpers')
   , utility = require('./gameUtilities')
   , record = require('./gameRecordHelpers')
@@ -66,7 +65,9 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     storyId = request.query.story_id;
   }
 
-  if (typeof gameConfig[storyId] === 'undefined') {
+  var gameConfig = app.getConfig('competitive_stories_config', storyId)
+
+  if (typeof gameConfig === 'undefined') {
     response.status(406).send('Game config not setup for story ID: ' + storyId);
     return false;
   }
@@ -115,7 +116,6 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   var game = gameModel.create(gameDoc);
   game.then(function(doc) {
     emitter.emit('game-created', doc);
-    var config = gameConfig[doc.story_id];
 
     // doc.story_id check added in order to A/B test auto-start functionality. 
     if (doc.game_type != "solo" && doc.story_id == 201) {
@@ -124,7 +124,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     }
     else {
       // Sets a time to ask the alpha if she wants to play a solo game.
-      message.giveSoloOptionAfterDelay(doc._id, gameModel, gameConfig[doc.story_id].ask_solo_play, TIME_UNTIL_SOLO_MESSAGE_SENT);
+      message.giveSoloOptionAfterDelay(doc._id, gameModel, gameConfig.ask_solo_play, TIME_UNTIL_SOLO_MESSAGE_SENT);
     }
   
     // Create game id to game type mapping.
@@ -174,10 +174,11 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
     // We opt users into these initial opt in paths only if the game type is NOT solo. 
     if (self.createdGameDoc.game_type !== 'solo') {
+      var gameConfig = app.getConfig('competitive_stories_config', self.createdGameDoc.story_id)
       message.group(self.createdGameDoc.alpha_phone,
-        gameConfig[self.createdGameDoc.story_id.toString()].alpha_wait_oip,
+        gameConfig.alpha_wait_oip,
         betaOptInArray,
-        gameConfig[self.createdGameDoc.story_id.toString()].beta_join_ask_oip);
+        gameConfig.beta_join_ask_oip);
     }
 
   },

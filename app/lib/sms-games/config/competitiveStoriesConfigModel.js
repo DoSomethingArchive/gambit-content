@@ -57,15 +57,15 @@ var competitiveStoriesConfigSchema = new mongoose.Schema({
   endgame_config: {
 
     // At the end of a game, an individual gets endgame feedback. This specifies whether it's "individual-decision-based" (BullyText 2014), or "rankings-within-group-based" (Science Sleuth 2014). 
-    indiv-message-end-game-format: String,
+    "indiv-message-end-game-format": String,
 
     // At the end of a game, all individuals in the game get the same feedback related to their group's performance. This could either be null (BullyText 2014), or "group-success-failure-based" (Science Sleuth 2014). 
-    group-message-end-game-format: String
+    "group-message-end-game-format": String
 
   },
 
   // A large object containing configuration for individual levels of gameplay, end-level logic, and end-game logic. 
-  story: Schema.Types.Mixed
+  story: {}
 
 })
 

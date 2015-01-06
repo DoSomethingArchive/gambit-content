@@ -4,7 +4,6 @@ var mobilecommons = rootRequire('mobilecommons')
   , connectionOperations = rootRequire('app/config/connectionOperations')
   , gameModel = rootRequire('app/lib/sms-games/models/sgCompetitiveStory')(connectionOperations)
   , userModel = rootRequire('app/lib/sms-games/models/sgUser')(connectionOperations)
-  , gameConfig = require('../config/competitive-stories')
   , utility = require('./gameUtilities')
   , record = require('./gameRecordHelpers')
   , SGSoloController = require('./SGSoloController')
@@ -169,7 +168,7 @@ function giveSoloOptionAfterDelay(gameId, gameModel, oip, delay) {
  * Send messages to the alpha and recently joined beta user about the pending
  * game status.
  *
- * @param config
+ * @param gameConfig
  *   Config object with game story details.
  * @param gameDoc
  *   Game document for users of the pending game.
@@ -178,9 +177,9 @@ function giveSoloOptionAfterDelay(gameId, gameModel, oip, delay) {
  *
  * @return Updated game document.
  */
-function wait(config, gameDoc, betaPhone) {
-  var alphaMessage = config[gameDoc.story_id].alpha_start_ask_oip;
-  var betaMessage = config[gameDoc.story_id].beta_wait_oip;
+function wait(gameConfig, gameDoc, betaPhone) {
+  var alphaMessage = gameConfig.alpha_start_ask_oip;
+  var betaMessage = gameConfig.beta_wait_oip;
 
   // Send message to alpha asking if they want to start now.
   module.exports.singleUser(gameDoc.alpha_phone, alphaMessage);
@@ -309,8 +308,9 @@ function endGameFromPlayerExit(playerDocs) {
           }
         );
 
+        var gameConfig = app.getConfig('competitive_stories_config', gameDoc.story_id);
         // Message them that the game has ended, and we're opting them into a solo game.
-        module.exports.singleUser(currentPlayerPhone, gameConfig[gameDoc.story_id].game_ended_from_exit_oip);
+        module.exports.singleUser(currentPlayerPhone, gameConfig.game_ended_from_exit_oip);
         var soloController = new SGSoloController;
         setTimeout(
           function() {
