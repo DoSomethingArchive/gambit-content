@@ -32,6 +32,13 @@ build:
 # Delivers passed build to target.
 deploy:
   steps:
+    - script: 
+        name: populate configuration database
+        # Setting environmental variables (on left) to env variables declared in wercker (on right). Allows for population of production config database through shell.sh control flow. 
+        code: |
+            export CONFIG_DB_HOST=$COMPOSEIO_CONFIG_DB_HOST
+            export CONFIG_DB_PORT=$COMPOSEIO_CONFIG_DB_PORT
+            sh seed.sh
     #- heroku-deploy:
     #    key-name: HEROKU_DEV_DEPLOY_KEY
     - desmondmorris/jitsu-deploy@1.0.0:
