@@ -27,6 +27,12 @@ var SGCreateFromMobileController = function(host) {
  *   Express response object.
  */
 SGCreateFromMobileController.prototype.processRequest = function(request, response) {
+  var self
+    , request
+    , response
+    , gameConfig
+    ;
+
   if (typeof request.query.story_id === 'undefined'
       || typeof request.query.story_type === 'undefined'
       || typeof request.body.phone === 'undefined'
@@ -42,18 +48,18 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
   // @todo When collaborative and most-likely-to games happen, set configs here.
   // Verify game type and id are valid.
   if (request.query.story_type == 'competitive-story') {
-    var gameConfigNameString = 'competitive_stories_config';
+    var gameConfigNameString = 'competitive_stories';
   }
   else {
     response.status(406).send('Invalid story_type.')
     return false;
   }
 
-  var self = this
-    , request = request
-    , response = response
-    , gameConfig = app.getConfig(gameConfigNameString, request.query.story_id)
-    ;
+    self = this
+  , request = request
+  , response = response
+  , gameConfig = app.getConfig(gameConfigNameString, request.query.story_id)
+  ;
 
   if (typeof gameConfig === 'undefined') {
     response.status(406).send('Game config not set up for story ID: ' + request.query.story_id);

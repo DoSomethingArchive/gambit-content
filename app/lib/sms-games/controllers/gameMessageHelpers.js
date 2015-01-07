@@ -228,6 +228,7 @@ function endGameFromPlayerExit(playerDocs) {
     for (var i = 0; i < docs.length; i++) {
 
       var gameDoc = docs[i];
+      var gameConfig = app.getConfig('competitive_stories', gameDoc.story_id);
 
       // Skip games that have already ended.
       var skipGame = false;
@@ -308,7 +309,6 @@ function endGameFromPlayerExit(playerDocs) {
           }
         );
 
-        var gameConfig = app.getConfig('competitive_stories_config', gameDoc.story_id);
         // Message them that the game has ended, and we're opting them into a solo game.
         module.exports.singleUser(currentPlayerPhone, gameConfig.game_ended_from_exit_oip);
         var soloController = new SGSoloController;

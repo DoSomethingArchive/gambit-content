@@ -16,7 +16,7 @@ var emitter = rootRequire('app/eventEmitter')
  */
 module.exports = function(request, doc) {
   var joiningBetaPhone = request.body.phone;
-  var gameConfig = app.getConfig('competitive_stories_config', doc.story_id)
+  var gameConfig = app.getConfig('competitive_stories', doc.story_id)
 
   // If the game's already started, notify the user and exit.
   if (doc.game_started || doc.game_ended) {

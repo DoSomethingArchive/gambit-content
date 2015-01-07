@@ -29,5 +29,5 @@ var campaignStartConfigSchema = new mongoose.Schema({
 })
 
 module.exports = function(connection) {
-  return connection.model('campaign_start_config', campaignStartConfigSchema);
+  return connection.model('campaign_start', campaignStartConfigSchema, 'campaign_start'); // Third param explicitly setting the name of the collection. 
 }

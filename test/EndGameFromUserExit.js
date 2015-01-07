@@ -29,7 +29,7 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
   var betaPhone4 = '5555550206';
 
   var storyId = 101;
-  var gameConfig = app.getConfig('competitive_stories_config', storyId)
+  var gameConfig = app.getConfig('competitive_stories', storyId)
 
   testHelper.gameAppSetup();
 

@@ -25,5 +25,5 @@ var yesNoPathsConfigSchema = new mongoose.Schema({
 })
 
 module.exports = function(connection) {
-  return connection.model('yes_no_paths_config', yesNoPathsConfigSchema);
+  return connection.model('yes_no_paths', yesNoPathsConfigSchema);
 }

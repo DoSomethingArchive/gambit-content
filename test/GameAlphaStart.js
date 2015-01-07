@@ -21,7 +21,7 @@ describe('Alpha-Starting a Bully Text game:', function() {
   var betaPhone1 = '5555550102';
   var betaPhone2 = '5555550103';
   var storyId = 100;
-  var gameConfig = app.getConfig('competitive_stories_config', storyId)
+  var gameConfig = app.getConfig('competitive_stories', storyId)
 
   testHelper.gameAppSetup();
 

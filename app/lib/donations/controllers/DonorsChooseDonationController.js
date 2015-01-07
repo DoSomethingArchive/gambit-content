@@ -73,7 +73,7 @@ DonorsChooseDonationController.prototype.findProject = function(request, respons
     return;
   }
 
-  var config = app.getConfig('donorschoose_config', request.query.id);
+  var config = app.getConfig('donorschoose', request.query.id);
 
   // Checking to see if the location param is a zip code or a state,
   // and assigning query params accordingly. 
@@ -197,7 +197,7 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
   };
   var self = this;
   var req = request; 
-  var config = app.getConfig('donorschoose_config', request.query.id);
+  var config = app.getConfig('donorschoose', request.query.id);
 
   // Populates the updateObject with the user's email only 
   // if it's non-obscene and is actually an email. Otherwise,
@@ -358,7 +358,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
  */
 DonorsChooseDonationController.prototype.retrieveFirstName = function(request, response) {
 
-  var config = app.getConfig('donorschoose_config', request.query.id);
+  var config = app.getConfig('donorschoose', request.query.id);
   var userSubmittedName = smsHelper.getFirstWord(request.body.args);
   var req = request;
 
@@ -411,7 +411,7 @@ DonorsChooseDonationController.prototype.retrieveLocation = function(request, re
 
   response.send();
 
-  var config = app.getConfig('donorschoose_config', request.query.id);
+  var config = app.getConfig('donorschoose', request.query.id);
   var location = smsHelper.getFirstWord(request.body.args);
 
   if (TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR == 'zip') {

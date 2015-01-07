@@ -39,6 +39,7 @@ var SGCompetitiveStoryController = function() {};
  *   Express response object.
  */
 SGCompetitiveStoryController.prototype.createGame = function(request, response) {
+  var gameConfig;
 
   // Return a 406 if some data is missing.
   if (typeof request.body === 'undefined'
@@ -65,7 +66,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     storyId = request.query.story_id;
   }
 
-  var gameConfig = app.getConfig('competitive_stories_config', storyId)
+  gameConfig = app.getConfig('competitive_stories', storyId)
 
   if (typeof gameConfig === 'undefined') {
     response.status(406).send('Game config not setup for story ID: ' + storyId);

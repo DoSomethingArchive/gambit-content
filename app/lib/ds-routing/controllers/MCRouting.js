@@ -21,7 +21,7 @@ MCRouting.prototype.yesNoGateway = function(request, response) {
 
   var args = request.body.args.trim().toLowerCase();
   var incomingOptIn = parseInt(request.body.opt_in_path_id);
-  var path = app.getConfig('yes_no_paths_config', incomingOptIn)
+  var path = app.getConfig('yes_no_paths', incomingOptIn)
 
   // If no path can be found, early out.
   if (path === undefined) {
@@ -62,7 +62,7 @@ MCRouting.prototype.campaignTransition = function(request, response) {
   }
 
   var mdataId = parseInt(request.body.mdata_id);
-  var transitionConfig = app.getConfig('start_campaign_transitions_config', mdataId);
+  var transitionConfig = app.getConfig('start_campaign_transitions', mdataId);
 
   if (typeof(transitionConfig) !== 'undefined'
       && typeof(transitionConfig.optin) !== 'undefined'
@@ -101,7 +101,7 @@ MCRouting.prototype.handleStartCampaignResponse = function(request, response) {
 
   var optinPathId = request.body.opt_in_path_id;
 
-  var startConfig = app.getConfig('campaign_start_config', optinPathId)
+  var startConfig = app.getConfig('campaign_start', optinPathId)
 
   // Get the config set that matches this opt_in_path_id.
   // Error out if there's no matching config.
