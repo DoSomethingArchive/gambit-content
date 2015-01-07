@@ -13,8 +13,6 @@ var requestHttp = require('request')
   , configModel = require('../models/sgGameCreateConfig')(connectionOperations)
   ;
 
-var gameCreateConfig;
-
 var SGCreateFromMobileController = function(host) {
   this.host = host; // Reference for application host. 
   this.game_type; // Flag for type of game (competitive, collaborative). Currently used. 

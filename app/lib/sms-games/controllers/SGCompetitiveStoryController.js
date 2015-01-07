@@ -174,7 +174,6 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
     // We opt users into these initial opt in paths only if the game type is NOT solo. 
     if (self.createdGameDoc.game_type !== 'solo') {
-      var gameConfig = app.getConfig('competitive_stories_config', self.createdGameDoc.story_id)
       message.group(self.createdGameDoc.alpha_phone,
         gameConfig.alpha_wait_oip,
         betaOptInArray,
