@@ -1,23 +1,26 @@
-{
-  "167209": {
+[
+  {
+    "_id": 167209,
     "__comments": "Thumb Wars 2014",
     "know": 10673,
     "plan": 10663,
     "do": 10243,
     "prove": 167259
   },
-  "168561": {
+  {
+    "_id": 168561,
     "__comments": "Fifth Harmony #ImABoss 2014",
     "know": 9521,
     "plan": 9531,
     "do": 9541,
     "prove": 168591
   },
-  "169133": {
+  {
+    "_id": 169133,
     "__comments": "Birthday Mail 2014",
     "know": 11351,
     "plan": 11349,
     "do": 11355,
     "prove": 167259
   }
-}
+]

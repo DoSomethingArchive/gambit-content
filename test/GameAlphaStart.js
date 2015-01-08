@@ -6,7 +6,6 @@ var assert = require('assert')
   , gameModel = rootRequire('app/lib/sms-games/models/sgCompetitiveStory')(connectionOperations)
   , userModel = rootRequire('app/lib/sms-games/models/sgUser')(connectionOperations)
   , SGCompetitiveStoryController = rootRequire('app/lib/sms-games/controllers/SGCompetitiveStoryController')
-  , gameConfig = rootRequire('app/lib/sms-games/config/competitive-stories')
   , smsHelper = rootRequire('app/lib/smsHelpers')
   , testHelper = require('./testHelperFunctions')
   ;
@@ -22,6 +21,7 @@ describe('Alpha-Starting a Bully Text game:', function() {
   var betaPhone1 = '5555550102';
   var betaPhone2 = '5555550103';
   var storyId = 100;
+  var gameConfig = app.getConfig('competitive_stories', storyId)
 
   testHelper.gameAppSetup();
 
@@ -152,7 +152,7 @@ describe('Alpha-Starting a Bully Text game:', function() {
 
     it('should start the game', function(done) {
       var alphaStarted = beta1Started = false;
-      var startOip = gameConfig[storyId].story_start_oip;
+      var startOip = gameConfig.story_start_oip;
       gameModel.findOne({_id: gameId}, function(err, doc) {
         if (!err && doc) {
           for (var i = 0; i < doc.players_current_status.length; i++) {

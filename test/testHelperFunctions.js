@@ -6,13 +6,12 @@ var assert = require('assert')
   , gameModel = rootRequire('app/lib/sms-games/models/sgCompetitiveStory')(connectionOperations)
   , userModel = rootRequire('app/lib/sms-games/models/sgUser')(connectionOperations)
   , SGCompetitiveStoryController = require('../app/lib/sms-games/controllers/SGCompetitiveStoryController')
-  , gameConfig = require('../app/lib/sms-games/config/competitive-stories')
   , smsHelper = require('../app/lib/smsHelpers')
   ;
 
 // Provides necessary setup conditions before game tests. 
 exports.gameAppSetup = function() {
-  before('instantiating Express app, game controller, game config, dummy response', function() {
+  before('instantiating game controller, dummy response', function() {
 
     this.gameController = new SGCompetitiveStoryController;
 

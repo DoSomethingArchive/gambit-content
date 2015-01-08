@@ -150,53 +150,5 @@
       168173,
       168395
     ]
-  },
-  { "_id": 11145,
-    "__comments": "Pregnancy Text - WAIT",
-    "name": "pregtext2014-wait",
-    "optins": [
-      165699,
-      165701,
-      165703,
-      165707,
-      165709,
-      165711,
-      165713,
-      165715,
-      165717,
-      165719
-    ]
-  },
-  { "_id": 11147,
-    "__comments": "Pregnancy Text - SAFE",
-    "name": "pregtext2014-safe",
-    "optins": [
-      165683,
-      165685,
-      165687,
-      165689,
-      165691,
-      165693,
-      165695,
-      165697
-    ]
-  },
-  { "_id": 11151,
-    "__comments": "Pregnancy Text - RIGHTS",
-    "name": "pregtext2014-rights",
-    "optins": [
-      165671,
-      165673,
-      165675
-    ]
-  },
-  { "_id": 11149,
-    "__comments": "Pregnancy Text - PARENT Tips",
-    "name": "pregtext2014-parent",
-    "optins": [
-      165677,
-      165679,
-      165681
-    ]
   }
 ]

@@ -1,5 +1,6 @@
- {
-  "100": {
+[
+  {
+    "_id": 100,
     "__comments": "Bully Text 2014",
     "alpha_wait_oip": 169841,
     "alpha_start_ask_oip": 169843,
@@ -519,7 +520,8 @@
       }
     }
   },
-  "101": {
+  {
+    "_id": 101,
     "__comments": "Science Sleuth 2014",
     "alpha_wait_oip": 172121,
     "alpha_start_ask_oip": 172123,
@@ -1052,7 +1054,8 @@
       }
     }
   }, 
-  "201": {
+  {
+    "_id": 201,
     "__comments": "Science Sleuth 2014 A/B testing config",
     "alpha_wait_oip": 173907,
     "alpha_start_ask_oip": 173909,
@@ -1585,4 +1588,4 @@
       }
     }
   }
-}
+]

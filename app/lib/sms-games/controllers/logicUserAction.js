@@ -4,7 +4,6 @@ var smsHelper = rootRequire('app/lib/smsHelpers')
   , connectionOperations = rootRequire('app/config/connectionOperations')
   , gameModel = rootRequire('app/lib/sms-games/models/sgCompetitiveStory')(connectionOperations)
   , userModel = rootRequire('app/lib/sms-games/models/sgUser')(connectionOperations)
-  , gameConfig = require('../config/competitive-stories')
   , message = require('./gameMessageHelpers')
   , utility = require('./gameUtilities')
   , record = require('./gameRecordHelpers')
@@ -37,11 +36,11 @@ module.exports = function(request, doc) {
   }
 
   // Get the story config.
-  var storyConfig = gameConfig[doc.story_id];
+  var gameConfig = app.getConfig('competitive_stories', doc.story_id)
 
   // Check if user response is valid.
   var choiceIndex = -1;
-  var storyItem = storyConfig.story[currentOip];
+  var storyItem = gameConfig.story[currentOip];
 
   if (storyItem && storyItem.choices) {
     for (var i = 0; i < storyItem.choices.length; i++) {
@@ -89,7 +88,7 @@ module.exports = function(request, doc) {
     // Player has reached the end of a level.
     if (typeof nextOip === 'string' && nextOip.match(/^END-LEVEL/)) {
       var level = nextOip;
-      nextOip = message.end.level.indiv(userPhone, level, storyConfig, gameDoc, 'answer');
+      nextOip = message.end.level.indiv(userPhone, level, gameConfig, gameDoc, 'answer');
       gameDoc = record.updatedPlayerStatus(gameDoc, userPhone, nextOip);
       gameDoc = record.updatedStoryResults(gameDoc, userPhone, nextOip);
 
@@ -103,8 +102,8 @@ module.exports = function(request, doc) {
 
         var playerAtEndLevel = false;
         var currentStatus = gameDoc.players_current_status[i].opt_in_path;
-        for (var j = 0; j < storyConfig.story[level].choices.length; j++) {
-          if (currentStatus == storyConfig.story[level].choices[j].next) {
+        for (var j = 0; j < gameConfig.story[level].choices.length; j++) {
+          if (currentStatus == gameConfig.story[level].choices[j].next) {
             playerAtEndLevel = true;
             break;
           }
@@ -161,7 +160,8 @@ function sendEndMessagesUpdateReturnGameDoc(level, gameDoc) {
 
   // Send group the end level message.
   var endLevelGroupKey = level + '-GROUP';
-  var groupOptin = message.end.level.group(endLevelGroupKey, gameConfig[gameDoc.story_id], gameDoc);
+  var gameConfig = app.getConfig('competitive_stories', gameDoc.story_id)
+  var groupOptin = message.end.level.group(endLevelGroupKey, gameConfig, gameDoc);
   for (var i = 0; i < gameDoc.players_current_status.length; i++) {
     var playerPhone = gameDoc.players_current_status[i].phone;  
 
@@ -176,7 +176,7 @@ function sendEndMessagesUpdateReturnGameDoc(level, gameDoc) {
   // that results for all players can be updated before figuring out the final messages.
   // Send group the next level message.
   var gameEnded = false;
-  var nextLevel = gameConfig[gameDoc.story_id].story[endLevelGroupKey].next_level;
+  var nextLevel = gameConfig.story[endLevelGroupKey].next_level;
   for (var i = 0; i < gameDoc.players_current_status.length; i++) {
     var playerPhone = gameDoc.players_current_status[i].phone;
     var nextPath = nextLevel;
@@ -187,13 +187,13 @@ function sendEndMessagesUpdateReturnGameDoc(level, gameDoc) {
       if (!gameEnded){
         // Sends universal GROUP endgame message (sent THIRD,
         // or second-last); updates gamedoc.
-        gameDoc = message.end.game.group(gameConfig[gameDoc.story_id], gameDoc);
+        gameDoc = message.end.game.group(gameConfig, gameDoc);
       }
       gameEnded = true;
       gameDoc.game_ended = true;
       utility.stathatReportCount(STATHAT_CATEGORY, 'end game', 'success', gameDoc.story_id, 1);
       // This is setting the next OIP to the INDIVIDUAL end-game message.
-      nextPath = message.end.game.indiv(playerPhone, gameConfig[gameDoc.story_id], gameDoc);
+      nextPath = message.end.game.indiv(playerPhone, gameConfig, gameDoc);
     }
 
     // Sends individual user the next level message.

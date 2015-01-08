@@ -21,5 +21,5 @@ var tipsConfigSchema = new mongoose.Schema({
 })
 
 module.exports = function(connection) {
-  return connection.model('tips_config', tipsConfigSchema);
+  return connection.model('tips', tipsConfigSchema);
 }

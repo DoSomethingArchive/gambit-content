@@ -6,7 +6,7 @@ var mongoose = require('mongoose');
 
 var donorschooseConfigSchema = new mongoose.Schema({
 
-  // Reassigning the _id value to the unique id of the mData which controls the tips flow. Automatically indexed. 
+  // Reassigning the _id value. 
   _id : Number,
 
   // Contextual information about the donorschoose donation flow. 
@@ -36,5 +36,5 @@ var donorschooseConfigSchema = new mongoose.Schema({
 })
 
 module.exports = function(connection) {
-  return connection.model('donorschoose_config', donorschooseConfigSchema);
+  return connection.model('donorschoose', donorschooseConfigSchema, 'donorschoose'); // Third param explicitly setting the name of the collection. 
 }

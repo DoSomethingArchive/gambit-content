@@ -1,134 +1,152 @@
-{
-    "startCampaignTransitions": {
-        "9491": {
-            "__comments": "Fifth Harmony #ImABoss 2014",
-            "optin": 168561,
-            "optout": 126959
-        },
-        "9943": {
-            "__comments": "Thumb Wars 2014",
-            "optin": 167209,
-            "optout": 126067
-        },
-        "10857": {
-            "__comments": "The Hunt 2014 Quiz to Pre-Campaign Tips",
-            "optin": 167415,
-            "optout": 126181
-        },
-        "11347": {
-            "__comments": "Birthday Mail 2014",
-            "optin": 169133,
-            "optout": 126953
-        },
-        "11385": {
-            "__comments": "The Hunt 2014 Optout",
-            "optin": 169603,
-            "optout": 126181
-        },
-        "11493": {
-            "__comments": "Notes From Shawn (Opt Out From Photo Receipt)",
-            "optin": 170139,
-            "optout": 128005
-        },
-        "11569": {
-            "__comments": "Make Art Save Art 2014",
-            "optin": 171799,
-            "optout": 128431
-        },
-        "11531": {
-            "__comments": "50 Cans 2014",
-            "optin": 171481,
-            "optout": 128525
-        },
-        "11559": {
-            "__comments": "Can Tribute, BBYO 2014",
-            "optin": 171417,
-            "optout": 128919
-        },
-        "11595": {
-            "__comments": "Musical Mixup 2014",
-            "optin": 172427,
-            "optout": 129189
-        },
-        "11603": {
-            "__comments": "Verizon Domestic Violence 2014",
-            "optin": 172459,
-            "optout": 129207
-        },
-        "11611": {
-            "__comments": "GGW2014 Smartphones4Seniors",
-            "optin": 172659,
-            "optout": 129321
-        },
-         "11619": {
-            "__comments": "GGW2014 SocialMedia4Seniors",
-            "optin": 172707,
-            "optout": 129347
-        },
-         "11623": {
-            "__comments": "GGW2014 OnlineMusic4Seniors",
-            "optin": 172743,
-            "optout": 129365
-        },
-         "11627": {
-            "__comments": "GGW2014 VideoChat4Seniors",
-            "optin": 172769,
-            "optout": 129383
-        },
-        "11631": {
-            "__comments": "GGW2014 Email4Seniors",
-            "optin": 172797,
-            "optout": 129397
-        },
-        "11673": {
-            "__comments": "BakesaleForBabies2014",
-            "optin": 172929,
-            "optout": 129491
-        },
-        "11713": {
-            "__comments": "Teens for Jeans 2015",
-            "optin": 173237,
-            "optout": 129745
-        },
-         "11751": {
-            "__comments": "Prank It Forward 2014",
-            "optin": 173517,
-            "optout": 129955
-        },
-        "11783": {
-            "__comments": "Love Letters 2014",
-            "optin": 173835,
-            "optout": 130265
-        },
-        "11829": {
-            "__comments": "Social Media Makeover 2014",
-            "optin": 171811,
-            "optout": 128991
-        },
-        "11833": {
-            "__comments": "Backpack Attack 2014",
-            "optin": 174377,
-            "optout": 130689
-        },
-        "11837": {
-            "__comments": "Patient Playbooks 2014",
-            "optin": 174425,
-            "optout": 130715
-        },
-        "11847": {
-            "__comments": "Baby, It's Cold Inside 2014",
-            "optin": 174541,
-            "optout": 130799
-        },
-        "11851": {
-            "__comments": "Search For Specs 2014",
-            "optin": 174571,
-            "optout": 130821
-        },
-        "11867": {
-            "__comments": "Ryan's Playbooks 2014",
-            "optin": 174359,
-            "optout": 130683
-        }
+[
+    {
+        "_id": 9491,
+        "__comments": "Fifth Harmony #ImABoss 2014",
+        "optin": 168561,
+        "optout": 126959
+    },
+    {
+        "_id": 9943,
+        "__comments": "Thumb Wars 2014",
+        "optin": 167209,
+        "optout": 126067
+    },
+    {
+        "_id": 10857,
+        "__comments": "The Hunt 2014 Quiz to Pre-Campaign Tips",
+        "optin": 167415,
+        "optout": 126181
+    },
+    {
+        "_id": 11347,
+        "__comments": "Birthday Mail 2014",
+        "optin": 169133,
+        "optout": 126953
+    },
+    {
+        "_id": 11385,
+        "__comments": "The Hunt 2014 Optout",
+        "optin": 169603,
+        "optout": 126181
+    },
+    {
+        "_id": 11493,
+        "__comments": "Notes From Shawn (Opt Out From Photo Receipt)",
+        "optin": 170139,
+        "optout": 128005
+    },
+    {
+        "_id": 11569,
+        "__comments": "Make Art Save Art 2014",
+        "optin": 171799,
+        "optout": 128431
+    },
+    {
+        "_id": 11531,
+        "__comments": "50 Cans 2014",
+        "optin": 171481,
+        "optout": 128525
+    },
+    {
+        "_id": 11559,
+        "__comments": "Can Tribute, BBYO 2014",
+        "optin": 171417,
+        "optout": 128919
+    },
+    {
+        "_id": 11595,
+        "__comments": "Musical Mixup 2014",
+        "optin": 172427,
+        "optout": 129189
+    },
+    {
+        "_id": 11603,
+        "__comments": "Verizon Domestic Violence 2014",
+        "optin": 172459,
+        "optout": 129207
+    },
+    {
+        "_id": 11611,
+        "__comments": "GGW2014 Smartphones4Seniors",
+        "optin": 172659,
+        "optout": 129321
+    },
+     {
+        "_id": 11619,
+        "__comments": "GGW2014 SocialMedia4Seniors",
+        "optin": 172707,
+        "optout": 129347
+    },
+     {
+        "_id": 11623,
+        "__comments": "GGW2014 OnlineMusic4Seniors",
+        "optin": 172743,
+        "optout": 129365
+    },
+     {
+        "_id": 11627,
+        "__comments": "GGW2014 VideoChat4Seniors",
+        "optin": 172769,
+        "optout": 129383
+    },
+    {
+        "_id": 11631,
+        "__comments": "GGW2014 Email4Seniors",
+        "optin": 172797,
+        "optout": 129397
+    },
+    {
+        "_id": 11673,
+        "__comments": "BakesaleForBabies2014",
+        "optin": 172929,
+        "optout": 129491
+    },
+    {
+        "_id": 11713,
+        "__comments": "Teens for Jeans 2015",
+        "optin": 173237,
+        "optout": 129745
+    },
+     {
+        "_id": 11751,
+        "__comments": "Prank It Forward 2014",
+        "optin": 173517,
+        "optout": 129955
+    },
+    {
+        "_id": 11783,
+        "__comments": "Love Letters 2014",
+        "optin": 173835,
+        "optout": 130265
+    },
+    {
+        "_id": 11829,
+        "__comments": "Social Media Makeover 2014",
+        "optin": 171811,
+        "optout": 128991
+    },
+    {
+        "_id": 11833,
+        "__comments": "Backpack Attack 2014",
+        "optin": 174377,
+        "optout": 130689
+    },
+    {
+        "_id": 11837,
+        "__comments": "Patient Playbooks 2014",
+        "optin": 174425,
+        "optout": 130715
+    },
+    {
+        "_id": 11847,
+        "__comments": "Baby, It's Cold Inside 2014",
+        "optin": 174541,
+        "optout": 130799
+    },
+    {
+        "_id": 11851,
+        "__comments": "Search For Specs 2014",
+        "optin": 174571,
+        "optout": 130821
     }
-}
+]

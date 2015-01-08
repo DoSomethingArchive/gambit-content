@@ -2,7 +2,6 @@ var emitter = rootRequire('app/eventEmitter')
   , logger = rootRequire('app/lib/logger')
   , connectionOperations = rootRequire('app/config/connectionOperations')
   , gameModel = rootRequire('app/lib/sms-games/models/sgCompetitiveStory')(connectionOperations)
-  , gameConfig = require('../config/competitive-stories')
   , message = require('./gameMessageHelpers')
   , SGSoloController = require('./SGSoloController')
   , start = require('./logicGameStart')
@@ -17,12 +16,13 @@ var emitter = rootRequire('app/eventEmitter')
  */
 module.exports = function(request, doc) {
   var joiningBetaPhone = request.body.phone;
+  var gameConfig = app.getConfig('competitive_stories', doc.story_id)
 
   // If the game's already started, notify the user and exit.
   if (doc.game_started || doc.game_ended) {
     // Notifies beta that the game has already started, but we're automatically
     // opting her into a solo game. 
-    message.singleUser(joiningBetaPhone, gameConfig[doc.story_id].game_in_progress_oip);
+    message.singleUser(joiningBetaPhone, gameConfig.game_in_progress_oip);
     var soloController = new SGSoloController;
     setTimeout(
       function() {

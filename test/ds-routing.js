@@ -172,7 +172,7 @@ describe('ds-routing tests', function() {
         emitter.on(emitter.events.mcOptinTest, function(payload) {
           emitter.removeAllListeners(emitter.events.mcOptinTest);
 
-          var expected = app.getConfig('tips_config', 10673).optins;
+          var expected = app.getConfig('tips', 10673).optins;
           if (expected.indexOf(payload.form.opt_in_path) >= 0) {
             done();
           }
@@ -198,7 +198,7 @@ describe('ds-routing tests', function() {
         emitter.on(emitter.events.mcOptinTest, function(payload) {
           emitter.removeAllListeners(emitter.events.mcOptinTest);
 
-          var expected = app.getConfig('tips_config', 10663).optins;
+          var expected = app.getConfig('tips', 10663).optins;
           if (expected.indexOf(payload.form.opt_in_path) >= 0) {
             done();
           }
@@ -224,7 +224,7 @@ describe('ds-routing tests', function() {
         emitter.on(emitter.events.mcOptinTest, function(payload) {
           emitter.removeAllListeners(emitter.events.mcOptinTest);
 
-          var expected = app.getConfig('tips_config', 10243).optins;
+          var expected = app.getConfig('tips', 10243).optins;
           if (expected.indexOf(payload.form.opt_in_path) >= 0) {
             done();
           }
@@ -283,7 +283,7 @@ describe('ds-routing tests', function() {
       emitter.on(emitter.events.mcOptinTest, function(payload) {
         emitter.removeAllListeners(emitter.events.mcOptinTest);
 
-        var expected = app.getConfig('tips_config', 9521).optins;
+        var expected = app.getConfig('tips', 9521).optins;
         if (expected.indexOf(payload.form.opt_in_path) >= 0) {
           done();
         }

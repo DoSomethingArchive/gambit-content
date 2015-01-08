@@ -9,8 +9,8 @@ var MCRouting = require('./controllers/MCRouting')
   , Tips = require('./controllers/Tips')
   ;
 
-var mcRouting = new MCRouting(app);
-var tips = new Tips(app);
+var mcRouting = new MCRouting;
+var tips = new Tips;
 
 /**
  * Route user to appropriate opt-in path based on their answer to a Y/N question.
