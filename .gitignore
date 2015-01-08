@@ -10,5 +10,6 @@ newrelic_agent.log
 .coveralls.yml
 coverage
 
-# deploy configurations
+# config
 .deploy_config.conf
+dump

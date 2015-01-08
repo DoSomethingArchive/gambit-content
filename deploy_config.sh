@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# @todo comment on what this file is suppose to do
+# Push config settings based on local config .json files to the production database.
 #
 
 # Prompt user to make sure they don't do this by accident
