@@ -38,6 +38,8 @@ deploy:
         code: |
             export CONFIG_DB_HOST=$COMPOSEIO_CONFIG_DB_HOST
             export CONFIG_DB_PORT=$COMPOSEIO_CONFIG_DB_PORT
+            export CONFIG_DB_USERNAME=$COMPOSEIO_CONFIG_DB_USERNAME
+            export CONFIG_DB_PASSWORD=$COMPOSEIO_CONFIG_DB_PASSWORD
             sh seed.sh
     #- heroku-deploy:
     #    key-name: HEROKU_DEV_DEPLOY_KEY
