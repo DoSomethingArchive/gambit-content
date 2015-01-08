@@ -1,6 +1,6 @@
 .DS_Store
 
-#npm
+# npm
 node_modules
 
 # newrelic
@@ -9,3 +9,6 @@ newrelic_agent.log
 # test coverage
 .coveralls.yml
 coverage
+
+# deploy configurations
+.deploy_config.conf
