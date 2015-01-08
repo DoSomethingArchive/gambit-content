@@ -8,6 +8,7 @@ var connectionOperations = require('./connectionOperations')
     , rootRequire('app/lib/ds-routing/config/yesNoPathsConfigModel')(connectionConfig)
     , rootRequire('app/lib/sms-games/config/competitiveStoriesConfigModel')(connectionConfig)
     ]
+  , logger = rootRequire('app/lib/logger')
   ;
 
 var configObject = {}
