@@ -11,7 +11,7 @@ echo "**    WARNING    **"
 echo "*******************"
 echo
 
-read -p "You're about to replace your local config database with the one on production. You sure about this? [y/n] " -r
+read -p "You're about to update your local config database with the one on production. You sure about this? [y/n] " -r
 
 echo
 
@@ -34,6 +34,8 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
   
     # Then restore to currently running mongod
     mongorestore
+
+    echo "\nLocal database updated with config from production!\n"
   fi
 else
   echo "Carry on."
