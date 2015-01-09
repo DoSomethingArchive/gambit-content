@@ -17,7 +17,7 @@ echo # Just moving to the next line
 
 if [[ $REPLY =~ ^[Yy]$ ]]; then
   # Source environment variables
-  source ./.deploy_config.conf
+  source ./.push_config.conf
 
   # Import local config changes to production db
   if [ -n "$SMS_CONFIG_DB_HOST" ] && \
@@ -45,20 +45,10 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo "\n\nFinished updating production database"
 
     # Install jitsu if it's not already
-    if ! type jitsu &> /dev/null ; then
-        echo "jitsu not installed, trying to install it through npm"
-
-        if ! type npm &> /dev/null ; then
-            echo "npm not found, make sure you have npm or jitsu installed"
-        else
-            echo "npm is available"
-            echo "npm version: $(npm --version)"
-
-            echo "installing jitsu"
-            sudo npm install -g --silent jitsu
-        fi
+    if [ ! type jitsu &> /dev/null ] || [ ! type npm &> /dev/null ]; then
+        echo "jitsu or npm not installed, make sure you have both"
     else
-        echo "jitsu is available"
+        echo "jitsu and npm are available"
     fi
 
     # Set Nodejitsu username and password
@@ -70,7 +60,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 
     echo "\n\nApp restarted with new configs! Done!\n\n"
   else
-    echo "Missing environment variables. Unable to push config to production. See deploy_config.conf for details."
+    echo "Missing environment variables. Unable to push config to production. See push_config.conf for details."
   fi
 else
   echo "whew. ok then."

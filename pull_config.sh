@@ -10,6 +10,7 @@ echo "*******************"
 echo "**    WARNING    **"
 echo "*******************"
 echo
+echo "NOTE: Documents sharing the same _id will not be overwritten.\n"
 
 read -p "You're about to update your local config database with the one on production. You sure about this? [y/n] " -r
 
