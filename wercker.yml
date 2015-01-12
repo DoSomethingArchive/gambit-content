@@ -22,7 +22,7 @@ build:
     - script:
         name: seeds config database with SMS config data 
         code: |
-            sh seed.sh
+            yes | sh pull_config.sh
     - script: 
         name: run Mocha tests and then send Istanbul coverage reports to coveralls
         code: |

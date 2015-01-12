@@ -13,4 +13,3 @@ coverage
 # config
 **/config/*.json
 .pull_config.conf
-dump
