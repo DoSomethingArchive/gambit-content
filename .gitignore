@@ -11,5 +11,6 @@ newrelic_agent.log
 coverage
 
 # config
-.push_config.conf
+**/config/*.json
+.pull_config.conf
 dump
