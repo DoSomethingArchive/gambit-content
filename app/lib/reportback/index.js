@@ -4,7 +4,6 @@
 
 var express = require('express')
   , router = express.Router()
-  , config = require('./reportback-config.json')
   , connectionOperations = rootRequire('app/config/connectionOperations')
   , model = require('./reportbackModel')(connectionOperations)
   , mobilecommons = rootRequire('mobilecommons')
@@ -14,12 +13,17 @@ var express = require('express')
   ;
 
 router.post('/:campaign', function(request, response) {
-  var campaign;
-  var campaignConfig;
-  var phone;
-  var requestData;
-  var i;
+  var campaign
+    , campaignConfig
+    , config
+    , phone
+    , requestData
+    , i
+    ;
   
+  // Get reportback config collection
+  config = app.getConfig('reportback');
+
   // Check that we have a config setup for this campaign
   campaign = request.params.campaign;
   for (i = 0; i < config.length; i++) {

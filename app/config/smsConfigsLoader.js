@@ -7,6 +7,7 @@ var connectionOperations = require('./connectionOperations')
     , rootRequire('app/lib/ds-routing/config/startCampaignTransitionsConfigModel')(connectionConfig)
     , rootRequire('app/lib/ds-routing/config/yesNoPathsConfigModel')(connectionConfig)
     , rootRequire('app/lib/sms-games/config/competitiveStoriesConfigModel')(connectionConfig)
+    , rootRequire('app/lib/reportback/reportbackModel')(connectionConfig)
     ]
   , logger = rootRequire('app/lib/logger')
   ;
@@ -55,10 +56,14 @@ function onRetrievedConfig() {
  *   _id of the config document we're searching for. 
  * 
  * @returns 
- *   Config document. 
+ *   If id is defined, the config document. If id is undefined, the config collection.
  */
 app.getConfig = function(modelName, id) {
   var configArray = this.configs[modelName];
+  if (typeof id === 'undefined') {
+    return configArray;
+  }
+
   for (var i = 0; i < configArray.length; i++) {
     if (configArray[i]._id == id) {
       return configArray[i];
