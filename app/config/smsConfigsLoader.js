@@ -7,7 +7,7 @@ var connectionOperations = require('./connectionOperations')
     , rootRequire('app/lib/ds-routing/config/startCampaignTransitionsConfigModel')(connectionConfig)
     , rootRequire('app/lib/ds-routing/config/yesNoPathsConfigModel')(connectionConfig)
     , rootRequire('app/lib/sms-games/config/competitiveStoriesConfigModel')(connectionConfig)
-    , rootRequire('app/lib/reportback/reportbackModel')(connectionConfig)
+    , rootRequire('app/lib/reportback/reportbackConfigModel')(connectionConfig)
     ]
   , logger = rootRequire('app/lib/logger')
   ;
@@ -54,18 +54,25 @@ function onRetrievedConfig() {
  *   Name of model we're searching for. Must match the prescribed Mongoose model name exactly.
  * @param id
  *   _id of the config document we're searching for. 
+ * @param key
+ *   Optional. Key to use instead of _id to search for the doc.
  * 
  * @returns 
- *   If id is defined, the config document. If id is undefined, the config collection.
+ *   Config document.
  */
-app.getConfig = function(modelName, id) {
-  var configArray = this.configs[modelName];
-  if (typeof id === 'undefined') {
-    return configArray;
-  }
+app.getConfig = function(modelName, id, key) {
+  var configArray
+    , i
+    , keyMatches
+    , idMatches
+    ;
 
-  for (var i = 0; i < configArray.length; i++) {
-    if (configArray[i]._id == id) {
+  configArray = this.configs[modelName];
+  for (i = 0; i < configArray.length; i++) {
+    keyMatches = typeof key !== 'undefined' && configArray[i][key] == id;
+    idMatches = configArray[i]._id == id;
+
+    if (keyMatches || idMatches) {
       return configArray[i];
     }
   }

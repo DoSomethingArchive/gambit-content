@@ -1,5 +1,5 @@
 /**
- * @TODO comment
+ * Model for tracking data submitted through a report back.
  */
 var mongoose = require('mongoose');
 
@@ -27,5 +27,5 @@ var rbSchema = new mongoose.Schema({
 });
 
 module.exports = function(connection) {
-  return connection.model('reportback', rbSchema);
+  return connection.model('reportbacks', rbSchema);
 }

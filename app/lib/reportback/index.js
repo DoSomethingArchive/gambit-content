@@ -15,23 +15,14 @@ var express = require('express')
 router.post('/:campaign', function(request, response) {
   var campaign
     , campaignConfig
-    , config
     , phone
     , requestData
     , i
     ;
   
-  // Get reportback config collection
-  config = app.getConfig('reportback');
-
   // Check that we have a config setup for this campaign
   campaign = request.params.campaign;
-  for (i = 0; i < config.length; i++) {
-    if (config[i].endpoint == campaign) {
-      campaignConfig = config[i];
-      break;
-    }
-  }
+  campaignConfig = app.getConfig('reportbacks', campaign, 'endpoint');
 
   if (typeof campaignConfig !== 'undefined') {
     phone = request.body.phone;
