@@ -1,6 +1,6 @@
 /**
- * Model for the tips configuration document. Each object corresponds to one section of 
- * the campaign tips flow, for instance: "Birthday Mail 2014 - KNOW". 
+ * Model for the competitive_stories configuration document. 
+ * Each object configures one SMS game.
  */
 var mongoose = require('mongoose');
 
