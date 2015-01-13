@@ -1,5 +1,5 @@
 /**
- * @TODO comment
+ * Model for tracking data submitted through a report back.
  */
 var mongoose = require('mongoose');
 

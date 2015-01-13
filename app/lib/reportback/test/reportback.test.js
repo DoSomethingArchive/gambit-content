@@ -1,6 +1,5 @@
 var assert = require('assert')
   , reportback = require('../')
-  , config = require('../reportback-config.json')
   , connectionOperations = rootRequire('app/config/connectionOperations')
   , model = require('../reportbackModel')(connectionOperations)
   , emitter = rootRequire('app/eventEmitter')
@@ -8,14 +7,7 @@ var assert = require('assert')
 
 function test() {
   var TEST_PHONE = '15555555555';
-  var TEST_CAMPAIGN_CONFIG;
-
-  for (i = 0; i < config.length; i++) {
-    if (config[i].endpoint == 'test') {
-      TEST_CAMPAIGN_CONFIG = config[i];
-      break;
-    }
-  }
+  var TEST_CAMPAIGN_CONFIG = app.getConfig('reportback', 'test', 'endpoint');
 
   var createTestDoc = function() {
     model.create({phone: TEST_PHONE, campaign: TEST_CAMPAIGN_CONFIG.endpoint});
