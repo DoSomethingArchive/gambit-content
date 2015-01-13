@@ -30,5 +30,5 @@ var rbSchema = new mongoose.Schema({
 });
 
 module.exports = function(connection) {
-  return connection.model('reportbacks', rbSchema);
+  return connection.model('reportback', rbSchema);
 }
