@@ -32,6 +32,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     mongoexport --host $SMS_CONFIG_DB_HOST --port $SMS_CONFIG_DB_PORT --db config -u $SMS_CONFIG_DB_USERNAME -p $SMS_CONFIG_DB_PASSWORD --jsonArray -c start_campaign_transitions -o app/lib/ds-routing/config/start-campaign-transitions.json
     mongoexport --host $SMS_CONFIG_DB_HOST --port $SMS_CONFIG_DB_PORT --db config -u $SMS_CONFIG_DB_USERNAME -p $SMS_CONFIG_DB_PASSWORD --jsonArray -c yes_no_paths -o app/lib/ds-routing/config/yes-no-paths.json
     mongoexport --host $SMS_CONFIG_DB_HOST --port $SMS_CONFIG_DB_PORT --db config -u $SMS_CONFIG_DB_USERNAME -p $SMS_CONFIG_DB_PASSWORD --jsonArray -c competitive_stories -o app/lib/sms-games/config/competitive-stories.json
+    mongoexport --host $SMS_CONFIG_DB_HOST --port $SMS_CONFIG_DB_PORT --db config -u $SMS_CONFIG_DB_USERNAME -p $SMS_CONFIG_DB_PASSWORD --jsonArray -c reportbacks -o app/lib/reportback/config/reportbacks.json
   
     # Then import them to the currently running mongod
     mongoimport --db config --jsonArray -c tips --file app/lib/ds-routing/config/tips.json
@@ -40,6 +41,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     mongoimport --db config --jsonArray -c start_campaign_transitions --file app/lib/ds-routing/config/start-campaign-transitions.json
     mongoimport --db config --jsonArray -c yes_no_paths --file app/lib/ds-routing/config/yes-no-paths.json
     mongoimport --db config --jsonArray -c competitive_stories --file app/lib/sms-games/config/competitive-stories.json
+    mongoimport --db config --jsonArray -c reportbacks --file app/lib/reportback/config/reportbacks.json
 
     echo "\nLocal database updated with config from production!\n"
   fi

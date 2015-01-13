@@ -21,6 +21,8 @@ if [ -n "$SMS_CONFIG_DB_HOST" ] && \
 
   mongoexport --host $SMS_CONFIG_DB_HOST --port $SMS_CONFIG_DB_PORT --db config -u $SMS_CONFIG_DB_USERNAME -p $SMS_CONFIG_DB_PASSWORD --jsonArray -c competitive_stories -o app/lib/sms-games/config/competitive-stories.json
 
+  mongoexport --host $SMS_CONFIG_DB_HOST --port $SMS_CONFIG_DB_PORT --db config -u $SMS_CONFIG_DB_USERNAME -p $SMS_CONFIG_DB_PASSWORD --jsonArray -c reportbacks -o app/lib/reportback/config/reportbacks.json
+
   # Importing to wercker db
   mongoimport --host $WERCKER_MONGODB_HOST --port $WERCKER_MONGODB_PORT --db config --collection tips < app/lib/ds-routing/config/tips.json --jsonArray
 
@@ -33,6 +35,8 @@ if [ -n "$SMS_CONFIG_DB_HOST" ] && \
   mongoimport --host $WERCKER_MONGODB_HOST --port $WERCKER_MONGODB_PORT --db config --collection yes_no_paths < app/lib/ds-routing/config/yes-no-paths.json --jsonArray
 
   mongoimport --host $WERCKER_MONGODB_HOST --port $WERCKER_MONGODB_PORT --db config --collection competitive_stories < app/lib/sms-games/config/competitive-stories.json --jsonArray
+
+  mongoimport --host $WERCKER_MONGODB_HOST --port $WERCKER_MONGODB_PORT --db config --collection reportbacks < app/lib/reportback/config/reportbacks.json --jsonArray
 
 else
 
