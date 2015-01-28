@@ -17,7 +17,7 @@ var startCampaignTransitionsConfigSchema = new mongoose.Schema({
   // OIP of the main campaign conversation we're opting the user into. 
   optin: Number,
 
-  // OIP of the intro campaign conversation we're opting the user out of. 
+  // Campaign ID (note, not the OIP) of the intro campaign conversation we're opting the user out of. 
   optout: Number
 
 })
