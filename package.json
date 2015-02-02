@@ -16,7 +16,7 @@
     "mongoose": "~3.8.8",
     "mysql": "2.1.x",
     "newrelic": "1.11.x",
-    "node-request-retry": "^0.0.1",
+    "node-request-retry": "^1.0.0",
     "path": "~0.4.9",
     "q": "^1.0.1",
     "request": "2.34.x",
