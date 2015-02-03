@@ -316,10 +316,10 @@ function campaignsReportback(rbData, callback) {
  */
 function isCampaignsReportbackError(response, body) {
   if (body && body.length > 0 && body[0] != false) {
-    return true;
+    return false;
   }
   else {
-    return false;
+    return true;
   }
 }
 
