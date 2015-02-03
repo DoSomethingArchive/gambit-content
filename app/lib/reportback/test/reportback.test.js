@@ -9,8 +9,12 @@ function test() {
   var TEST_PHONE = '15555555555';
   var TEST_CAMPAIGN_CONFIG = app.getConfig('reportback', 'test', 'endpoint');
 
-  var createTestDoc = function() {
-    model.create({phone: TEST_PHONE, campaign: TEST_CAMPAIGN_CONFIG.endpoint});
+  var createTestDoc = function(done) {
+    model.create({phone: TEST_PHONE, campaign: TEST_CAMPAIGN_CONFIG.endpoint}, function(err, doc) {
+      if (doc) {
+        done();
+      }
+    });
   };
 
   var removeTestDoc = function() {
