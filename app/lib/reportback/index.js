@@ -335,11 +335,19 @@ function submitReportBack(uid, doc, data) {
   };
 
   dscontentapi.campaignsReportback(rbData, function(err, response, body) {
-    if (!err && body && body.length > 0) {
-      logger.info('Successfully submitted report back. rbid: ' + body[0]);
+    if (err) {
+      logger.error(err);
+    }
+    else if (body && body.length > 0) {
+      if (body[0] == false) {
+        logger.error('Error when submitting report back.', response);
+      }
+      else {
+        logger.info('Successfully submitted report back. rbid: ' + body[0]);
 
-      // Remove the report back doc when complete
-      model.remove({phone: data.phone, campaign: data.campaignConfig.endpoint}).exec();
+        // Remove the report back doc when complete
+        model.remove({phone: data.phone, campaign: data.campaignConfig.endpoint}).exec();
+      }
     }
   });
 }

@@ -71,7 +71,7 @@ exports.profile_update = function(phone, optInPathId, customFields) {
   };
 
   var requestRetry = new RequestRetry();
-  requestRetry.setRetryCodes([400, 408, 500]);
+  requestRetry.setRetryConditions([400, 408, 500]);
   requestRetry.post(url, postData, callback);
 };
 
@@ -87,7 +87,7 @@ exports.optin = function(args) {
   var betaOptin = args.betaOptin || 0;
   var callback;
   var requestRetry = new RequestRetry();
-  requestRetry.setRetryCodes([400, 408, 500]);
+  requestRetry.setRetryConditions([400, 408, 500]);
 
   // Need at least these in order to continue
   if (alphaPhone == null || alphaOptin <= 0)
@@ -242,7 +242,7 @@ exports.optout = function(args) {
   };
 
   var requestRetry = new RequestRetry();
-  requestRetry.setRetryCodes([400, 408, 500]);
+  requestRetry.setRetryConditions([400, 408, 500]);
   requestRetry.post(url, payload, callback);
 };
 

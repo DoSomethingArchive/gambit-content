@@ -1,6 +1,7 @@
 var request = require('request')
   , crypto = require('crypto')
   , logger = rootRequire('app/lib/logger')
+  , RequestRetry = require('node-request-retry')
   ;
 
 var BASE_URL;
@@ -288,8 +289,6 @@ function campaignsReportback(rbData, callback) {
   };
 
   var options = {
-    url: BASE_URL + '/campaigns/' + nid + '/reportback',
-    method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -305,12 +304,35 @@ function campaignsReportback(rbData, callback) {
     _callback = onCampaignsReportback.bind({customCallback: callback});
   }
 
-  request(options, _callback);
+  var requestRetry = new RequestRetry();
+  requestRetry.setRetryConditions([400, 408, 500, isCampaignsReportbackError]);
+
+  var url = BASE_URL + '/campaigns/' + nid + '/reportback';
+  requestRetry.post(url, options, _callback);
 }
 
+/**
+ * Evaluates a report back submission's response and determines if it's valid or not.
+ */
+function isCampaignsReportbackError(response, body) {
+  if (body && body.length > 0 && body[0] != false) {
+    return false;
+  }
+  else {
+    return true;
+  }
+}
+
+/**
+ * Report back submission callback.
+ */
 function onCampaignsReportback(err, response, body) {
   if (err) {
     logger.error(err);
+  }
+
+  if (isCampaignsReportbackError(response, body)) {
+    err = 'Invalid body received from report back response';
   }
 
   if (typeof this.customCallback === 'function') {
