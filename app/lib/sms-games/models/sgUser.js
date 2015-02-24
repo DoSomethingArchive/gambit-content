@@ -11,6 +11,9 @@ var sgUserSchema = new mongoose.Schema({
   // Phone number of this user
   phone: {type: String, index: true},
 
+  // Name of this user
+  name: String,
+
   // _id of the game the user is currently in
   current_game_id: mongoose.Schema.Types.ObjectId
 })

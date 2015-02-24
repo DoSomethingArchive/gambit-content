@@ -27,7 +27,7 @@ router.post('/solo', function(request, response) {
   var host = request.get('host');
   var controller = new SGSoloController(host);
   controller.processRequest(request, response);
-})
+});
 
 /**
  * Gets a game controller.
