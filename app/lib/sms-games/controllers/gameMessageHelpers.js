@@ -430,20 +430,20 @@ function endLevelGroup(endLevelGroupKey, storyConfig, gameDoc) {
  *
  * @param phone
  *   User's phone number.
- * @param storyConfig
+ * @param gameConfig
  *   Object defining details for the current story.
  * @param gameDoc
  *   Document for the current game.
  *
  * @return End game individual message opt-in path
  */
-function endGameIndiv(phone, storyConfig, gameDoc) {
-  var indivMessageEndGameFormat = storyConfig['endgame_config']['indiv-message-end-game-format'];
+function endGameIndiv(phone, gameConfig, gameDoc) {
+  var indivMessageEndGameFormat = gameConfig.story['END-GAME']['indiv-message-end-game-format'];
   if (indivMessageEndGameFormat == 'individual-decision-based') {
-    return module.exports.end.level.indiv(phone, 'END-GAME', storyConfig, gameDoc, 'answer');
+    return module.exports.end.level.indiv(phone, 'END-GAME', gameConfig, gameDoc, 'answer');
   }
   else if (indivMessageEndGameFormat == 'rankings-within-group-based') {
-    return _getEndGameRankMessage(phone, storyConfig, gameDoc);
+    return _getEndGameRankMessage(phone, gameConfig, gameDoc);
   }
   else {
     logger.error('This story has an indeterminate endgame format.');
@@ -454,7 +454,7 @@ function endGameIndiv(phone, storyConfig, gameDoc) {
   * 
   * @param phone
   *   User's phone number.
-  * @param storyConfig
+  * @param gameConfig
   *   Object defining details for the current story.
   * @param gameDoc
   *   Document for the current game.
@@ -462,12 +462,12 @@ function endGameIndiv(phone, storyConfig, gameDoc) {
   * @return End game individual ranking opt-in-path. 
   */
 
-  function _getEndGameRankMessage(phone, storyConfig, gameDoc) {
+  function _getEndGameRankMessage(phone, gameConfig, gameDoc) {
     var gameDoc = gameDoc;
     // If we haven't run the ranking calculation before. 
     if (!gameDoc.players_current_status[0].rank) {
       var tempPlayerSuccessObject = {};
-      var indivLevelSuccessOips = storyConfig.story['END-GAME']['indiv-level-success-oips'];
+      var indivLevelSuccessOips = gameConfig.story['END-GAME']['indiv-level-success-oips'];
       // Populates the tempPlayerSuccess object with all the players. 
       for (var i = 0; i < gameDoc.players_current_status.length; i++) {
         tempPlayerSuccessObject[gameDoc.players_current_status[i].phone] = 0;
@@ -539,7 +539,7 @@ function endGameIndiv(phone, storyConfig, gameDoc) {
     for (var i = 0; i < gameDoc.players_current_status.length; i++) {
       if (gameDoc.players_current_status[i].phone === phone) {
         var playerRanking = gameDoc.players_current_status[i].rank;
-        return storyConfig.story['END-GAME']['indiv-rank-oips'][playerRanking];
+        return gameConfig.story['END-GAME']['indiv-rank-oips'][playerRanking];
       }
     }
     return false;
@@ -552,16 +552,16 @@ function endGameIndiv(phone, storyConfig, gameDoc) {
  * 4) Updates the gamedoc's storyResults and players' current status
  * 5) Returns the updated gamedoc.
  *
- * @param storyConfig
+ * @param gameConfig
  *   JSON object defining details for the current story.
  * @param gameDoc
  *  document for the current game
  *
  * @return The updated gamedoc.
  */
-function endGameGroup(storyConfig, gameDoc) {
-  if (storyConfig['endgame_config']['group-message-end-game-format'] == 'group-success-failure-based') {
-    var nextPathForAllPlayers = _getUniversalEndGameGroupMessage(storyConfig, gameDoc)
+function endGameGroup(gameConfig, gameDoc) {
+  if (gameConfig.story['END-GAME']['group-message-end-game-format'] == 'group-success-failure-based') {
+    var nextPathForAllPlayers = _getUniversalEndGameGroupMessage(gameConfig, gameDoc)
     // Iterating through all players, enrolling them in this new OIP.
     for (var j = 0; j < gameDoc.players_current_status.length; j ++) {
       var currentPlayer = gameDoc.players_current_status[j].phone;
@@ -579,21 +579,21 @@ function endGameGroup(storyConfig, gameDoc) {
   /**
    * Gets the universal end game message to be sent to a group.
    *
-   * @param storyConfig
+   * @param gameConfig
    *   JSON object defining details for the current story.
    * @param gameDoc
    *  document for the current game
    *
    * @return The oip of the final group message.
    */
-  function _getUniversalEndGameGroupMessage(storyConfig, gameDoc) {
+  function _getUniversalEndGameGroupMessage(gameConfig, gameDoc) {
     // An array of oips which represent group end-level impact paths.
-    var groupLevelSuccessOips = storyConfig.story['END-GAME']['group-level-success-oips'];
+    var groupLevelSuccessOips = gameConfig.story['END-GAME']['group-level-success-oips'];
 
     // A hash. Key --> number of levels where group successfully received
     // impact condition; value --> end-level oip that number of levels unlocks,
     // which is sent to all players.
-    var groupSuccessFailureOips = storyConfig.story['END-GAME']['group-success-failure-oips'];
+    var groupSuccessFailureOips = gameConfig.story['END-GAME']['group-success-failure-oips'];
     var levelSuccessCounter = 0;
 
     // Iterates through the user action documents in story results.
