@@ -13,7 +13,9 @@ var logger = rootRequire('app/lib/logger')
 module.exports.getNormalizedPhone = function(phone) {
   if (typeof phone === 'undefined') {
     logger.error('smsHelper.getNormalizedPhone has been passed an undefined phone value.', console.trace());
+    return;
   }
+
   var newPhone = phone.replace(/\D/g, '');
   if (newPhone.length === 10) {
     newPhone = '1' + newPhone;

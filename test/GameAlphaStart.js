@@ -23,7 +23,7 @@ describe('Alpha-Starting a Bully Text game:', function() {
   var storyId = 100;
   var gameConfig = app.getConfig('competitive_stories', storyId)
 
-  testHelper.gameAppSetup();
+  before('instantiating game controller, dummy response', testHelper.gameAppSetup);
 
   describe('Creating a Competitive Story game based on the test config file', function() {
     var request;
@@ -178,6 +178,136 @@ describe('Alpha-Starting a Bully Text game:', function() {
 
         assert(alphaStarted && beta1Started);
         done();
+      })
+    })
+  })
+
+  after(function() {
+    // Remove all test documents
+    userModel.remove({phone: smsHelper.getNormalizedPhone(alphaPhone)}, function() {});
+    userModel.remove({phone: smsHelper.getNormalizedPhone(betaPhone0)}, function() {});
+    userModel.remove({phone: smsHelper.getNormalizedPhone(betaPhone1)}, function() {});
+    userModel.remove({phone: smsHelper.getNormalizedPhone(betaPhone2)}, function() {});
+    gameMappingModel.remove({_id: gameMappingId}, function() {});
+    gameModel.remove({_id: gameId}, function() {});
+    this.gameController = null;
+  })
+})
+
+describe('Alpha-Starting a Bully Text game with first names:', function() {
+  // Test players' details.
+  var alphaName = 'alpha';
+  var alphaPhone = '5555550100';
+  var betaName0 = 'friend0';
+  var betaName1 = 'friend1';
+  var betaName2 = 'friend2';
+  var betaPhone0 = '5555550101';
+  var betaPhone1 = '5555550102';
+  var betaPhone2 = '5555550103';
+  var betaName0 = 'beta_name_0';
+  var betaName1 = 'beta_name_1';
+  var betaName2 = 'beta_name_2';
+  var storyId = 100;
+  var gameConfig = app.getConfig('competitive_stories', storyId)
+
+  before('instantiating game controller, dummy response', testHelper.gameAppSetup);
+
+  describe('Creating a Competitive Story game based on the test config file', function() {
+    var request;
+    before(function() {
+      // Test request object to create the game.
+      request = {
+        body: {
+          story_id: storyId,
+          alpha_first_name: alphaName,
+          alpha_mobile: alphaPhone,
+          beta_mobile_0: betaPhone0,
+          beta_mobile_1: betaPhone1,
+          beta_mobile_2: betaPhone2,
+          beta_first_name_0: betaName0,
+          beta_first_name_1: betaName1,
+          beta_first_name_2: betaName2,
+        }
+      };
+    });
+
+    it('should emit all game doc events', function(done) {
+      var eventCount = 0;
+      var expectedEvents = 6;
+
+      var onEventReceived = function() {
+        eventCount++;
+        if (eventCount == expectedEvents) {
+          done();
+
+          emitter.removeAllListeners('alpha-user-created');
+          emitter.removeAllListeners('beta-user-created');
+          emitter.removeAllListeners('game-mapping-created');
+          emitter.removeAllListeners('game-created');
+        }
+      };
+
+      // 1 expected alpha-user-created event
+      emitter.on('alpha-user-created', onEventReceived);
+      // 3 expected beta-user-created events
+      emitter.on('beta-user-created', onEventReceived);
+      // 1 expected game-mapping-created event. (Callback function takes a 'doc'
+      // argument because the emitter.emit() function gets passed a Mongo doc.)
+      emitter.on('game-mapping-created', function(doc) {
+        gameMappingId = doc._id;
+        onEventReceived();
+      });
+      // 1 expected game-created event
+      emitter.on('game-created', function(doc) {
+        gameId = doc._id;
+        onEventReceived();
+      });
+
+      // With event listeners setup, can now create the game.
+      assert.equal(true, this.gameController.createGame(request, response));
+    });
+
+    it('should add sg_user doc for alpha user with correct phone and name', function(done) {
+      var phone = smsHelper.getNormalizedPhone(alphaPhone);
+      userModel.find({phone: phone}, function(err, docs) {
+        if (!err && docs.length > 0) {
+          assert(docs[0].phone == phone && docs[0].name == alphaName);
+          done();
+        }
+        else { assert(false); }
+      })
+    })
+
+    it('should add sg_user doc for beta0 user with correct phone and name', function(done) {
+      var phone = smsHelper.getNormalizedPhone(betaPhone0);
+      userModel.find({phone: phone}, function(err, docs) {
+        if (!err && docs.length > 0) {
+          assert(docs[0].phone == phone && docs[0].name == betaName0);
+          done();
+        }
+        else { assert(false); }
+      })
+    })
+
+    it('should add sg_user doc for beta1 user with correct phone and name', function(done) {
+      var phone = smsHelper.getNormalizedPhone(betaPhone1);
+      userModel.find({phone: phone}, function(err, docs) {
+        if (!err && docs.length > 0) {
+          assert(docs[0].phone == phone && docs[0].name == betaName1);
+          done();
+        }
+        else { assert(false); }
+      })
+    })
+
+    it('should add sg_user doc for beta2 user with correct phone and name', function(done) {
+      var phone = smsHelper.getNormalizedPhone(betaPhone2);
+      userModel.find({phone: phone}, function(err, docs) {
+        if (!err && docs.length > 0) {
+          assert(docs[0].phone == phone && docs[0].name == betaName2);
+          done();
+        }
+        else { assert(false); }
       })
     })
   })

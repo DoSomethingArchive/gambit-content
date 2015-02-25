@@ -22,7 +22,7 @@ describe('Science Sleuth game being played:', function() {
   var storyId = 101;
   var gameConfig = app.getConfig('competitive_stories', storyId)
 
-  testHelper.gameAppSetup();
+  before('instantiating game controller, dummy response', testHelper.gameAppSetup);
 
   describe('Creating a Science Sleuth game', function() {
     var request;
