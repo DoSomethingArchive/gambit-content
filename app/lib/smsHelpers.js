@@ -11,7 +11,7 @@ var logger = rootRequire('app/lib/logger')
  * @return Normalized phone number string.
  */
 module.exports.getNormalizedPhone = function(phone) {
-  if (typeof phone === 'undefined') {
+  if (!phone) {
     logger.error('smsHelper.getNormalizedPhone has been passed an undefined phone value.', console.trace());
     return;
   }
