@@ -13,7 +13,7 @@ var logger = rootRequire('app/lib/logger')
 module.exports.getNormalizedPhone = function(phone) {
   if (!phone) {
     logger.error('smsHelper.getNormalizedPhone has been passed an undefined phone value.', console.trace());
-    return;
+    return '';
   }
 
   var newPhone = phone.replace(/\D/g, '');
