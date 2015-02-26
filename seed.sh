@@ -24,19 +24,19 @@ if [ -n "$SMS_CONFIG_DB_HOST" ] && \
   mongoexport --host $SMS_CONFIG_DB_HOST --port $SMS_CONFIG_DB_PORT --db config -u $SMS_CONFIG_DB_USERNAME -p $SMS_CONFIG_DB_PASSWORD --jsonArray -c reportbacks -o app/lib/reportback/config/reportbacks.json
 
   # Importing to wercker db
-  mongoimport --host $WERCKER_MONGODB_HOST --port $WERCKER_MONGODB_PORT --db config --collection tips < app/lib/ds-routing/config/tips.json --jsonArray
+  mongoimport --host $WERCKER_MONGODB_HOST --port $WERCKER_MONGODB_PORT --db config --jsonArray -c tips --file app/lib/ds-routing/config/tips.json
 
-  mongoimport --host $WERCKER_MONGODB_HOST --port $WERCKER_MONGODB_PORT --db config --collection donorschoose < app/lib/donations/config/donorschoose.json --jsonArray
+  mongoimport --host $WERCKER_MONGODB_HOST --port $WERCKER_MONGODB_PORT --db config --jsonArray -c donorschoose --file app/lib/donations/config/donorschoose.json --jsonArray
 
-  mongoimport --host $WERCKER_MONGODB_HOST --port $WERCKER_MONGODB_PORT --db config --collection campaign_start < app/lib/ds-routing/config/campaign-start.json --jsonArray
+  mongoimport --host $WERCKER_MONGODB_HOST --port $WERCKER_MONGODB_PORT --db config --jsonArray -c campaign_start --file app/lib/ds-routing/config/campaign-start.json --jsonArray
 
-  mongoimport --host $WERCKER_MONGODB_HOST --port $WERCKER_MONGODB_PORT --db config --collection start_campaign_transitions < app/lib/ds-routing/config/start-campaign-transitions.json --jsonArray
+  mongoimport --host $WERCKER_MONGODB_HOST --port $WERCKER_MONGODB_PORT --db config --jsonArray -c start_campaign_transitions --file app/lib/ds-routing/config/start-campaign-transitions.json --jsonArray
 
-  mongoimport --host $WERCKER_MONGODB_HOST --port $WERCKER_MONGODB_PORT --db config --collection yes_no_paths < app/lib/ds-routing/config/yes-no-paths.json --jsonArray
+  mongoimport --host $WERCKER_MONGODB_HOST --port $WERCKER_MONGODB_PORT --db config --jsonArray -c yes_no_paths --file app/lib/ds-routing/config/yes-no-paths.json --jsonArray
 
-  mongoimport --host $WERCKER_MONGODB_HOST --port $WERCKER_MONGODB_PORT --db config --collection competitive_stories < app/lib/sms-games/config/competitive-stories.json --jsonArray
+  mongoimport --host $WERCKER_MONGODB_HOST --port $WERCKER_MONGODB_PORT --db config --jsonArray -c competitive_stories --file app/lib/sms-games/config/competitive-stories.json --jsonArray
 
-  mongoimport --host $WERCKER_MONGODB_HOST --port $WERCKER_MONGODB_PORT --db config --collection reportbacks < app/lib/reportback/config/reportbacks.json --jsonArray
+  mongoimport --host $WERCKER_MONGODB_HOST --port $WERCKER_MONGODB_PORT --db config --jsonArray -c reportbacks --file app/lib/reportback/config/reportbacks.json --jsonArray
 
 else
 
