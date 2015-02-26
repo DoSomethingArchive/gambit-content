@@ -33,7 +33,7 @@ module.exports.getNormalizedPhone = function(phone) {
  * @return true if valid. false, otherwise.
  */
 module.exports.isValidPhone = function(phone) {
-  if (phone.length === 11) {
+  if (phone && phone.length === 11) {
     return true;
   }
   else {
