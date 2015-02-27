@@ -39,7 +39,13 @@ var SGCompetitiveStoryController = function() {};
  *   Express response object.
  */
 SGCompetitiveStoryController.prototype.createGame = function(request, response) {
-  var gameConfig;
+  var gameConfig,
+      storyId,
+      alphaPhone,
+      gameDoc,
+      phone,
+      idx,
+      i;
 
   // Return a 406 if some data is missing.
   if (typeof request.body === 'undefined'
@@ -58,7 +64,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   this.response = response;
 
   // Story ID could be in either POST or GET param.
-  var storyId = null;
+  storyId = null;
   if (typeof request.body.story_id !== 'undefined') {
     storyId = request.body.story_id;
   }
@@ -73,14 +79,14 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     return false;
   }
 
-  var alphaPhone = smsHelper.getNormalizedPhone(request.body.alpha_mobile);
+  alphaPhone = smsHelper.getNormalizedPhone(request.body.alpha_mobile);
   if (!smsHelper.isValidPhone(alphaPhone)) {
     response.status(406).send('Invalid alpha phone number.');
     return false;
   }
 
   // Compile a new game document.
-  var gameDoc = {
+  gameDoc = {
     story_id: storyId,
     alpha_name: request.body.alpha_first_name,
     alpha_phone: alphaPhone,
@@ -88,15 +94,15 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     game_type: (request.body.game_type || '')
   };
 
-  for (var i = 0; i < MAX_PLAYERS_TO_INVITE; i++) {
-    if (request.body['beta_mobile_' + i]) {
-      var phone = smsHelper.getNormalizedPhone(request.body['beta_mobile_' + i]);
-      if (smsHelper.isValidPhone(phone)) {
-        var idx = gameDoc.betas.length;
-        gameDoc.betas[idx] = {};
-        gameDoc.betas[idx].invite_accepted = false;
-        gameDoc.betas[idx].phone = phone;
-      }
+  for (i = 0; i < MAX_PLAYERS_TO_INVITE; i++) {
+    phone = request.body['beta_mobile_' + i] ? smsHelper.getNormalizedPhone(request.body['beta_mobile_' + i]) : null;
+
+    if (smsHelper.isValidPhone(phone)) {
+      idx = gameDoc.betas.length;
+      gameDoc.betas[idx] = {};
+      gameDoc.betas[idx].invite_accepted = false;
+      gameDoc.betas[idx].phone = phone;
+      gameDoc.betas[idx].name = request.body['beta_first_name_' + i] || null;
     }
   }
 
@@ -152,6 +158,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     return userModel.find(findCondition).exec();
   },
   utility.promiseErrorCallback('Unable to create player game docs within .createGame() function.')).then(function(playerDocs) {
+    var alphaData;
 
     // End games that these players were previously in.
     message.endGameFromPlayerExit(playerDocs);
@@ -161,11 +168,21 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     // so that upon SOLO game creation, the Alpha userModel will have been modified 
     // with the SOLO gameId before the start game logic runs 
     // (triggered by the POST to the /alpha-start route.)
-    createPlayer(self.createdGameDoc.alpha_phone, self.createdGameDoc._id, 'alpha-user-created', function(){ self.response.sendStatus(201); });
+    alphaData = {
+      phone: self.createdGameDoc.alpha_phone,
+      name: self.createdGameDoc.alpha_name,
+      docId: self.createdGameDoc._id
+    };
+    createPlayer(alphaData, 'alpha-user-created', function(){ self.response.sendStatus(201); });
 
     // Upsert user documents for the betas.
     self.createdGameDoc.betas.forEach(function(value, index, set) {
-      createPlayer(value.phone, self.createdGameDoc._id, 'beta-user-created');
+      var betaData = {
+        phone: value.phone,
+        name: value.name,
+        docId: self.createdGameDoc._id
+      };
+      createPlayer(betaData, 'beta-user-created');
     });
 
     var betaOptInArray = []; // Extract phone number for Mobile Commons opt in.
@@ -192,10 +209,31 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
   utility.stathatReportCount(STATHAT_CATEGORY, stathatAction, 'success', storyId, 1);
   return true;
 
-  function createPlayer(phone, docId, emitterMessage, onSuccess) {
+  /**
+   * Upserts user document for a player.
+   *
+   * @param playerData
+   *   Object of player data: phone, name, docId
+   * @param emitterMessage
+   *   Event message to emit when complete
+   * @param onSuccess
+   *   Callback upon completion
+   */
+  function createPlayer(playerData, emitterMessage, onSuccess) {
+    var userDoc = {
+      phone: playerData.phone,
+      current_game_id: playerData.docId,
+      updated_at: Date.now()
+    };
+
+    // Don't set name if it's null or undefined.
+    if (playerData.name) {
+      userDoc.name = playerData.name;
+    }
+
     userModel.update(
-      {phone: phone},
-      {$set: {phone: phone, current_game_id: docId, updated_at: Date.now()}},     
+      {phone: playerData.phone},
+      {$set: userDoc},
       {upsert: true}
     ).exec().then(function(num, raw) {
       emitter.emit(emitterMessage);

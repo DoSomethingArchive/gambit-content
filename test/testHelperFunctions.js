@@ -11,28 +11,25 @@ var assert = require('assert')
 
 // Provides necessary setup conditions before game tests. 
 exports.gameAppSetup = function() {
-  before('instantiating game controller, dummy response', function() {
+  this.gameController = new SGCompetitiveStoryController;
 
-    this.gameController = new SGCompetitiveStoryController;
-
-    // Dummy Express response object.
-    response = {
-      send: function(message) {
-        if (typeof message === 'undefined') {
-          message = '';
-        }
-        console.log('Response message: ' + message);
-      },
-
-      sendStatus: function(code) {
-        console.log('Response code: ' + code);
-      },
-
-      status: function(code) {
-        console.log('Response code: ' + code);
+  // Dummy Express response object.
+  response = {
+    send: function(message) {
+      if (typeof message === 'undefined') {
+        message = '';
       }
-    };
-  })
+      console.log('Response message: ' + message);
+    },
+
+    sendStatus: function(code) {
+      console.log('Response code: ' + code);
+    },
+
+    status: function(code) {
+      console.log('Response code: ' + code);
+    }
+  };
 }
 
 // Describe test for betas joining the game.

@@ -31,7 +31,7 @@ describe('Testing end game from user exit by creating two Science Sleuth games',
   var storyId = 101;
   var gameConfig = app.getConfig('competitive_stories', storyId)
 
-  testHelper.gameAppSetup();
+  before('instantiating game controller, dummy response', testHelper.gameAppSetup);
 
   describe('Creating Science Sleuth Game 1', function() {
     var request;

@@ -22,7 +22,7 @@ describe('Bully Text game being played:', function() {
   var storyId = 100;
   var gameConfig = app.getConfig('competitive_stories', storyId)
 
-  testHelper.gameAppSetup();
+  before('instantiating game controller, dummy response', testHelper.gameAppSetup);
 
   describe('Creating a BullyText game', function() {
     var request;
