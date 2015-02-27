@@ -232,7 +232,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     }
 
     userModel.update(
-      {phone: phone},
+      {phone: playerData.phone},
       {$set: userDoc},
       {upsert: true}
     ).exec().then(function(num, raw) {
