@@ -7,7 +7,7 @@ var assert = require('assert')
 
 function test() {
   var TEST_PHONE = '15555555555';
-  var TEST_CAMPAIGN_CONFIG = app.getConfig('reportback', 'test', 'endpoint');
+  var TEST_CAMPAIGN_CONFIG = app.getConfig(app.ConfigName.REPORTBACK, 'test', 'endpoint');
 
   var createTestDoc = function(done) {
     model.create({phone: TEST_PHONE, campaign: TEST_CAMPAIGN_CONFIG.endpoint}, function(err, doc) {

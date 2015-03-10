@@ -72,7 +72,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     storyId = request.query.story_id;
   }
 
-  gameConfig = app.getConfig('competitive_stories', storyId)
+  gameConfig = app.getConfig(app.ConfigName.COMPETITIVE_STORIES, storyId)
 
   if (typeof gameConfig === 'undefined') {
     response.status(406).send('Game config not setup for story ID: ' + storyId);

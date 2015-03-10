@@ -23,7 +23,7 @@ module.exports = {
  * @return Game document, updated with the requisite state changes.
  */
 function startGame(gameDoc) {
-  var gameConfig = app.getConfig('competitive_stories', gameDoc.story_id)
+  var gameConfig = app.getConfig(app.ConfigName.COMPETITIVE_STORIES, gameDoc.story_id)
   // Get the starting opt in path from the game config.
   var startMessage = gameConfig.story_start_oip;
 

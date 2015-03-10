@@ -36,7 +36,7 @@ module.exports = function(request, doc) {
   }
 
   // Get the story config.
-  var gameConfig = app.getConfig('competitive_stories', doc.story_id)
+  var gameConfig = app.getConfig(app.ConfigName.COMPETITIVE_STORIES, doc.story_id)
 
   // Check if user response is valid.
   var choiceIndex = -1;
@@ -160,7 +160,7 @@ function sendEndMessagesUpdateReturnGameDoc(level, gameDoc) {
 
   // Send group the end level message.
   var endLevelGroupKey = level + '-GROUP';
-  var gameConfig = app.getConfig('competitive_stories', gameDoc.story_id)
+  var gameConfig = app.getConfig(app.ConfigName.COMPETITIVE_STORIES, gameDoc.story_id)
   var groupOptin = message.end.level.group(endLevelGroupKey, gameConfig, gameDoc);
   for (var i = 0; i < gameDoc.players_current_status.length; i++) {
     var playerPhone = gameDoc.players_current_status[i].phone;  
