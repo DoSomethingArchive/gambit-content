@@ -23,5 +23,5 @@ var startCampaignTransitionsConfigSchema = new mongoose.Schema({
 })
 
 module.exports = function(connection) {
-  return connection.model('start_campaign_transitions', startCampaignTransitionsConfigSchema);
+  return connection.model('start_campaign_transition', startCampaignTransitionsConfigSchema);
 }
