@@ -354,6 +354,7 @@ function submitReportBack(uid, doc, data) {
   var rbData = {
     nid: data.campaignConfig.campaign_nid,
     uid: uid,
+    caption: doc.caption,
     quantity: doc.quantity,
     why_participated: doc.why_important,
     file_url: doc.photo

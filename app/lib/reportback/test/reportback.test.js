@@ -97,7 +97,7 @@ function test() {
 
     before(createTestDoc);
 
-    it('should respond with the "quantity" message', function(done) {
+    it('should respond with the "caption" message', function(done) {
       var mcEventDone = false;
       var rbEventDone = false;
       function onSuccessfulEvent(evt) {
@@ -116,7 +116,7 @@ function test() {
       // Check if correct user is subscribed to correct opt-in path
       emitter.on(emitter.events.mcProfileUpdateTest, function(evtData) {
         if (evtData.form.phone_number == testData.phone &&
-            evtData.form.opt_in_path_id == TEST_CAMPAIGN_CONFIG.message_quantity) {
+            evtData.form.opt_in_path_id == TEST_CAMPAIGN_CONFIG.message_caption) {
           onSuccessfulEvent(emitter.events.mcProfileUpdateTest);
         }
         else {
