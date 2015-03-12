@@ -1,3 +1,16 @@
+/**
+ * Globally-accessible object of config names.
+ */
+app.ConfigName = {
+  CAMPAIGN_START: 'campaign_start',
+  CAMPAIGN_TRANSITIONS: 'start_campaign_transition',
+  COMPETITIVE_STORIES: 'competitive_story',
+  DONORSCHOOSE: 'donorschoose',
+  REPORTBACK: 'reportback',
+  TIPS: 'tips',
+  YES_NO_PATHS: 'yes_no_path'
+};
+
 var connectionOperations = require('./connectionOperations')
   , connectionConfig = require('./connectionConfig')
   , configModelArray = [
@@ -77,19 +90,6 @@ app.getConfig = function(modelName, id, key) {
     }
   }
   logger.error('Unable to find requested config document for config model: ' + modelName + ' with id: ' + id);
-};
-
-/**
- * Globally-accessible object of config names.
- */
-app.ConfigName = {
-  CAMPAIGN_START: 'campaign_start',
-  CAMPAIGN_TRANSITIONS: 'start_campaign_transition',
-  COMPETITIVE_STORIES: 'competitive_story',
-  DONORSCHOOSE: 'donorschoose',
-  REPORTBACK: 'reportback',
-  TIPS: 'tips',
-  YES_NO_PATHS: 'yes_no_path'
 };
 
 module.exports = smsConfigsLoader;

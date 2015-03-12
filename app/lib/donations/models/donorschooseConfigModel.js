@@ -36,5 +36,5 @@ var donorschooseConfigSchema = new mongoose.Schema({
 })
 
 module.exports = function(connection) {
-  return connection.model('donorschoose', donorschooseConfigSchema, 'donorschoose'); // Third param explicitly setting the name of the collection. 
+  return connection.model(app.ConfigName.DONORSCHOOSE, donorschooseConfigSchema, 'donorschoose'); // Third param explicitly setting the name of the collection. 
 }

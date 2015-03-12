@@ -59,5 +59,5 @@ var competitiveStoriesConfigSchema = new mongoose.Schema({
 })
 
 module.exports = function(connection) {
-  return connection.model('competitive_story', competitiveStoriesConfigSchema, 'competitive_stories');
+  return connection.model(app.ConfigName.COMPETITIVE_STORIES, competitiveStoriesConfigSchema, 'competitive_stories');
 }
