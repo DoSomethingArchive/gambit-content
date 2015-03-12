@@ -37,7 +37,7 @@ Tips.prototype.deliverTips = function(request, response, mdataOverride) {
   }
 
   // Decide tip name based on the mdata id.
-  var tipConfig = app.getConfig('tips', mdataId);
+  var tipConfig = app.getConfig(app.ConfigName.TIPS, mdataId);
 
   // Config error checking
   if (typeof(tipConfig) === 'undefined'

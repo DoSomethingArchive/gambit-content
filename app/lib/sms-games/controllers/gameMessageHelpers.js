@@ -228,7 +228,7 @@ function endGameFromPlayerExit(playerDocs) {
     for (var i = 0; i < docs.length; i++) {
 
       var gameDoc = docs[i];
-      var gameConfig = app.getConfig('competitive_stories', gameDoc.story_id);
+      var gameConfig = app.getConfig(app.ConfigName.COMPETITIVE_STORIES, gameDoc.story_id);
 
       // Skip games that have already ended.
       var skipGame = false;

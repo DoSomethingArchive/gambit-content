@@ -22,7 +22,7 @@ router.post('/:campaign', function(request, response) {
   
   // Check that we have a config setup for this campaign
   campaign = request.params.campaign;
-  campaignConfig = app.getConfig('reportback', campaign, 'endpoint');
+  campaignConfig = app.getConfig(app.ConfigName.REPORTBACK, campaign, 'endpoint');
 
   if (typeof campaignConfig !== 'undefined') {
     phone = request.body.phone;

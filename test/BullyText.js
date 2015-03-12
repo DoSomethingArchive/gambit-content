@@ -20,7 +20,7 @@ describe('Bully Text game being played:', function() {
   var betaPhone1 = '5555550202';
   var betaPhone2 = '5555550203';
   var storyId = 100;
-  var gameConfig = app.getConfig('competitive_stories', storyId)
+  var gameConfig = app.getConfig(app.ConfigName.COMPETITIVE_STORIES, storyId)
 
   before('instantiating game controller, dummy response', testHelper.gameAppSetup);
 
