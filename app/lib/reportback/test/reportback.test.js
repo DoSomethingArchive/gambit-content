@@ -147,6 +147,66 @@ function test() {
     });
   });
 
+  describe('reportback.receiveCaption - with a value of "test caption"', function() {
+    var testDoc = {};
+    var testData = {
+      phone: TEST_PHONE,
+      campaignConfig: TEST_CAMPAIGN_CONFIG,
+      args: 'test caption'
+    };
+
+    before(createTestDoc);
+
+    it('should respond with the "quantity" message and update reportback doc with "test caption"', function(done) {
+      var mcEventDone = false;
+      var rbEventDone = false;
+      function onSuccessfulEvent(evt) {
+        if (evt == emitter.events.mcProfileUpdateTest) {
+          mcEventDone = true;
+        }
+        else if (evt == emitter.events.reportbackModelUpdate) {
+          rbEventDone = true;
+        }
+
+        if (mcEventDone && rbEventDone) {
+          done();
+        }
+      };
+
+      // Check if correct user is subscribed to correct opt-in path
+      emitter.on(emitter.events.mcProfileUpdateTest, function(evtData) {
+        if (evtData.form.phone_number == testData.phone &&
+            evtData.form.opt_in_path_id == TEST_CAMPAIGN_CONFIG.message_quantity) {
+          onSuccessfulEvent(emitter.events.mcProfileUpdateTest);
+        }
+        else {
+          assert(false);
+        }
+      });
+
+      // Check if model is updated properly
+      emitter.on(emitter.events.reportbackModelUpdate, function() {
+        model.findOne({phone: TEST_PHONE}, function(err, doc) {
+          if (doc && doc.caption == testData.args) {
+            onSuccessfulEvent(emitter.events.reportbackModelUpdate);
+          }
+          else {
+            assert(false);
+          }
+        });
+      });
+
+      // Call receiveCaption with test data
+      reportback.receiveCaption(testDoc, testData);
+    });
+
+    after(function() {
+      removeTestDoc();
+      emitter.removeAllListeners(emitter.events.mcProfileUpdateTest);
+      emitter.removeAllListeners(emitter.events.reportbackModelUpdate);
+    });
+  });
+
   describe('reportback.receiveQuantity - with a value of 5', function() {
     var testDoc = {};
     var testData = {

@@ -389,6 +389,7 @@ if (process.env.NODE_ENV === 'test') {
   module.exports.findDocument = findDocument;
   module.exports.onDocumentFound = onDocumentFound;
   module.exports.handleUserResponse = handleUserResponse;
+  module.exports.receiveCaption = receiveCaption;
   module.exports.receivePhoto = receivePhoto;
   module.exports.receiveQuantity = receiveQuantity;
   module.exports.receiveWhyImportant = receiveWhyImportant;
