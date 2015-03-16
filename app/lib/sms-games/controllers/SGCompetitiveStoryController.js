@@ -16,6 +16,7 @@ var smsHelper = rootRequire('app/lib/smsHelpers')
   , betaJoinLogic = require('./logicBetaJoin')
   , alphaStartLogic = require('./logicAlphaStart')
   , start = require('./logicGameStart')
+  , name = require('./playerNameHelpers')
   ;
 
 // Maximum number of players that can be invited into a game.
@@ -102,7 +103,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
       gameDoc.betas[idx] = {};
       gameDoc.betas[idx].invite_accepted = false;
       gameDoc.betas[idx].phone = phone;
-      gameDoc.betas[idx].name = request.body['beta_first_name_' + i] || null;
+      gameDoc.betas[idx].name = request.body['beta_first_name_' + i] || phone;
     }
   }
 
@@ -179,7 +180,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     self.createdGameDoc.betas.forEach(function(value, index, set) {
       var betaData = {
         phone: value.phone,
-        name: value.name,
+        name: (value.name || value.phone),
         docId: self.createdGameDoc._id
       };
       createPlayer(betaData, 'beta-user-created');
@@ -192,6 +193,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
     // We opt users into these initial opt in paths only if the game type is NOT solo. 
     if (self.createdGameDoc.game_type !== 'solo') {
+      name.addPlayerNamesToAlpha(self.createdGameDoc);
       message.group(self.createdGameDoc.alpha_phone,
         gameConfig.alpha_wait_oip,
         betaOptInArray,
