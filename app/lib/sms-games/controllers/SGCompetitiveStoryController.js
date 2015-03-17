@@ -193,11 +193,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
     // We opt users into these initial opt in paths only if the game type is NOT solo. 
     if (self.createdGameDoc.game_type !== 'solo') {
-      name.addPlayerNamesToAlpha(self.createdGameDoc);
-      message.group(self.createdGameDoc.alpha_phone,
-        gameConfig.alpha_wait_oip,
-        betaOptInArray,
-        gameConfig.beta_join_ask_oip);
+      name.alphaInvite(gameConfig, self.createdGameDoc);
     }
 
   },
