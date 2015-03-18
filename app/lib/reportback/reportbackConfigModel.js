@@ -22,6 +22,9 @@ var rbSchema = new mongoose.Schema({
   // Mobile Commons opt-in path ID for when the MMS response doesn't contain a photo
   message_not_a_photo: Number,
 
+  // Mobile Commons opt-in path ID to ask for photo caption
+  message_caption: Number,
+
   // Mobile Commons opt-in path ID to ask for quantity
   message_quantity: Number,
 

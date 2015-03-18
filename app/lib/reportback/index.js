@@ -101,6 +101,9 @@ function handleUserResponse(doc, data) {
   if (!doc.photo) {
     receivePhoto(doc, data);
   }
+  else if (!doc.caption) {
+    receiveCaption(doc, data);
+  }
   else if (!doc.quantity) {
     receiveQuantity(doc, data);
   }
@@ -132,8 +135,30 @@ function receivePhoto(doc, data) {
         }
       });
 
-    mobilecommons.profile_update(data.phone, data.campaignConfig.message_quantity);
+    mobilecommons.profile_update(data.phone, data.campaignConfig.message_caption);
   }
+}
+
+/**
+ * Process request for user who is sending the caption for the photo.
+ *
+ * @param doc
+ *   User's report back document
+ * @param data
+ *   Data from the user's request
+ */
+function receiveCaption(doc, data) {
+  var answer = data.args;
+  model.update(
+    {phone: data.phone},
+    {'$set': {caption: answer}},
+    function(err, num, raw) {
+      if (!err) {
+        emitter.emit(emitter.events.reportbackModelUpdate);
+      }
+    });
+
+  mobilecommons.profile_update(data.phone, data.campaignConfig.message_quantity);
 }
 
 /**
@@ -329,6 +354,7 @@ function submitReportBack(uid, doc, data) {
   var rbData = {
     nid: data.campaignConfig.campaign_nid,
     uid: uid,
+    caption: doc.caption,
     quantity: doc.quantity,
     why_participated: doc.why_important,
     file_url: doc.photo
@@ -363,6 +389,7 @@ if (process.env.NODE_ENV === 'test') {
   module.exports.findDocument = findDocument;
   module.exports.onDocumentFound = onDocumentFound;
   module.exports.handleUserResponse = handleUserResponse;
+  module.exports.receiveCaption = receiveCaption;
   module.exports.receivePhoto = receivePhoto;
   module.exports.receiveQuantity = receiveQuantity;
   module.exports.receiveWhyImportant = receiveWhyImportant;

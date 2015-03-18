@@ -283,6 +283,7 @@ function campaignsReportback(rbData, callback) {
   var nid = rbData.nid;
   var body = {
     uid: rbData.uid,
+    caption: rbData.caption,
     quantity: rbData.quantity,
     why_participated: rbData.why_participated,
     file_url: rbData.file_url
