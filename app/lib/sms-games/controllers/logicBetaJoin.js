@@ -5,6 +5,7 @@ var emitter = rootRequire('app/eventEmitter')
   , message = require('./gameMessageHelpers')
   , SGSoloController = require('./SGSoloController')
   , start = require('./logicGameStart')
+  , name = require('./playerNameHelpers')
   // After player attempts to join a started game, delay before she's opted into a solo game. 
   , BETA_TO_SOLO_AFTER_GAME_ALREADY_STARTED_DELAY = 3000
   ;
@@ -56,7 +57,7 @@ module.exports = function(request, doc) {
   // If we're still waiting on people, send appropriate messages to the recently
   // joined beta and alpha users.
   else {
-    doc = message.wait(gameConfig, doc, joiningBetaPhone);
+    doc = name.betaJoin(gameConfig, doc, joiningBetaPhone);
   }
 
   // Save the doc in the database with the betas and current status updates.
