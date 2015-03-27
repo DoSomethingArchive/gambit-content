@@ -28,23 +28,42 @@ module.exports = {
  * 
  */
 function createGameInviteAll(gameConfig, gameDoc) {
-  var i
-    , args
-    , profileUpdateString = ''
-    , betas = gameDoc.betas
+  // @todo I'M SORRY TONG. WE'LL FIX THIS LATER.
+  // var i
+  //   , args
+  //   , profileUpdateString = ''
+  //   , betas = gameDoc.betas
+  //   ;
+
+  // for (i = 0; i < betas.length; i++) {
+  //   profileUpdateString += betas[i].name;
+  //   if (i != betas.length - 1) {
+  //     profileUpdateString += ', ';
+  //   }
+  //   message.singleUser(betas[i].phone, gameConfig.beta_join_ask_oip);
+  // }
+
+  // args = { 'players_not_in_game': profileUpdateString };
+  // mobilecommons.profile_update(gameDoc.alpha_phone, gameConfig.alpha_wait_oip, args);
+  // emitter.emit('single-user-opted-in', args);
+
+  var args
+    , betas = []
+    , i
     ;
 
-  for (i = 0; i < betas.length; i++) {
-    profileUpdateString += betas[i].name;
-    if (i != betas.length - 1) {
-      profileUpdateString += ', ';
-    }
-    message.singleUser(betas[i].phone, gameConfig.beta_join_ask_oip);
+  for (i = 0; i < gameDoc.betas.length; i++) {
+    betas[i] = gameDoc.betas[i].phone;
   }
 
-  args = { 'players_not_in_game': profileUpdateString };
-  mobilecommons.profile_update(gameDoc.alpha_phone, gameConfig.alpha_wait_oip, args);
-  emitter.emit('single-user-opted-in', args);
+  args = {
+    alphaPhone: gameDoc.alpha_phone,
+    alphaOptin: gameConfig.alpha_wait_oip,
+    betaPhone: betas,
+    betaOptin: gameConfig.beta_join_ask_oip
+  };
+
+  mobilecommons.optin(args);
 }
 
 /**
