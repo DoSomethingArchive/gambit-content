@@ -126,7 +126,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     emitter.emit('game-created', doc);
 
     // doc.story_id check added in order to A/B test auto-start functionality. 
-    if (doc.game_type != "solo" && doc.story_id == 201) {
+    if (doc.game_type != "solo") {
       // Automatically starts game after specified delay, or opts alpha into solo play.
       start.auto(doc._id);
     }
