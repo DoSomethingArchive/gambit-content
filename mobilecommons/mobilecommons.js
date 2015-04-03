@@ -22,9 +22,11 @@ RequestRetry.setDefaults({timeout: 120000});
 *   Opt-in path to subscribe the user to.
 * @param customFields
 *   Array of custom profile field names and values to update the user with.
+* @param externalCallback
+*   A callback to run  when the request returns, if provided. 
 */
 
-exports.profile_update = function(phone, optInPathId, customFields) {
+exports.profile_update = function(phone, optInPathId, customFields, externalCallback) {
   var url = 'https://secure.mcommons.com/api/profile_update';
   var authEmail = process.env.MOBILECOMMONS_AUTH_EMAIL;
   var authPass = process.env.MOBILECOMMONS_AUTH_PASS;
@@ -67,6 +69,12 @@ exports.profile_update = function(phone, optInPathId, customFields) {
         + phone + ' | form data: ' + JSON.stringify(postData.form)
         + '| with code: ' + response.statusCode 
         + ' | body: ' + body + ' | stack: ' + trace);
+    }
+    else {
+      // If an external callback is provided, run it here. 
+      if (externalCallback) {
+        externalCallback();
+      }
     }
   };
 
