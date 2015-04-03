@@ -53,7 +53,7 @@ MCRouting.prototype.yesNoGateway = function(request, response) {
 };
 
 /**
- * Transition users for the sign up campaign to the actual campaign.
+ * Transition users from the sign up campaign to the actual campaign.
  */
 MCRouting.prototype.campaignTransition = function(request, response) {
   if (typeof(request.body.mdata_id) === 'undefined') {
