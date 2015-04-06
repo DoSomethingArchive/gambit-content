@@ -126,9 +126,8 @@ describe('mobilecommons.optout', function() {
         pass: 'MOBILECOMMONS_AUTH_PASS'
       },
       form: {
-        'person[phone]': 5555550100,
+        phone_number: 5555550100,
         campaign: 123,
-        company_key: 'MOBILECOMMONS_COMPANY_KEY'
       }
     };
 

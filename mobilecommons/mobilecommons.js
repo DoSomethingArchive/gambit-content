@@ -187,17 +187,15 @@ exports.optin = function(args) {
  * Opt out of a Mobile Commons campaign.
  */
 exports.optout = function(args) {
-  var url = 'https://secure.mcommons.com/profiles/opt_out';
-
-  var phone = args.phone || null;
-  var campaignId = args.campaignId || null;
-
-  var companyKey = process.env.MOBILECOMMONS_COMPANY_KEY || null;
-  var authEmail = process.env.MOBILECOMMONS_AUTH_EMAIL || null;
-  var authPass = process.env.MOBILECOMMONS_AUTH_PASS || null;
+  var url = 'https://secure.mcommons.com/api/profile_opt_out'
+    , phone = args.phone || null
+    , campaignId = args.campaignId || null
+    , authEmail = process.env.MOBILECOMMONS_AUTH_EMAIL || null
+    , authPass = process.env.MOBILECOMMONS_AUTH_PASS || null
+    ;
 
   // Exit out if one of the values isn't available
-  if (!phone || !campaignId || !companyKey || !authEmail || !authPass) {
+  if (!phone || !campaignId || !authEmail || !authPass) {
     return;
   }
 
@@ -207,9 +205,8 @@ exports.optout = function(args) {
       'pass': authPass
     },
     form: {
-      'person[phone]': phone,
-      campaign: campaignId,
-      company_key: companyKey
+      phone_number: phone,
+      campaign: campaignId
     }
   };
 
@@ -245,4 +242,3 @@ exports.optout = function(args) {
   requestRetry.setRetryConditions([400, 408, 500]);
   requestRetry.post(url, payload, callback);
 };
-
