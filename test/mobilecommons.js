@@ -127,7 +127,7 @@ describe('mobilecommons.optout', function() {
       },
       form: {
         phone_number: 5555550100,
-        campaign: 123,
+        campaign_id: 123,
       }
     };
 
