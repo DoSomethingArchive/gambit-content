@@ -206,7 +206,7 @@ exports.optout = function(args) {
     },
     form: {
       phone_number: phone,
-      campaign: campaignId
+      campaign_id: campaignId
     }
   };
 
