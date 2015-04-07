@@ -312,7 +312,7 @@ function test() {
       // Check if correct campaign id opt-out is sent
       emitter.on(emitter.events.mcOptoutTest, function(evtData) {
         if (evtData.form.phone_number == testData.phone &&
-            evtData.form.campaign == TEST_CAMPAIGN_CONFIG.campaign_optout_id) {
+            evtData.form.campaign_id == TEST_CAMPAIGN_CONFIG.campaign_optout_id) {
           onSuccessfulEvent(emitter.events.mcOptoutTest);
         }
         else {

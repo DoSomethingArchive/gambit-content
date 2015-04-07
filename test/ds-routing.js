@@ -132,7 +132,7 @@ describe('ds-routing tests', function() {
         emitter.removeAllListeners(emitter.events.mcOptoutTest);
         optoutReceived = true;
 
-        if (payload.form.campaign != 128005) {
+        if (payload.form.campaign_id != 128005) {
           assert(false, 'Failed campaign-transition with incorrect optout id. '
             + 'Returned: ' + payload.form.campaign);
         }
