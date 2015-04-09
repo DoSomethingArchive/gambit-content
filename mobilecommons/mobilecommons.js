@@ -6,6 +6,7 @@
 var RequestRetry = require('node-request-retry')
   , logger = rootRequire('app/lib/logger')
   , emitter = rootRequire('app/eventEmitter')
+  , _ = require('underscore')
   ;
 
 
@@ -22,11 +23,9 @@ RequestRetry.setDefaults({timeout: 120000});
 *   Opt-in path to subscribe the user to.
 * @param customFields
 *   Array of custom profile field names and values to update the user with.
-* @param externalCallback
-*   A callback to run  when the request returns, if provided. 
 */
 
-exports.profile_update = function(phone, optInPathId, customFields, externalCallback) {
+exports.profile_update = function(phone, optInPathId, customFields) {
   var url = 'https://secure.mcommons.com/api/profile_update';
   var authEmail = process.env.MOBILECOMMONS_AUTH_EMAIL;
   var authPass = process.env.MOBILECOMMONS_AUTH_PASS;
@@ -70,12 +69,6 @@ exports.profile_update = function(phone, optInPathId, customFields, externalCall
         + '| with code: ' + response.statusCode 
         + ' | body: ' + body + ' | stack: ' + trace);
     }
-    else {
-      // If an external callback is provided, run it here. 
-      if (externalCallback) {
-        externalCallback();
-      }
-    }
   };
 
   var requestRetry = new RequestRetry();
@@ -84,33 +77,42 @@ exports.profile_update = function(phone, optInPathId, customFields, externalCall
 };
 
 /**
- * Opt-in mobile numbers into specified Mobile Commons paths.
+ * Opt-in mobile numbers into specified Mobile Commons paths. Can take custom 
+ * key-value pairs in the args input in order to update custom profile fields 
+ * of the alphPhone user. 
  */
 exports.optin = function(args) {
-  var url = 'https://secure.mcommons.com/profiles/join';
+  var url = 'https://secure.mcommons.com/profiles/join'
+    , standardKeys = ['alphaPhone', 'betaPhone', 'alphaOptin', 'betaOptin']
+    , alphaPhone = args.alphaPhone || null
+    , betaPhone = args.betaPhone || null
+    , alphaOptin = args.alphaOptin || 0
+    , betaOptin = args.betaOptin || 0
+    , callback
+    , payload
+    , keys
+    , i
+    , customFieldString
+    , requestRetry = new RequestRetry()
+    ;
 
-  var alphaPhone = args.alphaPhone || null;
-  var betaPhone = args.betaPhone || null;
-  var alphaOptin = args.alphaOptin || 0;
-  var betaOptin = args.betaOptin || 0;
-  var callback;
-  var requestRetry = new RequestRetry();
   requestRetry.setRetryConditions([400, 408, 500]);
 
   // Need at least these in order to continue
-  if (alphaPhone == null || alphaOptin <= 0)
+  if (alphaPhone == null || alphaOptin <= 0) {
     return;
+  }
+    
+  payload = {
+    form: {
+      opt_in_path: alphaOptin,
+      'person[phone]': alphaPhone
+    }
+  };
 
   // If we have beta details, then create form with that beta info
   if (betaPhone != null && betaOptin > 0) {
-    var payload = {
-      form: {
-        opt_in_path: alphaOptin,
-        friends_opt_in_path: betaOptin,
-        'person[phone]': alphaPhone
-      }
-    };
-
+    payload.form.friends_opt_in_path = betaOptin;
     if (Array.isArray(betaPhone)) {
       betaPhone.forEach(function(value, index, set) {
         payload.form['friends['+index+']'] = value;
@@ -119,76 +121,48 @@ exports.optin = function(args) {
     else {
       payload.form['friends[]'] = betaPhone;
     }
+  }
 
-    // If we're in a test env, just log and emit an event.
-    if (process.env.NODE_ENV == 'test') {
-      logger.info('mobilecommons.optin: ', args);
-      emitter.emit(emitter.events.mcOptinTest, payload);
-      return;
+  // If a custom field exists in args, add it to the payload. 
+  keys = Object.keys(args);
+  for (i = 0; i < keys.length; i++) {
+    if (! _.contains(standardKeys, keys[i])) {
+      customFieldString = 'person[' + keys[i] + ']';
+      payload.form[customFieldString] = args[keys[i]];
     }
+  }
 
-    var trace = new Error().stack;
-    callback = function(error, response, body) {
-      if (error) {
+  // If we're in a test env, just log and emit an event.
+  if (process.env.NODE_ENV == 'test') {
+    logger.info('mobilecommons.optin: ', args);
+    console.log('payload****: ', payload)
+    emitter.emit(emitter.events.mcOptinTest, payload);
+    return;
+  }
+
+  var trace = new Error().stack;
+  callback = function(error, response, body) {
+    if (error) {
+      logger.error('Failed mobilecommons.optin for user: ' + alphaPhone
+        + ' | with request payload: ' + JSON.stringify(payload)
+        + ' | with error: ' + JSON.stringify(error)
+        + ' | stack: ' + trace);
+    }
+    else if (response) {
+      if (response.statusCode != 200) {
         logger.error('Failed mobilecommons.optin for user: ' + alphaPhone
           + ' | with request payload: ' + JSON.stringify(payload)
-          + ' | with error: ' + JSON.stringify(error)
-          + ' | stack: ' + trace);
+          + ' | with code: ' + response.statusCode + ' | body: '
+          + body + ' | stack: ' + trace);
       }
-      else if (response) {
-        if (response.statusCode != 200) {
-          logger.error('Failed mobilecommons.optin for user: ' + alphaPhone
-            + ' | with request payload: ' + JSON.stringify(payload)
-            + ' | with code: ' + response.statusCode 
-            + ' | body: ' + body + ' | stack: ' + trace);
-        }
-        else {
-          logger.info('Success mobilecommons.optin: ', alphaOptin);
-        }
+      else {
+        logger.info('Success mobilecommons.optin into: ', alphaOptin);
       }
-    };
-
-    requestRetry.post(url, payload, callback);
-  }
-  // Otherwise, just execute the opt in for the alpha user
-  else {
-    var payload = {
-      form: {
-        opt_in_path: alphaOptin,
-        'person[phone]': alphaPhone
-      }
-    };
-
-    // If we're in a test env, just log and emit an event.
-    if (process.env.NODE_ENV == 'test') {
-      logger.info('mobilecommons.optin: ', args);
-      emitter.emit(emitter.events.mcOptinTest, payload);
-      return;
     }
+  };
 
-    var trace = new Error().stack;
-    callback = function(error, response, body) {
-      if (error) {
-        logger.error('Failed mobilecommons.optin for user: ' + alphaPhone
-          + ' | with request payload: ' + JSON.stringify(payload)
-          + ' | with error: ' + JSON.stringify(error)
-          + ' | stack: ' + trace);
-      }
-      else if (response) {
-        if (response.statusCode != 200) {
-          logger.error('Failed mobilecommons.optin for user: ' + alphaPhone
-            + ' | with request payload: ' + JSON.stringify(payload)
-            + ' | with code: ' + response.statusCode + ' | body: '
-            + body + ' | stack: ' + trace);
-        }
-        else {
-          logger.info('Success mobilecommons.optin into: ', alphaOptin);
-        }
-      }
-    };
+  requestRetry.post(url, payload, callback);
 
-    requestRetry.post(url, payload, callback);
-  }
 };
 
 /**

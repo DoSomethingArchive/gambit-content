@@ -20,11 +20,10 @@ module.exports = {
  * For the purposes of SMS games, that message will contain those names. 
  * If names aren't present, phone numbers are used. 
  *
+ * @param gameConfig
+ *  The configuration document for the game, containing opt in path ids. 
  * @param  gameDoc
  *  The document storing game data, including player names and numbers. 
- * @param alphaWaitOip
- *  The opt in path of the message sent to the alpha alerting her that she's
- *  created a game. Contains the names of invited players. 
  * 
  */
 function createGameInviteAll(gameConfig, gameDoc) {
@@ -48,14 +47,11 @@ function createGameInviteAll(gameConfig, gameDoc) {
     alphaPhone: gameDoc.alpha_phone,
     alphaOptin: gameConfig.alpha_wait_oip,
     betaPhone: betas,
-    betaOptin: gameConfig.beta_join_ask_oip
+    betaOptin: gameConfig.beta_join_ask_oip,
+    players_not_in_game: profileUpdateString
   };
 
-  function callback(){
-    mobilecommons.optin(args);
-  }
-
-  mobilecommons.profile_update(gameDoc.alpha_phone, null, { 'players_not_in_game': profileUpdateString }, callback);
+  mobilecommons.optin(args);
 }
 
 /**
