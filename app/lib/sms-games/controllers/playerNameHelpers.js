@@ -20,47 +20,35 @@ module.exports = {
  * For the purposes of SMS games, that message will contain those names. 
  * If names aren't present, phone numbers are used. 
  *
+ * @param gameConfig
+ *  The configuration document for the game, containing opt in path ids. 
  * @param  gameDoc
  *  The document storing game data, including player names and numbers. 
- * @param alphaWaitOip
- *  The opt in path of the message sent to the alpha alerting her that she's
- *  created a game. Contains the names of invited players. 
  * 
  */
 function createGameInviteAll(gameConfig, gameDoc) {
-  // @todo I'M SORRY TONG. WE'LL FIX THIS LATER.
-  // var i
-  //   , args
-  //   , profileUpdateString = ''
-  //   , betas = gameDoc.betas
-  //   ;
-
-  // for (i = 0; i < betas.length; i++) {
-  //   profileUpdateString += betas[i].name;
-  //   if (i != betas.length - 1) {
-  //     profileUpdateString += ', ';
-  //   }
-  //   message.singleUser(betas[i].phone, gameConfig.beta_join_ask_oip);
-  // }
-
-  // args = { 'players_not_in_game': profileUpdateString };
-  // mobilecommons.profile_update(gameDoc.alpha_phone, gameConfig.alpha_wait_oip, args);
-  // emitter.emit('single-user-opted-in', args);
 
   var args
+    , callback
     , betas = []
+    , profileUpdateString = ''
     , i
     ;
 
   for (i = 0; i < gameDoc.betas.length; i++) {
     betas[i] = gameDoc.betas[i].phone;
+    profileUpdateString += gameDoc.betas[i].name;
+    if (i != gameDoc.betas.length - 1) {
+      profileUpdateString += ', ';
+    }
   }
 
   args = {
     alphaPhone: gameDoc.alpha_phone,
     alphaOptin: gameConfig.alpha_wait_oip,
     betaPhone: betas,
-    betaOptin: gameConfig.beta_join_ask_oip
+    betaOptin: gameConfig.beta_join_ask_oip,
+    players_not_in_game: profileUpdateString
   };
 
   mobilecommons.optin(args);

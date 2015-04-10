@@ -5,6 +5,7 @@
 var assert = require('assert')
   , mobilecommons = rootRequire('mobilecommons')
   , emitter = rootRequire('app/eventEmitter')
+  , _ = require('underscore')
   ;
 
 var setMobileCommonsTestCredentials = function() {
@@ -35,7 +36,7 @@ describe('mobilecommons.optin with just an Alpha', function() {
     emitter.on(emitter.events.mcOptinTest, function(payload) {
       emitter.removeAllListeners(emitter.events.mcOptinTest);
 
-      if (JSON.stringify(payload) == JSON.stringify(expected)) {
+      if (_.isEqual(payload, expected)) {
         done();
       }
       else {
@@ -67,7 +68,7 @@ describe('mobilecommons.optin with an Alpha and 1 Beta', function() {
     emitter.on(emitter.events.mcOptinTest, function(payload) {
       emitter.removeAllListeners(emitter.events.mcOptinTest);
 
-      if (JSON.stringify(payload) == JSON.stringify(expected)) {
+      if (_.isEqual(payload, expected)) {
         done();
       }
       else {
@@ -99,8 +100,7 @@ describe('mobilecommons.optin with Alpha and 2 Betas', function() {
 
     emitter.on(emitter.events.mcOptinTest, function(payload) {
       emitter.removeAllListeners(emitter.events.mcOptinTest);
-
-      if (JSON.stringify(payload) == JSON.stringify(expected)) {
+      if (_.isEqual(payload, expected)) {
         done();
       }
       else {
@@ -134,7 +134,7 @@ describe('mobilecommons.optout', function() {
     emitter.on(emitter.events.mcOptoutTest, function(payload) {
       emitter.removeAllListeners(emitter.events.mcOptoutTest);
 
-      if (JSON.stringify(payload) == JSON.stringify(expected)) {
+      if (_.isEqual(payload, expected)) {
         done();
       }
       else {
@@ -170,7 +170,7 @@ describe('mobilecommons.profile_update', function() {
     emitter.on(emitter.events.mcProfileUpdateTest, function(payload) {
       emitter.removeAllListeners(emitter.events.mcProfileUpdateTest);
 
-      if (JSON.stringify(payload) == JSON.stringify(expected)) {
+      if (_.isEqual(payload, expected)) {
         done();
       }
       else {
@@ -212,7 +212,7 @@ describe('mobilecommons.profile_update with custom fields', function() {
     emitter.on(emitter.events.mcProfileUpdateTest, function(payload) {
       emitter.removeAllListeners(emitter.events.mcProfileUpdateTest);
 
-      if (JSON.stringify(payload) == JSON.stringify(expected)) {
+      if (_.isEqual(payload, expected)) {
         done();
       }
       else {
