@@ -110,8 +110,8 @@ function betaJoinNotifyAllPlayers(gameConfig, gameDoc, joiningBetaPhone) {
 
   // message players who have already joined
   for (j = 0; j < hasJoined.length; j++) {
-    mobilecommons.profile_update(hasJoined[j], gameConfig.notify_joined_betas_that_beta_has_joined, args);
-    gameDoc = record.updatedPlayerStatus(gameDoc, hasJoined[j], gameConfig.notify_joined_betas_that_beta_has_joined);
+    mobilecommons.profile_update(hasJoined[j], gameConfig.beta_joined_notify_other_betas_oip, args);
+    gameDoc = record.updatedPlayerStatus(gameDoc, hasJoined[j], gameConfig.beta_joined_notify_other_betas_oip);
   }
 
   return gameDoc;
