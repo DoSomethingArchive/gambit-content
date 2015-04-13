@@ -135,7 +135,6 @@ exports.optin = function(args) {
   // If we're in a test env, just log and emit an event.
   if (process.env.NODE_ENV == 'test') {
     logger.info('mobilecommons.optin: ', args);
-    console.log('payload****: ', payload)
     emitter.emit(emitter.events.mcOptinTest, payload);
     return;
   }
