@@ -6,11 +6,14 @@ var mobilecommons = rootRequire('mobilecommons')
   , emitter = rootRequire('app/eventEmitter')
   , message = require('./gameMessageHelpers')
   , record = require('./gameRecordHelpers')
+  , connectionOperations = rootRequire('app/config/connectionOperations')
+  , userModel = rootRequire('app/lib/sms-games/models/sgUser')(connectionOperations)
   ;
 
 module.exports = {
   alphaInvite : createGameInviteAll,
-  betaJoin : betaJoinNotifyAllPlayers
+  betaJoin : betaJoinNotifyAllPlayers,
+  endLevel : endLevelMessageWithSuccessPlayerNames
 }
 
 /**
@@ -115,4 +118,53 @@ function betaJoinNotifyAllPlayers(gameConfig, gameDoc, joiningBetaPhone) {
   }
 
   return gameDoc;
+}
+
+function endLevelMessageWithSuccessPlayerNames(gameConfig, gameDoc, delay) {
+  var i, j
+    , path
+    , alphaPlayer
+    , allPlayers = []
+    , successPlayers = []
+    , successConfigKey
+    , nameString = ''
+    , removeIndex
+    , currentStatus = gameDoc.players_current_status
+    , successPaths = gameConfig['END-GAME']['indiv-level-success-oips']
+    ;
+
+  // finding all players who gave correct answers
+  for (i = 0; i < currentStatus.length; i++) {
+    path = currentStatus[i].opt_in_path;
+    for (j = 0; j < successPaths.length; j++) {
+      if (path == successPaths[j]) {
+        successPlayers.push(currentStatus[i]);
+      }
+    }
+  }
+
+  // assembling an array with all player data
+  alphaPlayer = { "name": gameDoc.alpha_name, "phone": gameDoc.alpha_phone };
+  allPlayers = gameDoc.betas;
+  allPlayers.push(alphaPlayer);
+
+  // assembling a string of all the correct players' names
+  for (i = 0; i < successPlayers.length; i++) {
+    for (j = 0; j < allPlayers.length; j++) {
+      if (successPlayers[i].phone == allPlayers[j].phone) {
+        nameString += successPlayers[i].name;
+        nameString += ', ';
+      }
+    }
+  }
+
+  successConfigKey = successPlayers.length + '/' + allPlayers.length; 
+
+  for (i = 0; i < allPlayers.length; i++) {
+    message.singleUserWithDelay(allPlayers[i].phone, gameConfig['END-LEVEL'][successConfigKey], delay, gameDoc._id, userModel, {'players_level_success' : nameString});
+  }
+
+  removeIndex = hasNotJoined.lastIndexOf(", ");
+  nameString = nameString.substring(0, removeIndex);
+
 }

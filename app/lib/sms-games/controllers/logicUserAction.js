@@ -7,12 +7,15 @@ var smsHelper = rootRequire('app/lib/smsHelpers')
   , message = require('./gameMessageHelpers')
   , utility = require('./gameUtilities')
   , record = require('./gameRecordHelpers')
+  , playerName = require('./playerNameHelpers')
   ;
 
 // Delay (in milliseconds) for end level group messages to be sent.
 var END_LEVEL_GROUP_MESSAGE_DELAY = 15000
 // Delay (in milliseconds) for next level start messages to be sent.
   , NEXT_LEVEL_START_DELAY = 30000
+// Delay for next level player name messages to be sent. 
+  , END_LEVEL_PLAYER_NAME_MESSAGE_DELAY = 7500
 // StatHat analytics marker. 
   , STATHAT_CATEGORY = 'sms-games'
 
@@ -89,6 +92,13 @@ module.exports = function(request, doc) {
     if (typeof nextOip === 'string' && nextOip.match(/^END-LEVEL/)) {
       var level = nextOip;
       nextOip = message.end.level.indiv(userPhone, level, gameConfig, gameDoc, 'answer');
+
+// PLAYER INDIV STATUS UPDATED HERE. BUT IS THIS THE END OF THE LEVEL, OR SOMEWHERE ELSE? 
+
+// In other words, can we run the functions we want to run in sendEndMessagesUpdateReturnGameDoc and have the players_current_status section still be valid? YES. 
+
+// SO PLAYER INDIVIDUAL STATUS IS UPDATED HERE. 
+
       gameDoc = record.updatedPlayerStatus(gameDoc, userPhone, nextOip);
       gameDoc = record.updatedStoryResults(gameDoc, userPhone, nextOip);
 
@@ -116,6 +126,9 @@ module.exports = function(request, doc) {
       }
 
       if (allPlayersReadyForNextLevel) {
+
+// At this point, players_current_status will have been updated with individual's most recent choices. Thus, we can check the players_current_status
+
         sendEndMessagesUpdateReturnGameDoc(level, gameDoc);
       }
     }
@@ -157,6 +170,11 @@ function sendEndMessagesUpdateReturnGameDoc(level, gameDoc) {
    * current user, she'll additionally be receiving the individual end
    * level message first.
    */
+
+  var gameConfig = app.getConfig(app.ConfigName.COMPETITIVE_STORIES, gameDoc.story_id)
+
+  // Calculate and send player-name specific feedback.
+  playerName.endLevel(gameConfig, gameDoc, END_LEVEL_PLAYER_NAME_MESSAGE_DELAY);
 
   // Send group the end level message.
   var endLevelGroupKey = level + '-GROUP';

@@ -102,19 +102,26 @@ function group(alphaPhone, alphaOptin, singleBetaPhoneOrArrayOfPhones, betaOptin
  * @param userModel
  *   A reference to Mongoose userModel to which we're querying in order to retrieve 
  *   the specific user's user document.
+ * @param profileUpdateObj
+ *   An optional object of key-value pairs which, if passed, is applied to the user's MC profile.
  */
-function singleUserWithDelay(phoneNumber, optinPath, delay, currentGameId, userModel) {
+function singleUserWithDelay(phoneNumber, optinPath, delay, currentGameId, userModel, profileUpdateObj) {
   if (!phoneNumber || !optinPath || !delay || !currentGameId || !userModel) {
     return;
   }
 
-  function sendSMS(_phoneNumber, _optinPath, _currentGameId, _userModel) {
+  function sendSMS(_phoneNumber, _optinPath, _currentGameId, _userModel, _profileUpdateObj) {
     _userModel.findOne({phone: _phoneNumber}, function(err, userDoc) {
       if (!err) {
         // If a user's in a game that has been ended, the current_game_id property will be removed
         // from her user document. Checking to see if current_game_id still exists for that user. 
         if (userDoc.current_game_id && (userDoc.current_game_id.equals(_currentGameId))) {
           var args = {alphaPhone: _phoneNumber, alphaOptin: _optinPath};
+          if (profileUpdateObj) {
+            for (key in _profileUpdateObj) {
+              args[key] = _profileUpdateObj[key];
+            }
+          }
           mobilecommons.optin(args);
           emitter.emit('single-user-opted-in-after-delay', args); // Event currently unused in testing. 
         }
@@ -129,7 +136,7 @@ function singleUserWithDelay(phoneNumber, optinPath, delay, currentGameId, userM
       }
     });
   }
-  setTimeout(function() { sendSMS(phoneNumber, optinPath, currentGameId, userModel); }, delay);
+  setTimeout(function() { sendSMS(phoneNumber, optinPath, currentGameId, userModel, profileUpdateObj); }, delay);
 }
 
 /**
