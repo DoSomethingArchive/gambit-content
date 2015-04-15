@@ -36,6 +36,12 @@ var competitiveStoriesConfigSchema = new mongoose.Schema({
   // A message informing the user about the solo play option. 
   ask_solo_play : Number,
 
+  // A message sent to a betas who have already joined after a beta joins. 
+  beta_joined_notify_other_betas_oip : Number,
+
+  // Object containing data relevant when story is imported into Intertwine. 
+  _twinedata : {},
+ 
   // Collection of messages corresponding to the create-from-mobile user flow.
   mobile_create: {
 
