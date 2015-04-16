@@ -129,8 +129,11 @@ function endLevelMessageWithSuccessPlayerNames(gameConfig, gameDoc, delay) {
     , successConfigKey
     , nameString = ''
     , removeIndex
+    , endLevelMessage
+    , numCorrect
+    , numPlayers
     , currentStatus = gameDoc.players_current_status
-    , successPaths = gameConfig['END-GAME']['indiv-level-success-oips']
+    , successPaths = gameConfig.story['END-GAME']['indiv-level-success-oips']
     ;
 
   // finding all players who gave correct answers
@@ -152,19 +155,43 @@ function endLevelMessageWithSuccessPlayerNames(gameConfig, gameDoc, delay) {
   for (i = 0; i < successPlayers.length; i++) {
     for (j = 0; j < allPlayers.length; j++) {
       if (successPlayers[i].phone == allPlayers[j].phone) {
-        nameString += successPlayers[i].name;
+        nameString += allPlayers[j].name;
         nameString += ', ';
       }
     }
   }
 
-  successConfigKey = successPlayers.length + '/' + allPlayers.length; 
-
-  for (i = 0; i < allPlayers.length; i++) {
-    message.singleUserWithDelay(allPlayers[i].phone, gameConfig['END-LEVEL'][successConfigKey], delay, gameDoc._id, userModel, {'players_level_success' : nameString});
+  numCorrect = successPlayers.length;
+  numPlayers = currentStatus.length;
+  // If no one answered correctly. 
+  if (numCorrect === 0) {
+    endLevelMessage = gameConfig.end_level_0_correct_loss;
+  } 
+  // If one player answered correctly, AND
+  else if (numCorrect === 1) {
+    // There's only one player. 
+    if (numPlayers === 1) {
+      endLevelMessage = gameConfig.end_level_solo_correct_win;
+    }
+    // There are two players. 
+    else if (numPlayers === 2) {
+      endLevelMessage = gameConfig.end_level_1_to_4_correct_win;
+    }
+    // There are 3-4 players. 
+    else {
+      endLevelMessage = gameConfig.end_level_1_correct_loss;
+    }
+  }
+  // If two more players answered correctly.
+  else if (numCorrect > 1) {
+    endLevelMessage = gameConfig.end_level_1_to_4_correct_win;
   }
 
-  removeIndex = hasNotJoined.lastIndexOf(", ");
+  for (i = 0; i < allPlayers.length; i++) {
+    message.singleUserWithDelay(allPlayers[i].phone, endLevelMessage, delay, gameDoc._id, userModel, {'players_who_succeeded_at_end_level' : nameString});
+  }
+
+  removeIndex = nameString.lastIndexOf(", ");
   nameString = nameString.substring(0, removeIndex);
 
 }

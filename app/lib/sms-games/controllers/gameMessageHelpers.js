@@ -117,7 +117,7 @@ function singleUserWithDelay(phoneNumber, optinPath, delay, currentGameId, userM
         // from her user document. Checking to see if current_game_id still exists for that user. 
         if (userDoc.current_game_id && (userDoc.current_game_id.equals(_currentGameId))) {
           var args = {alphaPhone: _phoneNumber, alphaOptin: _optinPath};
-          if (profileUpdateObj) {
+          if (_profileUpdateObj) {
             for (key in _profileUpdateObj) {
               args[key] = _profileUpdateObj[key];
             }
