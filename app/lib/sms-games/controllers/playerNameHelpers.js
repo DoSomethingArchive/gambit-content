@@ -187,11 +187,10 @@ function endLevelMessageWithSuccessPlayerNames(gameConfig, gameDoc, delay) {
     endLevelMessage = gameConfig.end_level_1_to_4_correct_win;
   }
 
-  for (i = 0; i < allPlayers.length; i++) {
-    message.singleUserWithDelay(allPlayers[i].phone, endLevelMessage, delay, gameDoc._id, userModel, {'players_who_succeeded_at_end_level' : nameString});
-  }
-
   removeIndex = nameString.lastIndexOf(", ");
   nameString = nameString.substring(0, removeIndex);
 
+  for (i = 0; i < allPlayers.length; i++) {
+    message.singleUserWithDelay(allPlayers[i].phone, endLevelMessage, delay, gameDoc._id, userModel, {'players_who_succeeded_at_end_level' : nameString});
+  }
 }
