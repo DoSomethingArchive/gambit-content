@@ -7,7 +7,8 @@ var assert = require('assert')
   , userModel = rootRequire('app/lib/sms-games/models/sgUser')(connectionOperations)
   , SGCompetitiveStoryController = rootRequire('app/lib/sms-games/controllers/SGCompetitiveStoryController')
   , smsHelper = rootRequire('app/lib/smsHelpers')
-  , testHelper = require('./testHelperFunctions') 
+  , testHelper = require('./testHelperFunctions')
+  , _ = require('underscore')
   ;
 
 describe('Alpha-Starting a Bully Text game:', function() {
@@ -36,7 +37,10 @@ describe('Alpha-Starting a Bully Text game:', function() {
           alpha_mobile: alphaPhone,
           beta_mobile_0: betaPhone0,
           beta_mobile_1: betaPhone1,
-          beta_mobile_2: betaPhone2
+          beta_mobile_2: betaPhone2, 
+          beta_first_name_0: betaName0,
+          beta_first_name_1: betaName1,
+          beta_first_name_2: betaName2,
         }
       };
     });
@@ -72,11 +76,19 @@ describe('Alpha-Starting a Bully Text game:', function() {
         gameId = doc._id;
         onEventReceived();
       });
-
-      // 1 expected mobilecommons-optin-test event with args containing 3 beta names 
+      // 1 expected mobilecommons-optin-test event with args containing all the beta names 
       emitter.on(emitter.events.mcOptinTest, function(args) {
-        if (args.form['person[players_not_in_game]'] && args.form['person[players_not_in_game]'].split(/[&,]+/).length == 3) {
-          onEventReceived();
+        if (args.form['person[players_not_in_game]']) {
+          var playerNameArray = args.form['person[players_not_in_game]'].split(/[&,]+/);
+          var originalNames = [betaName0, betaName1, betaName2];
+          if (playerNameArray) {
+            for (var i = 0; i < playerNameArray.length; i++) {
+              if (!_.contains(originalNames, playerNameArray[i].trim())) {
+                assert(false);
+              }
+            }
+            onEventReceived();
+          }
         }
       })
 
@@ -132,7 +144,84 @@ describe('Alpha-Starting a Bully Text game:', function() {
   })
 
   describe('Beta 1 joining the game', function() {
-    testHelper.betaJoinGameTest(betaPhone1);
+    // testHelper.betaJoinGameTest(betaPhone1);
+
+    before(function() {
+      request = {
+        body: {
+          phone: smsHelper.getNormalizedPhone(betaPhone1),
+          args: 'Y'
+        }
+      }
+
+      response = {
+        send: function(message) {
+          if (typeof message === 'undefined') {
+            message = '';
+          }
+          console.log('Response message: ' + message);
+        },
+
+        sendStatus: function(code) {
+          console.log('Response code: ' + code);
+        },
+
+        status: function(code) {
+          console.log('Response code: ' + code);
+        }
+      };
+
+    })
+
+    it('should emit all events caused by the first beta joining the game', function(done) {
+      var eventCount = 0
+        , expectedEvents = 1
+        ;
+
+      function onEventReceived() {
+        eventCount++;
+        if (eventCount === expectedEvents) {
+          done();
+          emitter.removeAllListeners('beta-join-notify-alpha');
+          emitter.removeAllListeners('beta-join-notify-self');
+          emitter.removeAllListeners('beta-join-notify-other-betas');
+        }
+      };
+
+      function checkArgs(args) {
+        console.log(args, 'args***');
+        if (args.players_not_in_game) {
+          var playerNameArray = args.players_not_in_game.split(/[&,]+/);
+          var originalNames = [betaName0, betaName1, betaName2];
+          console.log('originalNames', originalNames, 'playerNameArray', playerNameArray)
+          if (_.contains(playerNameArray, betaName1)) {
+            assert(false);
+          }
+          else if (args.player_just_joined != betaName1) {
+            assert(false)
+          } else {
+            onEventReceived();
+          }
+        }
+      }
+
+
+      // @TO-DO: add the following tests below 
+
+      emitter.on('beta-join-notify-alpha', function(args){ checkArgs(args); });
+    
+      emitter.on('beta-join-notify-self', function(args){ checkArgs(args); });
+
+      emitter.on('beta-join-notify-other-betas', function(args){ checkArgs(args); });
+
+      this.gameController.betaJoinGame(request, response);
+    })
+
+
+  })
+
+  describe('Beta 2 joining the game', function() {
+    it('should should send other betas the message that a beta has joined the game') 
   })
 
   describe('Alpha starting the game', function() {
@@ -171,6 +260,7 @@ describe('Alpha-Starting a Bully Text game:', function() {
             var b1Phone = smsHelper.getNormalizedPhone(betaPhone1);
             var b2Phone = smsHelper.getNormalizedPhone(betaPhone2);
 
+// if I add another user joining the game, check the below. 
             if (phone == b0Phone || phone == b2Phone) {
               assert(false, 'Beta users sent message when they shouldn\'t have received any.');
             }
