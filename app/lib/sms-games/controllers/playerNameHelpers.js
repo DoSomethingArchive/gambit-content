@@ -46,6 +46,8 @@ function createGameInviteAll(gameConfig, gameDoc) {
     }
   }
 
+  profileUpdateString = removeLastCommaAddAnd(profileUpdateString);
+
   args = {
     alphaPhone: gameDoc.alpha_phone,
     alphaOptin: gameConfig.alpha_wait_oip,
@@ -95,8 +97,7 @@ function betaJoinNotifyAllPlayers(gameConfig, gameDoc, joiningBetaPhone) {
     }
   }
 
-  removeIndex = hasNotJoined.lastIndexOf(", ");
-  hasNotJoined = hasNotJoined.substring(0, removeIndex);
+  hasNotJoined = removeLastCommaAddAnd(hasNotJoined);
 
   args = {
     'players_not_in_game': hasNotJoined,
@@ -191,10 +192,15 @@ function endLevelMessageWithSuccessPlayerNames(gameConfig, gameDoc, delay) {
     endLevelMessage = gameConfig.end_level_1_to_4_correct_win;
   }
 
-  removeIndex = nameString.lastIndexOf(", ");
-  nameString = nameString.substring(0, removeIndex);
+  nameString = removeLastCommaAddAnd(nameString);
 
   for (i = 0; i < allPlayers.length; i++) {
     message.singleUserWithDelay(allPlayers[i].phone, endLevelMessage, delay, gameDoc._id, userModel, {'players_who_succeeded_at_end_level' : nameString});
   }
+}
+
+// Removes last comma, add & to penultimate comma
+function removeLastCommaAddAnd(nameString) {
+  removeIndex = nameString.lastIndexOf(", ");
+  return nameString.substring(0, removeIndex).replace(/, (?!.*?, )/, ' & ');
 }
