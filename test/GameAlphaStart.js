@@ -7,7 +7,7 @@ var assert = require('assert')
   , userModel = rootRequire('app/lib/sms-games/models/sgUser')(connectionOperations)
   , SGCompetitiveStoryController = rootRequire('app/lib/sms-games/controllers/SGCompetitiveStoryController')
   , smsHelper = rootRequire('app/lib/smsHelpers')
-  , testHelper = require('./testHelperFunctions')
+  , testHelper = require('./testHelperFunctions') 
   ;
 
 describe('Alpha-Starting a Bully Text game:', function() {
@@ -43,7 +43,7 @@ describe('Alpha-Starting a Bully Text game:', function() {
 
     it('should emit all game doc events', function(done) {
       var eventCount = 0;
-      var expectedEvents = 6;
+      var expectedEvents = 7;
 
       var onEventReceived = function() {
         eventCount++;
@@ -72,6 +72,13 @@ describe('Alpha-Starting a Bully Text game:', function() {
         gameId = doc._id;
         onEventReceived();
       });
+
+      // 1 expected mobilecommons-optin-test event with args containing 3 beta names 
+      emitter.on(emitter.events.mcOptinTest, function(args) {
+        if (args.form['person[players_not_in_game]'] && args.form['person[players_not_in_game]'].split(/[&,]+/).length == 3) {
+          onEventReceived();
+        }
+      })
 
       // With event listeners setup, can now create the game.
       assert.equal(true, this.gameController.createGame(request, response));

@@ -41,11 +41,10 @@ function createGameInviteAll(gameConfig, gameDoc) {
   for (i = 0; i < gameDoc.betas.length; i++) {
     betas[i] = gameDoc.betas[i].phone;
     profileUpdateString += gameDoc.betas[i].name;
-    if (i != gameDoc.betas.length - 1) {
-      profileUpdateString += ', ';
-    }
+    profileUpdateString += ', ';
   }
 
+  console.log('profileUpdateString', profileUpdateString)
   profileUpdateString = removeLastCommaAddAnd(profileUpdateString);
 
   args = {
@@ -88,9 +87,6 @@ function betaJoinNotifyAllPlayers(gameConfig, gameDoc, joiningBetaPhone) {
   for (i = 0; i < betas.length; i++) {
     if (!betas[i].invite_accepted) {
       hasNotJoined = hasNotJoined + betas[i].name + ', ';
-    }
-    else if (betas[i].phone == joiningBetaPhone) {
-      justJoined = betas[i].name;
     }
     else {
       hasJoined.push(betas[i].phone);
@@ -201,6 +197,6 @@ function endLevelMessageWithSuccessPlayerNames(gameConfig, gameDoc, delay) {
 
 // Removes last comma, add & to penultimate comma
 function removeLastCommaAddAnd(nameString) {
-  removeIndex = nameString.lastIndexOf(", ");
+  removeIndex = nameString.lastIndexOf(",");
   return nameString.substring(0, removeIndex).replace(/, (?!.*?, )/, ' & ');
 }
