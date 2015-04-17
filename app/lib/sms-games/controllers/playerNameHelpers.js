@@ -121,6 +121,10 @@ function betaJoinNotifyAllPlayers(gameConfig, gameDoc, joiningBetaPhone) {
 }
 
 function endLevelMessageWithSuccessPlayerNames(gameConfig, gameDoc, delay) {
+  if (!gameConfig.story['END-GAME']['indiv-level-success-oips']) {
+    return;
+  }
+
   var i, j
     , path
     , alphaPlayer

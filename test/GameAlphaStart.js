@@ -204,9 +204,9 @@ describe('Alpha-Starting a Bully Text game with first names:', function() {
   var betaPhone0 = '5555550101';
   var betaPhone1 = '5555550102';
   var betaPhone2 = '5555550103';
-  var betaName0 = 'beta_name_0';
-  var betaName1 = 'beta_name_1';
-  var betaName2 = 'beta_name_2';
+  var betaName0 = 'betaName_0';
+  var betaName1 = 'betaName_1';
+  var betaName2 = 'betaName_2';
   var storyId = 100;
   var gameConfig = app.getConfig(app.ConfigName.COMPETITIVE_STORIES, storyId)
 
