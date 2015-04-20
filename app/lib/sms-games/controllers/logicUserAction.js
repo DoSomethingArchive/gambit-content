@@ -92,13 +92,6 @@ module.exports = function(request, doc) {
     if (typeof nextOip === 'string' && nextOip.match(/^END-LEVEL/)) {
       var level = nextOip;
       nextOip = message.end.level.indiv(userPhone, level, gameConfig, gameDoc, 'answer');
-
-// PLAYER INDIV STATUS UPDATED HERE. BUT IS THIS THE END OF THE LEVEL, OR SOMEWHERE ELSE? 
-
-// In other words, can we run the functions we want to run in sendEndMessagesUpdateReturnGameDoc and have the players_current_status section still be valid? YES. 
-
-// SO PLAYER INDIVIDUAL STATUS IS UPDATED HERE. 
-
       gameDoc = record.updatedPlayerStatus(gameDoc, userPhone, nextOip);
       gameDoc = record.updatedStoryResults(gameDoc, userPhone, nextOip);
 
@@ -126,9 +119,6 @@ module.exports = function(request, doc) {
       }
 
       if (allPlayersReadyForNextLevel) {
-
-// At this point, players_current_status will have been updated with individual's most recent choices. Thus, we can check the players_current_status
-
         sendEndMessagesUpdateReturnGameDoc(level, gameDoc);
       }
     }
