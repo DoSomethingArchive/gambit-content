@@ -185,6 +185,7 @@ describe('Alpha-Starting a Bully Text game:', function() {
         eventCount++;
         if (eventCount === expectedEvents) {
           done();
+          emitter.removeAllListeners('game-updated');
           emitter.removeAllListeners('beta-join-notify-alpha');
           emitter.removeAllListeners('beta-join-notify-self');
         }
@@ -270,6 +271,9 @@ describe('Alpha-Starting a Bully Text game:', function() {
           eventCount ++;
           if (eventCount === expectedEvents) {
             done();
+            emitter.removeAllListeners('game-updated');
+            emitter.removeAllListeners('beta-join-notify-alpha');
+            emitter.removeAllListeners('beta-join-notify-self');
             emitter.removeAllListeners('beta-join-notify-other-betas');
           }
       }
@@ -281,7 +285,7 @@ describe('Alpha-Starting a Bully Text game:', function() {
             assert(false);
           }
           else if (args.player_just_joined != betaName2) {
-            assert(false)
+            assert(false);
           } else {
             onEventReceived();
           }
