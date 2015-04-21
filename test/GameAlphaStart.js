@@ -182,32 +182,30 @@ describe('Alpha-Starting a Bully Text game:', function() {
         ;
 
       function onEventReceived() {
-        eventCount++;
-        if (eventCount === expectedEvents) {
-          done();
-          emitter.removeAllListeners('game-updated');
-          emitter.removeAllListeners('beta-join-notify-alpha');
-          emitter.removeAllListeners('beta-join-notify-self');
-        }
-      };
+          eventCount ++;
+          if (eventCount === expectedEvents) {
+            done();
+            emitter.removeAllListeners(emitter.events.mcProfileUpdateTest);
+            emitter.removeAllListeners('game-updated');
+          }
+      }
 
       function checkArgs(args) {
-        if (args.players_not_in_game) {
-          var playerNameArray = args.players_not_in_game.split(/[&,]+/);
-          if (_.contains(playerNameArray, betaName1)) {
-            assert(false);
-          }
-          else if (args.player_just_joined != betaName1) {
-            assert(false)
-          } else {
+        if (args.form.players_not_in_game && args.form.player_just_joined) {
+          var playerNameArray = args.form.players_not_in_game.split(/[&,]+/);
+          if (!_.contains(playerNameArray, betaName1) && args.form.player_just_joined == betaName1) {
             onEventReceived();
+          } else {
+            assert(false);
           }
         }
       }
 
+      emitter.on(emitter.events.mcProfileUpdateTest, function(postData) {
+        checkArgs(postData);
+      })
+
       emitter.on('game-updated', function() { onEventReceived(); });
-      emitter.on('beta-join-notify-alpha', function(args){ checkArgs(args); });    
-      emitter.on('beta-join-notify-self', function(args){ checkArgs(args); });
 
       this.gameController.betaJoinGame(request, response);
     })
@@ -271,32 +269,27 @@ describe('Alpha-Starting a Bully Text game:', function() {
           eventCount ++;
           if (eventCount === expectedEvents) {
             done();
+            emitter.removeAllListeners(emitter.events.mcProfileUpdateTest);
             emitter.removeAllListeners('game-updated');
-            emitter.removeAllListeners('beta-join-notify-alpha');
-            emitter.removeAllListeners('beta-join-notify-self');
-            emitter.removeAllListeners('beta-join-notify-other-betas');
           }
       }
 
       function checkArgs(args) {
-        if (args.players_not_in_game) {
-          var playerNameArray = args.players_not_in_game.split(/[&,]+/);
-          if (_.contains(playerNameArray, betaName2)) {
-            assert(false);
-          }
-          else if (args.player_just_joined != betaName2) {
-            assert(false);
-          } else {
+        if (args.form.players_not_in_game && args.form.player_just_joined) {
+          var playerNameArray = args.form.players_not_in_game.split(/[&,]+/);
+          if (!_.contains(playerNameArray, betaName2) && args.form.player_just_joined == betaName2) {
             onEventReceived();
+          } else {
+            assert(false);
           }
         }
       }
 
-      emitter.on('game-updated', function() { onEventReceived(); });
-      emitter.on('beta-join-notify-alpha', function(args){ checkArgs(args); });    
-      emitter.on('beta-join-notify-self', function(args){ checkArgs(args); });
-      emitter.on('beta-join-notify-other-betas', function(args){ checkArgs(args); });
+      emitter.on(emitter.events.mcProfileUpdateTest, function(postData) {
+        checkArgs(postData);
+      })
 
+      emitter.on('game-updated', function() { onEventReceived(); });
       this.gameController.betaJoinGame(request, response);
     })
     it('should update the game document that Beta 2 has joined', function(done) {
