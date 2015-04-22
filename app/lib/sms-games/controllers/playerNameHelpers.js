@@ -91,7 +91,7 @@ function betaJoinNotifyAllPlayers(gameConfig, gameDoc, joiningBetaPhone) {
       justJoined = betas[i].name;
     }
     else {
-      hasJoined.push(betas[i].name);
+      hasJoined.push(betas[i].phone);
     }
   }
 
@@ -136,6 +136,7 @@ function endLevelMessageWithSuccessPlayerNames(gameConfig, gameDoc, delay) {
     , endLevelMessage
     , numCorrect
     , numPlayers
+    , args
     , currentStatus = gameDoc.players_current_status
     , successPaths = gameConfig.story['END-GAME']['indiv-level-success-oips']
     ;
@@ -193,8 +194,11 @@ function endLevelMessageWithSuccessPlayerNames(gameConfig, gameDoc, delay) {
 
   nameString = removeLastCommaAddAnd(nameString);
 
+  args = {'players_who_succeeded_at_end_level' : nameString};
+
   for (i = 0; i < allPlayers.length; i++) {
-    message.singleUserWithDelay(allPlayers[i].phone, endLevelMessage, delay, gameDoc._id, userModel, {'players_who_succeeded_at_end_level' : nameString});
+    message.singleUserWithDelay(allPlayers[i].phone, endLevelMessage, delay, gameDoc._id, userModel, args);
+    emitter.emit('end-level-player-name-message', args);
   }
 }
 
