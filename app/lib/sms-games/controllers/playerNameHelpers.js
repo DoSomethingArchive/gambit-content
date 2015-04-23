@@ -121,7 +121,9 @@ function betaJoinNotifyAllPlayers(gameConfig, gameDoc, joiningBetaPhone) {
 }
 
 function endLevelMessageWithSuccessPlayerNames(gameConfig, gameDoc, delay) {
-  if (!gameConfig.story['END-GAME']['indiv-level-success-oips']) {
+  // @TODO: once we've moved this feature off the A/B game and into the main 
+  // production game, remove the reference to story_id !== 301. Inelegant, I know. :(
+  if (!gameConfig.story['END-GAME']['indiv-level-success-oips'] || gameDoc.story_id !== 301) {
     return;
   }
 
