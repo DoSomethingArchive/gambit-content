@@ -189,8 +189,8 @@ exports.userActionTest = function() {
         }
       })
 
-      if (this.playerNamesAnsweredCorrectlyThisLevel !== undefined){
-        it('should send messages with the names of players who answered this level correctly as well as the player-status-updated event', function(done) {
+      if (this.playerNamesAnsweredCorrectlyThisLevel !== undefined && this.endLevelPlayerNameSuccessMessage){
+        it('should send the right messages--featuring the names of players who answered this level correctly--as well as fire the player-status-updated event', function(done) {
           // this.playerNamesAnsweredCorrectlyThisLevel should be an array of player names. Like [betaName0, betaName1]
           // we want to count four messages (i.e. all the plyers in the game), and check all their params 
           var eventCount = 0
@@ -209,6 +209,7 @@ exports.userActionTest = function() {
             var expected = self.playerNamesAnsweredCorrectlyThisLevel // An array of expected player names
               , expected2 = self.playerNamesAnsweredCorrectlyThisLevel 
               , actual = args.players_who_succeeded_at_end_level.split(/ *[,&] */) // Splitting this into an array.
+              , expectedMessage = self.endLevelPlayerNameSuccessMessage
               ; 
 
             for (var i = 0; i < actual.length; i++) {
@@ -227,8 +228,8 @@ exports.userActionTest = function() {
               } 
             }
 
-            if (expected.length === 0 && actual.length === 0) {
-              onEventReceived()
+            if (expected.length === 0 && actual.length === 0 && args.endLevelMessage === expectedMessage) {
+              onEventReceived();
             } else {
               assert(false);
             }
@@ -330,44 +331,6 @@ exports.userActionTest = function() {
                 done();
               } 
               else {
-                assert(false);
-              }
-            }
-          })
-        })
-      }
-
-      if (this.playerNamesAnsweredCorrectlyThisLevel && this.endLevelPlayerNameSuccessMessage) {
-        var nameString
-          , self = this
-          ; 
-
-        if (this.playerNamesAnsweredCorrectlyThisLevel.length === 0) {
-          nameString = 'none of the players answered correctly'
-        }
-        else {
-          nameString = this.playerNamesAnsweredCorrectlyThisLevel.join(' ');
-        }
-
-        it('should send send the endlevel message (optin path: ' + this.endLevelPlayerNameSuccessMessage + ') with the names of the players who answered correctly: ' + nameString + ' .', function(done) {
-          var storyResults
-            , playerNum
-            , counter = 0
-            ;
-
-          gameModel.findOne({_id: gameId}, function(err, doc) {
-            if (!err) {
-              storyResults = doc.story_results;
-              playerNum = doc.players_current_status.length;
-
-              storyResults.forEach(function(val, idx, arr) {
-                if (val.oip == self.endLevelPlayerNameSuccessMessage) {
-                  counter ++;
-                }
-              })
-              if (counter === doc.players_current_status.length) {
-                done();
-              } else {
                 assert(false);
               }
             }

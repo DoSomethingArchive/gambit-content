@@ -164,7 +164,7 @@ function sendEndMessagesUpdateReturnGameDoc(level, gameDoc) {
   var gameConfig = app.getConfig(app.ConfigName.COMPETITIVE_STORIES, gameDoc.story_id);
 
   // Calculate and send player-name specific feedback.
-  gameDoc = playerName.endLevel(gameConfig, gameDoc, END_LEVEL_PLAYER_NAME_MESSAGE_DELAY);
+  playerName.endLevel(gameConfig, gameDoc, END_LEVEL_PLAYER_NAME_MESSAGE_DELAY);
 
   // Send group the end level message.
   var endLevelGroupKey = level + '-GROUP';

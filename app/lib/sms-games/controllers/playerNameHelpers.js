@@ -122,7 +122,7 @@ function betaJoinNotifyAllPlayers(gameConfig, gameDoc, joiningBetaPhone) {
 
 function endLevelMessageWithSuccessPlayerNames(gameConfig, gameDoc, delay) {
   if (!gameConfig.story['END-GAME']['indiv-level-success-oips']) {
-    return gameDoc;
+    return;
   }
 
   var i, j
@@ -137,7 +137,6 @@ function endLevelMessageWithSuccessPlayerNames(gameConfig, gameDoc, delay) {
     , numCorrect
     , numPlayers
     , args
-    , gameDoc = gameDoc
     , currentStatus = gameDoc.players_current_status
     , successPaths = gameConfig.story['END-GAME']['indiv-level-success-oips']
     ;
@@ -199,10 +198,8 @@ function endLevelMessageWithSuccessPlayerNames(gameConfig, gameDoc, delay) {
 
   for (i = 0; i < allPlayers.length; i++) {
     message.singleUserWithDelay(allPlayers[i].phone, endLevelMessage, delay, gameDoc._id, userModel, args);
-    gameDoc = record.updatedStoryResults(gameDoc, allPlayers[i].phone, endLevelMessage);
-    emitter.emit('end-level-player-name-message', args);
+    emitter.emit('end-level-player-name-message', {'players_who_succeeded_at_end_level' : nameString, 'endLevelMessage': endLevelMessage});
   }
-  return gameDoc;
 }
 
 // Removes last comma, add & to penultimate comma
