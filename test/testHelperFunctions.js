@@ -7,6 +7,7 @@ var assert = require('assert')
   , userModel = rootRequire('app/lib/sms-games/models/sgUser')(connectionOperations)
   , SGCompetitiveStoryController = require('../app/lib/sms-games/controllers/SGCompetitiveStoryController')
   , smsHelper = require('../app/lib/smsHelpers')
+  , _ = require('underscore')
   ;
 
 // Provides necessary setup conditions before game tests. 
@@ -138,6 +139,16 @@ exports.userActionTest = function() {
       return this;
     },
 
+    // Argument is an array. 
+    expectPlayerNamesAnsweredCorrectlyThisLevel: function(playerNamesAnsweredCorrectlyThisLevel) {
+      this.playerNamesAnsweredCorrectlyThisLevel = playerNamesAnsweredCorrectlyThisLevel;
+      return this;
+    },
+    expectEndLevelPlayerNameSuccessMessage: function(endLevelPlayerNameSuccessMessage) {
+      this.endLevelPlayerNameSuccessMessage = endLevelPlayerNameSuccessMessage;
+      return this;
+    },
+
     expectNextStageName: function(nextStageName) {
       this.nextStageName = nextStageName;
       return this;
@@ -178,15 +189,75 @@ exports.userActionTest = function() {
         }
       })
 
-      it('should emit player-status-updated event', function(done) {
-        emitter.on('player-status-updated', function() {
-          done();
-          emitter.removeAllListeners('player-status-updated');
+      if (this.playerNamesAnsweredCorrectlyThisLevel !== undefined){
+        it('should send messages with the names of players who answered this level correctly as well as the player-status-updated event', function(done) {
+          // this.playerNamesAnsweredCorrectlyThisLevel should be an array of player names. Like [betaName0, betaName1]
+          // we want to count four messages (i.e. all the plyers in the game), and check all their params 
+          var eventCount = 0
+            , expectedEvents = 5
+            ;
+
+          function onEventReceived() {
+            eventCount++;
+            if (eventCount === expectedEvents) {
+              done();
+              emitter.removeAllListeners('end-level-player-name-message');
+            }
+          }
+
+          function checkArgs(args) {
+            var expected = self.playerNamesAnsweredCorrectlyThisLevel // An array of expected player names
+              , expected2 = self.playerNamesAnsweredCorrectlyThisLevel 
+              , actual = args.players_who_succeeded_at_end_level.split(/ *[,&] */) // Splitting this into an array.
+              ; 
+
+            for (var i = 0; i < actual.length; i++) {
+              if (actual[i] == '') {
+                actual.splice(i, 1);
+              }
+              else if (_.contains(expected,  actual[i])) {
+                expected = _.without(expected, actual[i]); // removing the actual[i] name from the expected array
+              }
+            }
+
+            // Testing against case where actual array may be full, and we expect nothing. 
+            for (var j = 0; j < expected2.length; j++) {
+              if (_.contains(actual, expected2[j])) {
+                actual = _.without(actual, expected2[j]); 
+              } 
+            }
+
+            if (expected.length === 0 && actual.length === 0) {
+              onEventReceived()
+            } else {
+              assert(false);
+            }
+          }
+
+          emitter.on('end-level-player-name-message', function(args) {
+            checkArgs(args);
+          })
+
+          emitter.on('player-status-updated', function() {
+            onEventReceived();
+            emitter.removeAllListeners('player-status-updated');
+          })
+
+          this.gameController.userAction(request, response);
         })
 
-        // Simulates the user game action. 
-        this.gameController.userAction(request, response);
-      })
+      }
+      else {
+        it('should emit player-status-updated event', function(done) {
+          emitter.on('player-status-updated', function() {
+            done();
+            emitter.removeAllListeners('player-status-updated');
+          })
+          
+          // Simulates the user game action. 
+          this.gameController.userAction(request, response);
+        })
+      }
 
 
       it('should move user to level ' + this.nextLevelName + ' (optin path: ' + this.nextLevelMessage + ') in the game doc', function(done) {
@@ -233,7 +304,8 @@ exports.userActionTest = function() {
               }
               if (!numberOfActivePlayers) {
                 done();
-              } else {
+              } 
+              else {
                 assert(false);
               }
             }
@@ -265,23 +337,48 @@ exports.userActionTest = function() {
         })
       }
 
-      var checkIfAllPlayersReceivedMessage = function(playerPhoneObject, totalNumberOfPlayers) {
-        var numberPlayersReceivedMessage = 0;
-        for (phone in playerPhoneObject) {
-          if (playerPhoneObject.hasOwnProperty(phone) && playerPhoneObject[phone] === true) {
-            numberPlayersReceivedMessage ++;
-          }
+      if (this.playerNamesAnsweredCorrectlyThisLevel && this.endLevelPlayerNameSuccessMessage) {
+        var nameString
+          , self = this
+          ; 
+
+        if (this.playerNamesAnsweredCorrectlyThisLevel.length === 0) {
+          nameString = 'none of the players answered correctly'
         }
-        if (numberPlayersReceivedMessage == totalNumberOfPlayers) {
-          return true;
+        else {
+          nameString = this.playerNamesAnsweredCorrectlyThisLevel.join(' ');
         }
-        return false;
+
+        it('should send send the endlevel message (optin path: ' + this.endLevelPlayerNameSuccessMessage + ') with the names of the players who answered correctly: ' + nameString + ' .', function(done) {
+          var storyResults
+            , playerNum
+            , counter = 0
+            ;
+
+          gameModel.findOne({_id: gameId}, function(err, doc) {
+            if (!err) {
+              storyResults = doc.story_results;
+              playerNum = doc.players_current_status.length;
+
+              storyResults.forEach(function(val, idx, arr) {
+                if (val.oip == self.endLevelPlayerNameSuccessMessage) {
+                  counter ++;
+                }
+              })
+              if (counter === doc.players_current_status.length) {
+                done();
+              } else {
+                assert(false);
+              }
+            }
+          })
+        })
       }
 
       // If supplied the arguments, test for the end-game message sent to all 
       // members of the group. 
       if (this.endGameGroupMessageFormat && this.endGameGroupMessage) {
-        it('it should send the endgame group message with the format of ' + this.endGameGroupMessageFormat + ' (optin path: ' + this.endGameGroupMessage + ') to all players.', function(done) {
+        it('should send the endgame group message with the format of ' + this.endGameGroupMessageFormat + ' (optin path: ' + this.endGameGroupMessage + ') to all players.', function(done) {
 
           gameModel.findOne({_id: gameId}, function(err, doc) {
             var playersCurrentStatus = doc.players_current_status
@@ -384,6 +481,18 @@ exports.userActionTest = function() {
             }
           })
         })
+      }
+      var checkIfAllPlayersReceivedMessage = function(playerPhoneObject, totalNumberOfPlayers) {
+        var numberPlayersReceivedMessage = 0;
+        for (phone in playerPhoneObject) {
+          if (playerPhoneObject.hasOwnProperty(phone) && playerPhoneObject[phone] === true) {
+            numberPlayersReceivedMessage ++;
+          }
+        }
+        if (numberPlayersReceivedMessage == totalNumberOfPlayers) {
+          return true;
+        }
+        return false;
       }
     }
   }

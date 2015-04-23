@@ -161,17 +161,17 @@ function sendEndMessagesUpdateReturnGameDoc(level, gameDoc) {
    * level message first.
    */
 
-  var gameConfig = app.getConfig(app.ConfigName.COMPETITIVE_STORIES, gameDoc.story_id)
+  var gameConfig = app.getConfig(app.ConfigName.COMPETITIVE_STORIES, gameDoc.story_id);
 
   // Calculate and send player-name specific feedback.
-  playerName.endLevel(gameConfig, gameDoc, END_LEVEL_PLAYER_NAME_MESSAGE_DELAY);
+  gameDoc = playerName.endLevel(gameConfig, gameDoc, END_LEVEL_PLAYER_NAME_MESSAGE_DELAY);
 
   // Send group the end level message.
   var endLevelGroupKey = level + '-GROUP';
   var gameConfig = app.getConfig(app.ConfigName.COMPETITIVE_STORIES, gameDoc.story_id)
   var groupOptin = message.end.level.group(endLevelGroupKey, gameConfig, gameDoc);
   for (var i = 0; i < gameDoc.players_current_status.length; i++) {
-    var playerPhone = gameDoc.players_current_status[i].phone;  
+    var playerPhone = gameDoc.players_current_status[i].phone;
 
     // Send group the end level message. The end level group message is sent 
     // SECOND of all the messages in the logicUserAction() function call.

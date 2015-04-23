@@ -40,7 +40,7 @@ describe('Alpha-Starting a Bully Text game:', function() {
           beta_mobile_2: betaPhone2, 
           beta_first_name_0: betaName0,
           beta_first_name_1: betaName1,
-          beta_first_name_2: betaName2,
+          beta_first_name_2: betaName2
         }
       };
     });
@@ -182,7 +182,7 @@ describe('Alpha-Starting a Bully Text game:', function() {
         ;
 
       function onEventReceived() {
-          eventCount ++;
+          eventCount++;
           if (eventCount === expectedEvents) {
             done();
             emitter.removeAllListeners(emitter.events.mcProfileUpdateTest);
@@ -266,7 +266,7 @@ describe('Alpha-Starting a Bully Text game:', function() {
         ;
 
       function onEventReceived() {
-          eventCount ++;
+          eventCount++;
           if (eventCount === expectedEvents) {
             done();
             emitter.removeAllListeners(emitter.events.mcProfileUpdateTest);

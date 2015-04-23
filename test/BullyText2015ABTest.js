@@ -35,7 +35,10 @@ describe('Bully Text 2015 A/B test version being played:', function() {
           alpha_mobile: alphaPhone,
           beta_mobile_0: betaPhone0,
           beta_mobile_1: betaPhone1,
-          beta_mobile_2: betaPhone2
+          beta_mobile_2: betaPhone2,
+          beta_first_name_0: betaName0,
+          beta_first_name_1: betaName1,
+          beta_first_name_2: betaName2
         }
       };
     })
@@ -74,6 +77,116 @@ describe('Bully Text 2015 A/B test version being played:', function() {
       // With event listeners setup, can now create the game.
       assert.equal(true, this.gameController.createGame(request, response));
     })
+
+    describe('Beta 0 joining the game', function() {
+      testHelper.betaJoinGameTest(betaPhone0);
+    })
+
+    describe('Beta 1 joining the game', function() {
+      testHelper.betaJoinGameTest(betaPhone1);
+    })
+
+    describe('Beta 2 joining the game', function() {
+      testHelper.betaJoinGameTest(betaPhone2);
+
+      it('should auto-start the game', function(done) {
+        var alphaStarted = beta0Started = beta1Started = beta2Started = false; // Chaining assignment operators. They all are set to false. 
+        var startOip = gameConfig.story_start_oip;
+        gameModel.findOne({_id: gameId}, function(err, doc) {
+          if (!err && doc) {
+            for (var i = 0; i < doc.players_current_status.length; i++) {
+              if (doc.players_current_status[i].opt_in_path == startOip) {
+                var phone = doc.players_current_status[i].phone;
+                var aPhone = smsHelper.getNormalizedPhone(alphaPhone);
+                var b0Phone = smsHelper.getNormalizedPhone(betaPhone0);
+                var b1Phone = smsHelper.getNormalizedPhone(betaPhone1);
+                var b2Phone = smsHelper.getNormalizedPhone(betaPhone2);
+                if (phone == aPhone)
+                  alphaStarted = true;
+                else if (phone == b0Phone)
+                  beta0Started = true;
+                else if (phone == b1Phone)
+                  beta1Started = true;
+                else if (phone == b2Phone)
+                  beta2Started = true;
+              }
+            }
+          }
+
+          assert(alphaStarted && beta0Started && beta1Started && beta2Started);
+          done();
+        })
+      })
+    })
+
+    // Level 1. 
+    describe(alphaName + ' answers B at L10', function() {
+      testHelper.userActionTest().withPhone(alphaPhone)
+        .withUserInput('B')
+        .expectNextLevelName('L1B')
+        .expectNextLevelMessage(178183)
+        .exec();
+    });
+
+    describe(alphaName + ' answers B at L1B', function() {
+      testHelper.userActionTest().withPhone(alphaPhone)
+        .withUserInput('B')
+        .expectNextLevelName('END-LEVEL1').expectNextLevelMessage(178191).exec();
+    });
+
+    describe(betaName0 + ' answers B at L10', function() {
+      testHelper.userActionTest().withPhone(betaPhone0)
+        .withUserInput('B')
+        .expectNextLevelName('L1B')
+        .expectNextLevelMessage(178183)
+        .exec();
+    });
+
+    describe(betaName0 + ' answers B at L1B', function() {
+      testHelper.userActionTest().withPhone(betaPhone0)
+        .withUserInput('B')
+        .expectNextLevelName('END-LEVEL1')
+        .expectNextLevelMessage(178191)
+        .exec();
+    });
+
+    describe(betaName1 + ' answers B at L10', function() {
+      testHelper.userActionTest().withPhone(betaPhone1)
+        .withUserInput('B')
+        .expectNextLevelName('L1B')
+        .expectNextLevelMessage(178183)
+        .exec();
+    });
+
+    describe(betaName1 + ' answers B at L1B', function() {
+      testHelper.userActionTest().withPhone(betaPhone1)
+        .withUserInput('B')
+        .expectNextLevelName('END-LEVEL1')
+        .expectNextLevelMessage(178191)
+        .exec();
+    });
+
+    describe(betaName2 + ' answers B at L10', function() {
+      testHelper.userActionTest().withPhone(betaPhone2)
+        .withUserInput('B')
+        .expectNextLevelName('L1B')
+        .expectNextLevelMessage(178183)
+        .exec();
+    });
+
+    describe(betaName2 + ' answers B at L1B', function() {
+      testHelper.userActionTest().withPhone(betaPhone2)
+        .withUserInput('B')
+        .expectNextLevelName('END-LEVEL1')
+        .expectNextLevelMessage(178191)
+        .expectEndStageName('END-LEVEL1-GROUP')
+        .expectEndStageMessage(178195)
+        .expectNextStageName('L20')
+        .expectNextStageMessage(178197)
+        .expectPlayerNamesAnsweredCorrectlyThisLevel([])
+        .expectEndLevelPlayerNameSuccessMessage(178436)
+        .exec();
+    });
 
     after(function() {
       // Remove all test documents
