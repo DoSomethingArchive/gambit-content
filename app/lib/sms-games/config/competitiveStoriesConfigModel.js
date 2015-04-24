@@ -39,6 +39,18 @@ var competitiveStoriesConfigSchema = new mongoose.Schema({
   // A message sent to a betas who have already joined after a beta joins. 
   beta_joined_notify_other_betas_oip : Number,
 
+  // Sent at the end of a level if no players make the correct choice.(failure)
+  end_level_0_correct_loss: Number,
+
+  // Sent at the end of a level if 1/3 or 1/4 players make the correct choice. (failure) 
+  end_level_1_correct_loss: Number,
+
+  // Sent at the end of a level if 1/2, 3/4, or 4/4 players make the correct choice. (success)
+  end_level_1_to_4_correct_win: Number,
+
+  // Sent at the end of a level if 1/1 players make the correct choice. (success)
+  end_level_solo_correct_win: Number,
+
   // Object containing data relevant when story is imported into Intertwine. 
   _twinedata : {},
  

@@ -6,11 +6,14 @@ var mobilecommons = rootRequire('mobilecommons')
   , emitter = rootRequire('app/eventEmitter')
   , message = require('./gameMessageHelpers')
   , record = require('./gameRecordHelpers')
+  , connectionOperations = rootRequire('app/config/connectionOperations')
+  , userModel = rootRequire('app/lib/sms-games/models/sgUser')(connectionOperations)
   ;
 
 module.exports = {
   alphaInvite : createGameInviteAll,
-  betaJoin : betaJoinNotifyAllPlayers
+  betaJoin : betaJoinNotifyAllPlayers,
+  endLevel : endLevelMessageWithSuccessPlayerNames
 }
 
 /**
@@ -38,10 +41,10 @@ function createGameInviteAll(gameConfig, gameDoc) {
   for (i = 0; i < gameDoc.betas.length; i++) {
     betas[i] = gameDoc.betas[i].phone;
     profileUpdateString += gameDoc.betas[i].name;
-    if (i != gameDoc.betas.length - 1) {
-      profileUpdateString += ', ';
-    }
+    profileUpdateString += ', ';
   }
+
+  profileUpdateString = removeLastCommaAddAnd(profileUpdateString);
 
   args = {
     alphaPhone: gameDoc.alpha_phone,
@@ -92,9 +95,9 @@ function betaJoinNotifyAllPlayers(gameConfig, gameDoc, joiningBetaPhone) {
     }
   }
 
-  removeIndex = hasNotJoined.lastIndexOf(", ");
-  hasNotJoined = hasNotJoined.substring(0, removeIndex);
 
+  hasNotJoined = removeLastCommaAddAnd(hasNotJoined);
+  
   args = {
     'players_not_in_game': hasNotJoined,
     'player_just_joined': justJoined
@@ -115,4 +118,94 @@ function betaJoinNotifyAllPlayers(gameConfig, gameDoc, joiningBetaPhone) {
   }
 
   return gameDoc;
+}
+
+function endLevelMessageWithSuccessPlayerNames(gameConfig, gameDoc, delay) {
+  // @TODO: once we've moved this feature off the A/B game and into the main 
+  // production game, remove the reference to story_id !== 301. Inelegant, I know. :(
+  if (!gameConfig.story['END-GAME']['indiv-level-success-oips'] || gameDoc.story_id !== 301) {
+    return;
+  }
+
+  var i, j
+    , path
+    , alphaPlayer
+    , allPlayers = []
+    , successPlayers = []
+    , successConfigKey
+    , nameString = ''
+    , removeIndex
+    , endLevelMessage
+    , numCorrect
+    , numPlayers
+    , args
+    , currentStatus = gameDoc.players_current_status
+    , successPaths = gameConfig.story['END-GAME']['indiv-level-success-oips']
+    ;
+
+  // finding all players who gave correct answers
+  for (i = 0; i < currentStatus.length; i++) {
+    path = currentStatus[i].opt_in_path;
+    for (j = 0; j < successPaths.length; j++) {
+      if (path == successPaths[j]) {
+        successPlayers.push(currentStatus[i]);
+      }
+    }
+  }
+
+  // assembling an array with all player data
+  alphaPlayer = { "name": gameDoc.alpha_name, "phone": gameDoc.alpha_phone };
+  allPlayers = gameDoc.betas;
+  allPlayers.push(alphaPlayer);
+
+  // assembling a string of all the correct players' names
+  for (i = 0; i < successPlayers.length; i++) {
+    for (j = 0; j < allPlayers.length; j++) {
+      if (successPlayers[i].phone == allPlayers[j].phone) {
+        nameString += allPlayers[j].name;
+        nameString += ', ';
+      }
+    }
+  }
+
+  numCorrect = successPlayers.length;
+  numPlayers = currentStatus.length;
+  // If no one answered correctly. 
+  if (numCorrect === 0) {
+    endLevelMessage = gameConfig.end_level_0_correct_loss;
+  } 
+  // If one player answered correctly, AND
+  else if (numCorrect === 1) {
+    // There's only one player. 
+    if (numPlayers === 1) {
+      endLevelMessage = gameConfig.end_level_solo_correct_win;
+    }
+    // There are two players. 
+    else if (numPlayers === 2) {
+      endLevelMessage = gameConfig.end_level_1_to_4_correct_win;
+    }
+    // There are 3-4 players. 
+    else {
+      endLevelMessage = gameConfig.end_level_1_correct_loss;
+    }
+  }
+  // If two more players answered correctly.
+  else if (numCorrect > 1) {
+    endLevelMessage = gameConfig.end_level_1_to_4_correct_win;
+  }
+
+  nameString = removeLastCommaAddAnd(nameString);
+
+  args = {'players_who_succeeded_at_end_level' : nameString};
+
+  for (i = 0; i < allPlayers.length; i++) {
+    message.singleUserWithDelay(allPlayers[i].phone, endLevelMessage, delay, gameDoc._id, userModel, args);
+    emitter.emit('end-level-player-name-message', {'players_who_succeeded_at_end_level' : nameString, 'endLevelMessage': endLevelMessage});
+  }
+}
+
+// Removes last comma, add & to penultimate comma
+function removeLastCommaAddAnd(nameString) {
+  removeIndex = nameString.lastIndexOf(",");
+  return nameString.substring(0, removeIndex).replace(/, (?!.*?, )/, ' & ');
 }

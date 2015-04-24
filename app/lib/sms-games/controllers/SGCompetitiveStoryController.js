@@ -17,6 +17,7 @@ var smsHelper = rootRequire('app/lib/smsHelpers')
   , alphaStartLogic = require('./logicAlphaStart')
   , start = require('./logicGameStart')
   , name = require('./playerNameHelpers')
+  , stringValidator = rootRequire('app/lib/string-validators')
   ;
 
 // Maximum number of players that can be invited into a game.
@@ -27,6 +28,10 @@ var MAX_PLAYERS_TO_INVITE = 3
   , TIME_UNTIL_SOLO_MESSAGE_SENT = 300000 // Five minutes is 300000.
 // StatHat analytics marker. 
   , STATHAT_CATEGORY = 'sms-games'
+// Character limit for player names.
+  , NAME_CHAR_LIMIT = 10
+// If the user inputs a naughty name to the game, we use this name instead. 
+  , NAUGHTY_NAME = 'IamNaughty'
   ;
 
 var SGCompetitiveStoryController = function() {};
@@ -46,7 +51,8 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
       gameDoc,
       phone,
       idx,
-      i;
+      i,
+      shortName;
 
   // Return a 406 if some data is missing.
   if (typeof request.body === 'undefined'
@@ -86,10 +92,17 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
     return false;
   }
 
-  // Compile a new game document.
+  function truncName(name) {
+    if (!name) { return null; }
+    else if (stringValidator.containsNaughtyWords(name)) { return NAUGHTY_NAME; }
+    else { return name.substring(0, NAME_CHAR_LIMIT).trim(); }
+  }
+
+  // Compile a new game document. 
+  shortName = truncName(request.body.alpha_first_name);
   gameDoc = {
     story_id: storyId,
-    alpha_name: request.body.alpha_first_name,
+    alpha_name: shortName,
     alpha_phone: alphaPhone,
     betas: [],
     game_type: (request.body.game_type || '')
@@ -97,13 +110,14 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
   for (i = 0; i < MAX_PLAYERS_TO_INVITE; i++) {
     phone = request.body['beta_mobile_' + i] ? smsHelper.getNormalizedPhone(request.body['beta_mobile_' + i]) : null;
+    shortName = truncName(request.body['beta_first_name_' + i]);
 
     if (smsHelper.isValidPhone(phone)) {
       idx = gameDoc.betas.length;
       gameDoc.betas[idx] = {};
       gameDoc.betas[idx].invite_accepted = false;
       gameDoc.betas[idx].phone = phone;
-      gameDoc.betas[idx].name = request.body['beta_first_name_' + i] || phone;
+      gameDoc.betas[idx].name = shortName || phone;
     }
   }
 

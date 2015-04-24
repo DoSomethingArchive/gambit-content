@@ -19,12 +19,13 @@ describe('Running all responder tests', function() {
   });
 
   it('runs all the responder tests', function() {
-    require('./BullyText.js');
+    require('./BullyText2014.js');
     require('./ds-routing.js');
     require('./EndGameFromUserExit.js');
     require('./GameAlphaStart');
     require('./lib.test.js');
     require('./mobilecommons.js');
     require('./ScienceSleuth.js');
+    require('./BullyText2015ABTest.js');
   })
 });

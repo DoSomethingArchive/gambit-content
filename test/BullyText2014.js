@@ -10,7 +10,7 @@ var assert = require('assert')
   , testHelper = require('./testHelperFunctions')
   ;
 
-describe('Bully Text game being played:', function() {
+describe('Bully Text 2014 game being played:', function() {
   var alphaName = 'alpha';
   var alphaPhone = '5555550200';
   var betaName0 = 'friend0';
