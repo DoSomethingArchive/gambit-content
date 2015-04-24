@@ -198,11 +198,11 @@ describe('Bully Text 2015 A/B test version being played:', function() {
         .exec();
     });
 
-    describe(alphaName + ' answers A at L2A', function() {
+    describe(alphaName + ' answers B at L2A', function() {
       testHelper.userActionTest().withPhone(alphaPhone)
-        .withUserInput('A')
+        .withUserInput('B')
         .expectNextLevelName('END-LEVEL2')
-        .expectNextLevelMessage(178203).exec();
+        .expectNextLevelMessage(178205).exec();
     });
 
     describe(betaName0 + ' answers B at L20', function() {
