@@ -30,6 +30,8 @@ var MAX_PLAYERS_TO_INVITE = 3
   , STATHAT_CATEGORY = 'sms-games'
 // Character limit for player names.
   , NAME_CHAR_LIMIT = 10
+// If the user inputs a naughty name to the game, we use this name instead. 
+  , NAUGHTY_NAME = 'IamNaughty'
   ;
 
 var SGCompetitiveStoryController = function() {};
@@ -92,7 +94,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
 
   function truncName(name) {
     if (!name) { return null; }
-    else if (stringValidator.containsNaughtyWords(name)) { return "IamNaughty"; }
+    else if (stringValidator.containsNaughtyWords(name)) { return NAUGHTY_NAME; }
     else { return name.substring(0, NAME_CHAR_LIMIT).trim(); }
   }
 
