@@ -6,12 +6,15 @@ var assert = require('assert')
   ;
 
 function test() {
-  var TEST_PHONE = '15555555555';
-  var TEST_CAMPAIGN_CONFIG = app.getConfig(app.ConfigName.REPORTBACK, 'test', 'endpoint');
+  var TEST_PHONE = '15555555555'
+    , TEST_CAMPAIGN_CONFIG = app.getConfig(app.ConfigName.REPORTBACK, 'test', 'endpoint')
+    , testDoc // exists in the global test scope; variable re-assigned each time createTestDoc() is run. 
+    ; 
 
   var createTestDoc = function(done) {
     model.create({phone: TEST_PHONE, campaign: TEST_CAMPAIGN_CONFIG.endpoint}, function(err, doc) {
       if (doc) {
+        testDoc = doc;
         done();
       }
     });
@@ -63,7 +66,6 @@ function test() {
 
   describe('reportback.receivePhoto - when no photo is sent', function() {
     it('should respond with the "not a photo" message', function(done) {
-      var testDoc = {};
       var testData = {
         phone: TEST_PHONE,
         campaignConfig: TEST_CAMPAIGN_CONFIG
@@ -88,7 +90,6 @@ function test() {
   });
 
   describe('reportback.receivePhoto - when a photo is sent', function() {
-    var testDoc = {};
     var testData = {
       phone: TEST_PHONE,
       campaignConfig: TEST_CAMPAIGN_CONFIG,
@@ -135,7 +136,6 @@ function test() {
           }
         });
       });
-
       // Call receivePhoto with test data
       reportback.receivePhoto(testDoc, testData);
     });
@@ -148,7 +148,6 @@ function test() {
   });
 
   describe('reportback.receiveCaption - with a value of "test caption"', function() {
-    var testDoc = {};
     var testData = {
       phone: TEST_PHONE,
       campaignConfig: TEST_CAMPAIGN_CONFIG,
@@ -208,7 +207,6 @@ function test() {
   });
 
   describe('reportback.receiveQuantity - with a value of 5', function() {
-    var testDoc = {};
     var testData = {
       phone: TEST_PHONE,
       campaignConfig: TEST_CAMPAIGN_CONFIG,
@@ -268,7 +266,6 @@ function test() {
   });
 
   describe('reportback.receiveWhyImportant - with a value of "because I care"', function() {
-    var testDoc = {};
     var testData = {
       phone: TEST_PHONE,
       campaignConfig: TEST_CAMPAIGN_CONFIG,

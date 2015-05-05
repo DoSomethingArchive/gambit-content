@@ -127,7 +127,7 @@ function receivePhoto(doc, data) {
   }
   else {
     model.update(
-      {phone: data.phone},
+      {phone: data.phone, campaign: doc.campaign},
       {'$set': {photo: photoUrl}},
       function(err, num, raw) {
         if (!err) {
@@ -150,7 +150,7 @@ function receivePhoto(doc, data) {
 function receiveCaption(doc, data) {
   var answer = data.args;
   model.update(
-    {phone: data.phone},
+    {phone: data.phone, campaign: doc.campaign},
     {'$set': {caption: answer}},
     function(err, num, raw) {
       if (!err) {
@@ -172,7 +172,7 @@ function receiveCaption(doc, data) {
 function receiveQuantity(doc, data) {
   var answer = data.args;
   model.update(
-    {phone: data.phone},
+    {phone: data.phone, campaign: doc.campaign},
     {'$set': {quantity: answer}},
     function(err, num, raw) {
       if (!err) {
@@ -194,7 +194,7 @@ function receiveQuantity(doc, data) {
 function receiveWhyImportant(doc, data) {
   var answer = data.args;
   model.update(
-    {phone: data.phone},
+    {phone: data.phone, campaign: doc.campaign},
     {'$set': {why_important: answer}},
     function(err, num, raw) {
       if (!err) {
