@@ -6,23 +6,25 @@ var assert = require('assert')
   ;
 
 function test() {
-  var TEST_PHONE = '15555555555';
-  var TEST_CAMPAIGN_CONFIG = app.getConfig(app.ConfigName.REPORTBACK, 'test', 'endpoint');
+  var TEST_PHONE = '15555555555'
+    , TEST_CAMPAIGN_CONFIG = app.getConfig(app.ConfigName.REPORTBACK, 'test', 'endpoint')
+    , TEST_CAMPAIGN_CONFIG_2 = app.getConfig(app.ConfigName.REPORTBACK, 'test2', 'endpoint')
+    ;
 
-  var createTestDoc = function(done) {
-    model.create({phone: TEST_PHONE, campaign: TEST_CAMPAIGN_CONFIG.endpoint}, function(err, doc) {
-      if (doc) {
-        done();
-      }
-    });
-  };
-
-  var removeTestDoc = function() {
+  var removeTestDocs = function() {
     model.remove({phone: TEST_PHONE}).exec();
   };
 
   describe('reportback.findDocument', function() {
-    before(createTestDoc);
+    var testDoc;
+    before(function(done) {
+      model.create({phone: TEST_PHONE, campaign: TEST_CAMPAIGN_CONFIG.endpoint}, function(err, doc) {
+        if (doc) {
+          testDoc = doc;
+          done();
+        }
+      });
+    });
 
     it('should find the document', function(done) {
       reportback.findDocument(TEST_PHONE, TEST_CAMPAIGN_CONFIG.endpoint)
@@ -36,7 +38,7 @@ function test() {
         });
     });
 
-    after(removeTestDoc);
+    after(removeTestDocs);
   });
 
   describe('reportback.onDocumentFound - when no existing document is found', function() {
@@ -58,16 +60,24 @@ function test() {
       });
     });
 
-    after(removeTestDoc);
+    after(removeTestDocs);
   });
 
   describe('reportback.receivePhoto - when no photo is sent', function() {
     it('should respond with the "not a photo" message', function(done) {
-      var testDoc = {};
       var testData = {
         phone: TEST_PHONE,
         campaignConfig: TEST_CAMPAIGN_CONFIG
       };
+      var testDoc;
+      before(function(done) {
+        model.create({phone: TEST_PHONE, campaign: TEST_CAMPAIGN_CONFIG.endpoint}, function(err, doc) {
+          if (doc) {
+            testDoc = doc;
+            done();
+          }
+        });
+      });
 
       emitter.on(emitter.events.mcProfileUpdateTest, function(evtData) {
         if (evtData.form.phone_number == testData.phone &&
@@ -88,14 +98,20 @@ function test() {
   });
 
   describe('reportback.receivePhoto - when a photo is sent', function() {
-    var testDoc = {};
     var testData = {
       phone: TEST_PHONE,
       campaignConfig: TEST_CAMPAIGN_CONFIG,
       mms_image_url: 'http://test.url'
     };
-
-    before(createTestDoc);
+    var testDoc;
+    before(function(done) {
+      model.create({phone: TEST_PHONE, campaign: TEST_CAMPAIGN_CONFIG.endpoint}, function(err, doc) {
+        if (doc) {
+          testDoc = doc;
+          done();
+        }
+      });
+    });
 
     it('should respond with the "caption" message', function(done) {
       var mcEventDone = false;
@@ -135,29 +151,35 @@ function test() {
           }
         });
       });
-
       // Call receivePhoto with test data
       reportback.receivePhoto(testDoc, testData);
     });
 
     after(function() {
-      removeTestDoc();
+      removeTestDocs();
       emitter.removeAllListeners(emitter.events.mcProfileUpdateTest);
       emitter.removeAllListeners(emitter.events.reportbackModelUpdate);
     });
   });
 
   describe('reportback.receiveCaption - with a value of "test caption"', function() {
-    var testDoc = {};
     var testData = {
       phone: TEST_PHONE,
       campaignConfig: TEST_CAMPAIGN_CONFIG,
       args: 'test caption'
     };
-
-    before(createTestDoc);
+    var testDoc;
+    before(function(done) {
+      model.create({phone: TEST_PHONE, campaign: TEST_CAMPAIGN_CONFIG.endpoint}, function(err, doc) {
+        if (doc) {
+          testDoc = doc;
+          done();
+        }
+      });
+    });
 
     it('should respond with the "quantity" message and update reportback doc with "test caption"', function(done) {
+
       var mcEventDone = false;
       var rbEventDone = false;
       function onSuccessfulEvent(evt) {
@@ -201,21 +223,27 @@ function test() {
     });
 
     after(function() {
-      removeTestDoc();
+      removeTestDocs();
       emitter.removeAllListeners(emitter.events.mcProfileUpdateTest);
       emitter.removeAllListeners(emitter.events.reportbackModelUpdate);
     });
   });
 
   describe('reportback.receiveQuantity - with a value of 5', function() {
-    var testDoc = {};
     var testData = {
       phone: TEST_PHONE,
       campaignConfig: TEST_CAMPAIGN_CONFIG,
       args: '5'
     };
-
-    before(createTestDoc);
+    var testDoc;
+    before(function(done) {
+      model.create({phone: TEST_PHONE, campaign: TEST_CAMPAIGN_CONFIG.endpoint}, function(err, doc) {
+        if (doc) {
+          testDoc = doc;
+          done();
+        }
+      });
+    });
 
     it('should respond with the "why" message and update reportback doc with 5', function(done) {
       var mcEventDone = false;
@@ -261,21 +289,27 @@ function test() {
     });
 
     after(function() {
-      removeTestDoc();
+      removeTestDocs();
       emitter.removeAllListeners(emitter.events.mcProfileUpdateTest);
       emitter.removeAllListeners(emitter.events.reportbackModelUpdate);
     });
   });
 
   describe('reportback.receiveWhyImportant - with a value of "because I care"', function() {
-    var testDoc = {};
     var testData = {
       phone: TEST_PHONE,
       campaignConfig: TEST_CAMPAIGN_CONFIG,
       args: 'because I care'
     };
-
-    before(createTestDoc);
+    var testDoc;
+    before(function(done) {
+      model.create({phone: TEST_PHONE, campaign: TEST_CAMPAIGN_CONFIG.endpoint}, function(err, doc) {
+        if (doc) {
+          testDoc = doc;
+          done();
+        }
+      });
+    });
 
     it('should respond with the "completion" message and update reportback doc with the answer and optout of the campaign', function(done) {
       var mcUpdateEventDone = false;
@@ -337,12 +371,141 @@ function test() {
     });
 
     after(function() {
-      removeTestDoc();
+      removeTestDocs();
       emitter.removeAllListeners(emitter.events.mcProfileUpdateTest);
       emitter.removeAllListeners(emitter.events.mcOptoutTest);
       emitter.removeAllListeners(emitter.events.reportbackModelUpdate);
     });
   });
+  describe('A single user not finishing her reportback for one campaign before reporting back for another', function() {
+
+    // Documents updated as we simulate a user moving through the rb flow.
+    var testDoc1, testDoc2;
+    before(function(done) {
+      model.create({phone: TEST_PHONE, campaign: TEST_CAMPAIGN_CONFIG.endpoint}, {phone: TEST_PHONE, campaign: TEST_CAMPAIGN_CONFIG_2.endpoint}, function(err, doc1, doc2) {
+        if (doc1 && doc2) {
+          testDoc1 = doc1;
+          testDoc2 = doc2;
+          done();
+          console.log('testDoc1', testDoc1, 'testDoc2', testDoc2)
+        }
+      });
+    })
+
+    afterEach(function() {
+      emitter.removeAllListeners(emitter.events.reportbackModelUpdate);
+    })
+
+    it('should allow a user to send a photo for test campaign 1', function(done) {
+      var photoData = {
+        phone: TEST_PHONE,
+        campaignConfig: TEST_CAMPAIGN_CONFIG,
+        mms_image_url: 'http://test1.url'
+      };
+
+      emitter.on(emitter.events.reportbackModelUpdate, function(evtData) {
+        model.findOne({phone: TEST_PHONE, campaign: TEST_CAMPAIGN_CONFIG.endpoint}, function(err, doc) {
+          if (doc && doc.photo == photoData.mms_image_url) {
+            testDoc1 = doc;
+            done();
+          }
+        })
+      })
+      reportback.handleUserResponse(testDoc1, photoData);
+    })
+
+    it('should allow a user to send a caption for test campaign 1', function(done) {
+      var captionData = {
+        phone: TEST_PHONE,
+        campaignConfig: TEST_CAMPAIGN_CONFIG,
+        args: 'The arc of history is long but it bends towards justice'
+      }
+
+      emitter.on(emitter.events.reportbackModelUpdate, function(evtData) {
+        model.findOne({phone: TEST_PHONE, campaign: TEST_CAMPAIGN_CONFIG.endpoint}, function(err, doc) {
+          if (doc && doc.caption == captionData.args) {
+            testDoc1 = doc;
+            done();
+          }
+        })
+      })
+      reportback.handleUserResponse(testDoc1, captionData);
+    })
+
+    it('should allow a user to send in a quantity for test campaign 1', function(done) {
+      var quantityData = {
+        phone: TEST_PHONE,
+        campaignConfig: TEST_CAMPAIGN_CONFIG,
+        args: 888888888
+      }
+
+      emitter.on(emitter.events.reportbackModelUpdate, function(evtData) {
+        model.findOne({phone: TEST_PHONE, campaign: TEST_CAMPAIGN_CONFIG.endpoint}, function(err, doc) {
+          if (doc && doc.quantity == quantityData.args) {
+            testDoc1 = doc;
+            done();
+          }
+        })
+      })
+      reportback.handleUserResponse(testDoc1, quantityData);
+    })
+
+    it('should allow a user to send a photo for test campaign 2', function(done) {
+      var photoData = {
+        phone: TEST_PHONE,
+        campaignConfig: TEST_CAMPAIGN_CONFIG_2,
+        mms_image_url: 'http://testcampaigntwo.url'
+      };
+
+      emitter.on(emitter.events.reportbackModelUpdate, function(evtData) {
+        model.findOne({phone: TEST_PHONE, campaign: TEST_CAMPAIGN_CONFIG_2.endpoint}, function(err, doc) {
+          if (doc && doc.photo == photoData.mms_image_url) {
+            testDoc2 = doc;
+            done();
+          }
+        })
+      })
+      reportback.handleUserResponse(testDoc2, photoData);
+    })
+
+    it('should allow a user to send a caption for test campaign 2', function(done) {
+      var captionData = {
+        phone: TEST_PHONE,
+        campaignConfig: TEST_CAMPAIGN_CONFIG_2,
+        args: 'Friends, Romans, countrymen lend me your ears!'
+      }
+
+      emitter.on(emitter.events.reportbackModelUpdate, function(evtData) {
+        model.findOne({phone: TEST_PHONE, campaign: TEST_CAMPAIGN_CONFIG_2.endpoint}, function(err, doc) {
+          if (doc && doc.caption == captionData.args) {
+            testDoc2 = doc;
+            done();
+          }
+        })
+      })
+      reportback.handleUserResponse(testDoc2, captionData);
+    })
+
+    it('should allow a user to send in a quantity for test campaign 2', function(done) {
+      var quantityData = {
+        phone: TEST_PHONE,
+        campaignConfig: TEST_CAMPAIGN_CONFIG_2,
+        args: 777777777
+      }
+
+      emitter.on(emitter.events.reportbackModelUpdate, function(evtData) {
+        model.findOne({phone: TEST_PHONE, campaign: TEST_CAMPAIGN_CONFIG_2.endpoint}, function(err, doc) {
+          if (doc && doc.quantity == quantityData.args) {
+            testDoc2 = doc;
+            done();
+          }
+        })
+      })
+      reportback.handleUserResponse(testDoc2, quantityData);
+    })
+
+    after(removeTestDocs);
+  })
 };
 
 module.exports = test;
