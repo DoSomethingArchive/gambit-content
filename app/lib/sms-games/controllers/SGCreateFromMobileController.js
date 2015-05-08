@@ -72,6 +72,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
     // should NOT be confused with the game doc, or the gameConfig. It's destroyed
     // after the game is begun; it's used only for game creation. 
     if (configDoc == null) {
+      debugger;
       // We don't ask for the first name yet, so just saving it as phone for now.
       var doc = {
         alpha_mobile: request.body.phone,
@@ -99,19 +100,24 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
           sendSMS(configDoc.alpha_mobile, gameConfig.mobile_create.not_enough_players_oip);
         }
       }
-      else if (isPhoneNumber(message)) {
+      else if (isPhoneNumber(message) && smsHelper.hasLetters(message)) {
+        debugger;
         var betaMobile = smsHelper.getNormalizedPhone(message);
+        var betaName = smsHelper.getLetters(message);
+
         // If we haven't saved a beta number yet, save it to beta_mobile_0.
-        if (!configDoc.beta_mobile_0) {
+        if (!configDoc.beta_mobile_0 && !configDoc.beta_first_name_0) {
           configDoc.beta_mobile_0 = betaMobile;
+          configDoc.beta_first_name_0 = betaName;
           self._updateDocument(configDoc);
 
           // Then ask for beta_mobile_1.
           sendSMS(configDoc.alpha_mobile, gameConfig.mobile_create.ask_beta_1_oip);
         }
         // If we haven't saved the 2nd beta number yet, save it to beta_mobile_1.
-        else if (!configDoc.beta_mobile_1) {
+        else if (!configDoc.beta_mobile_1 && !configDoc.beta_first_name_1) {
           configDoc.beta_mobile_1 = betaMobile;
+          configDoc.beta_first_name_1 = betaName;
           self._updateDocument(configDoc);
 
           // Then ask for beta_mobile_2.
@@ -120,6 +126,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
         // At this point, this is the last number we need. So, create the game.
         else {
           configDoc.beta_mobile_2 = betaMobile;
+          configDoc.beta_first_name_2 = betaName;
           // Again, while it may seem that the two calls below may produce async disorderlyness, they don't. 
           createGame(configDoc, self.host);
           self._removeDocument(configDoc.alpha_mobile);
@@ -141,10 +148,11 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
     if (configDoc) {
       // User should have responded with beta_mobile_0.
       var message = request.body.args;
-      if (isPhoneNumber(message)) {
+      if (isPhoneNumber(message) && smsHelper.hasLetters(message)) {
         // Update doc with beta_mobile_0 number.
         // var doc = modelConfig._doc;
         configDoc.beta_mobile_0 = smsHelper.getNormalizedPhone(message);
+        configDoc.beta_first_name_0 = smsHelper.getLetters(message);
         self._updateDocument(configDoc);
 
         // Send next message asking for beta_mobile_1.
@@ -175,14 +183,18 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
  *   Hostname of this app.
  */
 function createGame(gameCreateConfig, host) {
+  debugger;
   var url = 'http://' + host + '/sms-multiplayer-game/create';
   var payload = {
     form: {
       alpha_mobile: gameCreateConfig.alpha_mobile,
       alpha_first_name: gameCreateConfig.alpha_first_name,
       beta_mobile_0: gameCreateConfig.beta_mobile_0,
+      beta_first_name_0: gameCreateConfig.beta_first_name_0 ? gameCreateConfig.beta_first_name_0 : '',
       beta_mobile_1: gameCreateConfig.beta_mobile_1 ? gameCreateConfig.beta_mobile_1 : '',
+      beta_first_name_1: gameCreateConfig.beta_first_name_1 ? gameCreateConfig.beta_first_name_1 : '',
       beta_mobile_2: gameCreateConfig.beta_mobile_2 ? gameCreateConfig.beta_mobile_2 : '',
+      beta_first_name_2: gameCreateConfig.beta_first_name_2 ? gameCreateConfig.beta_first_name_2 : '',
       story_id: gameCreateConfig.story_id,
       story_type: gameCreateConfig.story_type
     }
@@ -249,6 +261,9 @@ SGCreateFromMobileController.prototype._updateDocument = function(configDoc) {
       beta_mobile_0: configDoc.beta_mobile_0 ? configDoc.beta_mobile_0 : null,
       beta_mobile_1: configDoc.beta_mobile_1 ? configDoc.beta_mobile_1 : null,
       beta_mobile_2: configDoc.beta_mobile_2 ? configDoc.beta_mobile_2 : null,
+      beta_first_name_0: configDoc.beta_first_name_0 ? configDoc.beta_first_name_0 : '',
+      beta_first_name_1: configDoc.beta_first_name_1 ? configDoc.beta_first_name_1 : '',
+      beta_first_name_2: configDoc.beta_first_name_2 ? configDoc.beta_first_name_2 : ''
     }},
     function(err, num, raw) {
       if (err) {

@@ -93,4 +93,26 @@ module.exports.isYesResponse = function(message) {
   }
 }
 
+/**
+ * Determines whether or not the given string contains letters. 
+ *
+ * @param message
+ *   String message to parse.
+ *
+ * @return Bolean. 
+ */
+module.exports.hasLetters = function(message) {
+  return RegExp(/[a-zA-Z]/g).test(message);
+}
 
+/**
+ * Returns the letters contained in a string. 
+ *
+ * @param message
+ *   String message to parse.
+ *
+ * @return String. 
+ */
+module.exports.getLetters = function(message) {
+  return message.replace(/[^a-zA-Z]/g, '');
+}

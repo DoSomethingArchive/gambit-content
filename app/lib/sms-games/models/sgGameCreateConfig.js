@@ -17,11 +17,20 @@ var sgGameCreateConfigSchema = new mongoose.Schema({
   // Mobile number of beta 1
   beta_mobile_0: String,
 
+  // Name of beta 1 user
+  beta_first_name_0: String,
+
   // Mobile number of beta 2
   beta_mobile_1: String,
 
+  // Name of beta 2 user
+  beta_first_name_1: String,
+
   // Mobile number of beta 3
   beta_mobile_2: String,
+
+  // Name of beta 3 user
+  beta_first_name_2: String,
 
   // Story ID
   story_id: Number,
