@@ -72,7 +72,6 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
     // should NOT be confused with the game doc, or the gameConfig. It's destroyed
     // after the game is begun; it's used only for game creation. 
     if (configDoc == null) {
-      debugger;
       // We don't ask for the first name yet, so just saving it as phone for now.
       var doc = {
         alpha_mobile: request.body.phone,
@@ -101,7 +100,6 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
         }
       }
       else if (isPhoneNumber(message) && smsHelper.hasLetters(message)) {
-        debugger;
         var betaMobile = smsHelper.getNormalizedPhone(message);
         var betaName = smsHelper.getLetters(message);
 
@@ -183,7 +181,6 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
  *   Hostname of this app.
  */
 function createGame(gameCreateConfig, host) {
-  debugger;
   var url = 'http://' + host + '/sms-multiplayer-game/create';
   var payload = {
     form: {

@@ -26,6 +26,6 @@ describe('Running all responder tests', function() {
     require('./lib.test.js');
     require('./mobilecommons.js');
     require('./ScienceSleuth.js');
-    require('./BullyText2015ABTest.js');
+    require('./PlayerNamesInGame.js');
   })
 });
