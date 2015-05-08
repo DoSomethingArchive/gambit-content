@@ -65,6 +65,9 @@ var competitiveStoriesConfigSchema = new mongoose.Schema({
     // Asks alpha to provide phone number of third beta. 
     ask_beta_2_oip: Number, 
 
+    // Error message informing alpha she did not provide a valid name for herself. 
+    invalid_alpha_first_name: Number,
+
     // Error message informing alpha she provided an invalid mobile number. 
     invalid_mobile_oip: Number,
 

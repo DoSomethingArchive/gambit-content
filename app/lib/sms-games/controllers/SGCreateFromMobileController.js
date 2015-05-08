@@ -67,7 +67,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
   var queryConfig = configModel.findOne({alpha_mobile: request.body.phone});
   var promiseConfig = queryConfig.exec();
   promiseConfig.then(function(configDoc) {
-
+    debugger;
     // If no document found, then create one. This game creation config doc 
     // should NOT be confused with the game doc, or the gameConfig. It's destroyed
     // after the game is begun; it's used only for game creation. 
@@ -81,17 +81,16 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
         game_type: (request.query.game_type || '')
       };
 
-      // User should have responded with beta_mobile_0.
+      // User should have responded with the alpha name.
       var message = request.body.args;
-      if (isPhoneNumber(message) && smsHelper.hasLetters(message)) {
-        doc.beta_mobile_0 = smsHelper.getNormalizedPhone(message);
-        doc.beta_first_name_0 = smsHelper.getLetters(message);
+      if (smsHelper.hasLetters(message)) {
+        doc.alpha_first_name = smsHelper.getLetters(message);
         // Send next message asking for beta_mobile_1.
-        sendSMS(request.body.phone, gameConfig.mobile_create.ask_beta_1_oip);
+        sendSMS(request.body.phone, gameConfig.mobile_create.ask_beta_0_oip);
       }
       else {
-        // If user responded with something else, ask for a valid phone number.
-        sendSMS(request.body.phone, gameConfig.mobile_create.invalid_mobile_oip);
+        // If user responded with something else, ask for a valid player name. 
+        sendSMS(request.body.phone, gameConfig.mobile_create.invalid_alpha_first_name);
       }
       configModel.create(doc);
     }
@@ -111,6 +110,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
           sendSMS(configDoc.alpha_mobile, gameConfig.mobile_create.not_enough_players_oip);
         }
       }
+      // If the message contains a valid phone number and beta name. 
       else if (isPhoneNumber(message) && smsHelper.hasLetters(message)) {
         var betaMobile = smsHelper.getNormalizedPhone(message);
         var betaName = smsHelper.getLetters(message);
@@ -142,8 +142,8 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
           self._removeDocument(configDoc.alpha_mobile);
         }
       }
+      // Send the "invalid response" message.
       else {
-        // Send the "invalid response" message.
         sendSMS(configDoc.alpha_mobile, gameConfig.mobile_create.invalid_mobile_oip);
       }
     }
