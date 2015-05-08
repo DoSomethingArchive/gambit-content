@@ -81,7 +81,19 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
         game_type: (request.query.game_type || '')
       };
 
-      return configModel.create(doc);
+      // User should have responded with beta_mobile_0.
+      var message = request.body.args;
+      if (isPhoneNumber(message) && smsHelper.hasLetters(message)) {
+        doc.beta_mobile_0 = smsHelper.getNormalizedPhone(message);
+        doc.beta_first_name_0 = smsHelper.getLetters(message);
+        // Send next message asking for beta_mobile_1.
+        sendSMS(request.body.phone, gameConfig.mobile_create.ask_beta_1_oip);
+      }
+      else {
+        // If user responded with something else, ask for a valid phone number.
+        sendSMS(request.body.phone, gameConfig.mobile_create.invalid_mobile_oip);
+      }
+      configModel.create(doc);
     }
     // If a document is found, then process the user message.
     else {
@@ -134,41 +146,10 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
         // Send the "invalid response" message.
         sendSMS(configDoc.alpha_mobile, gameConfig.mobile_create.invalid_mobile_oip);
       }
-
-      throw new ErrorAbortPromiseChain();
-      return null;
     }
-
-  }).then(function(configDoc) {
-
-    // We only come within this .then() statement if the 
-    // config model has just been newly successfully created.
-    if (configDoc) {
-      // User should have responded with beta_mobile_0.
-      var message = request.body.args;
-      if (isPhoneNumber(message) && smsHelper.hasLetters(message)) {
-        // Update doc with beta_mobile_0 number.
-        // var doc = modelConfig._doc;
-        configDoc.beta_mobile_0 = smsHelper.getNormalizedPhone(message);
-        configDoc.beta_first_name_0 = smsHelper.getLetters(message);
-        self._updateDocument(configDoc);
-
-        // Send next message asking for beta_mobile_1.
-        sendSMS(configDoc.alpha_mobile, gameConfig.mobile_create.ask_beta_1_oip);
-      }
-      else {
-        // If user responded with something else, ask for a valid phone number.
-        sendSMS(configDoc.alpha_mobile, gameConfig.mobile_create.invalid_mobile_oip);
-      }
-    }  
-
   }, function(err) {
-    // ErrorAbortPromiseChain is ok. Otherwise, log the error.
-    if (!(err instanceof ErrorAbortPromiseChain)) {
-      logger.error(err);
-    }
-  });
-
+    logger.error(err);
+  })
   response.send();
 };
 
