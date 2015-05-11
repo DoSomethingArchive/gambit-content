@@ -74,7 +74,6 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
       // We don't ask for the first name yet, so just saving it as phone for now.
       var doc = {
         alpha_mobile: request.body.phone,
-        alpha_first_name: request.body.phone,
         story_id: request.query.story_id,
         story_type: request.query.story_type,
         game_type: (request.query.game_type || '')
@@ -107,6 +106,18 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
         else {
           // Send the "not enough players" message.
           sendSMS(configDoc.alpha_mobile, gameConfig.mobile_create.not_enough_players_oip);
+        }
+      }
+      // If the alpha hasn't yet provided a valid name yet. 
+      else if (!configDoc.alpha_first_name) {
+        if (smsHelper.hasLetters(message)) {
+          var alphaName = smsHelper.getLetters(message);
+          configDoc.alpha_first_name = alphaName;
+          self._updateDocument(configDoc);
+          sendSMS(configDoc.alpha_mobile, gameConfig.mobile_create.ask_beta_0_oip);
+        }
+        else {
+          sendSMS(configDoc.alpha_mobile, gameConfig.mobile_create.invalid_alpha_first_name);
         }
       }
       // If the message contains a valid phone number and beta name. 
@@ -235,6 +246,7 @@ SGCreateFromMobileController.prototype._updateDocument = function(configDoc) {
   configModel.update(
     {alpha_mobile: configDoc.alpha_mobile},
     {$set: {
+      alpha_first_name: configDoc.alpha_first_name ? configDoc.alpha_first_name : null,
       beta_mobile_0: configDoc.beta_mobile_0 ? configDoc.beta_mobile_0 : null,
       beta_mobile_1: configDoc.beta_mobile_1 ? configDoc.beta_mobile_1 : null,
       beta_mobile_2: configDoc.beta_mobile_2 ? configDoc.beta_mobile_2 : null,
