@@ -67,7 +67,6 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
   var queryConfig = configModel.findOne({alpha_mobile: request.body.phone});
   var promiseConfig = queryConfig.exec();
   promiseConfig.then(function(configDoc) {
-    debugger;
     // If no document found, then create one. This game creation config doc 
     // should NOT be confused with the game doc, or the gameConfig. It's destroyed
     // after the game is begun; it's used only for game creation. 
