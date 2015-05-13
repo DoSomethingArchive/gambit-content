@@ -2,14 +2,10 @@ var assert = require('assert')
   , express = require('express')
   , emitter = rootRequire('app/eventEmitter')
   , connectionOperations = rootRequire('app/config/connectionOperations')
-  // , gameMappingModel = rootRequire('app/lib/sms-games/models/sgGameMapping')(connectionOperations)
   , gameCreateConfigModel = rootRequire('app/lib/sms-games/models/sgGameCreateConfig')(connectionOperations)
   , gameModel = rootRequire('app/lib/sms-games/models/sgCompetitiveStory')(connectionOperations)
-  // , userModel = rootRequire('app/lib/sms-games/models/sgUser')(connectionOperations)
-  // , SGCompetitiveStoryController = rootRequire('app/lib/sms-games/controllers/SGCompetitiveStoryController')
   , SGCreateFromMobileController = rootRequire('app/lib/sms-games/controllers/SGCreateFromMobileController')
   , smsHelper = rootRequire('app/lib/smsHelpers')
-  // , testHelper = require('./testHelperFunctions')
   , _ = require('underscore')
   ;
 
@@ -90,8 +86,8 @@ describe('Creating a four-player game with first names from mobile: ', function(
         gameCreateConfigModel.findOne({_id: gameCreateConfigId}, function(err, doc) {
           if (!err && doc.beta_mobile_0 === betaPhone0 && doc.beta_first_name_0 === betaName0) { done(); }
           else { assert(false); }
-          emitter.removeAllListeners('game-create-config-modified');
         })
+        emitter.removeAllListeners('game-create-config-modified');
       })
       mobileController.processRequest(request, response);
     })
@@ -113,8 +109,8 @@ describe('Creating a four-player game with first names from mobile: ', function(
         gameCreateConfigModel.findOne({_id: gameCreateConfigId}, function(err, doc) {
           if (!err && doc.beta_mobile_1 === betaPhone1 && doc.beta_first_name_1 === betaName1) { done(); }
           else { assert(false); }
-          emitter.removeAllListeners('game-create-config-modified');
         })
+        emitter.removeAllListeners('game-create-config-modified');
       })
       mobileController.processRequest(request, response);
     })
@@ -148,22 +144,248 @@ describe('Creating a four-player game with first names from mobile: ', function(
         else {
           assert(false);
         }
+        emitter.removeAllListeners('mobile-create-flow-creating-game');
       })
       mobileController.processRequest(request, response);
     })
-    after(function() {
-      gameCreateConfigModel.remove({_id: gameCreateConfigId}, function() {});
-    })
+
   })
-
-  // Test an alpha starting a game after only inviting one player. 
-
-
-  // test a game creation process where the player first enter invalid params for 1) alpha name, 2) beta 0 namRitike, and 3) beta 0 number.
-
   after(function() {
     gameCreateConfigModel.remove({_id: gameCreateConfigId}, function() {});
   })
 })
 
-// describe('Alpha creating a game through mobile after only inviting one player')
+describe('Alpha creating a game through mobile after only inviting one player', function() {
+  describe(alphaName + ' beginning a mobile create flow' , function() {
+    var request = {
+      query: {
+        story_id: storyId,
+        story_type: storyType
+      },
+      body: {
+        phone: alphaPhone,
+        args: alphaName
+      }
+    }
+    it('should create a game-create-config game doc', function(done) {
+      emitter.on('game-create-config-created', function(doc) {
+        gameCreateConfigId = doc._id;
+        done();
+        emitter.removeAllListeners('game-create-config-created');
+      })
+      mobileController.processRequest(request, response);
+    })
+  })
+
+  describe(alphaName + ' inviting one beta', function() {
+    var request = {
+      query: {
+        story_id: storyId,
+        story_type: storyType
+      },
+      body: {
+        phone: alphaPhone,
+        args: betaName0 + betaPhone0
+      }
+    }
+    it('should update the game-create-config game doc', function(done) {
+      emitter.on('game-create-config-modified', function(doc) {
+        if (doc.beta_mobile_0 == betaPhone0 && doc.beta_first_name_0 == betaName0) {
+          done();
+        }
+        else {
+          assert(false);
+        }
+        emitter.removeAllListeners('game-create-config-modified');
+      })
+      mobileController.processRequest(request, response);
+    })
+  })
+
+  describe(alphaName + ' texting back "Y" ', function(done) {
+    var request = {
+      query: {
+        story_id: storyId,
+        story_type: storyType
+      },
+      body: {
+        phone: alphaPhone,
+        args: 'Y'
+      }
+    }
+    it('successfully creates a game with only two players', function(done) {
+      emitter.on('mobile-create-flow-creating-game', function(doc) {
+        if (
+          doc.alpha_mobile == alphaPhone &&
+          doc.alpha_first_name == alphaName &&
+          doc.beta_mobile_0 == betaPhone0 &&
+          doc.beta_first_name_0 == betaName0 && 
+          !doc.beta_mobile_1 &&
+          !doc.beta_first_name_1 &&
+          !doc.beta_mobile_2 &&
+          !doc.beta_first_name_2
+        ) {
+          done();
+        }
+        else {
+          assert(false);
+        }
+        emitter.removeAllListeners('mobile-create-flow-creating-game');
+      })
+      mobileController.processRequest(request, response);
+    })
+  })
+  after(function() {
+    gameCreateConfigModel.remove({_id: gameCreateConfigId}, function() {});
+  })
+})
+
+// test a game creation process where the player first enter invalid params for 1) alpha name, 2) beta 0 namRitike, and 3) beta 0 number.
+describe('Mobile-create-flow sends appropriate error messages', function() {
+  describe(alphaName + ' beginning a mobile create flow and entering a number, not a name', function() {
+    var request = {
+      query: {
+        story_id: storyId,
+        story_type: storyType
+      },
+      body: {
+        phone: alphaPhone,
+        args: alphaPhone
+      }
+    }
+    it('sends the alpha an error message yet still creates a game-create-config doc', function(done) {
+
+      var eventsWaitedOn = 2;
+      var recordEvent = function() {
+        eventsWaitedOn --
+        if (eventsWaitedOn === 0) {
+          done();
+        }
+      }
+
+      emitter.on('game-create-config-created', function(doc) {
+        gameCreateConfigId = doc._id;
+        emitter.removeAllListeners('game-create-config-created');
+        recordEvent();
+      })
+
+      emitter.on(emitter.events.mcOptinTest, function(payload) {
+        if (payload.form.opt_in_path == gameConfig.mobile_create.invalid_alpha_first_name) {
+          recordEvent();
+        }
+        else {
+          assert(false);
+        }
+        emitter.removeAllListeners(emitter.events.mcOptinTest);
+      })
+      mobileController.processRequest(request, response);
+    })
+  })
+
+  describe(alphaName + ' texts in her correct first name', function() {
+    var request = {
+      query: {
+        story_id: storyId,
+        story_type: storyType
+      },
+      body: {
+        phone: alphaPhone,
+        args: alphaName
+      }
+    }
+    it('should update the game-create-config game doc', function(done) {
+      emitter.on('game-create-config-modified', function(doc) {
+        if (doc.alpha_first_name == alphaName && doc.alpha_first_name == alphaName) {
+          done();
+        }
+        else {
+          assert(false);
+        }
+        emitter.removeAllListeners('game-create-config-modified');
+      })
+      mobileController.processRequest(request, response);
+    })
+  })
+
+  describe(alphaName + ' attempts to start the game without other players', function() {
+    var request = {
+      query: {
+        story_id: storyId,
+        story_type: storyType
+      },
+      body: {
+        phone: alphaPhone,
+        args: 'Y'
+      }
+    }
+
+    it('should send her the "not_enough_players_oip"', function(done) {
+      emitter.on(emitter.events.mcOptinTest, function(payload) {
+        if (payload.form.opt_in_path == gameConfig.mobile_create.not_enough_players_oip) {
+          done();
+        }
+        else {
+          assert(false);
+        }
+        emitter.removeAllListeners(emitter.events.mcOptinTest);
+      })
+      mobileController.processRequest(request, response);
+    })
+  })
+
+  describe(alphaName + ' texts in a beta name without a valid number', function() {
+    var request = {
+      query: {
+        story_id: storyId,
+        story_type: storyType
+      },
+      body: {
+        phone: alphaPhone,
+        args: betaName0
+      }
+    }
+
+    it('should send the alpha the "invalid_mobile_oip" message', function() {
+      emitter.on(emitter.events.mcOptinTest, function(payload) {
+        if (payload.form.opt_in_path == gameConfig.mobile_create.invalid_mobile_oip) {
+          done();
+        }
+        else {
+          assert(false);
+        }
+        emitter.removeAllListeners(emitter.events.mcOptinTest);
+      })
+      mobileController.processRequest(request, response);
+    })
+  })
+
+  describe(alphaName + ' texts in a beta name without a valid name', function() {
+    var request = {
+      query: {
+        story_id: storyId,
+        story_type: storyType
+      },
+      body: {
+        phone: alphaPhone,
+        args: betaPhone0
+      }
+    }
+
+    it('should send the alpha the "invalid_mobile_oip" message', function() {
+      emitter.on(emitter.events.mcOptinTest, function(payload) {
+        if (payload.form.opt_in_path == gameConfig.mobile_create.invalid_mobile_oip) {
+          done();
+        }
+        else {
+          assert(false);
+        }
+        emitter.removeAllListeners(emitter.events.mcOptinTest);
+      })
+      mobileController.processRequest(request, response);
+    })
+  })
+
+  after(function() {
+    gameCreateConfigModel.remove({_id: gameCreateConfigId}, function() {});
+  })
+})

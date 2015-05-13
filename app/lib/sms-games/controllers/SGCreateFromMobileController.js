@@ -103,6 +103,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
       // If the alpha responds 'Y' to the 'create game now?' query. 
       if (smsHelper.isYesResponse(message)) {
         if (configDoc.beta_mobile_0 && smsHelper.isValidPhone(configDoc.beta_mobile_0)) {
+          emitter.emit('mobile-create-flow-creating-game', configDoc)
           // While it may seem that the two calls below may produce asynchronous weirdness, they don't. 
           createGame(configDoc, self.host);
           self._removeDocument(configDoc.alpha_mobile);

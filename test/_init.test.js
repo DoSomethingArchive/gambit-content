@@ -27,6 +27,6 @@ describe('Running all responder tests', function() {
     require('./mobilecommons.js');
     require('./ScienceSleuth.js');
     require('./PlayerNamesInGame.js');
-    // require('./CreateGameFromMobile.js');
+    require('./CreateGameFromMobile.js');
   })
 });
