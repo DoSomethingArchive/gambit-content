@@ -56,12 +56,17 @@ var competitiveStoriesConfigSchema = new mongoose.Schema({
  
   // Collection of messages corresponding to the create-from-mobile user flow.
   mobile_create: {
+    // Message sent to alpha, asking her to provide the phone number of the first beta she wants to invite. (Alpha name was already texted back to the message triggered by the create-from-mobile keyword.) 
+    ask_beta_0_oip: Number,
 
-    // Message sent to alpha, asking her to provide the phone number of the second beta she wants to invite to the game. (First number was already texted back to the message triggered by the create-from-mobile keyword.)
+    // Message sent to alpha, asking her to provide the phone number of the second beta she wants to invite to the game.
     ask_beta_1_oip: Number,
 
     // Asks alpha to provide phone number of third beta. 
     ask_beta_2_oip: Number, 
+
+    // Error message informing alpha she did not provide a valid name for herself. 
+    invalid_alpha_first_name: Number,
 
     // Error message informing alpha she provided an invalid mobile number. 
     invalid_mobile_oip: Number,

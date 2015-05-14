@@ -9,6 +9,7 @@ var requestHttp = require('request')
   , mobilecommons = rootRequire('mobilecommons')
   , smsHelper = rootRequire('app/lib/smsHelpers')
   , logger = rootRequire('app/lib/logger')
+  , emitter = rootRequire('app/eventEmitter')
   , connectionOperations = rootRequire('app/config/connectionOperations')
   , configModel = require('../models/sgGameCreateConfig')(connectionOperations)
   ;
@@ -67,7 +68,6 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
   var queryConfig = configModel.findOne({alpha_mobile: request.body.phone});
   var promiseConfig = queryConfig.exec();
   promiseConfig.then(function(configDoc) {
-
     // If no document found, then create one. This game creation config doc 
     // should NOT be confused with the game doc, or the gameConfig. It's destroyed
     // after the game is begun; it's used only for game creation. 
@@ -75,13 +75,26 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
       // We don't ask for the first name yet, so just saving it as phone for now.
       var doc = {
         alpha_mobile: request.body.phone,
-        alpha_first_name: request.body.phone,
         story_id: request.query.story_id,
         story_type: request.query.story_type,
         game_type: (request.query.game_type || '')
       };
 
-      return configModel.create(doc);
+      // User should have responded with the alpha name.
+      var message = request.body.args;
+      if (smsHelper.hasLetters(message)) {
+        doc.alpha_first_name = smsHelper.getLetters(message);
+        // Send next message asking for beta_mobile_1.
+        sendSMS(request.body.phone, gameConfig.mobile_create.ask_beta_0_oip);
+      }
+      else {
+        // If user responded with something else, ask for a valid player name. 
+        sendSMS(request.body.phone, gameConfig.mobile_create.invalid_alpha_first_name);
+      }
+      var createGame = configModel.create(doc);
+      createGame.then(function(doc) {
+        emitter.emit('game-create-config-created', doc);
+      })
     }
     // If a document is found, then process the user message.
     else {
@@ -90,6 +103,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
       // If the alpha responds 'Y' to the 'create game now?' query. 
       if (smsHelper.isYesResponse(message)) {
         if (configDoc.beta_mobile_0 && smsHelper.isValidPhone(configDoc.beta_mobile_0)) {
+          emitter.emit('mobile-create-flow-creating-game', configDoc)
           // While it may seem that the two calls below may produce asynchronous weirdness, they don't. 
           createGame(configDoc, self.host);
           self._removeDocument(configDoc.alpha_mobile);
@@ -99,19 +113,36 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
           sendSMS(configDoc.alpha_mobile, gameConfig.mobile_create.not_enough_players_oip);
         }
       }
-      else if (isPhoneNumber(message)) {
+      // If the alpha hasn't yet provided a valid name yet. 
+      else if (!configDoc.alpha_first_name) {
+        if (smsHelper.hasLetters(message)) {
+          var alphaName = smsHelper.getLetters(message);
+          configDoc.alpha_first_name = alphaName;
+          self._updateDocument(configDoc);
+          sendSMS(configDoc.alpha_mobile, gameConfig.mobile_create.ask_beta_0_oip);
+        }
+        else {
+          sendSMS(configDoc.alpha_mobile, gameConfig.mobile_create.invalid_alpha_first_name);
+        }
+      }
+      // If the message contains a valid phone number and beta name. 
+      else if (isPhoneNumber(message) && smsHelper.hasLetters(message)) {
         var betaMobile = smsHelper.getNormalizedPhone(message);
+        var betaName = smsHelper.getLetters(message);
+
         // If we haven't saved a beta number yet, save it to beta_mobile_0.
-        if (!configDoc.beta_mobile_0) {
+        if (!configDoc.beta_mobile_0 && !configDoc.beta_first_name_0) {
           configDoc.beta_mobile_0 = betaMobile;
+          configDoc.beta_first_name_0 = betaName;
           self._updateDocument(configDoc);
 
           // Then ask for beta_mobile_1.
           sendSMS(configDoc.alpha_mobile, gameConfig.mobile_create.ask_beta_1_oip);
         }
         // If we haven't saved the 2nd beta number yet, save it to beta_mobile_1.
-        else if (!configDoc.beta_mobile_1) {
+        else if (!configDoc.beta_mobile_1 && !configDoc.beta_first_name_1) {
           configDoc.beta_mobile_1 = betaMobile;
+          configDoc.beta_first_name_1 = betaName;
           self._updateDocument(configDoc);
 
           // Then ask for beta_mobile_2.
@@ -120,49 +151,21 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
         // At this point, this is the last number we need. So, create the game.
         else {
           configDoc.beta_mobile_2 = betaMobile;
+          configDoc.beta_first_name_2 = betaName;
           // Again, while it may seem that the two calls below may produce async disorderlyness, they don't. 
+          emitter.emit('mobile-create-flow-creating-game', configDoc)
           createGame(configDoc, self.host);
           self._removeDocument(configDoc.alpha_mobile);
         }
       }
+      // Send the "invalid response" message.
       else {
-        // Send the "invalid response" message.
         sendSMS(configDoc.alpha_mobile, gameConfig.mobile_create.invalid_mobile_oip);
       }
-
-      throw new ErrorAbortPromiseChain();
-      return null;
     }
-
-  }).then(function(configDoc) {
-
-    // We only come within this .then() statement if the 
-    // config model has just been newly successfully created.
-    if (configDoc) {
-      // User should have responded with beta_mobile_0.
-      var message = request.body.args;
-      if (isPhoneNumber(message)) {
-        // Update doc with beta_mobile_0 number.
-        // var doc = modelConfig._doc;
-        configDoc.beta_mobile_0 = smsHelper.getNormalizedPhone(message);
-        self._updateDocument(configDoc);
-
-        // Send next message asking for beta_mobile_1.
-        sendSMS(configDoc.alpha_mobile, gameConfig.mobile_create.ask_beta_1_oip);
-      }
-      else {
-        // If user responded with something else, ask for a valid phone number.
-        sendSMS(configDoc.alpha_mobile, gameConfig.mobile_create.invalid_mobile_oip);
-      }
-    }  
-
   }, function(err) {
-    // ErrorAbortPromiseChain is ok. Otherwise, log the error.
-    if (!(err instanceof ErrorAbortPromiseChain)) {
-      logger.error(err);
-    }
-  });
-
+    logger.error(err);
+  })
   response.send();
 };
 
@@ -181,8 +184,11 @@ function createGame(gameCreateConfig, host) {
       alpha_mobile: gameCreateConfig.alpha_mobile,
       alpha_first_name: gameCreateConfig.alpha_first_name,
       beta_mobile_0: gameCreateConfig.beta_mobile_0,
+      beta_first_name_0: gameCreateConfig.beta_first_name_0 ? gameCreateConfig.beta_first_name_0 : '',
       beta_mobile_1: gameCreateConfig.beta_mobile_1 ? gameCreateConfig.beta_mobile_1 : '',
+      beta_first_name_1: gameCreateConfig.beta_first_name_1 ? gameCreateConfig.beta_first_name_1 : '',
       beta_mobile_2: gameCreateConfig.beta_mobile_2 ? gameCreateConfig.beta_mobile_2 : '',
+      beta_first_name_2: gameCreateConfig.beta_first_name_2 ? gameCreateConfig.beta_first_name_2 : '',
       story_id: gameCreateConfig.story_id,
       story_type: gameCreateConfig.story_type
     }
@@ -243,19 +249,25 @@ function ErrorAbortPromiseChain() {
  *   The document with updated data.
  */
 SGCreateFromMobileController.prototype._updateDocument = function(configDoc) {
-  configModel.update(
-    {alpha_mobile: configDoc.alpha_mobile},
-    {$set: {
+  var editedDoc = {
+      alpha_first_name: configDoc.alpha_first_name ? configDoc.alpha_first_name : null,
       beta_mobile_0: configDoc.beta_mobile_0 ? configDoc.beta_mobile_0 : null,
       beta_mobile_1: configDoc.beta_mobile_1 ? configDoc.beta_mobile_1 : null,
       beta_mobile_2: configDoc.beta_mobile_2 ? configDoc.beta_mobile_2 : null,
-    }},
+      beta_first_name_0: configDoc.beta_first_name_0 ? configDoc.beta_first_name_0 : '',
+      beta_first_name_1: configDoc.beta_first_name_1 ? configDoc.beta_first_name_1 : '',
+      beta_first_name_2: configDoc.beta_first_name_2 ? configDoc.beta_first_name_2 : ''
+    }
+  configModel.update(
+    {alpha_mobile: configDoc.alpha_mobile},
+    {$set: editedDoc},
     function(err, num, raw) {
       if (err) {
         logger.error(err);
       }
       else if (configDoc._id) {
         logger.info('SGCreateFromMobileController._updateDocument success for doc:', configDoc._id.toString());
+        emitter.emit('game-create-config-modified', editedDoc)
       }
     }
   );
