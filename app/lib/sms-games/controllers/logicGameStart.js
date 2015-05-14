@@ -70,7 +70,7 @@ function autoStartGame(gameId) {
 
   function createAndStartSoloOrStartMulti(gameId) {
     gameModel.findById(gameId, function(err, doc) {
-      if (err) {
+      if (err || !doc) {
         logger.error('Error in running auto-start game function for gameId: ' + gameId + ' Error: ' + err);
       }
       else if (doc.game_started !== true) {

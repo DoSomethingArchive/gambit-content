@@ -55,6 +55,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
   }
 
   self = this;
+  self.createGame = createGame;
   request = request;
   response = response;
   gameConfig = app.getConfig(gameConfigNameString, request.query.story_id);
@@ -105,7 +106,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
         if (configDoc.beta_mobile_0 && smsHelper.isValidPhone(configDoc.beta_mobile_0)) {
           emitter.emit('mobile-create-flow-creating-game', configDoc)
           // While it may seem that the two calls below may produce asynchronous weirdness, they don't. 
-          createGame(configDoc, self.host);
+          self.createGame(configDoc, self.host);
           self._removeDocument(configDoc.alpha_mobile);
         }
         else {
@@ -127,6 +128,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
       }
       // If the message contains a valid phone number and beta name. 
       else if (isPhoneNumber(message) && smsHelper.hasLetters(message)) {
+        debugger;
         var betaMobile = smsHelper.getNormalizedPhone(message);
         var betaName = smsHelper.getLetters(message);
 
@@ -150,11 +152,12 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
         }
         // At this point, this is the last number we need. So, create the game.
         else {
+          debugger;
           configDoc.beta_mobile_2 = betaMobile;
           configDoc.beta_first_name_2 = betaName;
           // Again, while it may seem that the two calls below may produce async disorderlyness, they don't. 
           emitter.emit('mobile-create-flow-creating-game', configDoc)
-          createGame(configDoc, self.host);
+          self.createGame(configDoc, self.host);
           self._removeDocument(configDoc.alpha_mobile);
         }
       }
