@@ -104,7 +104,7 @@ describe('Creating a four-player game with first names from mobile: ', function(
         args: betaName1 + betaPhone1
       }
     }
-    it('should create a game-create-config doc updated with ' + betaName0 + '\'s name and number', function(done) {
+    it('should create a game-create-config doc updated with ' + betaName1 + '\'s name and number', function(done) {
       emitter.on('game-create-config-modified', function(doc) {
         gameCreateConfigModel.findOne({_id: gameCreateConfigId}, function(err, doc) {
           if (!err && doc.beta_mobile_1 === betaPhone1 && doc.beta_first_name_1 === betaName1) { done(); }
