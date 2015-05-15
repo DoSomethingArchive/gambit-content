@@ -9,7 +9,8 @@ var express = require('express')
   , mobilecommons = rootRequire('mobilecommons')
   , emitter = rootRequire('app/eventEmitter')
   , logger = rootRequire('app/lib/logger')
-  , dscontentapi = rootRequire('app/lib/ds-content-api')();
+  , dscontentapi = rootRequire('app/lib/ds-content-api')()
+  , REPORTBACK_PERMALINK_BASE_URL = 'https://www.dosomething.org/reportback/'
   ;
 
 router.post('/:campaign', function(request, response) {
@@ -203,38 +204,7 @@ function receiveWhyImportant(doc, data) {
     });
 
   doc.why_important = answer;
-  completeReportBack(doc, data);
-}
-
-/**
- * Complete the report back flow.
- *
- * @param doc
- *   User's report back document
- * @param data
- *   Data from the user's request
- */
-function completeReportBack(doc, data) {
-  var customFields = {};
-
-  // Start report back submission requests by first finding the user
   findUserUidThenReportBack(doc, data);
-
-  // If this is the first campaign a user's completed, save it
-  if (data.profile_first_completed_campaign_id) {
-    customFields.profile_first_completed_campaign_id = data.campaignConfig.campaign_completed_id;
-  }
-
-  // Send message to user that their report back is complete
-  mobilecommons.profile_update(data.phone, data.campaignConfig.message_complete, customFields);
-
-  // Opt user out of campaign, if specified
-  if (data.campaignConfig.campaign_optout_id) {
-    mobilecommons.optout({
-      phone: data.phone,
-      campaignId: data.campaignConfig.campaign_optout_id
-    });
-  }
 }
 
 /**
@@ -351,34 +321,53 @@ function createUserThenReportBack(doc, data) {
  *   Data from the user's request
  */
 function submitReportBack(uid, doc, data) {
-  var rbData = {
-    nid: data.campaignConfig.campaign_nid,
-    uid: uid,
-    caption: doc.caption,
-    quantity: doc.quantity,
-    why_participated: doc.why_important,
-    file_url: doc.photo
-  };
+  var data = data
+    , customFields = {}
+    , rbData = {
+        nid: data.campaignConfig.campaign_nid,
+        uid: uid,
+        caption: doc.caption,
+        quantity: doc.quantity,
+        why_participated: doc.why_important,
+        file_url: doc.photo
+      }
+    ;
 
   dscontentapi.campaignsReportback(rbData, function(err, response, body) {
     if (err) {
       logger.error(err);
     }
     else if (body && body.length > 0) {
-      if (body[0] == false) {
+      var rbId = body[0]
+      // Checking to make sure the response body doesn't contain an error from the API. 
+      if (rbId == false || isNaN(rbId)) {
         logger.error('Error when submitting report back.', response);
       }
       else {
-        logger.info('Successfully submitted report back. rbid: ' + body[0]);
+        // Here, update the user profile in mobile commons 1) the campaign id of the campaign, if it's their first one,
+        // and 2) the URL of their submitted reportback. Then send the "completed" message. 
+        if (data.profile_first_completed_campaign_id) {
+          customFields.profile_first_completed_campaign_id = data.campaignConfig.campaign_completed_id;
+        }
 
+        customFields.last_reportback_url = REPORTBACK_PERMALINK_BASE_URL + rbId;
+        mobilecommons.profile_update(data.phone, data.campaignConfig.message_complete, customFields);
+
+        // Opt user out of campaign, if specified
+        if (data.campaignConfig.campaign_optout_id) {
+          mobilecommons.optout({
+            phone: data.phone,
+            campaignId: data.campaignConfig.campaign_optout_id
+          });
+        }
+
+        logger.info('Successfully submitted report back. rbid: ' + rbId);
         // Remove the report back doc when complete
         model.remove({phone: data.phone, campaign: data.campaignConfig.endpoint}).exec();
       }
     }
   });
 }
-
-
 
 /**
  *
@@ -393,5 +382,5 @@ if (process.env.NODE_ENV === 'test') {
   module.exports.receivePhoto = receivePhoto;
   module.exports.receiveQuantity = receiveQuantity;
   module.exports.receiveWhyImportant = receiveWhyImportant;
-  module.exports.completeReportBack = completeReportBack;
+  // module.exports.completeReportBack = completeReportBack;
 }
