@@ -387,7 +387,6 @@ function test() {
           testDoc1 = doc1;
           testDoc2 = doc2;
           done();
-          console.log('testDoc1', testDoc1, 'testDoc2', testDoc2)
         }
       });
     })

@@ -2,6 +2,7 @@ var request = require('request')
   , crypto = require('crypto')
   , logger = rootRequire('app/lib/logger')
   , RequestRetry = require('node-request-retry')
+  , emitter = rootRequire('app/eventEmitter')
   ;
 
 var BASE_URL;
@@ -303,6 +304,13 @@ function campaignsReportback(rbData, callback) {
   var _callback = onCampaignsReportback;
   if (typeof callback === 'function') {
     _callback = onCampaignsReportback.bind({customCallback: callback});
+  }
+
+  // If we're in a test env, just log and emit an event. 
+  if (process.env.NODE_ENV == 'test') {
+    logger.info('dscontentapi.campaignsReportback test: ', body.uid, ' | ', body.caption, ' | ', body.quantity, ' | ', body.why_participated, ' | ', body.file_url);
+    emitter.emit(emitter.events.reportbackSubmit, options);
+    return callback(null, ['100'], ['100']);
   }
 
   var requestRetry = new RequestRetry();
