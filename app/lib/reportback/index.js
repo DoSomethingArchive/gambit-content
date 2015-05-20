@@ -10,8 +10,15 @@ var express = require('express')
   , emitter = rootRequire('app/eventEmitter')
   , logger = rootRequire('app/lib/logger')
   , dscontentapi = rootRequire('app/lib/ds-content-api')()
-  , REPORTBACK_PERMALINK_BASE_URL = 'https://www.dosomething.org/reportback/'
+  , REPORTBACK_PERMALINK_BASE_URL
   ;
+
+if (process.env.NODE_ENV == 'production') {
+  REPORTBACK_PERMALINK_BASE_URL = 'https://www.dosomething.org/reportback/';
+}
+else {
+  REPORTBACK_PERMALINK_BASE_URL = 'http://staging.beta.dosomething.org/reportback/';
+}
 
 router.post('/:campaign', function(request, response) {
   var campaign
@@ -382,5 +389,5 @@ if (process.env.NODE_ENV === 'test') {
   module.exports.receivePhoto = receivePhoto;
   module.exports.receiveQuantity = receiveQuantity;
   module.exports.receiveWhyImportant = receiveWhyImportant;
-  // module.exports.completeReportBack = completeReportBack;
+  module.exports.REPORTBACK_PERMALINK_BASE_URL = REPORTBACK_PERMALINK_BASE_URL;
 }
