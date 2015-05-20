@@ -7,7 +7,8 @@ events.EventEmitter.prototype.events = {
   mcOptinTest: 'mobilecommons-optin-test',
   mcOptoutTest: 'mobilecommons-optout-test',
   mcProfileUpdateTest: 'mobilecommons-profile-update-test',
-  reportbackModelUpdate: 'reportback-model-update'
+  reportbackModelUpdate: 'reportback-model-update',
+  reportbackSubmit: 'reportback-submit'
 };
 
 module.exports = eventEmitter;

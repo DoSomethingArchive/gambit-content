@@ -2,9 +2,13 @@ var request = require('request')
   , crypto = require('crypto')
   , logger = rootRequire('app/lib/logger')
   , RequestRetry = require('node-request-retry')
+  , emitter = rootRequire('app/eventEmitter')
   ;
 
-var BASE_URL;
+var BASE_URL
+  , TEST_RBID = 100
+  ;
+
 var VERSION = 'v1';
 if (process.env.NODE_ENV == 'production') {
   BASE_URL = 'https://www.dosomething.org/api/' + VERSION;
@@ -25,7 +29,8 @@ module.exports = function() {
     userLogout: userLogout,
     authToken: authToken,
     campaignsReportback: campaignsReportback,
-    systemConnect: systemConnect
+    systemConnect: systemConnect,
+    TEST_RBID: TEST_RBID
   };
 };
 
@@ -303,6 +308,13 @@ function campaignsReportback(rbData, callback) {
   var _callback = onCampaignsReportback;
   if (typeof callback === 'function') {
     _callback = onCampaignsReportback.bind({customCallback: callback});
+  }
+
+  // If we're in a test env, just log, emit an event, and call the callback function with test values. 
+  if (process.env.NODE_ENV == 'test') {
+    logger.info('dscontentapi.campaignsReportback test: ', body.uid, ' | ', body.caption, ' | ', body.quantity, ' | ', body.why_participated, ' | ', body.file_url);
+    emitter.emit(emitter.events.reportbackSubmit, options);
+    return callback(null, [TEST_RBID], [TEST_RBID]);
   }
 
   var requestRetry = new RequestRetry();

@@ -3,6 +3,7 @@ var assert = require('assert')
   , connectionOperations = rootRequire('app/config/connectionOperations')
   , model = require('../reportbackModel')(connectionOperations)
   , emitter = rootRequire('app/eventEmitter')
+  , dscontentapi = rootRequire('app/lib/ds-content-api')()
   ;
 
 function test() {
@@ -335,7 +336,8 @@ function test() {
       // Check if correct user is subscribed to correct opt-in path
       emitter.on(emitter.events.mcProfileUpdateTest, function(evtData) {
         if (evtData.form.phone_number == testData.phone &&
-            evtData.form.opt_in_path_id == TEST_CAMPAIGN_CONFIG.message_complete) {
+            evtData.form.opt_in_path_id == TEST_CAMPAIGN_CONFIG.message_complete &&
+            evtData.form.last_reportback_url == reportback.REPORTBACK_PERMALINK_BASE_URL + dscontentapi.TEST_RBID) { 
           onSuccessfulEvent(emitter.events.mcProfileUpdateTest);
         }
         else {
@@ -387,7 +389,6 @@ function test() {
           testDoc1 = doc1;
           testDoc2 = doc2;
           done();
-          console.log('testDoc1', testDoc1, 'testDoc2', testDoc2)
         }
       });
     })
