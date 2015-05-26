@@ -11,6 +11,7 @@ var express = require('express')
   , logger = rootRequire('app/lib/logger')
   , dscontentapi = rootRequire('app/lib/ds-content-api')()
   , REPORTBACK_PERMALINK_BASE_URL
+  , shortenLink = rootRequire('app/lib/bitly')
   ;
 
 if (process.env.NODE_ENV == 'production') {
@@ -351,26 +352,32 @@ function submitReportBack(uid, doc, data) {
         logger.error('Error when submitting report back.', response);
       }
       else {
-        // Here, update the user profile in mobile commons 1) the campaign id of the campaign, if it's their first one,
-        // and 2) the URL of their submitted reportback. Then send the "completed" message. 
-        if (data.profile_first_completed_campaign_id) {
-          customFields.profile_first_completed_campaign_id = data.campaignConfig.campaign_completed_id;
-        }
+        shortenLink(REPORTBACK_PERMALINK_BASE_URL + rbId, function(shortenedLink) {
 
-        customFields.last_reportback_url = REPORTBACK_PERMALINK_BASE_URL + rbId;
-        mobilecommons.profile_update(data.phone, data.campaignConfig.message_complete, customFields);
+          //Remove http:// or https:// protocol 
+          shortenedLink = shortenedLink.replace(/.*?:\/\//g, "")
 
-        // Opt user out of campaign, if specified
-        if (data.campaignConfig.campaign_optout_id) {
-          mobilecommons.optout({
-            phone: data.phone,
-            campaignId: data.campaignConfig.campaign_optout_id
-          });
-        }
+          // Here, update the user profile in mobile commons 1) the campaign id of the campaign, if it's their first one,
+          // and 2) the URL of their submitted reportback. Then send the "completed" message. 
+          if (data.profile_first_completed_campaign_id) {
+            customFields.profile_first_completed_campaign_id = data.campaignConfig.campaign_completed_id;
+          }
 
-        logger.info('Successfully submitted report back. rbid: ' + rbId);
-        // Remove the report back doc when complete
-        model.remove({phone: data.phone, campaign: data.campaignConfig.endpoint}).exec();
+          customFields.last_reportback_url = shortenedLink;
+          mobilecommons.profile_update(data.phone, data.campaignConfig.message_complete, customFields);
+
+          // Opt user out of campaign, if specified
+          if (data.campaignConfig.campaign_optout_id) {
+            mobilecommons.optout({
+              phone: data.phone,
+              campaignId: data.campaignConfig.campaign_optout_id
+            });
+          }
+
+          logger.info('Successfully submitted report back. rbid: ' + rbId);
+          // Remove the report back doc when complete
+          model.remove({phone: data.phone, campaign: data.campaignConfig.endpoint}).exec();
+        })
       }
     }
   });
