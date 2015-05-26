@@ -12,6 +12,7 @@ var express = require('express')
   , dscontentapi = rootRequire('app/lib/ds-content-api')()
   , REPORTBACK_PERMALINK_BASE_URL
   , shortenLink = rootRequire('app/lib/bitly')
+  , Q = require('q')
   ;
 
 if (process.env.NODE_ENV == 'production') {
@@ -341,46 +342,66 @@ function submitReportBack(uid, doc, data) {
       }
     ;
 
-  dscontentapi.campaignsReportback(rbData, function(err, response, body) {
-    if (err) {
-      logger.error(err);
-    }
-    else if (body && body.length > 0) {
-      var rbId = body[0]
-      // Checking to make sure the response body doesn't contain an error from the API. 
-      if (rbId == false || isNaN(rbId)) {
-        logger.error('Error when submitting report back.', response);
+  function reportBackToDS() {
+    var deferred = Q.defer();
+    dscontentapi.campaignsReportback(rbData, function(err, response, body) {
+      if (!err && body && body.length > 0) {
+        try {
+          var rbId = body[0]
+          // Checking to make sure the response body doesn't contain an error from the API. 
+          if (rbId == false || isNaN(rbId)) {
+            logger.error('Unable to reportback to DS API for uid: ' + uid);
+          }
+          else {
+            deferred.resolve(rbId);
+          }
+        }
+        catch (e) {
+          logger.error('Unable to reportback to DS API for uid: ' + uid + ', error: ' + e);
+        }
       }
       else {
-        shortenLink(REPORTBACK_PERMALINK_BASE_URL + rbId, function(shortenedLink) {
+        logger.error('Unable to reportback to DS API for uid: ' + uid);
+        deferred.reject('Unable to reportback to DS API for uid: ' + uid);
+      }
+    });
+    return deferred.promise;
+  }
 
-          //Remove http:// or https:// protocol 
-          shortenedLink = shortenedLink.replace(/.*?:\/\//g, "")
+  function shortenLinkAndUpdateMCProfile(rbId) {
+    shortenLink(REPORTBACK_PERMALINK_BASE_URL + rbId, function(shortenedLink) {
 
-          // Here, update the user profile in mobile commons 1) the campaign id of the campaign, if it's their first one,
-          // and 2) the URL of their submitted reportback. Then send the "completed" message. 
-          if (data.profile_first_completed_campaign_id) {
-            customFields.profile_first_completed_campaign_id = data.campaignConfig.campaign_completed_id;
-          }
+      //Remove http:// or https:// protocol 
+      shortenedLink = shortenedLink.replace(/.*?:\/\//g, "")
 
-          customFields.last_reportback_url = shortenedLink;
-          mobilecommons.profile_update(data.phone, data.campaignConfig.message_complete, customFields);
+      // Here, update the user profile in mobile commons 1) the campaign id of the campaign, if it's their first one,
+      // and 2) the URL of their submitted reportback. Then send the "completed" message. 
+      if (data.profile_first_completed_campaign_id) {
+        customFields.profile_first_completed_campaign_id = data.campaignConfig.campaign_completed_id;
+      }
 
-          // Opt user out of campaign, if specified
-          if (data.campaignConfig.campaign_optout_id) {
-            mobilecommons.optout({
-              phone: data.phone,
-              campaignId: data.campaignConfig.campaign_optout_id
-            });
-          }
+      customFields.last_reportback_url = shortenedLink;
+      mobilecommons.profile_update(data.phone, data.campaignConfig.message_complete, customFields);
 
-          logger.info('Successfully submitted report back. rbid: ' + rbId);
-          // Remove the report back doc when complete
-          model.remove({phone: data.phone, campaign: data.campaignConfig.endpoint}).exec();
-        })
+      // Opt user out of campaign, if specified
+      if (data.campaignConfig.campaign_optout_id) {
+        mobilecommons.optout({
+          phone: data.phone,
+          campaignId: data.campaignConfig.campaign_optout_id
+        });
+      }
+
+      logger.info('Successfully submitted report back. rbid: ' + rbId);
+      // Remove the report back doc when complete
+      model.remove({phone: data.phone, campaign: data.campaignConfig.endpoint}).exec();
+    })
+  }
+  reportBackToDS().then(shortenLinkAndUpdateMCProfile, function(err) {
+      if (err) {
+        logger.error('Unable to reportback to DS API for uid: ' + uid + ', error: ' + err);
       }
     }
-  });
+  );
 }
 
 /**
