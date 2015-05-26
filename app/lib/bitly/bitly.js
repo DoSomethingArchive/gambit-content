@@ -20,6 +20,11 @@ var baseURL = 'https://api-ssl.bitly.com'; // alternate: api.bitly.com
 var appendURL = '/v3/shorten';
 
 function shortenLink(longURL, callback) {
+  if (process.env.NODE_ENV !== 'production') {
+    callback(longURL);
+    return;
+  }
+
   var longURL = encodeURIComponent(longURL.trim());
   var apiURL = baseURL + appendURL + '?' + 'uri=' + longURL + '&' + 'access_token=' + bitlyToken;
 

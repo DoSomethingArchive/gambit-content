@@ -335,9 +335,10 @@ function test() {
 
       // Check if correct user is subscribed to correct opt-in path
       emitter.on(emitter.events.mcProfileUpdateTest, function(evtData) {
+        var shortenedLink = (reportback.REPORTBACK_PERMALINK_BASE_URL + dscontentapi.TEST_RBID).replace(/.*?:\/\//g, "");
         if (evtData.form.phone_number == testData.phone &&
             evtData.form.opt_in_path_id == TEST_CAMPAIGN_CONFIG.message_complete &&
-            evtData.form.last_reportback_url == reportback.REPORTBACK_PERMALINK_BASE_URL + dscontentapi.TEST_RBID) { 
+            evtData.form.last_reportback_url == shortenedLink) { 
           onSuccessfulEvent(emitter.events.mcProfileUpdateTest);
         }
         else {
