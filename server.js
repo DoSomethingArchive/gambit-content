@@ -4,9 +4,9 @@ global.rootRequire = function(name) {
 }
 
 // Nodejitsu specifies NODE_ENV='production' by default
-if (process.env.NODE_ENV == 'production') {
-  require('newrelic');
-}
+// if (process.env.NODE_ENV == 'production') {
+//   require('newrelic');
+// }
 
 var express = require('express')
   , path = require('path')
