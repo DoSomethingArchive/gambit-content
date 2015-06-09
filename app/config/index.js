@@ -35,7 +35,7 @@ module.exports = function() {
   // @TODO: Find a better way of passing the host URL to SGSoloController.createSoloGame()
   // Specify app host URL. 
   if (process.env.NODE_ENV == 'production') {
-    app.hostName = 'ds-mdata-responder.jit.su';
+    app.hostName = 'ds-mdata-responder.herokuapp.com';
   } else {
     app.hostName = 'localhost:' + app.get('port');
   }
