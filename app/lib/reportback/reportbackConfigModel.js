@@ -25,6 +25,9 @@ var rbSchema = new mongoose.Schema({
   // Mobile Commons opt-in path ID to ask for photo caption
   message_caption: Number,
 
+  // Mobile Commons opt-in path ID of the error message indicating that the quantity submitted is invalid
+  message_quantity_sent_invalid: Number,
+
   // Mobile Commons opt-in path ID to ask for quantity
   message_quantity: Number,
 
