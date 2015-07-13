@@ -181,10 +181,8 @@ function receiveCaption(doc, data) {
  *   Data from the user's request
  */
 function receiveQuantity(doc, data) {
-  debugger;
   var answer = data.args;
   var quantity = parseForDigits(answer);
-  debugger;
   if (quantity) {
     model.update(
       {phone: data.phone, campaign: doc.campaign},
