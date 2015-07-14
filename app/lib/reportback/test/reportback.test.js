@@ -230,6 +230,52 @@ function test() {
     });
   });
 
+  describe('reportback.receiveQuantity - receives invalid quantity value', function() {
+
+    var testData = {
+      phone: TEST_PHONE,
+      campaignConfig: TEST_CAMPAIGN_CONFIG,
+      args: 'this is not a number in any way'
+    };
+
+    var testDoc;
+    before(function(done) {
+      model.create({phone: TEST_PHONE, campaign: TEST_CAMPAIGN_CONFIG.endpoint}, function(err, doc) {
+        if (doc) {
+          testDoc = doc;
+          done();
+        }
+      });
+    });
+
+    it('should respond with the "quantity sent invalid" message', function(done) {
+      emitter.on(emitter.events.mcProfileUpdateTest, function(evtData) {
+        if (evtData.form.phone_number == testData.phone &&
+            evtData.form.opt_in_path_id == TEST_CAMPAIGN_CONFIG.message_quantity_sent_invalid) {
+          done();
+        }
+        else {
+          assert(false);
+        }
+      });
+
+      // If model is updated, test fails. 
+      emitter.on(emitter.events.reportbackModelUpdate, function() {
+        assert(false);
+      });
+
+      // Call receiveQuantity with test data
+      reportback.receiveQuantity(testDoc, testData);
+    })
+
+    after(function() {
+      removeTestDocs();
+      emitter.removeAllListeners(emitter.events.mcProfileUpdateTest);
+      emitter.removeAllListeners(emitter.events.reportbackModelUpdate);
+    });
+
+  })
+
   describe('reportback.receiveQuantity - with a value of 5', function() {
     var testData = {
       phone: TEST_PHONE,

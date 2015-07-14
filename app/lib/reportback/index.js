@@ -13,6 +13,7 @@ var express = require('express')
   , REPORTBACK_PERMALINK_BASE_URL
   , shortenLink = rootRequire('app/lib/bitly')
   , Q = require('q')
+  , parseForDigits = require('count-von-count')
   ;
 
 if (process.env.NODE_ENV == 'production') {
@@ -181,16 +182,21 @@ function receiveCaption(doc, data) {
  */
 function receiveQuantity(doc, data) {
   var answer = data.args;
-  model.update(
-    {phone: data.phone, campaign: doc.campaign},
-    {'$set': {quantity: answer}},
-    function(err, num, raw) {
-      if (!err) {
-        emitter.emit(emitter.events.reportbackModelUpdate);
-      }
-    });
-
-  mobilecommons.profile_update(data.phone, data.campaignConfig.message_why);
+  var quantity = parseForDigits(answer);
+  if (quantity) {
+    model.update(
+      {phone: data.phone, campaign: doc.campaign},
+      {'$set': {quantity: quantity}},
+      function(err, num, raw) {
+        if (!err) {
+          emitter.emit(emitter.events.reportbackModelUpdate);
+        }
+      });
+    mobilecommons.profile_update(data.phone, data.campaignConfig.message_why);
+  }
+  else {
+    mobilecommons.profile_update(data.phone, data.campaignConfig.message_quantity_sent_invalid);
+  }
 }
 
 /**
