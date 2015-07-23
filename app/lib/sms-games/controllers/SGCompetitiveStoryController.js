@@ -118,6 +118,7 @@ SGCompetitiveStoryController.prototype.createGame = function(request, response) 
       gameDoc.betas[idx].invite_accepted = false;
       gameDoc.betas[idx].phone = phone;
       gameDoc.betas[idx].name = shortName || phone;
+      gameDoc.betas[idx].time_joined = 0;
     }
   }
 

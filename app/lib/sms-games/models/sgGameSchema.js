@@ -21,7 +21,11 @@ var sgGameSchema = new mongoose.Schema({
     name: String,
 
     // Phone number of the beta user
-    phone: String
+    phone: String,
+
+    // Time when beta joins
+    time_joined: 0
+
   }]
 })
 
