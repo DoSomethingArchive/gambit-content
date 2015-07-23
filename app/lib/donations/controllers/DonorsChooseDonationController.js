@@ -4,12 +4,16 @@
  * Donors Choose implementation of the donation interface.
  *
  * The flow a user should be guided through:
- *   1. retrieveLocation
+ *   1. start
+ *      - sends the appropriate optin path to start the donation
+ *      - unless a max number of donations have been made, then a message
+ *        is sent to notify the user about that
+ *   2. retrieveLocation
  *      - will call findProject
  *      - findProject responsible for responding to user with project details
  *        and asking for the first name
- *   2. retrieveFirstName
- *   3. retrieveEmail
+ *   3. retrieveFirstName
+ *   4. retrieveEmail
  *      - will call submitDonation
  *        submitDonation responsible for responding to user with success message
  */
@@ -43,7 +47,10 @@ var Q = require('q')
   ;
 
 var connectionOperations = rootRequire('app/config/connectionOperations')
-  , donationModel = require('../models/DonationInfo')(connectionOperations);
+  , donationModel = require('../models/DonationInfo')(connectionOperations)
+  , userModel = rootRequire('app/lib/sms-games/models/sgUser')(connectionOperations)
+  ;
+
 // @TODO: add some kind of reference to retrieve the donations config 
 // var donationConfigModel = require('../')
 
@@ -56,6 +63,59 @@ function DonorsChooseDonationController() {
  * Resource name identifier. Routes will use this to specify the controller to use.
  */
 DonorsChooseDonationController.prototype.resourceName = 'donors-choose';
+
+/**
+ * Optional method to start the donation flow. Validates that this user is
+ * allowed to make a donation.
+ *
+ * @param request
+ *   Express Request object
+ * @param response
+ *   Express Response object
+ */
+DonorsChooseDonationController.prototype.start = function(request, response) {
+  var phone;
+  var configId;
+
+  // Find the user
+  phone = smsHelper.getNormalizedPhone(request.body.phone);
+  configId = request.query.id;
+  userModel.findOne({phone: phone}, onUserFound);
+
+  response.send();
+
+  // Callback after user is found
+  function onUserFound(err, doc) {
+    var config;
+    var donationsCount;
+    var i;
+
+    if (err) {
+      logger.error(err);
+    }
+
+    donationsCount = 0;
+    if (doc && doc.donations) {
+      for (i = 0; i < doc.donations.length; i++) {
+        if (configId == doc.donations[i].config_id) {
+          donationsCount = doc.donations[i].count;
+          break;
+        }
+      }
+    }
+
+    config = app.getConfig(app.ConfigName.DONORSCHOOSE, configId);
+
+    // If user has not hit the max limit, start the donation flow.
+    if (donationsCount < config.max_donations_allowed) {
+      sendSMS(phone, config.max_donations_reached_oip);
+    }
+    // Otherwise, send an error message
+    else {
+      sendSMS(phone, config.start_donation_flow);
+    }
+  }
+};
 
 /**
  * Finds a project based on user input. Also responsible for sending the
