@@ -36,6 +36,7 @@ module.exports = function(request, doc) {
   for (var i = 0; i < doc.betas.length; i++) {
     if (doc.betas[i].phone == joiningBetaPhone) {
       doc.betas[i].invite_accepted = true;
+      doc.betas[i].time_joined = new Date();
       break;
     }
   }
