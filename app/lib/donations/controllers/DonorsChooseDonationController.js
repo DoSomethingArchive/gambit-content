@@ -27,7 +27,7 @@ var donorsChooseApiKey = (process.env.DONORSCHOOSE_API_KEY || null)
 if (process.env.NODE_ENV == 'test') {
   donorsChooseApiKey = 'DONORSCHOOSE';
   donorsChooseApiPassword = 'helpClassrooms!';
-  donorsChooseDonationBaseURL = 'https://apiqasecure.donorschoose.org/common/json_api.html?APIKey=';
+  donorsChooseDonationBaseURL = 'https://dev1-apisecure.donorschoose.org/common/json_api.html?APIKey=';
 }
 
 var TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR = 'zip' // 'zip' or 'state'. Our retrieveLocation() function will adjust accordingly.
