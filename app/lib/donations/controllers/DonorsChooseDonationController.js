@@ -107,7 +107,7 @@ DonorsChooseDonationController.prototype.start = function(request, response) {
     config = app.getConfig(app.ConfigName.DONORSCHOOSE, configId);
 
     // If user has not hit the max limit, start the donation flow.
-    if (donationsCount < config.max_donations_allowed) {
+    if (!config.max_donations_allowed || donationsCount < config.max_donations_allowed) {
       sendSMS(phone, config.max_donations_reached_oip);
     }
     // Otherwise, send an error message
@@ -441,6 +441,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
    *   Document for user that made a donation
    */
   function incrementDonationCount(doc) {
+    var i;
     var countUpdated = false;
 
     if (!doc) {
@@ -468,7 +469,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
     userModel.update(
       {phone: doc.phone},
       {$set: {donations: doc.donations}}
-    );
+    ).exec();
   }
 
   /**

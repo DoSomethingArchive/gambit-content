@@ -31,7 +31,13 @@ var donorschooseConfigSchema = new mongoose.Schema({
   donate_complete: Number,
 
   // Error notification OIP. 
-  error_direct_user_to_restart: Number
+  error_direct_user_to_restart: Number,
+
+  // Maximum number of donations a user can make for this campaign.
+  max_donations_allowed: Number,
+
+  // OIP sent when the maximum number of donations has already been sent.
+  max_donations_reached_oip: Number
 
 })
 
