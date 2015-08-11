@@ -65,11 +65,12 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
     return false;
   }
 
-  // Query for an existing game creation config doc.
-  var queryConfig = configModel.findOne({alpha_mobile: request.body.phone});
+  // Query for the game creation config doc most recently created by this user.
+  var queryConfig = configModel.find({alpha_mobile: request.body.phone, story_id: request.query.story_id}).sort({created_at: -1}).limit(1);
   var promiseConfig = queryConfig.exec();
-  promiseConfig.then(function(configDoc) {
-    // If no document found, then create one. This game creation config doc 
+
+  promiseConfig.then(function(configDocs) {
+    // If no document has been created by this user, then create one. This game creation config doc 
     // should NOT be confused with the game doc, or the gameConfig. It's destroyed
     // after the game is begun; it's used only for game creation. 
     if (configDoc == null) {
@@ -128,7 +129,6 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
       }
       // If the message contains a valid phone number and beta name. 
       else if (isPhoneNumber(message) && smsHelper.hasLetters(message)) {
-        debugger;
         var betaMobile = smsHelper.getNormalizedPhone(message);
         var betaName = smsHelper.getLetters(message);
 
@@ -152,7 +152,6 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
         }
         // At this point, this is the last number we need. So, create the game.
         else {
-          debugger;
           configDoc.beta_mobile_2 = betaMobile;
           configDoc.beta_first_name_2 = betaName;
           // Again, while it may seem that the two calls below may produce async disorderlyness, they don't. 

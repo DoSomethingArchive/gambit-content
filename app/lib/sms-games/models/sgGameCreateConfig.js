@@ -36,7 +36,11 @@ var sgGameCreateConfigSchema = new mongoose.Schema({
   story_id: Number,
 
   // Type of game structure; competitive? collaborative?
-  story_type: String
+  story_type: String,
+
+  // Timestamp. 
+  created_at: {type: Date, default: Date.now}
+
 })
 
 module.exports = function(connection) {
