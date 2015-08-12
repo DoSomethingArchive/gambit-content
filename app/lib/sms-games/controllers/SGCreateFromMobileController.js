@@ -82,9 +82,11 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
       var createGameConfig = configModel.create(doc);
       createGameConfig.then(function(doc) {
         emitter.emit('game-create-config-created', doc);
+        // @TODO: delete any existing create-game config docs for this user number and game ID. 
       })
       // Send next message asking for beta_mobile_1.
       sendSMS(request.body.phone, gameConfig.mobile_create.ask_beta_0_oip);
+
     }
     else {
       // If user responded with something else, ask for a valid player name. 
