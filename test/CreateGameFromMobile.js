@@ -46,7 +46,8 @@ describe('Creating a four-player game with first names from mobile: ', function(
       var request = {
         query: {
           story_id: storyId,
-          story_type: storyType
+          story_type: storyType,
+          alpha_first_name_query_response: true
         },
         body: {
           phone: alphaPhone,
@@ -160,7 +161,8 @@ describe('Alpha creating a game through mobile after only inviting one player', 
     var request = {
       query: {
         story_id: storyId,
-        story_type: storyType
+        story_type: storyType,
+        alpha_first_name_query_response: true
       },
       body: {
         phone: alphaPhone,
@@ -240,38 +242,24 @@ describe('Alpha creating a game through mobile after only inviting one player', 
   })
 })
 
-// test a game creation process where the player first enter invalid params for 1) alpha name, 2) beta 0 namRitike, and 3) beta 0 number.
+// test a game creation process where the player first enter invalid params for 1) alpha name, 2) beta 0 name, and 3) beta 0 number.
 describe('Mobile-create-flow sends appropriate error messages', function() {
   describe(alphaName + ' beginning a mobile create flow and entering a number, not a name', function() {
     var request = {
       query: {
         story_id: storyId,
-        story_type: storyType
+        story_type: storyType,
+        alpha_first_name_query_response: true
       },
       body: {
         phone: alphaPhone,
         args: alphaPhone
       }
     }
-    it('sends the alpha an error message yet still creates a game-create-config doc', function(done) {
-
-      var eventsWaitedOn = 2;
-      var recordEvent = function() {
-        eventsWaitedOn --
-        if (eventsWaitedOn === 0) {
-          done();
-        }
-      }
-
-      emitter.on('game-create-config-created', function(doc) {
-        gameCreateConfigId = doc._id;
-        emitter.removeAllListeners('game-create-config-created');
-        recordEvent();
-      })
-
+    it('sends the alpha an error message', function(done) {
       emitter.on(emitter.events.mcOptinTest, function(payload) {
-        if (payload.form.opt_in_path == gameConfig.mobile_create.invalid_alpha_first_name) {
-          recordEvent();
+        if (payload.form.opt_in_path == gameConfig.mobile_create.invalid_alpha_first_name_oip) {
+          done();
         }
         else {
           assert(false);
@@ -286,23 +274,28 @@ describe('Mobile-create-flow sends appropriate error messages', function() {
     var request = {
       query: {
         story_id: storyId,
-        story_type: storyType
+        story_type: storyType,
+        alpha_first_name_query_response: true
       },
       body: {
         phone: alphaPhone,
         args: alphaName
       }
     }
-    it('should update the game-create-config game doc', function(done) {
-      emitter.on('game-create-config-modified', function(doc) {
+    it('should create the game-create-config game doc', function(done) {
+
+      emitter.on('game-create-config-created', function(doc) {
+        gameCreateConfigId = doc._id;
+
         if (doc.alpha_first_name == alphaName && doc.alpha_first_name == alphaName) {
           done();
         }
         else {
           assert(false);
         }
-        emitter.removeAllListeners('game-create-config-modified');
+        emitter.removeAllListeners('game-create-config-created');
       })
+
       mobileController.processRequest(request, response);
     })
   })

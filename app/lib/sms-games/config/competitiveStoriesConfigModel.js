@@ -66,13 +66,13 @@ var competitiveStoriesConfigSchema = new mongoose.Schema({
     ask_beta_2_oip: Number, 
 
     // Error message informing alpha she did not provide a valid name for herself. 
-    invalid_alpha_first_name: Number,
+    invalid_alpha_first_name_oip: Number,
 
     // Error message informing alpha she provided an invalid mobile number. 
     invalid_mobile_oip: Number,
 
     // Error message informing that the alpha has not provided enough numbers (>=1) for the game to begin. 
-    not_enough_players_oip: Number,
+    not_enough_players_oip: Number
 
   },
 
