@@ -12,21 +12,21 @@ var assert = require('assert')
 
 describe('Testing end game from user exit by creating two Science Sleuth games', function() {
   var alphaName1 = 'alpha1';
-  var alphaPhone1 = '5555550200';
+  var alphaPhone1 = '5555550300';
   var betaName0 = 'friend0';
-  var betaPhone0 = '5555550201';
+  var betaPhone0 = '5555550301';
   var betaName1 = 'friend1';
-  var betaPhone1 = '5555550202';
+  var betaPhone1 = '5555550302';
 
-  var betaPhone2 = '5555550203';
+  var betaPhone2 = '5555550303';
   var betaName2 = 'friend2';
 
   var alphaName2 = 'alpha2';
-  var alphaPhone2 = '5555550204';
+  var alphaPhone2 = '5555550304';
   var betaName3 = 'friend3';
-  var betaPhone3 = '5555550205';
+  var betaPhone3 = '5555550305';
   var betaName4 = 'friend4';
-  var betaPhone4 = '5555550206';
+  var betaPhone4 = '5555550306';
 
   var storyId = 101;
   var gameConfig = app.getConfig(app.ConfigName.COMPETITIVE_STORIES, storyId)

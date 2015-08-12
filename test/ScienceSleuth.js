@@ -12,13 +12,13 @@ var assert = require('assert')
 
 describe('Science Sleuth game being played:', function() {
   var alphaName = 'alpha';
-  var alphaPhone = '5555550200';
+  var alphaPhone = '5555550600';
   var betaName0 = 'friend0';
   var betaName1 = 'friend1';
   var betaName2 = 'friend2';
-  var betaPhone0 = '5555550201';
-  var betaPhone1 = '5555550202';
-  var betaPhone2 = '5555550203';
+  var betaPhone0 = '5555550601';
+  var betaPhone1 = '5555550602';
+  var betaPhone2 = '5555550603';
   var storyId = 101;
   var gameConfig = app.getConfig(app.ConfigName.COMPETITIVE_STORIES, storyId)
 
