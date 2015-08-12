@@ -247,7 +247,6 @@ function ErrorAbortPromiseChain() {
  */
 SGCreateFromMobileController.prototype._updateDocument = function(configDoc) {
   var editedDoc = {
-      _id: configDoc._id,
       alpha_first_name: configDoc.alpha_first_name ? configDoc.alpha_first_name : null,
       beta_mobile_0: configDoc.beta_mobile_0 ? configDoc.beta_mobile_0 : null,
       beta_mobile_1: configDoc.beta_mobile_1 ? configDoc.beta_mobile_1 : null,

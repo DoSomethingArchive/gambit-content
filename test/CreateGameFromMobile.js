@@ -258,7 +258,6 @@ describe('Mobile-create-flow sends appropriate error messages', function() {
     }
     it('sends the alpha an error message', function(done) {
       emitter.on(emitter.events.mcOptinTest, function(payload) {
-        console.log(payload, '&&&&', gameConfig)
         if (payload.form.opt_in_path == gameConfig.mobile_create.invalid_alpha_first_name_oip) {
           done();
         }
