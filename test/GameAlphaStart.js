@@ -14,13 +14,13 @@ var assert = require('assert')
 describe('Alpha-Starting a Bully Text game:', function() {
   // Test players' details.
   var alphaName = 'alpha';
-  var alphaPhone = '5555550100';
+  var alphaPhone = '5555550400';
   var betaName0 = 'friend0';
   var betaName1 = 'friend1';
   var betaName2 = 'friend2';
-  var betaPhone0 = '5555550101';
-  var betaPhone1 = '5555550102';
-  var betaPhone2 = '5555550103';
+  var betaPhone0 = '5555550401';
+  var betaPhone1 = '5555550402';
+  var betaPhone2 = '5555550403';
   var storyId = 100;
   var gameConfig = app.getConfig(app.ConfigName.COMPETITIVE_STORIES, storyId)
 

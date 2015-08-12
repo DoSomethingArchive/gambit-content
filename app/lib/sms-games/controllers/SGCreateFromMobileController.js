@@ -55,7 +55,6 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
   }
 
   self = this;
-  self.createGame = createGame;
   request = request;
   response = response;
   gameConfig = app.getConfig(gameConfigNameString, request.query.story_id);
@@ -65,110 +64,105 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
     return false;
   }
 
-  // Query for an existing game creation config doc.
-  var queryConfig = configModel.findOne({alpha_mobile: request.body.phone});
-  var promiseConfig = queryConfig.exec();
-  promiseConfig.then(function(configDoc) {
-    // If no document found, then create one. This game creation config doc 
-    // should NOT be confused with the game doc, or the gameConfig. It's destroyed
-    // after the game is begun; it's used only for game creation. 
-    if (configDoc == null) {
-      // We don't ask for the first name yet, so just saving it as phone for now.
-      var doc = {
-        alpha_mobile: request.body.phone,
-        story_id: request.query.story_id,
-        story_type: request.query.story_type,
-        game_type: (request.query.game_type || '')
-      };
-
-      // User should have responded with the alpha name.
-      var message = request.body.args;
-      if (smsHelper.hasLetters(message)) {
-        doc.alpha_first_name = smsHelper.getLetters(message);
-        // Send next message asking for beta_mobile_1.
-        sendSMS(request.body.phone, gameConfig.mobile_create.ask_beta_0_oip);
-      }
-      else {
-        // If user responded with something else, ask for a valid player name. 
-        sendSMS(request.body.phone, gameConfig.mobile_create.invalid_alpha_first_name);
-      }
-      var createGame = configModel.create(doc);
-      createGame.then(function(doc) {
+  // If the request query params contain the 'alpha_first_name_query_response' param, 
+  // check whether or not we should create a new create game config. 
+  // (not to be confused with the game doc, or the gameConfig--it's destroyed after
+  // the game is begun; it's only used for game creation.)
+  if (request.query.alpha_first_name_query_response) {
+    var doc = {
+      alpha_mobile: request.body.phone,
+      story_id: request.query.story_id,
+      story_type: request.query.story_type,
+      game_type: (request.query.game_type || '')
+    };
+    var message = request.body.args;
+    // User should have responded with the alpha name. If so, create game create config doc.
+    if (smsHelper.hasLetters(message)) {
+      doc.alpha_first_name = smsHelper.getLetters(message);
+      var createGameConfig = configModel.create(doc);
+      createGameConfig.then(function(doc) {
         emitter.emit('game-create-config-created', doc);
       })
+      // Send next message asking for beta_mobile_1.
+      sendSMS(request.body.phone, gameConfig.mobile_create.ask_beta_0_oip);
     }
-    // If a document is found, then process the user message.
     else {
-      var message = request.body.args;
-      // Create the game if we have at least one beta number.
-      // If the alpha responds 'Y' to the 'create game now?' query. 
-      if (smsHelper.isYesResponse(message)) {
-        if (configDoc.beta_mobile_0 && smsHelper.isValidPhone(configDoc.beta_mobile_0)) {
-          emitter.emit('mobile-create-flow-creating-game', configDoc)
-          // While it may seem that the two calls below may produce asynchronous weirdness, they don't. 
-          self.createGame(configDoc, self.host);
-          self._removeDocument(configDoc.alpha_mobile);
-        }
-        else {
-          // Send the "not enough players" message.
-          sendSMS(configDoc.alpha_mobile, gameConfig.mobile_create.not_enough_players_oip);
-        }
-      }
-      // If the alpha hasn't yet provided a valid name yet. 
-      else if (!configDoc.alpha_first_name) {
-        if (smsHelper.hasLetters(message)) {
-          var alphaName = smsHelper.getLetters(message);
-          configDoc.alpha_first_name = alphaName;
-          self._updateDocument(configDoc);
-          sendSMS(configDoc.alpha_mobile, gameConfig.mobile_create.ask_beta_0_oip);
-        }
-        else {
-          sendSMS(configDoc.alpha_mobile, gameConfig.mobile_create.invalid_alpha_first_name);
-        }
-      }
-      // If the message contains a valid phone number and beta name. 
-      else if (isPhoneNumber(message) && smsHelper.hasLetters(message)) {
-        debugger;
-        var betaMobile = smsHelper.getNormalizedPhone(message);
-        var betaName = smsHelper.getLetters(message);
-
-        // If we haven't saved a beta number yet, save it to beta_mobile_0.
-        if (!configDoc.beta_mobile_0 && !configDoc.beta_first_name_0) {
-          configDoc.beta_mobile_0 = betaMobile;
-          configDoc.beta_first_name_0 = betaName;
-          self._updateDocument(configDoc);
-
-          // Then ask for beta_mobile_1.
-          sendSMS(configDoc.alpha_mobile, gameConfig.mobile_create.ask_beta_1_oip);
-        }
-        // If we haven't saved the 2nd beta number yet, save it to beta_mobile_1.
-        else if (!configDoc.beta_mobile_1 && !configDoc.beta_first_name_1) {
-          configDoc.beta_mobile_1 = betaMobile;
-          configDoc.beta_first_name_1 = betaName;
-          self._updateDocument(configDoc);
-
-          // Then ask for beta_mobile_2.
-          sendSMS(configDoc.alpha_mobile, gameConfig.mobile_create.ask_beta_2_oip);
-        }
-        // At this point, this is the last number we need. So, create the game.
-        else {
-          debugger;
-          configDoc.beta_mobile_2 = betaMobile;
-          configDoc.beta_first_name_2 = betaName;
-          // Again, while it may seem that the two calls below may produce async disorderlyness, they don't. 
-          emitter.emit('mobile-create-flow-creating-game', configDoc)
-          self.createGame(configDoc, self.host);
-          self._removeDocument(configDoc.alpha_mobile);
-        }
-      }
-      // Send the "invalid response" message.
-      else {
-        sendSMS(configDoc.alpha_mobile, gameConfig.mobile_create.invalid_mobile_oip);
-      }
+      // If user responded with something else, ask for a valid player name. 
+      sendSMS(request.body.phone, gameConfig.mobile_create.invalid_alpha_first_name_oip);
     }
-  }, function(err) {
-    logger.error(err);
-  })
+
+  }
+  // If the query params do not contain the `alpha_first_name_query_response` param, process the request otherwise.
+  else {
+    // Query for the game creation config doc most recently created by this user.
+    var queryConfig = configModel.find({alpha_mobile: request.body.phone, story_id: request.query.story_id}).sort({created_at: -1}).limit(1);
+    var promiseConfig = queryConfig.exec();
+
+    promiseConfig.then(function(configDocs) {
+      var configDoc = configDocs[0];
+      // If a document is found, then process the user message.
+      if (configDoc) {
+        var message = request.body.args;
+        // Create the game if we have at least one beta number.
+        // If the alpha responds 'Y' to the 'create game now?' query. 
+        if (smsHelper.isYesResponse(message)) {
+          if (configDoc.beta_mobile_0 && smsHelper.isValidPhone(configDoc.beta_mobile_0)) {
+            emitter.emit('mobile-create-flow-creating-game', configDoc)
+            // While it may seem that the two calls below may produce asynchronous weirdness, they don't. 
+            self._createGame(configDoc, self.host);
+            self._removeDocument(configDoc._id);
+          }
+          else {
+            // Send the "not enough players" message.
+            sendSMS(configDoc.alpha_mobile, gameConfig.mobile_create.not_enough_players_oip);
+          }
+        }
+        // If the message contains a valid phone number and beta name. 
+        else if (isPhoneNumber(message) && smsHelper.hasLetters(message)) {
+          var betaMobile = smsHelper.getNormalizedPhone(message);
+          var betaName = smsHelper.getLetters(message);
+
+          // If we haven't saved a beta number yet, save it to beta_mobile_0.
+          if (!configDoc.beta_mobile_0 && !configDoc.beta_first_name_0) {
+            configDoc.beta_mobile_0 = betaMobile;
+            configDoc.beta_first_name_0 = betaName;
+            self._updateDocument(configDoc);
+
+            // Then ask for beta_mobile_1.
+            sendSMS(configDoc.alpha_mobile, gameConfig.mobile_create.ask_beta_1_oip);
+          }
+          // If we haven't saved the 2nd beta number yet, save it to beta_mobile_1.
+          else if (!configDoc.beta_mobile_1 && !configDoc.beta_first_name_1) {
+            configDoc.beta_mobile_1 = betaMobile;
+            configDoc.beta_first_name_1 = betaName;
+            self._updateDocument(configDoc);
+
+            // Then ask for beta_mobile_2.
+            sendSMS(configDoc.alpha_mobile, gameConfig.mobile_create.ask_beta_2_oip);
+          }
+          // At this point, this is the last number we need. So, create the game.
+          else {
+            configDoc.beta_mobile_2 = betaMobile;
+            configDoc.beta_first_name_2 = betaName;
+            // Again, while it may seem that the two calls below may produce async disorderlyness, they don't. 
+            emitter.emit('mobile-create-flow-creating-game', configDoc)
+            self._createGame(configDoc, self.host);
+            self._removeDocument(configDoc._id);
+          }
+        }
+        // Send the "invalid response" message.
+        else {
+          sendSMS(configDoc.alpha_mobile, gameConfig.mobile_create.invalid_mobile_oip);
+        }
+      }
+      // If no config doc is found, then the user hasn't created one yet by texting in an alpha first name. Ask again.
+      else {
+        sendSMS(request.body.phone, gameConfig.mobile_create.invalid_alpha_first_name_oip);
+      }
+    }, function(err) {
+      logger.error(err);
+    })
+  }
   response.send();
 };
 
@@ -180,7 +174,7 @@ SGCreateFromMobileController.prototype.processRequest = function(request, respon
  * @param host
  *   Hostname of this app.
  */
-function createGame(gameCreateConfig, host) {
+SGCreateFromMobileController.prototype._createGame = function(gameCreateConfig, host) {
   var url = 'http://' + host + '/sms-multiplayer-game/create';
   var payload = {
     form: {
@@ -203,7 +197,7 @@ function createGame(gameCreateConfig, host) {
     }
 
     if (response && response.statusCode) {
-      logger.info('SGCreateFromMobileController.createGame: POST to ' + url + ' returned status code: ' + response.statusCode);
+      logger.info('SGCreateFromMobileController._createGame: POST to ' + url + ' returned status code: ' + response.statusCode);
     }
   });
 };
@@ -262,7 +256,7 @@ SGCreateFromMobileController.prototype._updateDocument = function(configDoc) {
       beta_first_name_2: configDoc.beta_first_name_2 ? configDoc.beta_first_name_2 : ''
     }
   configModel.update(
-    {alpha_mobile: configDoc.alpha_mobile},
+    {_id: configDoc._id},
     {$set: editedDoc},
     function(err, num, raw) {
       if (err) {
@@ -282,9 +276,9 @@ SGCreateFromMobileController.prototype._updateDocument = function(configDoc) {
  * @param phone
  *   Alpha mobile number.
  */
-SGCreateFromMobileController.prototype._removeDocument = function(phone) {
+SGCreateFromMobileController.prototype._removeDocument = function(id) {
   configModel.remove(
-    {alpha_mobile: phone},
+    {_id: id},
     function(err, num) {
       if (err) {
         logger.error(err);
