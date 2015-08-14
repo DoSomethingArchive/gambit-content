@@ -108,11 +108,11 @@ DonorsChooseDonationController.prototype.start = function(request, response) {
 
     // If user has not hit the max limit, start the donation flow.
     if (!config.max_donations_allowed || donationsCount < config.max_donations_allowed) {
-      sendSMS(phone, config.max_donations_reached_oip);
+      sendSMS(phone, config.start_donation_flow);
     }
     // Otherwise, send an error message
     else {
-      sendSMS(phone, config.start_donation_flow);
+      sendSMS(phone, config.max_donations_reached_oip);
     }
   }
 };
