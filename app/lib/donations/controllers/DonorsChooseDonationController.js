@@ -4,12 +4,16 @@
  * Donors Choose implementation of the donation interface.
  *
  * The flow a user should be guided through:
- *   1. retrieveLocation
+ *   1. start
+ *      - sends the appropriate optin path to start the donation
+ *      - unless a max number of donations have been made, then a message
+ *        is sent to notify the user about that
+ *   2. retrieveLocation
  *      - will call findProject
  *      - findProject responsible for responding to user with project details
  *        and asking for the first name
- *   2. retrieveFirstName
- *   3. retrieveEmail
+ *   3. retrieveFirstName
+ *   4. retrieveEmail
  *      - will call submitDonation
  *        submitDonation responsible for responding to user with success message
  */
@@ -23,7 +27,7 @@ var donorsChooseApiKey = (process.env.DONORSCHOOSE_API_KEY || null)
 if (process.env.NODE_ENV == 'test') {
   donorsChooseApiKey = 'DONORSCHOOSE';
   donorsChooseApiPassword = 'helpClassrooms!';
-  donorsChooseDonationBaseURL = 'https://apiqasecure.donorschoose.org/common/json_api.html?APIKey=';
+  donorsChooseDonationBaseURL = 'https://dev1-apisecure.donorschoose.org/common/json_api.html?APIKey=';
 }
 
 var TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR = 'zip' // 'zip' or 'state'. Our retrieveLocation() function will adjust accordingly.
@@ -43,7 +47,10 @@ var Q = require('q')
   ;
 
 var connectionOperations = rootRequire('app/config/connectionOperations')
-  , donationModel = require('../models/DonationInfo')(connectionOperations);
+  , donationModel = require('../models/DonationInfo')(connectionOperations)
+  , userModel = rootRequire('app/lib/sms-games/models/sgUser')(connectionOperations)
+  ;
+
 // @TODO: add some kind of reference to retrieve the donations config 
 // var donationConfigModel = require('../')
 
@@ -56,6 +63,59 @@ function DonorsChooseDonationController() {
  * Resource name identifier. Routes will use this to specify the controller to use.
  */
 DonorsChooseDonationController.prototype.resourceName = 'donors-choose';
+
+/**
+ * Optional method to start the donation flow. Validates that this user is
+ * allowed to make a donation.
+ *
+ * @param request
+ *   Express Request object
+ * @param response
+ *   Express Response object
+ */
+DonorsChooseDonationController.prototype.start = function(request, response) {
+  var phone;
+  var configId;
+
+  // Find the user
+  phone = smsHelper.getNormalizedPhone(request.body.phone);
+  configId = request.query.id;
+  userModel.findOne({phone: phone}, onUserFound);
+
+  response.send();
+
+  // Callback after user is found
+  function onUserFound(err, doc) {
+    var config;
+    var donationsCount;
+    var i;
+
+    if (err) {
+      logger.error(err);
+    }
+
+    donationsCount = 0;
+    if (doc && doc.donations) {
+      for (i = 0; i < doc.donations.length; i++) {
+        if (configId == doc.donations[i].config_id) {
+          donationsCount = doc.donations[i].count;
+          break;
+        }
+      }
+    }
+
+    config = app.getConfig(app.ConfigName.DONORSCHOOSE, configId);
+
+    // If user has not hit the max limit, start the donation flow.
+    if (!config.max_donations_allowed || donationsCount < config.max_donations_allowed) {
+      sendSMS(phone, config.start_donation_flow);
+    }
+    // Otherwise, send an error message
+    else {
+      sendSMS(phone, config.max_donations_reached_oip);
+    }
+  }
+};
 
 /**
  * Finds a project based on user input. Also responsible for sending the
@@ -255,7 +315,18 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
  *
  */
 DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject, donorInfoObject, proposalId, donationConfig) {
-  // First request: obtains a unique token for the donation.
+  var donorPhone;
+
+  donorPhone = smsHelper.getNormalizedPhone(donorInfoObject.donorPhoneNumber);
+
+  requestToken().then(requestDonation,
+    promiseErrorCallback('Unable to successfully retrieve donation token from DonorsChoose.org API. User mobile: '
+      + donorPhone)
+  );
+
+  /**
+   * First request: obtains a unique token for the donation.
+   */
   function requestToken() {
     // Creates promise-storing object.
     var deferred = Q.defer();
@@ -273,27 +344,29 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
             deferred.resolve(JSON.parse(body).token);
           } else {
             logger.error('Unable to retrieve a donation token from the DonorsChoose API for user mobile:' 
-              + donorInfoObject.donorPhoneNumber);
-            sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
+              + donorPhone);
+            sendSMS(donorPhone, donationConfig.error_direct_user_to_restart);
           }
         }
         catch (e) {
           logger.error('Failed trying to parse the donation token request response from DonorsChoose.org for user mobile:' 
-            + donorInfoObject.donorPhoneNumber + ' Error: ' + e.message + '| Response: ' + response + '| Body: ' + body);
-          sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
+            + donorPhone + ' Error: ' + e.message + '| Response: ' + response + '| Body: ' + body);
+          sendSMS(donorPhone, donationConfig.error_direct_user_to_restart);
         }
       }
       else {
         deferred.reject('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, user mobile: ' 
-          + donorInfoObject.donorPhoneNumber + 'error: ' + err);
-        sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
+          + donorPhone + 'error: ' + err);
+        sendSMS(donorPhone, donationConfig.error_direct_user_to_restart);
       }
     });
     return deferred.promise;
   }
 
-  // After promise we make the second request: donation transaction.
-  requestToken().then(function(tokenData) {
+  /**
+   * After promise we make the second request: donation transaction.
+   */
+  function requestDonation(tokenData) {
     var donateParams = {'form': {
       'APIKey': apiInfoObject.apiKey,
       'apipassword': apiInfoObject.apiPassword, 
@@ -312,41 +385,108 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
       logger.log('debug', 'Donation submission return:', body.trim())
       if (err) {
         logger.error('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, user mobile: ' + donorInfoObject.donorPhoneNumber + 'error: ' + err);
-        sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
+        sendSMS(donorPhone, donationConfig.error_direct_user_to_restart);
       }
       else if (response && response.statusCode != 200) {
         logger.error('Failed to submit donation to DonorsChoose.org for user mobile: ' 
-          + donorInfoObject.donorPhoneNumber + '. Status code: ' + response.statusCode + ' | Response: ' + response);
-        sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
+          + donorPhone + '. Status code: ' + response.statusCode + ' | Response: ' + response);
+        sendSMS(donorPhone, donationConfig.error_direct_user_to_restart);
       }
       else {
         try {
           var jsonBody = JSON.parse(body);
           if (jsonBody.statusDescription == 'success') {
             logger.info('Donation to proposal ' + proposalId + ' was successful! Body:', jsonBody);
-            // Uses Bitly to shorten the link, then updates the user's MC profile.
-            shortenLink(jsonBody.proposalURL, function(shortenedLink) {
-              var customFields = {
-                donorsChooseProposalUrl: shortenedLink
-              };
-              mobilecommons.profile_update(donorInfoObject.donorPhoneNumber, donationConfig.donate_complete, customFields);
-            })
-          } else {
+            updateUserWithDonation();
+            sendSuccessMessage(jsonBody.proposalURL);
+          }
+          else {
             logger.warn('Donation to proposal ' + proposalId + ' for user mobile: ' 
-              + donorInfoObject.donorPhoneNumber + ' was NOT successful. Body:' + JSON.stringify(jsonBody));
-            sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
+              + donorPhone + ' was NOT successful. Body:' + JSON.stringify(jsonBody));
+            sendSMS(donorPhone, donationConfig.error_direct_user_to_restart);
           }
         }
         catch (e) {
           logger.error('Failed trying to parse the donation response from DonorsChoose.org. User mobile: ' 
-            + donorInfoObject.donorPhoneNumber + 'Error: ' + e.message);
-          sendSMS(donorInfoObject.donorPhoneNumber, donationConfig.error_direct_user_to_restart);
+            + donorPhone + 'Error: ' + e.message);
+          sendSMS(donorPhone, donationConfig.error_direct_user_to_restart);
         }
       }
     })
-  },
-  promiseErrorCallback('Unable to successfully retrieve donation token from DonorsChoose.org API. User mobile: ' 
-    + donorInfoObject.donorPhoneNumber)); 
+  }
+
+  /**
+   * Start donation process.
+   */
+  function updateUserWithDonation() {
+    userModel.findOne({phone: donorPhone}, function(err, doc) {
+      if (err) {
+        logger.error(err);
+      }
+
+      if (!doc) {
+        userModel.create({phone: donorPhone})
+          .then(incrementDonationCount);
+      }
+      else {
+        incrementDonationCount(doc);
+      }
+    });
+  }
+
+  /**
+   * Updates the donation count in a user's donation history.
+   *
+   * @param doc
+   *   Document for user that made a donation
+   */
+  function incrementDonationCount(doc) {
+    var i;
+    var countUpdated = false;
+
+    if (!doc) {
+      return;
+    }
+
+    // Find previous donation history and increment the count if found
+    for (i = 0; i < doc.donations.length; i++) {
+      if (doc.donations[i].config_id == donationConfig._id) {
+        doc.donations[i].count += 1;
+        countUpdated = true;
+        break;
+      }
+    }
+
+    // If no previous donation found, add a new item
+    if (!countUpdated) {
+      doc.donations[doc.donations.length] = {
+        config_id: donationConfig._id,
+        count: 1
+      }
+    }
+
+    // Update the user document
+    userModel.update(
+      {phone: doc.phone},
+      {$set: {donations: doc.donations}}
+    ).exec();
+  }
+
+  /**
+   * Sends message to user after a successful donation.
+   *
+   * @param url
+   *   URL to the DonorsChoose project
+   */
+  function sendSuccessMessage(url) {
+    // Uses Bitly to shorten the link, then updates the user's MC profile.
+    shortenLink(url, function(shortenedLink) {
+      var customFields = {
+        donorsChooseProposalUrl: shortenedLink
+      };
+      mobilecommons.profile_update(donorPhone, donationConfig.donate_complete, customFields);
+    });
+  }
 };
 
 /**

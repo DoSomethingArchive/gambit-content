@@ -60,6 +60,21 @@ function implementsInterface(controller) {
   }
 }
 
+/**
+ * Starts the donation flow. Any validation needed before a donation flow
+ * begins should happen here. This endpoint will typically need to be
+ * triggered via an mData.
+ */
+router.post('/:controller/start', function(request, response) {
+  var controller = loadController(request.params.controller);
+  if (controller) {
+    controller.start(request, response);
+  }
+  else {
+    response.status(404).send('Request not available for: ' + request.params.controller);
+  }
+});
+
 router.post('/:controller/find-project', function(request, response) {
   var controller = loadController(request.params.controller);
   if (controller) {

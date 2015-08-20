@@ -15,7 +15,15 @@ var sgUserSchema = new mongoose.Schema({
   name: String,
 
   // _id of the game the user is currently in
-  current_game_id: mongoose.Schema.Types.ObjectId
+  current_game_id: mongoose.Schema.Types.ObjectId,
+
+  // Donation history
+  donations: [
+    {
+      config_id: Number,
+      count: Number
+    }
+  ]
 })
 
 module.exports = function(connection) {
