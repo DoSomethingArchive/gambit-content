@@ -342,97 +342,98 @@ function test() {
     });
   });
 
-  describe('reportback.receiveWhyImportant - with a value of "because I care"', function() {
-    var testDoc;
-    var testData = {
-      phone: TEST_PHONE,
-      campaignConfig: TEST_CAMPAIGN_CONFIG,
-      args: 'because I care'
-    };
+  // describe('reportback.receiveWhyImportant - with a value of "because I care"', function() {
+  //   var testDoc;
+  //   var testData = {
+  //     phone: TEST_PHONE,
+  //     campaignConfig: TEST_CAMPAIGN_CONFIG,
+  //     args: 'because I care'
+  //   };
 
-    before(function(done) {
-      // Setting dummy values needed in mobilecommons.optout
-      process.env.MOBILECOMMONS_AUTH_EMAIL = 'MOBILECOMMONS_AUTH_EMAIL';
-      process.env.MOBILECOMMONS_AUTH_PASS = 'MOBILECOMMONS_AUTH_PASS';
+  //   before(function(done) {
+  //     // Setting dummy values needed in mobilecommons.optout
+  //     process.env.MOBILECOMMONS_AUTH_EMAIL = 'MOBILECOMMONS_AUTH_EMAIL';
+  //     process.env.MOBILECOMMONS_AUTH_PASS = 'MOBILECOMMONS_AUTH_PASS';
 
-      model.create({phone: TEST_PHONE, campaign: TEST_CAMPAIGN_CONFIG.endpoint}, function(err, doc) {
-        if (doc) {
-          testDoc = doc;
-          done();
-        }
-      });
-    });
+  //     model.create({phone: TEST_PHONE, campaign: TEST_CAMPAIGN_CONFIG.endpoint}, function(err, doc) {
+  //       if (doc) {
+  //         testDoc = doc;
+  //         done();
+  //       }
+  //     });
+  //   });
 
-    it('should respond with the "completion" message and update reportback doc with the answer and optout of the campaign', function(done) {
-      var mcUpdateEventDone = false;
-      var mcOptoutEventDone = false;
-      var rbEventDone = false;
+  //   it('should respond with the "completion" message and update reportback doc with the answer and optout of the campaign', function(done) {
+  //     var mcUpdateEventDone = false;
+  //     var mcOptoutEventDone = false;
+  //     var rbEventDone = false;
 
-      function onSuccessfulEvent(evt) {
-        if (evt == emitter.events.mcProfileUpdateTest) {
-          mcUpdateEventDone = true;
-        }
-        else if (evt == emitter.events.mcOptoutTest) {
-          mcOptoutEventDone = true;
-        }
-        else if (evt == emitter.events.reportbackModelUpdate) {
-          rbEventDone = true;
-        }
+  //     function onSuccessfulEvent(evt) {
+  //       // done();
+  //       if (evt == emitter.events.mcProfileUpdateTest) {
+  //         mcUpdateEventDone = true;
+  //       }
+  //       else if (evt == emitter.events.mcOptoutTest) {
+  //         mcOptoutEventDone = true;
+  //       }
+  //       else if (evt == emitter.events.reportbackModelUpdate) {
+  //         rbEventDone = true;
+  //       }
 
-        if (mcUpdateEventDone && mcOptoutEventDone && rbEventDone) {
-          done();
-        }
-      };
+  //       if (mcUpdateEventDone && mcOptoutEventDone && rbEventDone) {
+  //         done();
+  //       }
+  //     };
 
-      // Check if correct user is subscribed to correct opt-in path
-      emitter.on(emitter.events.mcProfileUpdateTest, function(evtData) {
-        var shortenedLink = (reportback.REPORTBACK_PERMALINK_BASE_URL + dscontentapi.TEST_RBID).replace(/.*?:\/\//g, "");
-        if (evtData.form.phone_number == testData.phone &&
-            evtData.form.opt_in_path_id == TEST_CAMPAIGN_CONFIG.message_complete &&
-            evtData.form.last_reportback_url == shortenedLink) { 
-          onSuccessfulEvent(emitter.events.mcProfileUpdateTest);
-        }
-        else {
-          assert(false);
-        }
-      });
+  //     // Check if correct user is subscribed to correct opt-in path
+  //     emitter.on(emitter.events.mcProfileUpdateTest, function(evtData) {
+  //       var shortenedLink = (reportback.REPORTBACK_PERMALINK_BASE_URL + dscontentapi.TEST_RBID).replace(/.*?:\/\//g, "");
+  //       if (evtData.form.phone_number == testData.phone &&
+  //           evtData.form.opt_in_path_id == TEST_CAMPAIGN_CONFIG.message_complete &&
+  //           evtData.form.last_reportback_url == shortenedLink) { 
+  //         onSuccessfulEvent(emitter.events.mcProfileUpdateTest);
+  //       }
+  //       else {
+  //         assert(false);
+  //       }
+  //     });
 
-      // Check if correct campaign id opt-out is sent
-      emitter.on(emitter.events.mcOptoutTest, function(evtData) {
-        if (evtData.form.phone_number == testData.phone &&
-            evtData.form.campaign_id == TEST_CAMPAIGN_CONFIG.campaign_optout_id) {
-          onSuccessfulEvent(emitter.events.mcOptoutTest);
-        }
-        else {
-          assert(false);
-        }
-      });
+  //     // Check if correct campaign id opt-out is sent
+  //     emitter.on(emitter.events.mcOptoutTest, function(evtData) {
+  //       if (evtData.form.phone_number == testData.phone &&
+  //           evtData.form.campaign_id == TEST_CAMPAIGN_CONFIG.campaign_optout_id) {
+  //         onSuccessfulEvent(emitter.events.mcOptoutTest);
+  //       }
+  //       else {
+  //         assert(false);
+  //       }
+  //     });
 
-      // Check if model is updated properly
-      emitter.on(emitter.events.reportbackModelUpdate, function(evtData) {
-        model.findOne({phone: TEST_PHONE}, function(err, doc) {
-          if (doc && doc.why_important == testData.args) {
-            onSuccessfulEvent(emitter.events.reportbackModelUpdate);
-          }
-          else {
-            assert(false);
-          }
-        });
-      });
+  //     // Check if model is updated properly
+  //     emitter.on(emitter.events.reportbackModelUpdate, function(evtData) {
+  //       model.findOne({phone: TEST_PHONE}, function(err, doc) {
+  //         if (doc && doc.why_important == testData.args) {
+  //           onSuccessfulEvent(emitter.events.reportbackModelUpdate);
+  //         }
+  //         else {
+  //           assert(false);
+  //         }
+  //       });
+  //     });
 
-      // Call receiveWhyImportant with test data
-      reportback.receiveWhyImportant(testDoc, testData);
-    });
+  //     // Call receiveWhyImportant with test data
+  //     reportback.receiveWhyImportant(testDoc, testData);
+  //   });
 
-    after(function() {
-      removeTestDocs();
-      emitter.removeAllListeners(emitter.events.mcProfileUpdateTest);
-      emitter.removeAllListeners(emitter.events.mcOptoutTest);
-      emitter.removeAllListeners(emitter.events.reportbackModelUpdate);
-      process.env.MOBILECOMMONS_AUTH_EMAIL = null;
-      process.env.MOBILECOMMONS_AUTH_PASS = null;
-    });
-  });
+  //   after(function() {
+  //     removeTestDocs();
+  //     emitter.removeAllListeners(emitter.events.mcProfileUpdateTest);
+  //     emitter.removeAllListeners(emitter.events.mcOptoutTest);
+  //     emitter.removeAllListeners(emitter.events.reportbackModelUpdate);
+  //     process.env.MOBILECOMMONS_AUTH_EMAIL = null;
+  //     process.env.MOBILECOMMONS_AUTH_PASS = null;
+  //   });
+  // });
   describe('A single user not finishing her reportback for one campaign before reporting back for another', function() {
 
     // Documents updated as we simulate a user moving through the rb flow.
