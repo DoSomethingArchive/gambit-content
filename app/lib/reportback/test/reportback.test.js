@@ -343,13 +343,18 @@ function test() {
   });
 
   describe('reportback.receiveWhyImportant - with a value of "because I care"', function() {
+    var testDoc;
     var testData = {
       phone: TEST_PHONE,
       campaignConfig: TEST_CAMPAIGN_CONFIG,
       args: 'because I care'
     };
-    var testDoc;
+
     before(function(done) {
+      // Setting dummy values needed in mobilecommons.optout
+      process.env.MOBILECOMMONS_AUTH_EMAIL = 'MOBILECOMMONS_AUTH_EMAIL';
+      process.env.MOBILECOMMONS_AUTH_PASS = 'MOBILECOMMONS_AUTH_PASS';
+
       model.create({phone: TEST_PHONE, campaign: TEST_CAMPAIGN_CONFIG.endpoint}, function(err, doc) {
         if (doc) {
           testDoc = doc;
@@ -424,6 +429,8 @@ function test() {
       emitter.removeAllListeners(emitter.events.mcProfileUpdateTest);
       emitter.removeAllListeners(emitter.events.mcOptoutTest);
       emitter.removeAllListeners(emitter.events.reportbackModelUpdate);
+      process.env.MOBILECOMMONS_AUTH_EMAIL = null;
+      process.env.MOBILECOMMONS_AUTH_PASS = null;
     });
   });
   describe('A single user not finishing her reportback for one campaign before reporting back for another', function() {
