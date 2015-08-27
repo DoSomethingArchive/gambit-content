@@ -126,6 +126,12 @@ function endLevelMessageWithSuccessPlayerNames(gameConfig, gameDoc, delay) {
     return;
   }
 
+  // If no end_level_* messages are specified, then return.
+  if (!gameConfig.end_level_0_correct_loss && !gameConfig.end_level_1_correct_loss &&
+      !gameConfig.end_level_solo_correct_win && !gameConfig.end_level_1_to_4_correct_win) {
+    return;
+  }
+
   var i, j
     , path
     , alphaPlayer
@@ -154,7 +160,12 @@ function endLevelMessageWithSuccessPlayerNames(gameConfig, gameDoc, delay) {
 
   // assembling an array with all player data
   alphaPlayer = { "name": gameDoc.alpha_name, "phone": gameDoc.alpha_phone };
-  allPlayers = gameDoc.betas;
+  allPlayers = [];
+  for (i = 0; i < gameDoc.betas.length; i++) {
+    if (gameDoc.betas[i].invite_accepted) {
+      allPlayers.push(gameDoc.betas[i]);
+    }
+  }
   allPlayers.push(alphaPlayer);
 
   // assembling a string of all the correct players' names
