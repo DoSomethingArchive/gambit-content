@@ -13,7 +13,7 @@ var mobilecommons = rootRequire('mobilecommons')
 // StatHat analytics marker. 
 var STATHAT_CATEGORY = 'sms-games'
 // Delay (in milliseconds) for end game universal group messages to be sent.
-  , UNIVERSAL_GROUP_ENDGAME_MESSAGE_DELAY = 23000
+  , UNIVERSAL_GROUP_ENDGAME_MESSAGE_DELAY = 5000
   ;
 
 module.exports = {
