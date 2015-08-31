@@ -12,33 +12,21 @@ var donorschooseConfigSchema = new mongoose.Schema({
   // Contextual information about the donorschoose donation flow. 
   __comments: String,
 
-  // OIP which begins the donation. 
   start_donation_flow: Number,
 
-  // Error notification OIP. 
-  invalid_state_oip: Number,
+  ask_email: Number,
 
-  // Error notification OIP. 
-  invalid_zip_oip: Number,
+  donation_complete_project_info_A: Number,
 
-  // OIP sent after DonorsChoose project found. 
-  found_project_ask_name: Number,
+  donation_complete_project_info_B: Number,
 
-  // OIP sent asking for email address to complete transaction. 
-  received_name_ask_email: Number,
+  donation_complete_give_url: Number,
 
-  // OIP sent after donation is complete. 
-  donate_complete: Number,
+  max_donations_reached_oip: Number,
 
-  // Error notification OIP. 
-  error_direct_user_to_restart: Number,
+  error_start_again: Number,
 
-  // Maximum number of donations a user can make for this campaign.
-  max_donations_allowed: Number,
-
-  // OIP sent when the maximum number of donations has already been sent.
-  max_donations_reached_oip: Number
-
+  max_donations_allowed: Number
 })
 
 module.exports = function(connection) {
