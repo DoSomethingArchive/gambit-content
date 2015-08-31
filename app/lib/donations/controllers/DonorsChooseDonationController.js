@@ -34,7 +34,7 @@ var TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR = 'zip' // 'zip' or 'state'. Our retrie
   , COST_TO_COMPLETE_UPPER_LIMIT = 10000
   , DONATE_API_URL = donorsChooseDonationBaseURL + donorsChooseApiKey
   , DONATION_LOCATION = 'MN' // for Minnesota;
-  , END_MESSAGE_DELAY = 1000; 
+  , END_MESSAGE_DELAY = 2500; 
 
 var Q = require('q')
   , requestHttp = require('request')
@@ -108,7 +108,7 @@ DonorsChooseDonationController.prototype.start = function(request, response) {
     config = app.getConfig(app.ConfigName.DONORSCHOOSE, configId);
 
     // If user has not hit the max limit, start the donation flow.
-    if (!config.max_donations_allowed || donationsCount < config.max_donations_allowed) {
+    if (!config.max_donations_allowed || donationsCount <= config.max_donations_allowed) {
       self.findProject(phone, configId);
     }
     // Otherwise, send an error message
@@ -129,7 +129,7 @@ DonorsChooseDonationController.prototype.start = function(request, response) {
  */
 DonorsChooseDonationController.prototype.findProject = function(mobileNumber, configId) {
 
-  var config = app.getConfig(app.ConfigName.DONORSCHOOSE, request.query.id);
+  var config = app.getConfig(app.ConfigName.DONORSCHOOSE, configId);
   var locationFilter = 'state=' + DONATION_LOCATION;
 
   // Subject code for all 'Math & Science' subjects.
@@ -166,12 +166,13 @@ DonorsChooseDonationController.prototype.findProject = function(mobileNumber, co
       if (selectedProposal) {
 
         var entities = new Entities(); // Calling 'html-entities' module to decode escaped characters.
+        var location = entities.decode(selectedProposal.city) + ', ' + entities.decode(selectedProposal.state)
 
         var mobileCommonsCustomFields = {
           SS_fulfillment_trailer:   entities.decode(selectedProposal.fulfillmentTrailer), 
           SS_teacher_name :         entities.decode(selectedProposal.teacherName), 
           SS_school_name :          entities.decode(selectedProposal.schoolName),
-          SS_proj_location:         entities.decode(selectedProposal.city)
+          SS_proj_location:         location
         };
 
       } else {
@@ -332,8 +333,6 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
  */
 DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject, donorInfoObject, proposalId, donationConfig) {
   var donorPhone = donorInfoObject.donorPhoneNumber;
-
-  // donorPhone = smsHelper.getNormalizedPhone(donorInfoObject.donorPhoneNumber);
 
   requestToken().then(requestDonation,
     promiseErrorCallback('Unable to successfully retrieve donation token from DonorsChoose.org API. User mobile: '
@@ -509,9 +508,9 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
 
     // Last message user receives. Uses Bitly to shorten the link, then updates the user's MC profile.
     setTimeout(function() {
-      shortenLink(url, function(shortenedLink) {
+      shortenLink(projectUrl, function(shortenedLink) {
         var customFields = {
-          donorsChooseProposalUrl: shortenedLink
+          SS_donation_url: shortenedLink
         };
         mobilecommons.profile_update(donorPhone, donationConfig.donation_complete_give_url, customFields);
       });
