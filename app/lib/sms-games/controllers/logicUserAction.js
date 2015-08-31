@@ -13,7 +13,7 @@ var smsHelper = rootRequire('app/lib/smsHelpers')
 // Delay (in milliseconds) for end level group messages to be sent.
 var END_LEVEL_GROUP_MESSAGE_DELAY = 4000
 // Delay (in milliseconds) for next level start messages to be sent.
-  , NEXT_LEVEL_START_DELAY = 6000
+  , NEXT_LEVEL_START_DELAY = 7000
 // Delay for next level player name messages to be sent. 
   , END_LEVEL_PLAYER_NAME_MESSAGE_DELAY = 2000
 // StatHat analytics marker. 
