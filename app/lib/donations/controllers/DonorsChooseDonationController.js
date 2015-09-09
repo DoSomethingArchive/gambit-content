@@ -33,7 +33,8 @@ var TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR = 'zip' // 'zip' or 'state'. Our retrie
   , DONATION_AMOUNT = 10
   , COST_TO_COMPLETE_UPPER_LIMIT = 10000
   , DONATE_API_URL = donorsChooseDonationBaseURL + donorsChooseApiKey
-  , DONATION_LOCATION = 'MN' // for Minnesota;
+  , DONATION_LOCATION = 'MN' // for Minnesota
+  , PROJECT_CREATION_CUTOFF_DATE = 1442188860000 // September 14th, 12:01 AM GMT
   , END_MESSAGE_DELAY = 2500; 
 
 var Q = require('q')
@@ -138,9 +139,10 @@ DonorsChooseDonationController.prototype.findProject = function(mobileNumber, co
   var urgencySort = 'sortBy=0'; 
   // Constrains results which fall within a specific 'costToComplete' value range. 
   var costToCompleteRange = 'costToCompleteRange=' + DONATION_AMOUNT + '+TO+' + COST_TO_COMPLETE_UPPER_LIMIT; 
+  var projectsCreatedBy = 'olderThan=' + PROJECT_CREATION_CUTOFF_DATE;
   // Maximum number of results to return. 
   var maxNumberOfResults = '1';
-  var filterParams = locationFilter + '&' + subjectFilter + '&' + urgencySort + '&' + costToCompleteRange + '&';
+  var filterParams = locationFilter + '&' + subjectFilter + '&' + urgencySort + '&' + costToCompleteRange + '&' + projectsCreatedBy + '&';
   var requestUrlString = donorsChooseProposalsQueryBaseURL + filterParams + 'APIKey=' + donorsChooseApiKey + '&max=' + maxNumberOfResults;
 
   requestHttp.get(requestUrlString, function(error, response, data) {
