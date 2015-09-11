@@ -126,12 +126,6 @@ function endLevelMessageWithSuccessPlayerNames(gameConfig, gameDoc, delay) {
     return;
   }
 
-  // If no end_level_* messages are specified, then return.
-  if (!gameConfig.end_level_0_correct_loss && !gameConfig.end_level_1_correct_loss &&
-      !gameConfig.end_level_solo_correct_win && !gameConfig.end_level_1_to_4_correct_win) {
-    return;
-  }
-
   var i, j
     , path
     , alphaPlayer
@@ -209,7 +203,14 @@ function endLevelMessageWithSuccessPlayerNames(gameConfig, gameDoc, delay) {
   args = {'players_who_succeeded_at_end_level' : nameString};
 
   for (i = 0; i < allPlayers.length; i++) {
-    message.singleUserWithDelay(allPlayers[i].phone, endLevelMessage, delay, gameDoc._id, userModel, args);
+    // If no individual end-level win/loss message is set in the configs, only update the profile.
+    if (!endLevelMessage) {
+      mobilecommons.profile_update(allPlayers[i].phone, '', args);
+    }
+    else {
+      message.singleUserWithDelay(allPlayers[i].phone, endLevelMessage, delay, gameDoc._id, userModel, args);
+    }
+
     emitter.emit('end-level-player-name-message', {'players_who_succeeded_at_end_level' : nameString, 'endLevelMessage': endLevelMessage});
   }
 }
