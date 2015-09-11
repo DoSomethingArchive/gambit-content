@@ -154,7 +154,12 @@ function endLevelMessageWithSuccessPlayerNames(gameConfig, gameDoc, delay) {
 
   // assembling an array with all player data
   alphaPlayer = { "name": gameDoc.alpha_name, "phone": gameDoc.alpha_phone };
-  allPlayers = gameDoc.betas;
+  allPlayers = [];
+  for (i = 0; i < gameDoc.betas.length; i++) {
+    if (gameDoc.betas[i].invite_accepted) {
+      allPlayers.push(gameDoc.betas[i]);
+    }
+  }
   allPlayers.push(alphaPlayer);
 
   // assembling a string of all the correct players' names
@@ -198,7 +203,14 @@ function endLevelMessageWithSuccessPlayerNames(gameConfig, gameDoc, delay) {
   args = {'players_who_succeeded_at_end_level' : nameString};
 
   for (i = 0; i < allPlayers.length; i++) {
-    message.singleUserWithDelay(allPlayers[i].phone, endLevelMessage, delay, gameDoc._id, userModel, args);
+    // If no individual end-level win/loss message is set in the configs, only update the profile.
+    if (!endLevelMessage) {
+      mobilecommons.profile_update(allPlayers[i].phone, '', args);
+    }
+    else {
+      message.singleUserWithDelay(allPlayers[i].phone, endLevelMessage, delay, gameDoc._id, userModel, args);
+    }
+
     emitter.emit('end-level-player-name-message', {'players_who_succeeded_at_end_level' : nameString, 'endLevelMessage': endLevelMessage});
   }
 }
