@@ -391,10 +391,9 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
       'token': tokenData,
       'proposalId': proposalId,
       'amount': DONATION_AMOUNT,
-      'email': (donorInfoObject.donorEmail || defaultDonorsChooseTransactionEmail),
-      'first': donorInfoObject.donorFirstName, 
-      'last': 'a DoSomething.org member',
-      'salutation': donorInfoObject.donorFirstName + ', a DoSomething.org Member'
+      'email': defaultDonorsChooseTransactionEmail,
+      'honoreeEmail': donorInfoObject.donorEmail,
+      'honoreeFirst': donorInfoObject.donorFirstName,
     }};
 
     logger.info('Submitting donation with params:', donateParams);
