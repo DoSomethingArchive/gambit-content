@@ -33,8 +33,8 @@ var TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR = 'zip' // 'zip' or 'state'. Our retrie
   , DONATION_AMOUNT = 10
   , COST_TO_COMPLETE_UPPER_LIMIT = 10000
   , DONATE_API_URL = donorsChooseDonationBaseURL + donorsChooseApiKey
-  , DONATION_LOCATION = 'MN' // for Minnesota
-  , PROJECT_CREATION_CUTOFF_DATE = 1442188860000 // September 14th, 12:01 AM GMT
+  , DONATION_LOCATION = 63101 // zip of downtown St. Louis, MO
+  , PROJECT_CREATION_CUTOFF_DATE = 1442966460000 // September 23rd, 12:01 AM GMT
   , END_MESSAGE_DELAY = 2500; 
 
 var Q = require('q')
@@ -131,7 +131,7 @@ DonorsChooseDonationController.prototype.start = function(request, response) {
 DonorsChooseDonationController.prototype.findProject = function(mobileNumber, configId) {
 
   var config = app.getConfig(app.ConfigName.DONORSCHOOSE, configId);
-  var locationFilter = 'state=' + DONATION_LOCATION;
+  var locationFilter = 'zip=' + DONATION_LOCATION;
 
   // Subject code for all 'Math & Science' subjects.
   var subjectFilter = 'subject4=-4'; 
