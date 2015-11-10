@@ -33,7 +33,6 @@ var TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR = 'zip' // 'zip' or 'state'. Our retrie
   , DONATION_AMOUNT = 10
   , COST_TO_COMPLETE_UPPER_LIMIT = 10000
   , DONATE_API_URL = donorsChooseDonationBaseURL + donorsChooseApiKey
-  , DONATION_LOCATION = 'state=MO&cityName=Saint%20Louis' // Saint Louis, MO
   , PROJECT_CREATION_CUTOFF_DATE = 1445299201000 // October 20th, 2-15 12:00:01 AM GMT
   , END_MESSAGE_DELAY = 2500;
 
@@ -131,7 +130,6 @@ DonorsChooseDonationController.prototype.start = function(request, response) {
 DonorsChooseDonationController.prototype.findProject = function(mobileNumber, configId) {
 
   var config = app.getConfig(app.ConfigName.DONORSCHOOSE, configId);
-  var locationFilter = DONATION_LOCATION;
 
   // Subject code for all 'Math & Science' subjects.
   var subjectFilter = 'subject4=-4'; 
@@ -142,7 +140,7 @@ DonorsChooseDonationController.prototype.findProject = function(mobileNumber, co
   var projectsCreatedBy = 'olderThan=' + PROJECT_CREATION_CUTOFF_DATE;
   // Maximum number of results to return. 
   var maxNumberOfResults = '1';
-  var filterParams = locationFilter + '&' + subjectFilter + '&' + urgencySort + '&' + costToCompleteRange + '&' + projectsCreatedBy + '&';
+  var filterParams = subjectFilter + '&' + urgencySort + '&' + costToCompleteRange + '&' + projectsCreatedBy + '&';
   var requestUrlString = donorsChooseProposalsQueryBaseURL + filterParams + 'APIKey=' + donorsChooseApiKey + '&max=' + maxNumberOfResults;
 
   requestHttp.get(requestUrlString, function(error, response, data) {
@@ -190,7 +188,7 @@ DonorsChooseDonationController.prototype.findProject = function(mobileNumber, co
         mobile: mobileNumber,
         email: 'donorschoose@dosomething.org', 
         first_name: 'Anonymous',
-        location: DONATION_LOCATION,
+        location: location,
         project_id: selectedProposal.id,
         project_url: selectedProposal.proposalURL,
         donation_complete: false
