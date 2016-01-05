@@ -134,7 +134,7 @@ function handleUserResponse(doc, data) {
 function receivePhoto(doc, data) {
   var photoUrl = data.mms_image_url;
   if (!photoUrl) {
-    mobilecommons.profile_update(data.phone, data.campaignConfig.message_not_a_photo);
+    mobilecommons.optin({alphaPhone: data.phone, alphaOptin: data.campaignConfig.message_not_a_photo});
   }
   else {
     model.update(
@@ -146,7 +146,7 @@ function receivePhoto(doc, data) {
         }
       });
 
-    mobilecommons.profile_update(data.phone, data.campaignConfig.message_caption);
+    mobilecommons.optin({alphaPhone: data.phone, alphaOptin: data.campaignConfig.message_caption});
   }
 }
 
@@ -169,7 +169,7 @@ function receiveCaption(doc, data) {
       }
     });
 
-  mobilecommons.profile_update(data.phone, data.campaignConfig.message_quantity);
+  mobilecommons.optin({alphaPhone: data.phone, alphaOptin: data.campaignConfig.message_quantity});
 }
 
 /**
@@ -192,10 +192,10 @@ function receiveQuantity(doc, data) {
           emitter.emit(emitter.events.reportbackModelUpdate);
         }
       });
-    mobilecommons.profile_update(data.phone, data.campaignConfig.message_why);
+    mobilecommons.optin({alphaPhone: data.phone, alphaOptin: data.campaignConfig.message_why});
   }
   else {
-    mobilecommons.profile_update(data.phone, data.campaignConfig.message_quantity_sent_invalid);
+    mobilecommons.optin({alphaPhone: data.phone, alphaOptin: data.campaignConfig.message_quantity_sent_invalid});
   }
 }
 
@@ -337,7 +337,6 @@ function createUserThenReportBack(doc, data) {
  */
 function submitReportBack(uid, doc, data) {
   var data = data
-    , customFields = {}
     , rbData = {
         nid: data.campaignConfig.campaign_nid,
         uid: uid,
@@ -376,6 +375,10 @@ function submitReportBack(uid, doc, data) {
 
   function shortenLinkAndUpdateMCProfile(rbId) {
     shortenLink(REPORTBACK_PERMALINK_BASE_URL + rbId, function(shortenedLink) {
+      var optinArgs = {
+        alphaPhone: data.phone,
+        alphaOptin: data.campaignConfig.message_complete
+      };
 
       //Remove http:// or https:// protocol 
       shortenedLink = shortenedLink.replace(/.*?:\/\//g, "")
@@ -383,11 +386,11 @@ function submitReportBack(uid, doc, data) {
       // Here, update the user profile in mobile commons 1) the campaign id of the campaign, if it's their first one,
       // and 2) the URL of their submitted reportback. Then send the "completed" message. 
       if (data.profile_first_completed_campaign_id) {
-        customFields.profile_first_completed_campaign_id = data.campaignConfig.campaign_completed_id;
+        optinArgs.profile_first_completed_campaign_id = data.campaignConfig.campaign_completed_id;
       }
 
-      customFields.last_reportback_url = shortenedLink;
-      mobilecommons.profile_update(data.phone, data.campaignConfig.message_complete, customFields);
+      optinArgs.last_reportback_url = shortenedLink;
+      mobilecommons.optin(optinArgs);
 
       // Opt user out of campaign, if specified
       if (data.campaignConfig.campaign_optout_id) {
@@ -402,6 +405,7 @@ function submitReportBack(uid, doc, data) {
       model.remove({phone: data.phone, campaign: data.campaignConfig.endpoint}).exec();
     })
   }
+
   reportBackToDS().then(shortenLinkAndUpdateMCProfile, function(err) {
       if (err) {
         logger.error('Unable to reportback to DS API for uid: ' + uid + ', error: ' + err);
