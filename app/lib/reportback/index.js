@@ -23,6 +23,24 @@ else {
   REPORTBACK_PERMALINK_BASE_URL = 'http://staging.beta.dosomething.org/reportback/';
 }
 
+/**
+ * Single endpoint through which a reportback is created, populated and
+ * submitted. The expected reportback flow is that a user is asked for a photo,
+ * a caption, the reportback quantity and finally why it's important to them.
+ *
+ * POST /reportback/:campaign
+ *
+ * Query Params:
+ *   save_to - (optional) force this response to save to the specified field
+ *     Valid options: photo, caption, quantity, why_important
+ *
+ * Body Params:
+ *   args - the user's text response
+ *   mms_image_url - if set, the URL of the photo the user submitted
+ *   phone - the user's phone number
+ *   profile_first_completed_campaign_id - if set, the id of the first Mobile
+ *     Commons campaign the user has completed
+ */
 router.post('/:campaign', function(request, response) {
   var campaign
     , campaignConfig
@@ -51,7 +69,8 @@ router.post('/:campaign', function(request, response) {
             phone: phone,
             args: request.body.args,
             mms_image_url: request.body.mms_image_url,
-            profile_first_completed_campaign_id: request.body.profile_first_completed_campaign_id
+            profile_first_completed_campaign_id: request.body.profile_first_completed_campaign_id,
+            save_to: request.query.save_to
           };
           handleUserResponse(doc, requestData);
         }, function(err) {
@@ -109,16 +128,18 @@ function onDocumentFound(doc, phone, campaignConfig) {
  *   Data from the user's request
  */
 function handleUserResponse(doc, data) {
-  if (!doc.photo) {
+  var override = data.save_to;
+
+  if (override === 'photo' || (!override && !doc.photo)) {
     receivePhoto(doc, data);
   }
-  else if (!doc.caption) {
+  else if (override === 'caption' || (!override && !doc.caption)) {
     receiveCaption(doc, data);
   }
-  else if (!doc.quantity) {
+  else if (override === 'quantity' || (!override && !doc.quantity)) {
     receiveQuantity(doc, data);
   }
-  else if (!doc.why_important) {
+  else if (override === 'why_important' || (!override && !doc.why_important)) {
     receiveWhyImportant(doc, data);
   }
 }
