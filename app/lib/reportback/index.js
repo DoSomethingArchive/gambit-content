@@ -31,6 +31,9 @@ else {
  * POST /reportback/:campaign
  *
  * Query Params:
+ *   config_override - (optional) use the config taggedwith this config_override.
+ *     By default, we use the campaign value in the URL to find the config with
+ *     the matching endpoint value.
  *   save_to - (optional) force this response to save to the specified field
  *     Valid options: photo, caption, quantity, why_important
  *
@@ -42,16 +45,19 @@ else {
  *     Commons campaign the user has completed
  */
 router.post('/:campaign', function(request, response) {
-  var campaign
-    , campaignConfig
+  var campaignConfig
     , phone
     , requestData
     , i
     ;
   
-  // Check that we have a config setup for this campaign
-  campaign = request.params.campaign;
-  campaignConfig = app.getConfig(app.ConfigName.REPORTBACK, campaign, 'endpoint');
+  // Get the config either from the override or the campaign value in the URL
+  if (request.query.config_override) {
+    campaignConfig = app.getConfig(app.ConfigName.REPORTBACK, request.query.config_override, 'config_override');
+  }
+  else {
+    campaignConfig = app.getConfig(app.ConfigName.REPORTBACK, request.params.campaign, 'endpoint');
+  }
 
   if (typeof campaignConfig !== 'undefined') {
     phone = request.body.phone;

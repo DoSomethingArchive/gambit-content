@@ -13,6 +13,10 @@ var rbSchema = new mongoose.Schema({
   // Mobile Commons campaign ID to opt user out of
   campaign_optout_id: Number,
 
+  // Hacky - use this to id a secondary reportback flow when there are multiple
+  // flows for a single endpoint value
+  config_override: String,
+
   // Resource name used as endpoint in URL
   endpoint: String,
 
