@@ -5,6 +5,7 @@ var multiplayerGameRouter = require('./lib/sms-games')
   , donationsRouter = require('./lib/donations')
   , dsCampaignRouter = require('./lib/ds-routing')
   , reportback = require('./lib/reportback')
+  , puppetSloth = require('./lib/puppet-sloth')
   ;
 
 // Directs all requests to the top-level router. 
@@ -21,3 +22,6 @@ router.use('/ds-routing', dsCampaignRouter);
 
 // Standard Staff Pick campaign report back.
 router.use('/reportback', reportback);
+
+// Testing router.
+router.use('/puppet-sloth', puppetSloth);
