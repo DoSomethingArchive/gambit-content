@@ -16,7 +16,6 @@
     "mocha-lcov-reporter": "0.0.1",
     "mongoose": "~3.8.8",
     "mysql": "2.1.x",
-    "newrelic": "^1.11.5",
     "node-request-retry": "^1.0.0",
     "path": "~0.4.9",
     "q": "^1.0.1",

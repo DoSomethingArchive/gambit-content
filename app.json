@@ -45,11 +45,12 @@
     "MOBILECOMMONS_COMPANY_KEY": {
       "required": true
     },
+    // @see https://github.com/DoSomething/ds-mdata-responder/issues/518 
     "NEW_RELIC_APP_NAME": {
-      "required": true
+      "required": false
     },
     "NEWRELIC_LICENSE_KEY": {
-      "required": true
+      "required": false
     },
     "NODE_ENV": {
       "required": true
