@@ -20,7 +20,7 @@ if (process.env.NODE_ENV == 'production') {
   REPORTBACK_PERMALINK_BASE_URL = 'https://www.dosomething.org/reportback/';
 }
 else {
-  REPORTBACK_PERMALINK_BASE_URL = 'http://staging.beta.dosomething.org/reportback/';
+  REPORTBACK_PERMALINK_BASE_URL = 'https://thor.dosomething.org/reportback/';
 }
 
 /**
