@@ -3,11 +3,6 @@ global.rootRequire = function(name) {
   return require(__dirname + '/' + name);
 }
 
-// Nodejitsu specifies NODE_ENV='production' by default
-if (process.env.NODE_ENV == 'production') {
-  require('newrelic');
-}
-
 var express = require('express')
   , path = require('path')
   , http = require('http')
@@ -18,13 +13,13 @@ var express = require('express')
 // Default is 5. Increasing # of concurrent sockets per host.
 http.globalAgent.maxSockets = 100;
 
-// Authenticate app with the DS content API.
+// Authenticate app with Phoenix API.
 dscontentapi.userLogin(
   process.env.DS_CONTENT_API_USERNAME,
   process.env.DS_CONTENT_API_PASSWORD,
   function(err, response, body) {
     if (response && response.statusCode == 200) {
-      logger.info('Successfully logged in to DS content API.',
+      logger.info('Successfully logged in to Phoenix API.',
         '\n\tsessid: ' + body.sessid,
         '\n\tsession_name: ' + body.session_name,
         '\n\ttoken: ' + body.token);

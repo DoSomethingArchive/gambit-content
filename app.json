@@ -1,0 +1,78 @@
+{
+  "name": "ds-mdata-responder",
+  "scripts": {
+  },
+  "env": {
+    "BITLY_GENERIC_ACCESS_TOKEN": {
+      "required": true
+    },
+    "CONFIG_DB_URI": {
+      "required": true
+    },
+    "DB_URI": {
+      "required": true
+    },
+    "DONORSCHOOSE_API_KEY": {
+      "required": true
+    },
+    "DONORSCHOOSE_API_PASSWORD": {
+      "required": true
+    },
+    "DONORSCHOOSE_DEFAULT_EMAIL": {
+      "required": true
+    },
+    "DS_CONTENT_API_PASSWORD": {
+      "required": true
+    },
+    "DS_CONTENT_API_PASSWORD_KEY": {
+      "required": true
+    },
+    "DS_CONTENT_API_USER_REGISTRATION_SOURCE": {
+      "required": true
+    },
+    "DS_CONTENT_API_USERNAME": {
+      "required": true
+    },
+    "LOGGING_DB_URI": {
+      "required": true
+    },
+    "MOBILECOMMONS_AUTH_EMAIL": {
+      "required": true
+    },
+    "MOBILECOMMONS_AUTH_PASS": {
+      "required": true
+    },
+    "MOBILECOMMONS_COMPANY_KEY": {
+      "required": true
+    },
+    // @see https://github.com/DoSomething/ds-mdata-responder/issues/518 
+    "NEW_RELIC_APP_NAME": {
+      "required": false
+    },
+    "NEWRELIC_LICENSE_KEY": {
+      "required": false
+    },
+    "NODE_ENV": {
+      "required": true
+    },
+    "STATHAT_EZ_KEY": {
+      "required": true
+    },
+    "SUBDOMAIN": {
+      "required": true
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1
+    }
+  },
+  "addons": [
+    "newrelic"
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ]
+}

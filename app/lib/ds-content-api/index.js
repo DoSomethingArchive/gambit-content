@@ -14,7 +14,7 @@ if (process.env.NODE_ENV == 'production') {
   BASE_URL = 'https://www.dosomething.org/api/' + VERSION;
 }
 else {
-  BASE_URL = 'http://staging.beta.dosomething.org/api/' + VERSION;
+  BASE_URL = 'https://thor.dosomething.org/api/' + VERSION;
 }
 
 module.exports = function() {
