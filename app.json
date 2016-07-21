@@ -51,6 +51,9 @@
     "NEW_RELIC_LICENSE_KEY": {
       "required": true
     },
+    "NEW_RELIC_LOGGING_LEVEL": {
+      "required": true
+    },
     "NODE_ENV": {
       "required": true
     },
