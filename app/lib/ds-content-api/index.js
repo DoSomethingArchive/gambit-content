@@ -286,12 +286,17 @@ function onSystemConnect(err, response, body) {
  */
 function campaignsReportback(rbData, callback) {
   var nid = rbData.nid;
+  var rbSource = 'sms';
+  if (process.env.DS_CONTENT_API_REPORTBACK_SOURCE) {
+    rbSource = DS_CONTENT_API_REPORTBACK_SOURCE;
+  }
   var body = {
     uid: rbData.uid,
     caption: rbData.caption,
     quantity: rbData.quantity,
     why_participated: rbData.why_participated,
-    file_url: rbData.file_url
+    file_url: rbData.file_url,
+    source: rbSource
   };
 
   var options = {
