@@ -1,6 +1,6 @@
 {
   "name": "ds-mdata-responder",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Interface for interacting with DoSomething.org SMS experiences.",
   "dependencies": {
     "body-parser": "^1.9.2",
