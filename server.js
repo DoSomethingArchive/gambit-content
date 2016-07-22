@@ -3,6 +3,11 @@ global.rootRequire = function(name) {
   return require(__dirname + '/' + name);
 }
 
+if (process.env.NODE_ENV == 'production' || process.env.NEW_RELIC_ENABLED) {
+  require ('newrelic');
+}
+
+
 var express = require('express')
   , path = require('path')
   , http = require('http')
