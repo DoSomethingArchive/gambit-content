@@ -291,7 +291,8 @@ function campaignsReportback(rbData, callback) {
     caption: rbData.caption,
     quantity: rbData.quantity,
     why_participated: rbData.why_participated,
-    file_url: rbData.file_url
+    file_url: rbData.file_url,
+    source: 'sms-mobilecommons'
   };
 
   var options = {
