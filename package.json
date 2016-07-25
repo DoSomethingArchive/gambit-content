@@ -1,7 +1,12 @@
 {
   "name": "ds-mdata-responder",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Interface for interacting with DoSomething.org SMS experiences.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DoSomething/ds-mdata-responder.git"
+  },
   "dependencies": {
     "body-parser": "^1.9.2",
     "connect-multiparty": "1.1.0",
