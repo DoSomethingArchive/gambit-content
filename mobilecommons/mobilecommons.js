@@ -155,7 +155,7 @@ exports.optin = function(args) {
           + body + ' | stack: ' + trace);
       }
       else {
-        logger.info('Success mobilecommons.optin into: ', alphaOptin);
+        logger.info('Success mobilecommons.optin to moco_oip:' + alphaOptin + ' for user:' + alphaPhone);
       }
     }
   };
@@ -214,7 +214,7 @@ exports.optout = function(args) {
           + ' | body: ' + body + ' | stack: ' + trace);
       }
       else {
-        logger.info('Success mobilecommons.optout from: ', campaignId);
+        logger.info('Success mobilecommons.optout from moco_campaign_id:' + campaignId + ' for user:' + phone);
       }
     }
   };
