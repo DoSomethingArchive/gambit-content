@@ -65,15 +65,17 @@ function onRetrievedConfig() {
  * 
  * @param modelName
  *   Name of model we're searching for. Must match the prescribed Mongoose model name exactly.
- * @param id
+ * @param documentId
  *   _id of the config document we're searching for. 
  * @param key
  *   Optional. Key to use instead of _id to search for the doc.
+ *   @todo -- do we ever use this?
  * 
  * @returns 
  *   Config document.
  */
-app.getConfig = function(modelName, id, key) {
+app.getConfig = function(modelName, documentId, key) {
+  logger.debug('smsConfigsLoader.getConfig for modelName:' + modelName + ' documentId:' + documentId + ' key:' + key);
   var configArray
     , i
     , keyMatches
@@ -82,14 +84,15 @@ app.getConfig = function(modelName, id, key) {
 
   configArray = this.configs[modelName];
   for (i = 0; i < configArray.length; i++) {
-    keyMatches = typeof key !== 'undefined' && configArray[i][key] == id;
-    idMatches = configArray[i]._id == id;
+    keyMatches = typeof key !== 'undefined' && configArray[i][key] == documentId;
+    idMatches = configArray[i]._id == documentId;
 
     if (keyMatches || idMatches) {
+      logger.log('verbose', 'smsConfigsLoader.getConfig return:', configArray[i]);
       return configArray[i];
     }
   }
-  logger.error('Unable to find requested config document for config model: ' + modelName + ' with id: ' + id);
+  logger.error('smsConfigsLoader.getConfig document not found for modelName:' + modelName + ' documentId:' + documentId + ' key:' + key);
 };
 
 module.exports = smsConfigsLoader;

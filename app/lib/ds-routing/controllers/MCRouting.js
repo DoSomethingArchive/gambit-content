@@ -3,6 +3,7 @@
  */
 
 var mobilecommons = rootRequire('mobilecommons');
+var logger = rootRequire('app/lib/logger');
 
 var Tips = require('./Tips')
   , tips = new Tips
@@ -53,15 +54,18 @@ MCRouting.prototype.yesNoGateway = function(request, response) {
 };
 
 /**
- * Transition users from the sign up campaign to the actual campaign.
+ * Transitions user from a MoCo Signup-campaign into corresponding MoCo Campaign-campaign.
  */
 MCRouting.prototype.campaignTransition = function(request, response) {
+  logger.log('verbose', 'MCRouting.campaignTransition request.body', request.body);
   if (typeof(request.body.mdata_id) === 'undefined') {
+    logger.log('info', "MCRouting.campaignTransition request.body.mdata_id is undefined.", request.body);
     response.sendStatus(204);
     return;
   }
 
   var mdataId = parseInt(request.body.mdata_id);
+  logger.log('debug', 'MCRouting.campaignTransition mdataId:' + mdataId); 
   var transitionConfig = app.getConfig(app.ConfigName.CAMPAIGN_TRANSITIONS, mdataId);
 
   if (typeof(transitionConfig) !== 'undefined'
@@ -84,6 +88,7 @@ MCRouting.prototype.campaignTransition = function(request, response) {
     response.send();
   }
   else {
+    logger.log('warn', "MCRouting.campaignTransition transitionConfig document error for mdataId:" + mdataId);
     // Config for that mData is not set.
     response.sendStatus(501);
   }

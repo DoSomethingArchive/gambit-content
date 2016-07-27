@@ -13,7 +13,7 @@ router.post('/mobilecommons', function(request, response) {
   // @todo Move hardcoded value into environment variable.
   var optin = 210045;
   phone = smsHelper.getNormalizedPhone(request.body.phone);
-  logger.info("user:" + phone + " sent @slothbot a message:" + request.body.args);
+  logger.debug("user:" + phone + " sent @slothbot a message:" + request.body.args);
   response.send();  
   var mobileCommonsCustomFields = {
     slothbot_response: request.body.args
