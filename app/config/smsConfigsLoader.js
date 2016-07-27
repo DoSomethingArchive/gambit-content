@@ -88,7 +88,7 @@ app.getConfig = function(modelName, documentId, key) {
     idMatches = configArray[i]._id == documentId;
 
     if (keyMatches || idMatches) {
-      logger.log('verbose', 'smsConfigsLoader.getConfig return:', configArray[i]);
+      logger.log('verbose', 'smsConfigsLoader.getConfig:%s', JSON.stringify(configArray[i]));
       return configArray[i];
     }
   }

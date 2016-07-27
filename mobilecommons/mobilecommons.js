@@ -142,20 +142,20 @@ exports.optin = function(args) {
   var trace = new Error().stack;
   callback = function(error, response, body) {
     if (error) {
-      logger.error('Failed mobilecommons.optin for user: ' + alphaPhone
+      logger.error('Failed mobilecommons.optin for user:' + alphaPhone
         + ' | with request payload: ' + JSON.stringify(payload)
         + ' | with error: ' + JSON.stringify(error)
         + ' | stack: ' + trace);
     }
     else if (response) {
       if (response.statusCode != 200) {
-        logger.error('Failed mobilecommons.optin for user: ' + alphaPhone
+        logger.error('Failed mobilecommons.optin for user:' + alphaPhone
           + ' | with request payload: ' + JSON.stringify(payload)
           + ' | with code: ' + response.statusCode + ' | body: '
           + body + ' | stack: ' + trace);
       }
       else {
-        logger.info('Success mobilecommons.optin to moco_oip:' + alphaOptin + ' for user:' + alphaPhone);
+        logger.info('Success mobilecommons.optin to oip:%d for user:%s', alphaOptin, alphaPhone);
       }
     }
   };
