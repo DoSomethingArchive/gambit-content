@@ -4,6 +4,8 @@ var winston = require('winston')
 require('winston-mongodb').MongoDB;
 
 var mongoDbUri = process.env.LOGGING_DB_URI || 'mongodb://localhost/ds-mdata-responder';
+var loggingLevel = process.env.LOGGING_LEVEL || 'info';
+
 var logger = new (winston.Logger) ({
   levels: {
     verbose: 0,
@@ -20,8 +22,8 @@ var logger = new (winston.Logger) ({
     error: 'red'
   },
   transports: [
-    new winston.transports.Console({prettyPrint: true, colorize: true, level: 'info'}),
-    new winston.transports.MongoDB({dbUri: mongoDbUri, collection: 'logs_winston', level: 'info'})
+    new winston.transports.Console({prettyPrint: true, colorize: true, level: loggingLevel}),
+    new winston.transports.MongoDB({dbUri: mongoDbUri, collection: 'logs_winston', level: loggingLevel})
   ],
   exceptionHandlers: [
     new winston.transports.Console({prettyPrint: true, colorize: true}),
