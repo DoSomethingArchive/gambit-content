@@ -45,6 +45,7 @@ else {
  *     Commons campaign the user has completed
  */
 router.post('/:campaign', function(request, response) {
+  logger.log('verbose', '/reportback/%s request.body:', request.params.campaign, JSON.stringify(request.body));
   var campaignConfig
     , phone
     , requestData
@@ -116,11 +117,13 @@ function findDocument(phone, endpoint) {
  */
 function onDocumentFound(doc, phone, campaignConfig) {
   if (doc) {
+    logger.log('debug', 'reportback.onDocumentFound found doc:%s', JSON.stringify(doc));
     return doc;
   }
   else {
-    // Create a document if none was found
-    return model.create({'phone': phone, 'campaign': campaignConfig.endpoint});
+    var newDoc = model.create({'phone': phone, 'campaign': campaignConfig.endpoint});
+    logger.log('debug', 'reportback.onDocumentFound created doc:%s', JSON.stringify(doc));
+    return newDoc;
   }
 }
 
