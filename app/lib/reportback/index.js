@@ -152,6 +152,9 @@ function handleUserResponse(doc, data) {
   else if (override === 'why_important' || (!override && !doc.why_important)) {
     receiveWhyImportant(doc, data);
   }
+  else {
+    logger.error('reportback.handleUserResponse blank for user:%s doc:%s', data.phone, JSON.stringify(doc));
+  }
 }
 
 /**
