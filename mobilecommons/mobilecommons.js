@@ -82,6 +82,7 @@ exports.profile_update = function(phone, optInPathId, customFields) {
  * of the alphPhone user. 
  */
 exports.optin = function(args) {
+  logger.log('debug', 'mobilecommons.optin:%s', JSON.stringify(args));
   var url = 'https://secure.mcommons.com/profiles/join'
     , standardKeys = ['alphaPhone', 'betaPhone', 'alphaOptin', 'betaOptin']
     , alphaPhone = args.alphaPhone || null
@@ -168,6 +169,7 @@ exports.optin = function(args) {
  * Opt out of a Mobile Commons campaign.
  */
 exports.optout = function(args) {
+  logger.log('debug', 'mobilecommons.optout:%s', JSON.stringify(args));
   var url = 'https://secure.mcommons.com/api/profile_opt_out'
     , phone = args.phone || null
     , campaignId = args.campaignId || null

@@ -28,7 +28,7 @@ else {
  * submitted. The expected reportback flow is that a user is asked for a photo,
  * a caption, the reportback quantity and finally why it's important to them.
  *
- * POST /reportback/:campaign
+ * POST /reportback/:campaignName
  *
  * Query Params:
  *   config_override - (optional) use the config taggedwith this config_override.
@@ -45,6 +45,8 @@ else {
  *     Commons campaign the user has completed
  */
 router.post('/:campaign', function(request, response) {
+  var campaignName = request.params.campaign;
+  logger.log('verbose', '/reportback/%s request.body:', campaignName, JSON.stringify(request.body));
   var campaignConfig
     , phone
     , requestData
@@ -56,7 +58,7 @@ router.post('/:campaign', function(request, response) {
     campaignConfig = app.getConfig(app.ConfigName.REPORTBACK, request.query.config_override, 'config_override');
   }
   else {
-    campaignConfig = app.getConfig(app.ConfigName.REPORTBACK, request.params.campaign, 'endpoint');
+    campaignConfig = app.getConfig(app.ConfigName.REPORTBACK, campaignName, 'endpoint');
   }
 
   if (typeof campaignConfig !== 'undefined') {
@@ -67,7 +69,7 @@ router.post('/:campaign', function(request, response) {
       .then(function(doc) {
           return onDocumentFound(doc, phone, campaignConfig);
         }, function(err) {
-          logger.error('Error from reportback.findDocument:', err);
+          logger.error('/reportback/%s reportback.findDocument: error', campaignName, err);
         })
       .then(function(doc) {
           requestData = {
@@ -116,11 +118,13 @@ function findDocument(phone, endpoint) {
  */
 function onDocumentFound(doc, phone, campaignConfig) {
   if (doc) {
+    logger.log('debug', 'reportback.onDocumentFound existing doc:%s', JSON.stringify(doc));
     return doc;
   }
   else {
-    // Create a document if none was found
-    return model.create({'phone': phone, 'campaign': campaignConfig.endpoint});
+    var newDoc = model.create({'phone': phone, 'campaign': campaignConfig.endpoint});
+    logger.log('debug', 'reportback.onDocumentFound created doc:%s', JSON.stringify(doc));
+    return newDoc;
   }
 }
 
@@ -148,6 +152,9 @@ function handleUserResponse(doc, data) {
   else if (override === 'why_important' || (!override && !doc.why_important)) {
     receiveWhyImportant(doc, data);
   }
+  else {
+    logger.error('reportback.handleUserResponse blank for user:%s doc:%s', data.phone, JSON.stringify(doc));
+  }
 }
 
 /**
@@ -159,6 +166,7 @@ function handleUserResponse(doc, data) {
  *   Data from the user's request
  */
 function receivePhoto(doc, data) {
+  logReportbackStep(doc, data);
   var photoUrl = data.mms_image_url;
   if (!photoUrl) {
     mobilecommons.optin({alphaPhone: data.phone, alphaOptin: data.campaignConfig.message_not_a_photo});
@@ -186,6 +194,7 @@ function receivePhoto(doc, data) {
  *   Data from the user's request
  */
 function receiveCaption(doc, data) {
+  logReportbackStep(doc, data);
   var answer = data.args;
   model.update(
     {phone: data.phone, campaign: doc.campaign},
@@ -208,6 +217,7 @@ function receiveCaption(doc, data) {
  *   Data from the user's request
  */
 function receiveQuantity(doc, data) {
+  logReportbackStep(doc, data);
   var answer = data.args;
   var quantity = parseForDigits(answer);
   if (quantity) {
@@ -235,6 +245,7 @@ function receiveQuantity(doc, data) {
  *   Data from the user's request
  */
 function receiveWhyImportant(doc, data) {
+  logReportbackStep(doc, data);
   var answer = data.args;
   model.update(
     {phone: data.phone, campaign: doc.campaign},
@@ -247,6 +258,10 @@ function receiveWhyImportant(doc, data) {
 
   doc.why_important = answer;
   findUserUidThenReportBack(doc, data);
+}
+
+function logReportbackStep(doc, data) {
+  logger.log('debug', arguments.callee.caller.name + ':%s doc:%s ', data.args , JSON.stringify(doc));
 }
 
 /**
