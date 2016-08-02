@@ -1,6 +1,6 @@
 {
   "name": "ds-mdata-responder",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Interface for interacting with DoSomething.org SMS experiences.",
   "license": "MIT",
   "repository": {

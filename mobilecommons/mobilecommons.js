@@ -82,6 +82,7 @@ exports.profile_update = function(phone, optInPathId, customFields) {
  * of the alphPhone user. 
  */
 exports.optin = function(args) {
+  logger.log('debug', 'mobilecommons.optin:%s', JSON.stringify(args));
   var url = 'https://secure.mcommons.com/profiles/join'
     , standardKeys = ['alphaPhone', 'betaPhone', 'alphaOptin', 'betaOptin']
     , alphaPhone = args.alphaPhone || null
@@ -142,20 +143,20 @@ exports.optin = function(args) {
   var trace = new Error().stack;
   callback = function(error, response, body) {
     if (error) {
-      logger.error('Failed mobilecommons.optin for user: ' + alphaPhone
+      logger.error('Failed mobilecommons.optin for user:' + alphaPhone
         + ' | with request payload: ' + JSON.stringify(payload)
         + ' | with error: ' + JSON.stringify(error)
         + ' | stack: ' + trace);
     }
     else if (response) {
       if (response.statusCode != 200) {
-        logger.error('Failed mobilecommons.optin for user: ' + alphaPhone
+        logger.error('Failed mobilecommons.optin for user:' + alphaPhone
           + ' | with request payload: ' + JSON.stringify(payload)
           + ' | with code: ' + response.statusCode + ' | body: '
           + body + ' | stack: ' + trace);
       }
       else {
-        logger.info('Success mobilecommons.optin into: ', alphaOptin);
+        logger.info('Success mobilecommons.optin to oip:%d for user:%s', alphaOptin, alphaPhone);
       }
     }
   };
@@ -168,6 +169,7 @@ exports.optin = function(args) {
  * Opt out of a Mobile Commons campaign.
  */
 exports.optout = function(args) {
+  logger.log('debug', 'mobilecommons.optout:%s', JSON.stringify(args));
   var url = 'https://secure.mcommons.com/api/profile_opt_out'
     , phone = args.phone || null
     , campaignId = args.campaignId || null
@@ -214,7 +216,7 @@ exports.optout = function(args) {
           + ' | body: ' + body + ' | stack: ' + trace);
       }
       else {
-        logger.info('Success mobilecommons.optout from: ', campaignId);
+        logger.info('Success mobilecommons.optout from moco_campaign_id:' + campaignId + ' for user:' + phone);
       }
     }
   };

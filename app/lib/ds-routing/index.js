@@ -20,7 +20,7 @@ router.post('/yes-no-gateway', function(req, res) {
 });
 
 /**
- * Transition users for the sign up campaign to the actual campaign.
+ * Transitions user from a MoCo Signup-campaign into corresponding MoCo Campaign-campaign.
  */
 router.post('/campaign-transition', function(req, res) {
   mcRouting.campaignTransition(req, res);
