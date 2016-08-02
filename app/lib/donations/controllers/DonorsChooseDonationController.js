@@ -8,24 +8,21 @@
  *      - sends the appropriate optin path to start the donation
  *      - unless a max number of donations have been made, then a message
  *        is sent to notify the user about that
- *      - calls findProject
- *      - findProject responsible for responding to user with project details
- *        and asking for the first name
+ *      - calls findProject to respond to user with project details
+ *        and ask for their first name
  *   2. retrieveFirstName
  *   3. retrieveEmail
  *      - will call submitDonation
  *        submitDonation responsible for responding to user with success message
  */
 
-var donorsChooseApiKey = (process.env.DONORSCHOOSE_API_KEY || null)
-  , donorsChooseApiPassword = (process.env.DONORSCHOOSE_API_PASSWORD || null)
+var donorsChooseApiKey = (process.env.DONORSCHOOSE_API_KEY || 'DONORSCHOOSE')
+  , donorsChooseApiPassword = (process.env.DONORSCHOOSE_API_PASSWORD || 'helpClassrooms!')
   , donorsChooseDonationBaseURL = 'https://apisecure.donorschoose.org/common/json_api.html?APIKey='
   , donorsChooseProposalsQueryBaseURL = 'http://api.donorschoose.org/common/json_feed.html?'
   , defaultDonorsChooseTransactionEmail = (process.env.DONORSCHOOSE_DEFAULT_EMAIL || null);
 
 if (process.env.NODE_ENV == 'test') {
-  donorsChooseApiKey = 'DONORSCHOOSE';
-  donorsChooseApiPassword = 'helpClassrooms!';
   donorsChooseDonationBaseURL = 'https://dev1-apisecure.donorschoose.org/common/json_api.html?APIKey=';
 }
 
@@ -33,7 +30,6 @@ var TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR = 'zip' // 'zip' or 'state'. Our retrie
   , DONATION_AMOUNT = 10
   , COST_TO_COMPLETE_UPPER_LIMIT = 10000
   , DONATE_API_URL = donorsChooseDonationBaseURL + donorsChooseApiKey
-  , PROJECT_CREATION_CUTOFF_DATE = 1445299201000 // October 20th, 2-15 12:00:01 AM GMT
   , END_MESSAGE_DELAY = 2500;
 
 var Q = require('q')
@@ -82,11 +78,12 @@ DonorsChooseDonationController.prototype.start = function(request, response) {
   phone = smsHelper.getNormalizedPhone(request.body.phone);
   configId = request.query.id;
   userModel.findOne({phone: phone}, onUserFound);
-
   response.send();
 
   // Callback after user is found
   function onUserFound(err, doc) {
+    logger.log('debug', 'DonorsChoose.onUserFound:%s', JSON.stringify(doc));
+
     var config;
     var donationsCount;
     var i;
@@ -109,7 +106,7 @@ DonorsChooseDonationController.prototype.start = function(request, response) {
 
     // If user has not hit the max limit, start the donation flow.
     if (!config.max_donations_allowed || donationsCount <= config.max_donations_allowed) {
-      self.findProject(phone, configId);
+      self.findProject(phone, config);
     }
     // Otherwise, send an error message
     else {
@@ -119,29 +116,24 @@ DonorsChooseDonationController.prototype.start = function(request, response) {
 };
 
 /**
- * Finds a project. Also responsible for sending the
+ * Queries DonorsChoose API to find a project and sends the
  * project details back to the user.
  *
- * @param request
- *   Express Request object
- * @param response
- *   Express Response object
+ * @see https://data.donorschoose.org/docs/project-listing/json-requests/
+ *
+ * @param mobileNumber
+ *   User's mobile number
+ * @param config
+ *   Loaded donorschoose config document.
  */
-DonorsChooseDonationController.prototype.findProject = function(mobileNumber, configId) {
-
-  var config = app.getConfig(app.ConfigName.DONORSCHOOSE, configId);
-
-  // Subject code for all 'Math & Science' subjects.
-  var subjectFilter = 'subject4=-4'; 
-  // Search returns results ordered by urgency algorithm. 
-  var urgencySort = 'sortBy=0'; 
-  // Constrains results which fall within a specific 'costToComplete' value range. 
-  var costToCompleteRange = 'costToCompleteRange=' + DONATION_AMOUNT + '+TO+' + COST_TO_COMPLETE_UPPER_LIMIT; 
-  var projectsCreatedBy = 'olderThan=' + PROJECT_CREATION_CUTOFF_DATE;
-  // Maximum number of results to return. 
-  var maxNumberOfResults = '1';
-  var filterParams = subjectFilter + '&' + urgencySort + '&' + costToCompleteRange + '&' + projectsCreatedBy + '&';
-  var requestUrlString = donorsChooseProposalsQueryBaseURL + filterParams + 'APIKey=' + donorsChooseApiKey + '&max=' + maxNumberOfResults;
+DonorsChooseDonationController.prototype.findProject = function(mobileNumber, config) {
+  var requestUrlString = donorsChooseProposalsQueryBaseURL;
+  requestUrlString += '&subject4=-4'; 
+  requestUrlString += '&sortBy=2'; 
+  requestUrlString += '&costToCompleteRange=' + DONATION_AMOUNT + '+TO+' + COST_TO_COMPLETE_UPPER_LIMIT; 
+  requestUrlString += '&max=1';
+  requestUrlString += '&APIKey=' + donorsChooseApiKey;
+  logger.log('debug', 'DonorsChoose.findProject request:%s', requestUrlString);
 
   requestHttp.get(requestUrlString, function(error, response, data) {
     if (!error) {
@@ -164,7 +156,6 @@ DonorsChooseDonationController.prototype.findProject = function(mobileNumber, co
       }
 
       if (selectedProposal) {
-
         var entities = new Entities(); // Calling 'html-entities' module to decode escaped characters.
         var location = entities.decode(selectedProposal.city) + ', ' + entities.decode(selectedProposal.state)
 
@@ -174,8 +165,8 @@ DonorsChooseDonationController.prototype.findProject = function(mobileNumber, co
           SS_school_name :          entities.decode(selectedProposal.schoolName),
           SS_proj_location:         location
         };
-
-      } else {
+      }
+      else {
         sendSMS(mobileNumber, config.error_direct_user_to_restart);
         logger.error('DonorsChoose API response for user mobile: ' + mobileNumber 
           + ' has not returned with a valid proposal. Response returned: ' 
@@ -198,6 +189,7 @@ DonorsChooseDonationController.prototype.findProject = function(mobileNumber, co
       // ensure that the ORIGINAL DOCUMENT IS CREATED before the user texts back 
       // their email address and attempts to find the document to be updated. 
       donationModel.create(currentDonationInfo).then(function(doc) {
+        logger.log('debug', 'DonorsChoose.findProject config:%s', JSON.stringify(config));
         mobilecommons.profile_update(mobileNumber, config.start_donation_flow, mobileCommonsCustomFields); // Arguments: phone, optInPathId, customFields.
         logger.info('Doc retrieved:', doc._id.toString(), ' - Updating Mobile Commons profile with:', mobileCommonsCustomFields);
       }, promiseErrorCallback('Unable to create donation document for user mobile: ' + mobileNumber));
