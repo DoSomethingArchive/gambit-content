@@ -16,15 +16,13 @@
  *        submitDonation responsible for responding to user with success message
  */
 
-var donorsChooseApiKey = (process.env.DONORSCHOOSE_API_KEY || null)
-  , donorsChooseApiPassword = (process.env.DONORSCHOOSE_API_PASSWORD || null)
+var donorsChooseApiKey = (process.env.DONORSCHOOSE_API_KEY || 'DONORSCHOOSE')
+  , donorsChooseApiPassword = (process.env.DONORSCHOOSE_API_PASSWORD || 'helpClassrooms!')
   , donorsChooseDonationBaseURL = 'https://apisecure.donorschoose.org/common/json_api.html?APIKey='
   , donorsChooseProposalsQueryBaseURL = 'http://api.donorschoose.org/common/json_feed.html?'
   , defaultDonorsChooseTransactionEmail = (process.env.DONORSCHOOSE_DEFAULT_EMAIL || null);
 
 if (process.env.NODE_ENV == 'test') {
-  donorsChooseApiKey = 'DONORSCHOOSE';
-  donorsChooseApiPassword = 'helpClassrooms!';
   donorsChooseDonationBaseURL = 'https://dev1-apisecure.donorschoose.org/common/json_api.html?APIKey=';
 }
 
@@ -80,7 +78,6 @@ DonorsChooseDonationController.prototype.start = function(request, response) {
   phone = smsHelper.getNormalizedPhone(request.body.phone);
   configId = request.query.id;
   userModel.findOne({phone: phone}, onUserFound);
-
   response.send();
 
   // Callback after user is found
@@ -159,7 +156,6 @@ DonorsChooseDonationController.prototype.findProject = function(mobileNumber, co
       }
 
       if (selectedProposal) {
-
         var entities = new Entities(); // Calling 'html-entities' module to decode escaped characters.
         var location = entities.decode(selectedProposal.city) + ', ' + entities.decode(selectedProposal.state)
 
@@ -169,8 +165,8 @@ DonorsChooseDonationController.prototype.findProject = function(mobileNumber, co
           SS_school_name :          entities.decode(selectedProposal.schoolName),
           SS_proj_location:         location
         };
-
-      } else {
+      }
+      else {
         sendSMS(mobileNumber, config.error_direct_user_to_restart);
         logger.error('DonorsChoose API response for user mobile: ' + mobileNumber 
           + ' has not returned with a valid proposal. Response returned: ' 
@@ -193,6 +189,7 @@ DonorsChooseDonationController.prototype.findProject = function(mobileNumber, co
       // ensure that the ORIGINAL DOCUMENT IS CREATED before the user texts back 
       // their email address and attempts to find the document to be updated. 
       donationModel.create(currentDonationInfo).then(function(doc) {
+        logger.log('debug', 'DonorsChoose.findProject config:%s', JSON.stringify(config));
         mobilecommons.profile_update(mobileNumber, config.start_donation_flow, mobileCommonsCustomFields); // Arguments: phone, optInPathId, customFields.
         logger.info('Doc retrieved:', doc._id.toString(), ' - Updating Mobile Commons profile with:', mobileCommonsCustomFields);
       }, promiseErrorCallback('Unable to create donation document for user mobile: ' + mobileNumber));

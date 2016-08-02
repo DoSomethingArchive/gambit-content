@@ -17,15 +17,21 @@ RequestRetry.setDefaults({timeout: 120000});
 * Mobile Commons profile_update API. Can be used to subscribe the user to an
 * opt-in path.
 *
+* @see https://mobilecommons.zendesk.com/hc/en-us/articles/202052534-REST-API#ProfileUpdate
+*
 * @param phone
 *   Phone number of the profile to update.
 * @param optInPathId
 *   Opt-in path to subscribe the user to.
 * @param customFields
-*   Array of custom profile field names and values to update the user with.
+*   Object with MoCo custom profile field names as properties, and values to update the user with.
+*   Note: Doesn't seem like the field names are case-sensitive. 
+*     e.g. SS_teacher_name and ss_teacher_name both update the same custom ss_teacher_name field
 */
 
 exports.profile_update = function(phone, optInPathId, customFields) {
+  logger.log('debug', 'mobilecommons.profile_update for user:%s oip:%s customFields:%s', phone, optInPathId, JSON.stringify(customFields));
+
   var url = 'https://secure.mcommons.com/api/profile_update';
   var authEmail = process.env.MOBILECOMMONS_AUTH_EMAIL;
   var authPass = process.env.MOBILECOMMONS_AUTH_PASS;
