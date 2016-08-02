@@ -8,9 +8,8 @@
  *      - sends the appropriate optin path to start the donation
  *      - unless a max number of donations have been made, then a message
  *        is sent to notify the user about that
- *      - calls findProject
- *      - findProject responsible for responding to user with project details
- *        and asking for the first name
+ *      - calls findProject to respond to user with project details
+ *        and ask for their first name
  *   2. retrieveFirstName
  *   3. retrieveEmail
  *      - will call submitDonation
@@ -33,7 +32,6 @@ var TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR = 'zip' // 'zip' or 'state'. Our retrie
   , DONATION_AMOUNT = 10
   , COST_TO_COMPLETE_UPPER_LIMIT = 10000
   , DONATE_API_URL = donorsChooseDonationBaseURL + donorsChooseApiKey
-  , PROJECT_CREATION_CUTOFF_DATE = 1445299201000 // October 20th, 2-15 12:00:01 AM GMT
   , END_MESSAGE_DELAY = 2500;
 
 var Q = require('q')
@@ -87,6 +85,8 @@ DonorsChooseDonationController.prototype.start = function(request, response) {
 
   // Callback after user is found
   function onUserFound(err, doc) {
+    logger.log('debug', 'DonorsChoose.onUserFound:%s', JSON.stringify(doc));
+
     var config;
     var donationsCount;
     var i;
@@ -109,7 +109,7 @@ DonorsChooseDonationController.prototype.start = function(request, response) {
 
     // If user has not hit the max limit, start the donation flow.
     if (!config.max_donations_allowed || donationsCount <= config.max_donations_allowed) {
-      self.findProject(phone, configId);
+      self.findProject(phone, config);
     }
     // Otherwise, send an error message
     else {
@@ -119,29 +119,24 @@ DonorsChooseDonationController.prototype.start = function(request, response) {
 };
 
 /**
- * Finds a project. Also responsible for sending the
+ * Queries DonorsChoose API to find a project and sends the
  * project details back to the user.
  *
- * @param request
- *   Express Request object
- * @param response
- *   Express Response object
+ * @see https://data.donorschoose.org/docs/project-listing/json-requests/
+ *
+ * @param mobileNumber
+ *   User's mobile number
+ * @param config
+ *   Loaded donorschoose config document.
  */
-DonorsChooseDonationController.prototype.findProject = function(mobileNumber, configId) {
-
-  var config = app.getConfig(app.ConfigName.DONORSCHOOSE, configId);
-
-  // Subject code for all 'Math & Science' subjects.
-  var subjectFilter = 'subject4=-4'; 
-  // Search returns results ordered by urgency algorithm. 
-  var urgencySort = 'sortBy=0'; 
-  // Constrains results which fall within a specific 'costToComplete' value range. 
-  var costToCompleteRange = 'costToCompleteRange=' + DONATION_AMOUNT + '+TO+' + COST_TO_COMPLETE_UPPER_LIMIT; 
-  var projectsCreatedBy = 'olderThan=' + PROJECT_CREATION_CUTOFF_DATE;
-  // Maximum number of results to return. 
-  var maxNumberOfResults = '1';
-  var filterParams = subjectFilter + '&' + urgencySort + '&' + costToCompleteRange + '&' + projectsCreatedBy + '&';
-  var requestUrlString = donorsChooseProposalsQueryBaseURL + filterParams + 'APIKey=' + donorsChooseApiKey + '&max=' + maxNumberOfResults;
+DonorsChooseDonationController.prototype.findProject = function(mobileNumber, config) {
+  var requestUrlString = donorsChooseProposalsQueryBaseURL;
+  requestUrlString += '&subject4=-4'; 
+  requestUrlString += '&sortBy=2'; 
+  requestUrlString += '&costToCompleteRange=' + DONATION_AMOUNT + '+TO+' + COST_TO_COMPLETE_UPPER_LIMIT; 
+  requestUrlString += '&max=1';
+  requestUrlString += '&APIKey=' + donorsChooseApiKey;
+  logger.log('debug', 'DonorsChoose.findProject request:%s', requestUrlString);
 
   requestHttp.get(requestUrlString, function(error, response, data) {
     if (!error) {
