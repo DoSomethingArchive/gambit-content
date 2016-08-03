@@ -216,9 +216,11 @@ DonorsChooseDonationController.prototype.retrieveFirstName = function(request, r
   var config = app.getConfig(app.ConfigName.DONORSCHOOSE, request.query.id);
   var userSubmittedName = smsHelper.getFirstWord(request.body.args);
   var mobile = smsHelper.getNormalizedPhone(request.body.phone);
+  logger.log('debug', 'DonorsChoose.retrieveFirstName:%s for user:%s', userSubmittedName, mobile);
 
   if (stringValidator.containsNaughtyWords(userSubmittedName) || !userSubmittedName) {
     userSubmittedName = 'Anonymous';
+    logger.log('debug', 'DonorsChoose.retrieveFirstName set to %s for user:%s', userSubmittedName, mobile);
   }
 
   donationModel.findOneAndUpdate(
