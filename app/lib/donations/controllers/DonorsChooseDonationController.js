@@ -18,18 +18,19 @@
 
 var donorsChooseApiKey = (process.env.DONORSCHOOSE_API_KEY || 'DONORSCHOOSE')
   , donorsChooseApiPassword = (process.env.DONORSCHOOSE_API_PASSWORD || 'helpClassrooms!')
-  , donorsChooseDonationBaseURL = 'https://apisecure.donorschoose.org/common/json_api.html?APIKey='
-  , donorsChooseProposalsQueryBaseURL = 'http://api.donorschoose.org/common/json_feed.html?'
+  , donorsChooseDonationBaseURL = 'https://apisecure.donorschoose.org/common/json_api.html?'
+  , donorsChooseProposalsQueryBaseURL = 'https://api.donorschoose.org/common/json_feed.html'
   , defaultDonorsChooseTransactionEmail = (process.env.DONORSCHOOSE_DEFAULT_EMAIL || null);
 
-if (process.env.NODE_ENV == 'test') {
-  donorsChooseDonationBaseURL = 'https://dev1-apisecure.donorschoose.org/common/json_api.html?APIKey=';
+if (process.env.NODE_ENV != 'production') {
+  donorsChooseProposalsQueryBaseURL = 'https://qa.donorschoose.org/common/json_feed.html';
+  donorsChooseDonationBaseURL = 'https://apiqasecure.donorschoose.org/common/json_api.html';
 }
 
 var TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR = 'zip' // 'zip' or 'state'. Our retrieveLocation() function will adjust accordingly.
-  , DONATION_AMOUNT = 10
+  , DONATION_AMOUNT = (process.env.DONORSCHOOSE_DONATION_AMOUNT || 10)
   , COST_TO_COMPLETE_UPPER_LIMIT = 10000
-  , DONATE_API_URL = donorsChooseDonationBaseURL + donorsChooseApiKey
+  , DONATE_API_URL = donorsChooseDonationBaseURL + '?APIKey=' + donorsChooseApiKey
   , END_MESSAGE_DELAY = 2500;
 
 var Q = require('q')
@@ -95,6 +96,7 @@ DonorsChooseDonationController.prototype.start = function(request, response) {
     donationsCount = 0;
     if (doc && doc.donations) {
       for (i = 0; i < doc.donations.length; i++) {
+        // Check for number of donations from this specific Donation Flow config/campaign.
         if (configId == doc.donations[i].config_id) {
           donationsCount = doc.donations[i].count;
           break;
@@ -128,7 +130,7 @@ DonorsChooseDonationController.prototype.start = function(request, response) {
  */
 DonorsChooseDonationController.prototype.findProject = function(mobileNumber, config) {
   var requestUrlString = donorsChooseProposalsQueryBaseURL;
-  requestUrlString += '&subject4=-4'; 
+  requestUrlString += '?subject4=-4'; 
   requestUrlString += '&sortBy=2'; 
   requestUrlString += '&costToCompleteRange=' + DONATION_AMOUNT + '+TO+' + COST_TO_COMPLETE_UPPER_LIMIT; 
   requestUrlString += '&max=1';
@@ -150,7 +152,7 @@ DonorsChooseDonationController.prototype.findProject = function(mobileNumber, co
       catch (e) {
         sendSMS(mobileNumber, config.error_start_again);
         // JSON.parse will throw a SyntaxError exception if data is not valid JSON
-        logger.error('Invalid JSON data received from DonorsChoose API for user mobile: ' 
+        logger.error('DonorsChoose.findProject invalid JSON data received from DonorsChoose API for user: ' 
           + mobileNumber + ' , or selected proposal does not contain necessary fields. Error: ' + e);
         return;
       }
@@ -168,9 +170,8 @@ DonorsChooseDonationController.prototype.findProject = function(mobileNumber, co
       }
       else {
         sendSMS(mobileNumber, config.error_direct_user_to_restart);
-        logger.error('DonorsChoose API response for user mobile: ' + mobileNumber 
-          + ' has not returned with a valid proposal. Response returned: ' 
-          + donorsChooseResponse);
+        logger.error('DonorsChoose.findProject API response for user:' + mobileNumber 
+          + ' has not returned with a valid proposal. response:'  + donorsChooseResponse);
         return;
       }
 
@@ -189,14 +190,13 @@ DonorsChooseDonationController.prototype.findProject = function(mobileNumber, co
       // ensure that the ORIGINAL DOCUMENT IS CREATED before the user texts back 
       // their email address and attempts to find the document to be updated. 
       donationModel.create(currentDonationInfo).then(function(doc) {
-        logger.log('debug', 'DonorsChoose.findProject config:%s', JSON.stringify(config));
+        logger.log('debug', 'DonorsChoose.findProject created donation_infos document:%s for user:%s', JSON.stringify(doc), mobileNumber);
         mobilecommons.profile_update(mobileNumber, config.start_donation_flow, mobileCommonsCustomFields); // Arguments: phone, optInPathId, customFields.
-        logger.info('Doc retrieved:', doc._id.toString(), ' - Updating Mobile Commons profile with:', mobileCommonsCustomFields);
-      }, promiseErrorCallback('Unable to create donation document for user mobile: ' + mobileNumber));
+      }, promiseErrorCallback('DonorsChoose.findProject unable to create donation_infos document for user: ' + mobileNumber));
     }
     else {
       sendSMS(mobileNumber, config.error_direct_user_to_restart);
-      logger.error('Error for user mobile: ' + mobileNumber 
+      logger.error('DonorsChoose.findProject error for user:' + mobileNumber 
         + ' in retrieving proposal info from DonorsChoose or in uploading to MobileCommons custom fields: ' + error);
       return;
     }
@@ -215,9 +215,11 @@ DonorsChooseDonationController.prototype.retrieveFirstName = function(request, r
   var config = app.getConfig(app.ConfigName.DONORSCHOOSE, request.query.id);
   var userSubmittedName = smsHelper.getFirstWord(request.body.args);
   var mobile = smsHelper.getNormalizedPhone(request.body.phone);
+  logger.log('debug', 'DonorsChoose.retrieveFirstName:%s for user:%s', userSubmittedName, mobile);
 
   if (stringValidator.containsNaughtyWords(userSubmittedName) || !userSubmittedName) {
     userSubmittedName = 'Anonymous';
+    logger.log('debug', 'DonorsChoose.retrieveFirstName set to %s for user:%s', userSubmittedName, mobile);
   }
 
   donationModel.findOneAndUpdate(
@@ -256,23 +258,15 @@ DonorsChooseDonationController.prototype.retrieveFirstName = function(request, r
  *   Express Response object
  */
 DonorsChooseDonationController.prototype.retrieveEmail = function(request, response) {
-
   var userSubmittedEmail = smsHelper.getFirstWord(request.body.args);
+  var mobile = smsHelper.getNormalizedPhone(request.body.phone);
+  logger.log('debug', 'DonorsChoose.retrieveEmail:%s for user:%s', userSubmittedEmail, mobile);
+
   var updateObject = { $set: { donation_complete: true }};
-  var apiInfoObject = {
-    'apiUrl':       DONATE_API_URL,
-    'apiPassword':  donorsChooseApiPassword,
-    'apiKey':       donorsChooseApiKey
-  };
   var self = this;
   var req = request; 
   var config = app.getConfig(app.ConfigName.DONORSCHOOSE, request.query.id);
-  var mobile = smsHelper.getNormalizedPhone(request.body.phone);
 
-  // Populates the updateObject with the user's email only 
-  // if it's non-obscene and is actually an email. Otherwise,
-  // the submitDonation() function inserts a default DoSomething.org 
-  // email address.
   if (stringValidator.isValidEmail(userSubmittedEmail) && !stringValidator.containsNaughtyWords(userSubmittedEmail)) {
     updateObject['$set'].email = userSubmittedEmail;
   }
@@ -287,12 +281,11 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
     updateObject,
     function(err, donorDocument) {
       if (err) {
-        logger.error('Error for user mobile: ' + req.body.phone 
-          + 'in donationModel.findOneAndUpdate: ' + err);
+        logger.error('DonorsChoose.retrieveEmail error for user:' + mobile + ' in donationModel.findOneAndUpdate: ' + err);
         sendSMS(mobile, config.error_start_again);
       } 
       else if (donorDocument) {
-        logger.log('debug', 'Mongo donorDocument returned by retrieveEmail:' + donorDocument);
+        logger.log('debug', 'DonorsChoose.retrieveEmail donorDocument%s: for user:%s', JSON.stringify(donorDocument), mobile);
         // In the case that the user is out of order in the donation flow, 
         // or our app hasn't found a proposal (aka project) and attached a 
         // project_id to the document, we opt the user back into the start donation flow.  
@@ -300,14 +293,12 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
           sendSMS(mobile, config.error_start_again);
         }
         else {
-          
           var donorInfoObject = {
             donorEmail: donorDocument.email, 
             donorFirstName: (donorDocument.first_name || 'Anonymous'),
             donorPhoneNumber: mobile
           }
-
-          self.submitDonation(apiInfoObject, donorInfoObject, donorDocument.project_id, config);
+          self.submitDonation(donorInfoObject, donorDocument.project_id, config);
         }
       }
     }
@@ -318,12 +309,14 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
 /**
  * Submits a donation transaction to Donors Choose.
  *
- * @param apiInfoObject = {apiUrl: string, apiPassword: string, apiKey: string}
+ * @see https://data.donorschoose.org/docs/transactions/
+ *
  * @param donorInfoObject = {donorEmail: string, donorFirstName: string}
  * @param proposalId, the DonorsChoose proposal ID 
+ * @param donationConfig, the donorschoose config document 
  *
  */
-DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject, donorInfoObject, proposalId, donationConfig) {
+DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObject, proposalId, donationConfig) {
   var donorPhone = donorInfoObject.donorPhoneNumber;
 
   requestToken().then(requestDonation,
@@ -338,31 +331,34 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
     // Creates promise-storing object.
     var deferred = Q.defer();
     var retrieveTokenParams = { 'form': {
-      'APIKey': apiInfoObject.apiKey,
-      'apipassword': apiInfoObject.apiPassword, 
+      'APIKey': donorsChooseApiKey,
+      'apipassword': donorsChooseApiPassword, 
       'action': 'token'
     }}
-    requestHttp.post(apiInfoObject.apiUrl, retrieveTokenParams, function(err, response, body) {
+    logger.log('debug', 'DonorsChoose.requestToken POST:%s', DONATE_API_URL);
+    requestHttp.post(DONATE_API_URL, retrieveTokenParams, function(err, response, body) {
+      logger.log('verbose', 'requestToken response:%s body:%s', JSON.stringify(response), JSON.stringify(body));
       if (!err) {
         try {
           var jsonBody = JSON.parse(body);
           if (jsonBody.statusDescription == 'success') {
-            logger.log('debug', 'Request for token returned body:' + jsonBody);
+            logger.log('debug', 'DonorsChoose.retrieveToken success body:%s' + JSON.stringify(jsonBody));
             deferred.resolve(JSON.parse(body).token);
-          } else {
-            logger.error('Unable to retrieve a donation token from the DonorsChoose API for user mobile:' 
+          }
+          else {
+            logger.error('DonorsChoose.retrieveToken error to retrieve a donation token from the DonorsChoose API for user:' 
               + donorPhone);
             sendSMS(donorPhone, donationConfig.error_start_again);
           }
         }
         catch (e) {
-          logger.error('Failed trying to parse the donation token request response from DonorsChoose.org for user mobile:' 
+          logger.error('DonorsChoose.retrieveToken error: failed trying to parse the donation token request response from DonorsChoose.org for user:' 
             + donorPhone + ' Error: ' + e.message + '| Response: ' + response + '| Body: ' + body);
           sendSMS(donorPhone, donationConfig.error_start_again);
         }
       }
       else {
-        deferred.reject('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, user mobile: ' 
+        deferred.reject('DonorsChoose.retrieveToken error: unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, user: ' 
           + donorPhone + 'error: ' + err);
         sendSMS(donorPhone, donationConfig.error_start_again);
       }
@@ -375,8 +371,8 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
    */
   function requestDonation(tokenData) {
     var donateParams = {'form': {
-      'APIKey': apiInfoObject.apiKey,
-      'apipassword': apiInfoObject.apiPassword, 
+      'APIKey': donorsChooseApiKey,
+      'apipassword': donorsChooseApiPassword, 
       'action': 'donate',
       'token': tokenData,
       'proposalId': proposalId,
@@ -386,15 +382,15 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
       'honoreeFirst': donorInfoObject.donorFirstName,
     }};
 
-    logger.info('Submitting donation with params:', donateParams);
-    requestHttp.post(apiInfoObject.apiUrl, donateParams, function(err, response, body) {
-      logger.log('debug', 'Donation submission return:', body.trim())
+    logger.log('debug', 'DonorsChoose.requestDonation POST:%s params:%s', DONATE_API_URL, JSON.stringify(donateParams));
+    requestHttp.post(DONATE_API_URL, donateParams, function(err, response, body) {
+      logger.log('verbose', 'DonorsChoose.requestDonation body:', body.trim())
       if (err) {
-        logger.error('Was unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, user mobile: ' + donorInfoObject.donorPhoneNumber + 'error: ' + err);
+        logger.error('DonorsChoose.requestDonation error for user:' + donorInfoObject.donorPhoneNumber + 'error: ' + err);
         sendSMS(donorPhone, donationConfig.error_start_again);
       }
       else if (response && response.statusCode != 200) {
-        logger.error('Failed to submit donation to DonorsChoose.org for user mobile: ' 
+        logger.error('DonorsChoose.requestDonation error for user: ' 
           + donorPhone + '. Status code: ' + response.statusCode + ' | Response: ' + response);
         sendSMS(donorPhone, donationConfig.error_start_again);
       }
@@ -402,19 +398,17 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
         try {
           var jsonBody = JSON.parse(body);
           if (jsonBody.statusDescription == 'success') {
-            logger.info('Donation to proposal ' + proposalId + ' was successful! Body:', jsonBody);
+            logger.info('DonorsChoose.requestDonation success for user:' + donorPhone + ' proposal:' + proposalId + ' body:', jsonBody);
             updateUserWithDonation();
             sendSuccessMessages(donorPhone, donationConfig, jsonBody.proposalURL);
           }
           else {
-            logger.warn('Donation to proposal ' + proposalId + ' for user mobile: ' 
-              + donorPhone + ' was NOT successful. Body:' + JSON.stringify(jsonBody));
+            logger.warn('DonorsChoose.requestDonation failed for user:' + donorPhone + ' proposal:' + proposalId + ' body:', jsonBody);
             sendSMS(donorPhone, donationConfig.error_start_again);
           }
         }
         catch (e) {
-          logger.error('Failed trying to parse the donation response from DonorsChoose.org. User mobile: ' 
-            + donorPhone + 'Error: ' + e.message);
+          logger.error('DonorsChoose.requestDonation error for user:%s error:%s', donorPhone, e.message);
           sendSMS(donorPhone, donationConfig.error_start_again);
         }
       }
@@ -476,10 +470,11 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
       {phone: doc.phone},
       {$set: {donations: doc.donations}}
     ).exec();
+    logger.log('debug', 'DonorsChoose.incrementDonationCount user:%s donations:%s', doc.phone, JSON.stringify(doc.donations));
   }
 
   /**
-   * Sends message to user after a successful donation.
+   * Sends multiple messages to user after a successful donation.
    *
    * @param url
    *   URL to the DonorsChoose project
