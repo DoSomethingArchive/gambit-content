@@ -258,22 +258,14 @@ DonorsChooseDonationController.prototype.retrieveFirstName = function(request, r
  */
 DonorsChooseDonationController.prototype.retrieveEmail = function(request, response) {
   var userSubmittedEmail = smsHelper.getFirstWord(request.body.args);
-  logger.log('debug', 'donorsChoose.retrieveEmail:%s', userSubmittedEmail);
+  var mobile = smsHelper.getNormalizedPhone(request.body.phone);
+  logger.log('debug', 'DonorsChoose.retrieveEmail:%s for user:%s', userSubmittedEmail, mobile);
+
   var updateObject = { $set: { donation_complete: true }};
-  var apiInfoObject = {
-    'apiUrl':       DONATE_API_URL,
-    'apiPassword':  donorsChooseApiPassword,
-    'apiKey':       donorsChooseApiKey
-  };
   var self = this;
   var req = request; 
   var config = app.getConfig(app.ConfigName.DONORSCHOOSE, request.query.id);
-  var mobile = smsHelper.getNormalizedPhone(request.body.phone);
 
-  // Populates the updateObject with the user's email only 
-  // if it's non-obscene and is actually an email. Otherwise,
-  // the submitDonation() function inserts a default DoSomething.org 
-  // email address.
   if (stringValidator.isValidEmail(userSubmittedEmail) && !stringValidator.containsNaughtyWords(userSubmittedEmail)) {
     updateObject['$set'].email = userSubmittedEmail;
   }
@@ -288,8 +280,7 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
     updateObject,
     function(err, donorDocument) {
       if (err) {
-        logger.error('Error for user mobile: ' + req.body.phone 
-          + 'in donationModel.findOneAndUpdate: ' + err);
+        logger.error('Error for user: ' + mobile + 'in donationModel.findOneAndUpdate: ' + err);
         sendSMS(mobile, config.error_start_again);
       } 
       else if (donorDocument) {
@@ -308,7 +299,7 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
             donorPhoneNumber: mobile
           }
 
-          self.submitDonation(apiInfoObject, donorInfoObject, donorDocument.project_id, config);
+          self.submitDonation(donorInfoObject, donorDocument.project_id, config);
         }
       }
     }
@@ -321,12 +312,12 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
  *
  * @see https://data.donorschoose.org/docs/transactions/
  *
- * @param apiInfoObject = {apiUrl: string, apiPassword: string, apiKey: string}
  * @param donorInfoObject = {donorEmail: string, donorFirstName: string}
  * @param proposalId, the DonorsChoose proposal ID 
+ * @param donationConfig, the donorschoose config document 
  *
  */
-DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject, donorInfoObject, proposalId, donationConfig) {
+DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObject, proposalId, donationConfig) {
   var donorPhone = donorInfoObject.donorPhoneNumber;
 
   requestToken().then(requestDonation,
@@ -354,7 +345,8 @@ DonorsChooseDonationController.prototype.submitDonation = function(apiInfoObject
           if (jsonBody.statusDescription == 'success') {
             logger.log('debug', 'DonorsChoose.retrieveToken success body:%s' + JSON.stringify(jsonBody));
             deferred.resolve(JSON.parse(body).token);
-          } else {
+          }
+          else {
             logger.error('DonorsChoose.retrieveToken error to retrieve a donation token from the DonorsChoose API for user mobile:' 
               + donorPhone);
             sendSMS(donorPhone, donationConfig.error_start_again);
