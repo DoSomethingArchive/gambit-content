@@ -285,7 +285,7 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
         sendSMS(mobile, config.error_start_again);
       } 
       else if (donorDocument) {
-        logger.log('debug', 'DonorsChoose.retrieveEmail donorDocument%s: for user:%s', JSON.stringify(donorDocument), mobile);
+        logger.log('debug', 'DonorsChoose.retrieveEmail donorDocument:%s: for user:%s', JSON.stringify(donorDocument), mobile);
         // In the case that the user is out of order in the donation flow, 
         // or our app hasn't found a proposal (aka project) and attached a 
         // project_id to the document, we opt the user back into the start donation flow.  
@@ -300,6 +300,9 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
           }
           self.submitDonation(donorInfoObject, donorDocument.project_id, config);
         }
+      }
+      else {
+        logger.log('error', 'DonorsChoose.retrieveEmail donorDocument not set.');
       }
     }
   )
@@ -317,7 +320,9 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
  *
  */
 DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObject, proposalId, donationConfig) {
+
   var donorPhone = donorInfoObject.donorPhoneNumber;
+  logger.log('debug', 'DonorsChoose.submitDonation user:%s', donorPhone, donorInfoObject, proposalId, donationConfig);
 
   requestToken().then(requestDonation,
     promiseErrorCallback('Unable to successfully retrieve donation token from DonorsChoose.org API. User mobile: '
@@ -386,12 +391,11 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
     requestHttp.post(DONATE_API_URL, donateParams, function(err, response, body) {
       logger.log('verbose', 'DonorsChoose.requestDonation body:', body.trim())
       if (err) {
-        logger.error('DonorsChoose.requestDonation error for user:' + donorInfoObject.donorPhoneNumber + 'error: ' + err);
+        logger.error('DonorsChoose.requestDonation requestHttp error for user:' + donorInfoObject.donorPhoneNumber + 'error: ' + err);
         sendSMS(donorPhone, donationConfig.error_start_again);
       }
       else if (response && response.statusCode != 200) {
-        logger.error('DonorsChoose.requestDonation error for user: ' 
-          + donorPhone + '. Status code: ' + response.statusCode + ' | Response: ' + response);
+        logger.error('DonorsChoose.requestDonation statusCode:%s for user:%s | Response: ' + response, response.statusCode, donorInfoObject.donorPhoneNumber);
         sendSMS(donorPhone, donationConfig.error_start_again);
       }
       else {
@@ -403,12 +407,12 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
             sendSuccessMessages(donorPhone, donationConfig, jsonBody.proposalURL);
           }
           else {
-            logger.warn('DonorsChoose.requestDonation failed for user:' + donorPhone + ' proposal:' + proposalId + ' body:', jsonBody);
+            logger.warn('DonorsChoose.requestDonation status!=success user:' + donorPhone + ' proposal:' + proposalId + ' body:', jsonBody);
             sendSMS(donorPhone, donationConfig.error_start_again);
           }
         }
         catch (e) {
-          logger.error('DonorsChoose.requestDonation error for user:%s error:%s', donorPhone, e.message);
+          logger.error('DonorsChoose.requestDonation catch exception for user:%s e:%s', donorPhone, e.message);
           sendSMS(donorPhone, donationConfig.error_start_again);
         }
       }
