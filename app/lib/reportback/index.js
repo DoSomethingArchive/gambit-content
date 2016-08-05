@@ -340,7 +340,7 @@ function onFindUserUid(err, response, body) {
  *   Data from the user's request
  */
 function createUserThenReportback(doc, data) {
-  var phone;
+  var phone = data.phone;
   var userData;
 
   // Strip the international code for user registration data
