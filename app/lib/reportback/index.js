@@ -306,7 +306,8 @@ function onFindUserUid(err, response, body) {
   var jsonBody = JSON.parse(body);
   if (jsonBody.length == 0) {
     // If the initial search couldn't find the user, search again with country code.
-    // @todo: This seems strange.
+    // This is because Phoenix mobile number values currently contain a mix of numbers
+    // with and without leading country code.
     if (isInitialSearch) {
       userData = {
         mobile: data.phone
