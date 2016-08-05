@@ -321,7 +321,7 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
  */
 DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObject, proposalId, donationConfig) {
   var donorPhone = donorInfoObject.donorPhoneNumber;
-  logger.log('debug', 'DonorsChoose.submitDonation user:%s', donorPhone, donorInfoObject, proposalId, donationConfig);
+  logger.log('debug', 'DonorsChoose.submitDonation user:%s info:%s proposal:%s config:%s', donorPhone, JSON.stringify(donorInfoObject), proposalId, JSON.stringify(donationConfig));
 
   requestToken().then(requestDonation,
     promiseErrorCallback('Unable to successfully retrieve donation token from DonorsChoose.org API. User mobile: '
@@ -403,7 +403,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
           if (jsonBody.statusDescription == 'success') {
             logger.info('DonorsChoose.requestDonation success for user:' + donorPhone + ' proposal:' + proposalId + ' body:', jsonBody);
             updateUserWithDonation();
-            sendSuccessMessages(donorPhone, donationConfig, jsonBody.proposalURL);
+//            sendSuccessMessages(donorPhone, donationConfig, jsonBody.proposalURL);
           }
           else {
             logger.warn('DonorsChoose.requestDonation status!=success user:' + donorPhone + ' proposal:' + proposalId + ' body:', jsonBody);
