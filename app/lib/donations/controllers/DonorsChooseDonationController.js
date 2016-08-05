@@ -50,7 +50,7 @@ var connectionOperations = rootRequire('app/config/connectionOperations')
 
 // @TODO: add some kind of reference to retrieve the donations config 
 // var donationConfigModel = require('../')
-var donationConfigId = 201;
+var donationConfigId = (process.env.DONORSCHOOSE_CONFIG_ID || 201);
 
 function DonorsChooseDonationController() {
   this.host; // Used to store reference to application host.
@@ -72,17 +72,12 @@ DonorsChooseDonationController.prototype.resourceName = 'donors-choose';
  *   Express Response object
  */
 DonorsChooseDonationController.prototype.start = function(request, response) {
-  var phone;
-  var configId;
   var self = this;
 
-  // Find the user
-  phone = smsHelper.getNormalizedPhone(request.body.phone);
-  configId = request.query.id;
+  var phone = smsHelper.getNormalizedPhone(request.body.phone);
   userModel.findOne({phone: phone}, onUserFound);
   response.send();
 
-  // Callback after user is found
   function onUserFound(err, doc) {
     logger.log('debug', 'DonorsChoose.onUserFound:%s', JSON.stringify(doc));
 
@@ -91,21 +86,21 @@ DonorsChooseDonationController.prototype.start = function(request, response) {
     var i;
 
     if (err) {
-      logger.error(err);
+      logger.error('DonorsChoose.onUserFound err:%s', JSON.stringify(err));
     }
 
     donationsCount = 0;
     if (doc && doc.donations) {
       for (i = 0; i < doc.donations.length; i++) {
         // Check for number of donations from this specific Donation Flow config/campaign.
-        if (configId == doc.donations[i].config_id) {
+        if (donationConfigId == doc.donations[i].config_id) {
           donationsCount = doc.donations[i].count;
           break;
         }
       }
     }
 
-    config = app.getConfig(app.ConfigName.DONORSCHOOSE, configId);
+    config = app.getConfig(app.ConfigName.DONORSCHOOSE, donationConfigId);
 
     // If user has not hit the max limit, start the donation flow.
     if (!config.max_donations_allowed || donationsCount <= config.max_donations_allowed) {
@@ -213,7 +208,7 @@ DonorsChooseDonationController.prototype.findProject = function(mobileNumber, co
  *   Express Response object
  */
 DonorsChooseDonationController.prototype.retrieveFirstName = function(request, response) {
-  var config = app.getConfig(app.ConfigName.DONORSCHOOSE, request.query.id);
+  var config = app.getConfig(app.ConfigName.DONORSCHOOSE, donationConfigId);
   var userSubmittedName = smsHelper.getFirstWord(request.body.args);
   var mobile = smsHelper.getNormalizedPhone(request.body.phone);
   logger.log('debug', 'DonorsChoose.retrieveFirstName:%s for user:%s', userSubmittedName, mobile);
@@ -266,7 +261,7 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
   var updateObject = { $set: { donation_complete: true }};
   var self = this;
   var req = request; 
-  var config = app.getConfig(app.ConfigName.DONORSCHOOSE, request.query.id);
+  var config = app.getConfig(app.ConfigName.DONORSCHOOSE, donationConfigId);
 
   if (stringValidator.isValidEmail(userSubmittedEmail) && !stringValidator.containsNaughtyWords(userSubmittedEmail)) {
     updateObject['$set'].email = userSubmittedEmail;
@@ -529,16 +524,14 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
  */
 DonorsChooseDonationController.prototype.retrieveLocation = function(request, response) {
 
-  if (typeof request.query.id === 'undefined'
-      || typeof request.body.phone === 'undefined'
-      || typeof request.body.args === 'undefined') {
+  if (typeof request.body.phone === 'undefined' || typeof request.body.args === 'undefined') {
     response.status(406).send('Missing required params.');
     return;
   }
 
   response.send();
 
-  var config = app.getConfig(app.ConfigName.DONORSCHOOSE, request.query.id);
+  var config = app.getConfig(app.ConfigName.DONORSCHOOSE, donationConfigId);
   var location = smsHelper.getFirstWord(request.body.args);
 
   if (TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR == 'zip') {
@@ -563,7 +556,7 @@ DonorsChooseDonationController.prototype.retrieveLocation = function(request, re
     location: location
   };
 
-  this._post('find-project?id=' + request.query.id, info);
+  this._post('find-project?id=' + donationConfigId, info);
 };
 
 /**
