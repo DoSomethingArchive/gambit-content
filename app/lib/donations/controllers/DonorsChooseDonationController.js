@@ -50,6 +50,7 @@ var connectionOperations = rootRequire('app/config/connectionOperations')
 
 // @TODO: add some kind of reference to retrieve the donations config 
 // var donationConfigModel = require('../')
+var donationConfigId = 201;
 
 function DonorsChooseDonationController() {
   this.host; // Used to store reference to application host.
@@ -341,12 +342,12 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
     }}
     logger.log('debug', 'DonorsChoose.requestToken POST:%s', DONATE_API_URL);
     requestHttp.post(DONATE_API_URL, retrieveTokenParams, function(err, response, body) {
-      logger.log('verbose', 'requestToken response:%s body:%s', JSON.stringify(response), JSON.stringify(body));
+      logger.log('verbose', 'requestToken response:%s body:%s', JSON.stringify(response).trim(), JSON.stringify(body).trim());
       if (!err) {
         try {
           var jsonBody = JSON.parse(body);
           if (jsonBody.statusDescription == 'success') {
-            logger.log('debug', 'DonorsChoose.retrieveToken success body:%s' + JSON.stringify(jsonBody));
+            logger.log('debug', 'DonorsChoose.retrieveToken success body:%s' + JSON.stringify(jsonBody).trim());
             deferred.resolve(JSON.parse(body).token);
           }
           else {
@@ -403,7 +404,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
           if (jsonBody.statusDescription == 'success') {
             logger.info('DonorsChoose.requestDonation success for user:' + donorPhone + ' proposal:' + proposalId + ' body:', jsonBody);
             updateUserWithDonation();
-//            sendSuccessMessages(donorPhone, donationConfig, jsonBody.proposalURL);
+            sendSuccessMessages(donorPhone, donationConfig, jsonBody.proposalURL);
           }
           else {
             logger.warn('DonorsChoose.requestDonation status!=success user:' + donorPhone + ' proposal:' + proposalId + ' body:', jsonBody);
@@ -422,16 +423,20 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
    * Start donation process.
    */
   function updateUserWithDonation() {
+    logger.log('debug', 'donorsChoose.updateUserWithDonation user:%s', donorPhone);
     userModel.findOne({phone: donorPhone}, function(err, doc) {
       if (err) {
-        logger.error(err);
+        logger.error('debug', 'DonorsChoose.updateUserWithDonation error:', err);
+        return;
       }
 
       if (!doc) {
+        logger.log('debug', 'donorsChoose.updateUserWithDonation userModel.create for user:%s', donorPhone);
         userModel.create({phone: donorPhone})
           .then(incrementDonationCount);
       }
       else {
+        logger.log('debug', 'donorsChoose.updateUserWithDonation userModel doc exists for user:%s', donorPhone);
         incrementDonationCount(doc);
       }
     });
@@ -448,12 +453,17 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
     var countUpdated = false;
 
     if (!doc) {
+      logger.log('debug', 'donorsChoose.incrementDonationCount !doc');
       return;
     }
+    logger.log('debug', 'donorsChoose.incrementDonationCount doc:%s', JSON.stringify(doc));
+    logger.log('debug', 'donorsChoose.incrementDonationCount donationConfig:%s', JSON.stringify(donationConfig));
 
     // Find previous donation history and increment the count if found
     for (i = 0; i < doc.donations.length; i++) {
-      if (doc.donations[i].config_id == donationConfig._id) {
+      logger.log('verbose', 'donorsChoose.incrementDonationCount i=', i);
+      if (doc.donations[i].config_id == donationConfigId) {
+        logger.log('verbose', 'donorsChoose.incrementDonationCount oc.donations[i].config_id == donationConfigId');
         doc.donations[i].count += 1;
         countUpdated = true;
         break;
@@ -462,6 +472,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
 
     // If no previous donation found, add a new item
     if (!countUpdated) {
+      logger.log('verbose', 'donorsChoose.incrementDonationCount !countUpdated');
       doc.donations[doc.donations.length] = {
         config_id: donationConfig._id,
         count: 1
@@ -473,7 +484,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
       {phone: doc.phone},
       {$set: {donations: doc.donations}}
     ).exec();
-    logger.log('debug', 'DonorsChoose.incrementDonationCount user:%s donations:%s', doc.phone, JSON.stringify(doc.donations));
+    logger.log('debug', 'DonorsChoose.incrementDonationCount complete for user:%s donations:%s', doc.phone, JSON.stringify(doc.donations));
   }
 
   /**
@@ -483,21 +494,21 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
    *   URL to the DonorsChoose project
    */
   function sendSuccessMessages(mobileNumber, donationConfig, projectUrl) {
-    var mobileNumber = mobileNumber;
-    var donationConfig = donationConfig;
-    var projectUrl = projectUrl;
+    logger.log('debug', 'DonorsChoose.sendSuccessMessages user:%s config:%s projectUrl%s', mobileNumber, JSON.stringify(donationConfig), projectUrl);
 
     // First message user receives. 
     mobilecommons.profile_update(mobileNumber, donationConfig.donation_complete_project_info_A);
 
     // Second message user receives. 
     setTimeout(function() {
+      logger.log('verbose', 'DonorsChoose.sendSuccessMessages timeout 1');
       mobilecommons.profile_update(mobileNumber, donationConfig.donation_complete_project_info_B);
     }, END_MESSAGE_DELAY)
 
     // Last message user receives. Uses Bitly to shorten the link, then updates the user's MC profile.
     setTimeout(function() {
       shortenLink(projectUrl, function(shortenedLink) {
+        logger.log('verbose', 'DonorsChoose.sendSuccessMessages timeout 2');
         var customFields = {
           SS_donation_url: shortenedLink
         };
