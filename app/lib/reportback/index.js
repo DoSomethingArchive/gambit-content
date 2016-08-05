@@ -1,5 +1,5 @@
 /**
- * Submit report backs to the Drupal backend via SMS.
+ * Submits reportbacks (and new users) to Phoenix API via SMS.
  */
 
 var express = require('express')
@@ -9,7 +9,7 @@ var express = require('express')
   , mobilecommons = rootRequire('mobilecommons')
   , emitter = rootRequire('app/eventEmitter')
   , logger = rootRequire('app/lib/logger')
-  , dscontentapi = rootRequire('app/lib/ds-content-api')()
+  , phoenix = rootRequire('app/lib/ds-content-api')()
   , REPORTBACK_PERMALINK_BASE_URL
   , shortenLink = rootRequire('app/lib/bitly')
   , Q = require('q')
@@ -82,7 +82,7 @@ router.post('/:campaign', function(request, response) {
           };
           handleUserResponse(doc, requestData);
         }, function(err) {
-          logger.error('Error from reportback.onDocumentFound:', err);
+          logger.error('reportback.onDocumentFound:', err);
         });
 
     response.send();
@@ -292,11 +292,12 @@ function findUserUidThenReportBack(doc, data) {
     doc: doc,
     isInitialSearch: true
   };
-
-  dscontentapi.userGet(userData, onFindUserUid.bind(context));
+  logger.log('debug', 'reportback.findUserUidThenReportBack phoenix.userGet:%s', JSON.stringify(userData));
+  phoenix.userGet(userData, onFindUserUid.bind(context));
 }
 
 function onFindUserUid(err, response, body) {
+  logger.log('debug', 'reportback.onFindUserUid response:%s body:%s', JSON.stringify(response), JSON.stringify(body));
   var context;
 
   // Variables bound to the callback
@@ -307,6 +308,7 @@ function onFindUserUid(err, response, body) {
   var jsonBody = JSON.parse(body);
   if (jsonBody.length == 0) {
     // If the initial search couldn't find the user, search again with country code.
+    // @todo: This seems strange.
     if (isInitialSearch) {
       userData = {
         mobile: data.phone
@@ -317,17 +319,17 @@ function onFindUserUid(err, response, body) {
         doc: doc,
         isInitialSearch: false,
       };
-
-      dscontentapi.userGet(userData, onFindUserUid.bind(context));
+      logger.log('debug', 'reportback.onFindUserUid 2nd phoenix.userGet:%s', JSON.stringify(userData));
+      phoenix.userGet(userData, onFindUserUid.bind(context));
     }
     // If we still can't find the user, create an account and then submit report back.
     else {
-      createUserThenReportBack(doc, data);
+      createUserThenReportback(doc, data);
     }
   }
   else {
     // User account found. Submit the report back.
-    submitReportBack(jsonBody[0].uid, doc, data);
+    submitReportback(jsonBody[0].uid, doc, data);
   }
 }
 
@@ -339,7 +341,7 @@ function onFindUserUid(err, response, body) {
  * @param data
  *   Data from the user's request
  */
-function createUserThenReportBack(doc, data) {
+function createUserThenReportback(doc, data) {
   var phone;
   var userData;
 
@@ -354,15 +356,14 @@ function createUserThenReportBack(doc, data) {
     user_registration_source: process.env.DS_CONTENT_API_USER_REGISTRATION_SOURCE
   };
 
-  // Create user account
-  dscontentapi.userCreate(userData, function(err, response, body) {
-    // Then submit report back with the newly created UID
+  phoenix.userCreate(userData, function(err, response, body) {
+    logger.log('debug', 'reportback.userCreate response:' + JSON.stringify(response));
+
     if (body && body.uid) {
-      logger.info('Successfully created a user for: ' + phone);
-      submitReportBack(body.uid, doc, data);
+      submitReportback(body.uid, doc, data);
     }
     else {
-      logger.error('Unable to create a user for: ' + phone);
+      logger.error('reportback.createUserThenReportback error:%s for user:' + phone,  JSON.stringify(error));
     }
   });
 }
@@ -371,13 +372,14 @@ function createUserThenReportBack(doc, data) {
  * Submit a report back.
  *
  * @param uid
- *   User ID
+ *   Numeric Phoenix user ID
  * @param doc
- *   User's report back document
+ *   User's reportback document
  * @param data
  *   Data from the user's request
  */
-function submitReportBack(uid, doc, data) {
+function submitReportback(uid, doc, data) {
+  logger.log('debug', 'reportback.submitReportback uid:%s doc:%s data:', uid, JSON.stringify(doc), JSON.stringify(data));
   var data = data
     , rbData = {
         nid: data.campaignConfig.campaign_nid,
@@ -389,26 +391,28 @@ function submitReportBack(uid, doc, data) {
       }
     ;
 
-  function reportBackToDS() {
+  function reportbackToDS() {
     var deferred = Q.defer();
-    dscontentapi.campaignsReportback(rbData, function(err, response, body) {
+    phoenix.campaignsReportback(rbData, function(err, response, body) {
       if (!err && body && body.length > 0) {
         try {
           var rbId = body[0]
           // Checking to make sure the response body doesn't contain an error from the API. 
           if (rbId == false || isNaN(rbId)) {
-            logger.error('Unable to reportback to DS API for uid: ' + uid);
+            logger.error('reportback.reportbackToDS no rbid for uid: ' + uid);
           }
           else {
+            var rbLink = REPORTBACK_PERMALINK_BASE_URL + rbId;
+            logger.info('reportback.reportbackToDS:%s', rbLink);
             deferred.resolve(rbId);
           }
         }
         catch (e) {
-          logger.error('Unable to reportback to DS API for uid: ' + uid + ', error: ' + e);
+          logger.error('reportback.reportbackToDS uid:%s error:%s', uid, JSON.stringify(error));
         }
       }
       else {
-        logger.error('Unable to reportback to DS API for uid: ' + uid);
+        logger.error('reportback.reportbackToDS uid:%s error:%s', uid, JSON.stringify(error));
         deferred.reject('Unable to reportback to DS API for uid: ' + uid);
       }
     });
@@ -422,7 +426,7 @@ function submitReportBack(uid, doc, data) {
         alphaOptin: data.campaignConfig.message_complete
       };
 
-      //Remove http:// or https:// protocol 
+      // Remove http:// or https:// protocol 
       shortenedLink = shortenedLink.replace(/.*?:\/\//g, "")
 
       // Here, update the user profile in mobile commons 1) the campaign id of the campaign, if it's their first one,
@@ -442,13 +446,12 @@ function submitReportBack(uid, doc, data) {
         });
       }
 
-      logger.info('Successfully submitted report back. rbid: ' + rbId);
-      // Remove the report back doc when complete
+      // Remove the reportback doc upon successful submission.
       model.remove({phone: data.phone, campaign: data.campaignConfig.endpoint}).exec();
     })
   }
 
-  reportBackToDS().then(shortenLinkAndUpdateMCProfile, function(err) {
+  reportbackToDS().then(shortenLinkAndUpdateMCProfile, function(err) {
       if (err) {
         logger.error('Unable to reportback to DS API for uid: ' + uid + ', error: ' + err);
       }
