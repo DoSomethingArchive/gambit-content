@@ -37,6 +37,6 @@
   },
   "subdomain": "ds-mdata-responder",
   "engines": {
-    "node": "v0.10.x"
+    "node": ">=4.4.x"
   }
 }
