@@ -484,9 +484,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
    *   URL to the DonorsChoose project
    */
   function sendSuccessMessages(mobileNumber, donationConfig, projectUrl) {
-    var mobileNumber = mobileNumber;
-    var donationConfig = donationConfig;
-    var projectUrl = projectUrl;
+    logger.log('debug', 'DonorsChoose.sendSuccessMessages user:%s config:%s projectUrl%s', mobileNumber, JSON.stringify(donationConfig), projectUrl);
 
     // First message user receives. 
     mobilecommons.profile_update(mobileNumber, donationConfig.donation_complete_project_info_A);
