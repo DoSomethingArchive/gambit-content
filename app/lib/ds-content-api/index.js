@@ -80,7 +80,7 @@ function userCreate(createData, callback) {
   if (typeof callback === 'function') {
     _callback = onUserCreate.bind({customCallback: callback});
   }
-  logger.log('debug', 'phoenix.userCreate request options:%s', JSON.stringify(options));
+  logger.log('debug', 'phoenix.userCreate POST users mobile:%s', createData.mobile);
   request(options, _callback);
 }
 
@@ -89,7 +89,7 @@ function onUserCreate(err, response, body) {
     logger.error('phoenix.userCreate error:', err);
   }
   else {
-    logger.log('debug', 'phoenix.userCreate body:', JSON.stringify(body));
+    logger.log('info', 'phoenix.userCreate success uid:', body.uid);
   }
   if (typeof this.customCallback === 'function') {
     this.customCallback(err, response, body);
