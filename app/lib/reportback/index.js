@@ -349,7 +349,7 @@ function createUserThenReportBack(doc, data) {
   }
 
   userData = {
-    email: phone + '@mobile',
+    email: phone + '@mobile.import',
     mobile: phone,
     user_registration_source: process.env.DS_CONTENT_API_USER_REGISTRATION_SOURCE
   };
