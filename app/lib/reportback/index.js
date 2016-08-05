@@ -292,12 +292,10 @@ function findUserUidThenReportBack(doc, data) {
     doc: doc,
     isInitialSearch: true
   };
-  logger.log('debug', 'reportback.findUserUidThenReportBack phoenix.userGet:%s', JSON.stringify(userData));
   phoenix.userGet(userData, onFindUserUid.bind(context));
 }
 
 function onFindUserUid(err, response, body) {
-  logger.log('debug', 'reportback.onFindUserUid response:%s body:%s', JSON.stringify(response), JSON.stringify(body));
   var context;
 
   // Variables bound to the callback
@@ -357,8 +355,6 @@ function createUserThenReportback(doc, data) {
   };
 
   phoenix.userCreate(userData, function(err, response, body) {
-    logger.log('debug', 'reportback.userCreate response:' + JSON.stringify(response));
-
     if (body && body.uid) {
       submitReportback(body.uid, doc, data);
     }
@@ -372,7 +368,7 @@ function createUserThenReportback(doc, data) {
  * Submit a report back.
  *
  * @param uid
- *   Numeric Phoenix user ID
+ *   Numeric Phoenix User uid
  * @param doc
  *   User's reportback document
  * @param data
