@@ -274,7 +274,7 @@ function logReportbackStep(doc, data) {
  *   Data from the user's request
  */
 function findUserUidThenReportBack(doc, data) {
-  var phone;
+  var phone = data.phone;
   var userData;
   var context;
 
