@@ -316,6 +316,7 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
  *
  */
 DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObject, proposalId, donationConfig) {
+
   var donorPhone = donorInfoObject.donorPhoneNumber;
   logger.log('debug', 'DonorsChoose.submitDonation user:%s info:%s proposal:%s config:%s', donorPhone, JSON.stringify(donorInfoObject), proposalId, JSON.stringify(donationConfig));
 
