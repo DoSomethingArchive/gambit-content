@@ -80,15 +80,17 @@ function userCreate(createData, callback) {
   if (typeof callback === 'function') {
     _callback = onUserCreate.bind({customCallback: callback});
   }
-
+  logger.log('debug', 'phoenix.userCreate POST users mobile:%s', createData.mobile);
   request(options, _callback);
 }
 
 function onUserCreate(err, response, body) {
   if (err) {
-    logger.error(err);
+    logger.error('phoenix.userCreate error:', err);
   }
-
+  else {
+    logger.log('info', 'phoenix.userCreate success uid:', body.uid);
+  }
   if (typeof this.customCallback === 'function') {
     this.customCallback(err, response, body);
   }
@@ -98,6 +100,7 @@ function onUserCreate(err, response, body) {
  * Get user
  */
 function userGet(userData, callback) {
+  logger.log('debug', 'phoenix.userGet userData:%s', JSON.stringify(userData));
   var options = {
     url: BASE_URL + '/users',
     method: 'GET',
@@ -119,15 +122,17 @@ function userGet(userData, callback) {
   if (typeof callback === 'function') {
     _callback = onUserGet.bind({customCallback: callback});
   }
-
+  logger.log('debug', 'phoenix.userGet GET:%s', options.url);
   request(options, _callback)
 }
 
 function onUserGet(err, response, body) {
   if (err) {
-    logger.error(err);
+    logger.error('phoenix.onUserGet error:', err);
   }
-
+  else {
+    logger.log('debug', 'phoenix.onUserGet body:', JSON.stringify(body));
+  }
   if (typeof this.customCallback === 'function') {
     this.customCallback(err, response, body);
   }
@@ -342,7 +347,10 @@ function isCampaignsReportbackError(response, body) {
  */
 function onCampaignsReportback(err, response, body) {
   if (err) {
-    logger.error(err);
+    logger.error('phoenix.onCampaignsReportback error:', err);
+  }
+  else {
+    logger.log('debug', 'phoenix.onCampaignsReportback body:', JSON.stringify(body));
   }
 
   if (isCampaignsReportbackError(response, body)) {
