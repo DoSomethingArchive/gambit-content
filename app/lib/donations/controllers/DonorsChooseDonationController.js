@@ -335,31 +335,27 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
       'apipassword': donorsChooseApiPassword, 
       'action': 'token'
     }}
-    logger.log('debug', 'DonorsChoose.requestToken POST:%s', DONATE_API_URL);
+    logger.log('debug', 'DonorsChoose.requestToken user:%s', donorPhone);
     requestHttp.post(DONATE_API_URL, retrieveTokenParams, function(err, response, body) {
-      logger.log('verbose', 'requestToken response:%s body:%s', JSON.stringify(response).trim(), JSON.stringify(body).trim());
       if (!err) {
         try {
           var jsonBody = JSON.parse(body);
           if (jsonBody.statusDescription == 'success') {
-            logger.log('debug', 'DonorsChoose.retrieveToken success body:%s' + JSON.stringify(jsonBody).trim());
+            logger.log('debug', 'DonorsChoose.requestToken success user:%s', donorPhone);
             deferred.resolve(JSON.parse(body).token);
           }
           else {
-            logger.error('DonorsChoose.retrieveToken error to retrieve a donation token from the DonorsChoose API for user:' 
-              + donorPhone);
+            logger.error('DonorsChoose.requestToken statusDescription!=success user:%s', donorPhone);
             sendSMS(donorPhone, donationConfig.error_start_again);
           }
         }
         catch (e) {
-          logger.error('DonorsChoose.retrieveToken error: failed trying to parse the donation token request response from DonorsChoose.org for user:' 
-            + donorPhone + ' Error: ' + e.message + '| Response: ' + response + '| Body: ' + body);
+          logger.error('DonorsChoose.requestToken failed user:'  + donorPhone + ' error:' + JSON.stringify(error));
           sendSMS(donorPhone, donationConfig.error_start_again);
         }
       }
       else {
-        deferred.reject('DonorsChoose.retrieveToken error: unable to retrieve a response from the submit donation endpoint of DonorsChoose.org, user: ' 
-          + donorPhone + 'error: ' + err);
+        deferred.reject('DonorsChoose.requestToken error user: ' + donorPhone + 'error: ' + JSON.stringify(err));
         sendSMS(donorPhone, donationConfig.error_start_again);
       }
     });
@@ -382,27 +378,26 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
       'honoreeFirst': donorInfoObject.donorFirstName,
     }};
 
-    logger.log('debug', 'DonorsChoose.requestDonation POST:%s params:%s', DONATE_API_URL, JSON.stringify(donateParams));
+    logger.log('debug', 'DonorsChoose.requestDonation POST user:' + donorInfoObject.donorPhoneNumber + ' proposalId:' + proposalId + ' amount:' + DONATION_AMOUNT + ' honoreeEmail:%s honoreeFirst:%s', donorInfoObject.donorEmail, donorInfoObject.donorFirstName);
     requestHttp.post(DONATE_API_URL, donateParams, function(err, response, body) {
-      logger.log('verbose', 'DonorsChoose.requestDonation body:', body.trim())
       if (err) {
-        logger.error('DonorsChoose.requestDonation requestHttp error for user:' + donorInfoObject.donorPhoneNumber + 'error: ' + err);
+        logger.error('DonorsChoose.requestDonation requestHttp error user:' + donorInfoObject.donorPhoneNumber + 'error: ' + err);
         sendSMS(donorPhone, donationConfig.error_start_again);
       }
       else if (response && response.statusCode != 200) {
-        logger.error('DonorsChoose.requestDonation statusCode:%s for user:%s | Response: ' + response, response.statusCode, donorInfoObject.donorPhoneNumber);
+        logger.error('DonorsChoose.requestDonation response.statusCode:%s for user:%s', response.statusCode, donorInfoObject.donorPhoneNumber);
         sendSMS(donorPhone, donationConfig.error_start_again);
       }
       else {
         try {
           var jsonBody = JSON.parse(body);
           if (jsonBody.statusDescription == 'success') {
-            logger.info('DonorsChoose.requestDonation success for user:' + donorPhone + ' proposal:' + proposalId + ' body:', jsonBody);
+            logger.info('DonorsChoose.requestDonation success user:' + donorPhone + ' proposal:' + proposalId + ' body:', jsonBody);
             updateUserWithDonation();
             sendSuccessMessages(donorPhone, donationConfig, jsonBody.proposalURL);
           }
           else {
-            logger.warn('DonorsChoose.requestDonation status!=success user:' + donorPhone + ' proposal:' + proposalId + ' body:', jsonBody);
+            logger.warn('DonorsChoose.requestDonation failed user:' + donorPhone + ' proposal:' + proposalId + ' body:', jsonBody);
             sendSMS(donorPhone, donationConfig.error_start_again);
           }
         }
