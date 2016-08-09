@@ -8,7 +8,6 @@
  *   function retrieveFirstName(request, response)
  *   function retrieveZip(request, response)
  *   function submitDonation(request, response)
- *   function setHost(hostname)
  * }
  */
 
@@ -50,8 +49,7 @@ function implementsInterface(controller) {
       typeof controller.retrieveEmail === 'function' &&
       typeof controller.retrieveFirstName === 'function' &&
       typeof controller.retrieveZip === 'function' &&
-      typeof controller.submitDonation === 'function' &&
-      typeof controller.setHost === 'function') {
+      typeof controller.submitDonation === 'function') {
     return true;
   }
   else {
@@ -74,21 +72,9 @@ router.post('/:controller/start', function(request, response) {
   }
 });
 
-router.post('/:controller/find-project', function(request, response) {
-  var controller = loadController(request.params.controller);
-  if (controller) {
-    controller.setHost(request.get('host'));
-    controller.findProject(request, response);
-  }
-  else {
-    response.status(404).send('Request not available for: ' + request.params.controller);
-  }
-});
-
 router.post('/:controller/retrieve-email', function(request, response) {
   var controller = loadController(request.params.controller);
   if (controller) {
-    controller.setHost(request.get('host'));
     controller.retrieveEmail(request, response);
   }
   else {
@@ -99,7 +85,6 @@ router.post('/:controller/retrieve-email', function(request, response) {
 router.post('/:controller/retrieve-firstname', function(request, response) {
   var controller = loadController(request.params.controller);
   if (controller) {
-    controller.setHost(request.get('host'));
     controller.retrieveFirstName(request, response);
   }
   else {
@@ -110,7 +95,6 @@ router.post('/:controller/retrieve-firstname', function(request, response) {
 router.post('/:controller/retrieve-zip', function(request, response) {
   var controller = loadController(request.params.controller);
   if (controller) {
-    controller.setHost(request.get('host'));
     controller.retrieveZip(request, response);
   }
   else {

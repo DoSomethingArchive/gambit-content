@@ -1,19 +1,20 @@
 "use strict";
 
 /**
- * Donors Choose implementation of the donation interface.
+ * DonorsChoose.org implementation of the donation interface.
  *
  * The flow a user should be guided through:
  *   1. start
- *      - sends the appropriate optin path to start the donation
+ *      - sends the appropriate optin path to start the donation and retrieveZip
  *      - unless a max number of donations have been made, then a message
  *        is sent to notify the user about that
+ *   2. retrieveZip
  *      - calls findProject to respond to user with project details
  *        and ask for their first name
- *   2. retrieveFirstName
- *   3. retrieveEmail
- *      - will call submitDonation
- *        submitDonation responsible for responding to user with success message
+ *   3. retrieveFirstName
+ *      - calls retrieveEmail
+ *   4. retrieveEmail
+ *      - will call submitDonation, which reponds to user with success message.
  */
 
 var donorsChooseApiKey = (process.env.DONORSCHOOSE_API_KEY || 'DONORSCHOOSE')
@@ -47,6 +48,7 @@ var connectionOperations = rootRequire('app/config/connectionOperations')
   , userModel = rootRequire('app/lib/sms-games/models/sgUser')(connectionOperations)
   ;
 
+// @todo: Read values from config document again, or set as environment variables.
 var donorsChooseConfig = {
   max_donations_allowed: 5,
   moco_campaign: 146307,
@@ -62,7 +64,6 @@ var donorsChooseConfig = {
 };
 
 function DonorsChooseDonationController() {
-  this.host; // Used to store reference to application host.
   this.resourceName; // Resource name identifier. Specifies controller to route. 
 };
 
@@ -317,8 +318,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
   logger.log('debug', 'DonorsChoose.submitDonation user:%s amount:%s info:%s proposal:%s', donorPhone, DONATION_AMOUNT, JSON.stringify(donorInfoObject), proposalId);
 
   requestToken().then(requestDonation,
-    promiseErrorCallback('Unable to successfully retrieve donation token from DonorsChoose.org API. User mobile: '
-      + donorPhone)
+    promiseErrorCallback('DonorsChoose.submitDonation failed for user:' + donorPhone)
   );
 
   /**
@@ -389,12 +389,12 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
         try {
           var jsonBody = JSON.parse(body);
           if (jsonBody.statusDescription == 'success') {
-            logger.info('DonorsChoose.requestDonation success user:' + donorPhone + ' proposal:' + proposalId + ' body:', jsonBody);
+            logger.info('DonorsChoose.requestDonation success user:' + donorPhone + ' proposalId:' + proposalId + ' body:', jsonBody);
             updateUserWithDonation();
             sendSuccessMessages(donorPhone, jsonBody.proposalURL);
           }
           else {
-            logger.error('DonorsChoose.requestDonation failed user:' + donorPhone + ' proposal:' + proposalId + ' body:', jsonBody);
+            logger.error('DonorsChoose.requestDonation failed user:' + donorPhone + ' proposalId:' + proposalId + ' body:', jsonBody);
             mobilecommons.profile_update(donorPhone, donorsChooseConfig.oip_error);
           }
         }
@@ -459,6 +459,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
     // If no previous donation found, add a new item
     if (!countUpdated) {
       logger.log('verbose', 'donorsChoose.incrementDonationCount !countUpdated');
+      // @todo: Store as moco_campaign instead of config_id?
       doc.donations[doc.donations.length] = {
         config_id: donorsChooseConfig.moco_campaign,
         count: 1
@@ -482,16 +483,13 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
   function sendSuccessMessages(mobileNumber, projectUrl) {
     logger.log('debug', 'DonorsChoose.sendSuccessMessages user:%s projectUrl%s', mobileNumber, projectUrl);
 
-    // First message user receives. 
     mobilecommons.profile_update(mobileNumber, donorsChooseConfig.oip_donation_complete_1);
 
-    // Second message user receives. 
     setTimeout(function() {
       logger.log('verbose', 'DonorsChoose.sendSuccessMessages timeout 1');
       mobilecommons.profile_update(mobileNumber, donorsChooseConfig.oip_donation_complete_2);
     }, END_MESSAGE_DELAY)
 
-    // Last message user receives. Uses Bitly to shorten the link, then updates the user's MC profile.
     setTimeout(function() {
       shortenLink(projectUrl, function(shortenedLink) {
         logger.log('verbose', 'DonorsChoose.sendSuccessMessages timeout 2');
@@ -530,55 +528,6 @@ DonorsChooseDonationController.prototype.retrieveZip = function(request, respons
     return;
   }
   this.findProject(mobile, zip);
-};
-
-/**
- * Sets the hostname.
- *
- * @param host
- *   The hostname string.
- */
-DonorsChooseDonationController.prototype.setHost = function(host) {
-  this.host = host;
-};
-
-/**
- * POST data to another endpoint on this Donors Choose resource.
- *
- * @param endpoint
- *   Endpoint to POST to.
- * @param data
- *   Object with data to POST to the endpoint.
- */
-DonorsChooseDonationController.prototype._post = function(endpoint, data) {
-  var url = 'http://' + this.host + '/donations/' + this.resourceName + '/' + endpoint;
-
-  var payload = {form:{}};
-  var keys = Object.keys(data);
-  for (var i = 0; i < keys.length; i++) {
-    payload.form[keys[i]] = data[keys[i]];
-  }
-
-  requestHttp.post(url, payload, function(err, response, body) {
-    if (err) {
-      logger.error(err);
-    }
-
-    if (response && response.statusCode) {
-      logger.info('DonorsChooseDonationController - POST to ' + url 
-        + ' return status code: ' + response.statusCode);
-    }
-  });
-}
-
-/**
- * Sets the hostname.
- *
- * @param host
- *   The hostname string.
- */
-DonorsChooseDonationController.prototype.setHost = function(host) {
-  this.host = host;
 };
 
 /**
