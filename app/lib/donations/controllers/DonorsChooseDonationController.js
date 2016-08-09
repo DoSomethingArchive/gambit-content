@@ -27,8 +27,7 @@ if (process.env.NODE_ENV != 'production') {
   donorsChooseDonationBaseURL = 'https://apiqasecure.donorschoose.org/common/json_api.html';
 }
 
-var TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR = 'zip' // 'zip' or 'state'. Our retrieveLocation() function will adjust accordingly.
-  , DONATION_AMOUNT = (process.env.DONORSCHOOSE_DONATION_AMOUNT || 10)
+var DONATION_AMOUNT = (process.env.DONORSCHOOSE_DONATION_AMOUNT || 10)
   , COST_TO_COMPLETE_UPPER_LIMIT = 10000
   , DONATE_API_URL = donorsChooseDonationBaseURL + '?APIKey=' + donorsChooseApiKey
   , END_MESSAGE_DELAY = 2500;
@@ -111,7 +110,7 @@ DonorsChooseDonationController.prototype.start = function(request, response) {
     }
 
     if (donationsCount <= donorsChooseConfig.max_donations_allowed) {
-      self.findProject(phone);
+      mobilecommons.profile_update(phone, donorsChooseConfig.oip_ask_zip);
     }
     else {
       mobilecommons.profile_update(phone, donorsChooseConfig.oip_max_donations);
@@ -125,16 +124,14 @@ DonorsChooseDonationController.prototype.start = function(request, response) {
  *
  * @see https://data.donorschoose.org/docs/project-listing/json-requests/
  *
- * @param mobileNumber
- *   User's mobile number
- *
  */
-DonorsChooseDonationController.prototype.findProject = function(mobileNumber) {
+DonorsChooseDonationController.prototype.findProject = function(mobileNumber, zip) {
   var requestUrlString = donorsChooseProposalsQueryBaseURL;
   requestUrlString += '?subject4=-4'; 
   requestUrlString += '&sortBy=2'; 
   requestUrlString += '&costToCompleteRange=' + DONATION_AMOUNT + '+TO+' + COST_TO_COMPLETE_UPPER_LIMIT; 
   requestUrlString += '&max=1';
+  requestUrlString += '&zip=' + zip;
   requestUrlString += '&APIKey=' + donorsChooseApiKey;
   logger.log('debug', 'DonorsChoose.findProject request:%s', requestUrlString);
 
@@ -508,8 +505,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
 };
 
 /**
- * Retrieves the location of a user to use for finding a project. For Donors Choose
- * this will be the user's state.
+ * Retrieves the zip code of a user to use for finding a project.
  *
  * @param request
  *   Express Request object
@@ -517,40 +513,21 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
  *   Express Response object
  */
 DonorsChooseDonationController.prototype.retrieveLocation = function(request, response) {
-
   if (typeof request.body.phone === 'undefined' || typeof request.body.args === 'undefined') {
     response.status(406).send('Missing required params.');
     return;
   }
 
   response.send();
+  var phone = request.body.phone;
+  var zip = smsHelper.getFirstWord(request.body.args);
 
-  var config = app.getConfig(app.ConfigName.DONORSCHOOSE, donationConfigId);
-  var location = smsHelper.getFirstWord(request.body.args);
-
-  if (TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR == 'zip') {
-    if (!stringValidator.isValidZip(location)) {
-      mobilecommons.profile_update(request.body.phone, config.invalid_zip_oip);
-      logger.info('User ' + request.body.phone 
-        + ' did not submit a valid zipcode in the DonorsChoose.org flow.');
-      return;
-    }
+  if (!stringValidator.isValidZip(zip)) {
+    mobilecommons.profile_update(phone, donorsChooseConfig.oip_invalid_zip);
+    logger.log('debug', 'DonorsChoose.retrieveLocation invalid zip:%s user:%s', zip, phone);
+    return;
   }
-  else if (TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR == 'state') {
-    if (!stringValidator.isValidState(location)) {
-      mobilecommons.profile_update(request.body.phone, config.invalid_state_oip);
-      logger.info('User ' + request.body.phone 
-        + ' did not submit a valid state abbreviation in the DonorsChoose.org flow.');
-      return;
-    }
-  }
-
-  var info = {
-    mobile: request.body.phone,
-    location: location
-  };
-
-  this._post('find-project?id=' + donationConfigId, info);
+  this.findProject(phone, zip);
 };
 
 /**
