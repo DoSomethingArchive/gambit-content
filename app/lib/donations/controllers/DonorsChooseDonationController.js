@@ -114,7 +114,7 @@ DonorsChooseDonationController.prototype.start = function(request, response) {
       self.findProject(phone);
     }
     else {
-      sendSMS(phone, donorsChooseConfig.oip_max_donations);
+      mobilecommons.profile_update(phone, donorsChooseConfig.oip_max_donations);
     }
   }
 };
@@ -151,7 +151,7 @@ DonorsChooseDonationController.prototype.findProject = function(mobileNumber) {
         }    
       }
       catch (e) {
-        sendSMS(mobileNumber, donorsChooseConfig.oip_error);
+        mobilecommons.profile_update(mobileNumber, donorsChooseConfig.oip_error);
         // JSON.parse will throw a SyntaxError exception if data is not valid JSON
         logger.error('DonorsChoose.findProject invalid JSON data received from DonorsChoose API for user: ' 
           + mobileNumber + ' , or selected proposal does not contain necessary fields. Error: ' + e);
@@ -170,7 +170,7 @@ DonorsChooseDonationController.prototype.findProject = function(mobileNumber) {
         };
       }
       else {
-        sendSMS(mobileNumber, donorsChooseConfig.oip_error);
+        mobilecommons.profile_update(mobileNumber, donorsChooseConfig.oip_error);
         logger.error('DonorsChoose.findProject API response for user:' + mobileNumber 
           + ' has not returned with a valid proposal. response:'  + donorsChooseResponse);
         return;
@@ -196,7 +196,7 @@ DonorsChooseDonationController.prototype.findProject = function(mobileNumber) {
       }, promiseErrorCallback('DonorsChoose.findProject unable to create donation_infos document for user: ' + mobileNumber));
     }
     else {
-      sendSMS(mobileNumber, donorsChooseConfig.oip_error);
+      mobilecommons.profile_update(mobileNumber, donorsChooseConfig.oip_error);
       logger.error('DonorsChoose.findProject error for user:' + mobileNumber 
         + ' in retrieving proposal info from DonorsChoose or in uploading to MobileCommons custom fields: ' + error);
       return;
@@ -236,7 +236,7 @@ DonorsChooseDonationController.prototype.retrieveFirstName = function(request, r
       if (err) {
         logger.error('Error in retrieving first name of user for user mobile: ' 
           + req.body.phone + ' | Error: ' + err);
-        sendSMS(mobile, donorsChooseConfig.oip_error);
+        mobilecommons.profile_update(mobile, donorsChooseConfig.oip_error);
       }
       else {
         mobilecommons.profile_update(mobile, donorsChooseConfig.oip_ask_email, { SS_user_first_name: userSubmittedName });
@@ -279,7 +279,7 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
     function(err, donorDocument) {
       if (err) {
         logger.error('DonorsChoose.retrieveEmail error for user:' + mobile + ' in donationModel.findOneAndUpdate: ' + err);
-        sendSMS(mobile, donorsChooseConfig.oip_error);
+        mobilecommons.profile_update(mobile, donorsChooseConfig.oip_error);
       } 
       else if (donorDocument) {
         logger.log('debug', 'DonorsChoose.retrieveEmail donorDocument:%s: for user:%s', JSON.stringify(donorDocument), mobile);
@@ -287,7 +287,7 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
         // or our app hasn't found a proposal (aka project) and attached a 
         // project_id to the document, we opt the user back into the start donation flow.  
         if (!donorDocument.project_id) {
-          sendSMS(mobile, donorsChooseConfig.oip_error);
+          mobilecommons.profile_update(mobile, donorsChooseConfig.oip_error);
         }
         else {
           var donorInfoObject = {
@@ -346,17 +346,17 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
           }
           else {
             logger.error('DonorsChoose.requestToken statusDescription!=success user:%s', donorPhone);
-            sendSMS(donorPhone, donorsChooseConfig.oip_error);
+            mobilecommons.profile_update(donorPhone, donorsChooseConfig.oip_error);
           }
         }
         catch (e) {
           logger.error('DonorsChoose.requestToken failed user:'  + donorPhone + ' error:' + JSON.stringify(error));
-          sendSMS(donorPhone, donorsChooseConfig.oip_error);
+          mobilecommons.profile_update(donorPhone, donorsChooseConfig.oip_error);
         }
       }
       else {
         deferred.reject('DonorsChoose.requestToken error user: ' + donorPhone + 'error: ' + JSON.stringify(err));
-        sendSMS(donorPhone, donorsChooseConfig.oip_error);
+        mobilecommons.profile_update(donorPhone, donorsChooseConfig.oip_error);
       }
     });
     return deferred.promise;
@@ -382,11 +382,11 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
     requestHttp.post(DONATE_API_URL, donateParams, function(err, response, body) {
       if (err) {
         logger.error('DonorsChoose.requestDonation requestHttp error user:' + donorInfoObject.donorPhoneNumber + 'error: ' + err);
-        sendSMS(donorPhone,  donorsChooseConfig.oip_error);
+        mobilecommons.profile_update(donorPhone,  donorsChooseConfig.oip_error);
       }
       else if (response && response.statusCode != 200) {
         logger.error('DonorsChoose.requestDonation response.statusCode:%s for user:%s', response.statusCode, donorInfoObject.donorPhoneNumber);
-        sendSMS(donorPhone, donorsChooseConfig.oip_error);
+        mobilecommons.profile_update(donorPhone, donorsChooseConfig.oip_error);
       }
       else {
         try {
@@ -398,12 +398,12 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
           }
           else {
             logger.error('DonorsChoose.requestDonation failed user:' + donorPhone + ' proposal:' + proposalId + ' body:', jsonBody);
-            sendSMS(donorPhone, donorsChooseConfig.oip_error);
+            mobilecommons.profile_update(donorPhone, donorsChooseConfig.oip_error);
           }
         }
         catch (e) {
           logger.error('DonorsChoose.requestDonation catch exception for user:%s e:%s', donorPhone, e.message);
-          sendSMS(donorPhone, donorsChooseConfig.oip_error);
+          mobilecommons.profile_update(donorPhone, donorsChooseConfig.oip_error);
         }
       }
     })
@@ -530,7 +530,7 @@ DonorsChooseDonationController.prototype.retrieveLocation = function(request, re
 
   if (TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR == 'zip') {
     if (!stringValidator.isValidZip(location)) {
-      sendSMS(request.body.phone, config.invalid_zip_oip);
+      mobilecommons.profile_update(request.body.phone, config.invalid_zip_oip);
       logger.info('User ' + request.body.phone 
         + ' did not submit a valid zipcode in the DonorsChoose.org flow.');
       return;
@@ -538,7 +538,7 @@ DonorsChooseDonationController.prototype.retrieveLocation = function(request, re
   }
   else if (TYPE_OF_LOCATION_WE_ARE_QUERYING_FOR == 'state') {
     if (!stringValidator.isValidState(location)) {
-      sendSMS(request.body.phone, config.invalid_state_oip);
+      mobilecommons.profile_update(request.body.phone, config.invalid_state_oip);
       logger.info('User ' + request.body.phone 
         + ' did not submit a valid state abbreviation in the DonorsChoose.org flow.');
       return;
@@ -612,20 +612,8 @@ function promiseErrorCallback(message, userPhone) {
 function onPromiseErrorCallback(err) {
   if (err) {
     logger.error(this.message + '\n', err.stack);
-    sendSMS(this.userPhone, config.error_start_again)
+    mobilecommons.profile_update(this.userPhone, config.error_start_again)
   }
 }
-
-/**
- * Subscribe phone number to a Mobile Commons opt-in path.
- *
- * @param phone
- *  Phone number to subscribe.
- * @param oip
- *   Opt-in path to subscribe to.
- */
-function sendSMS(phone, oip) {
-  mobilecommons.profile_update(phone, oip);
-};
 
 module.exports = DonorsChooseDonationController;
