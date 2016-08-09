@@ -15,8 +15,7 @@
 var express = require('express')
   , router = express.Router();
 
-var DonorsChoose = require('./controllers/DonorsChooseDonationController')
-  ;
+var DonorsChoose = require('./controllers/DonorsChooseDonationController');
 
 /**
  * Load the controller associated with the provided controller name.
