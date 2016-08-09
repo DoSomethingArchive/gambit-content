@@ -480,7 +480,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
    *   URL to the DonorsChoose project
    */
   function sendSuccessMessages(mobileNumber, projectUrl) {
-    logger.log('debug', 'DonorsChoose.sendSuccessMessages user:%s config:%s projectUrl%s', mobileNumber, projectUrl);
+    logger.log('debug', 'DonorsChoose.sendSuccessMessages user:%s projectUrl%s', mobileNumber, projectUrl);
 
     // First message user receives. 
     mobilecommons.profile_update(mobileNumber, donorsChooseConfig.oip_donation_complete_1);
@@ -589,7 +589,7 @@ function promiseErrorCallback(message, userPhone) {
 function onPromiseErrorCallback(err) {
   if (err) {
     logger.error(this.message + '\n', err.stack);
-    mobilecommons.profile_update(this.userPhone, config.error_start_again)
+    mobilecommons.profile_update(this.userPhone, donorsChooseConfig.error_start_again)
   }
 }
 
