@@ -314,7 +314,7 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
  */
 DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObject, proposalId) {
   var donorPhone = donorInfoObject.donorPhoneNumber;
-  logger.log('debug', 'DonorsChoose.submitDonation user:%s info:%s proposal:%s', donorPhone, JSON.stringify(donorInfoObject), proposalId);
+  logger.log('debug', 'DonorsChoose.submitDonation user:%s amount:%s info:%s proposal:%s', donorPhone, DONATION_AMOUNT, JSON.stringify(donorInfoObject), proposalId);
 
   requestToken().then(requestDonation,
     promiseErrorCallback('Unable to successfully retrieve donation token from DonorsChoose.org API. User mobile: '
