@@ -6,7 +6,7 @@
  *   function findProject(request, response)
  *   function retrieveEmail(request, response)
  *   function retrieveFirstName(request, response)
- *   function retrieveLocation(request, response)
+ *   function retrieveZip(request, response)
  *   function submitDonation(request, response)
  *   function setHost(hostname)
  * }
@@ -49,7 +49,7 @@ function implementsInterface(controller) {
       typeof controller.findProject === 'function' &&
       typeof controller.retrieveEmail === 'function' &&
       typeof controller.retrieveFirstName === 'function' &&
-      typeof controller.retrieveLocation === 'function' &&
+      typeof controller.retrieveZip === 'function' &&
       typeof controller.submitDonation === 'function' &&
       typeof controller.setHost === 'function') {
     return true;
@@ -107,11 +107,11 @@ router.post('/:controller/retrieve-firstname', function(request, response) {
   }
 });
 
-router.post('/:controller/retrieve-location', function(request, response) {
+router.post('/:controller/retrieve-zip', function(request, response) {
   var controller = loadController(request.params.controller);
   if (controller) {
     controller.setHost(request.get('host'));
-    controller.retrieveLocation(request, response);
+    controller.retrieveZip(request, response);
   }
   else {
     response.status(404).send('Request not available for: ' + request.params.controller);

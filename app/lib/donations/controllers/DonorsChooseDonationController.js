@@ -72,7 +72,7 @@ function DonorsChooseDonationController() {
 DonorsChooseDonationController.prototype.resourceName = 'donors-choose';
 
 /**
- * Optional method to start the donation flow. Validates that this user is
+ * Start the donation flow by validating that this user is
  * allowed to make a donation.
  *
  * @param request
@@ -119,7 +119,7 @@ DonorsChooseDonationController.prototype.start = function(request, response) {
 };
 
 /**
- * Queries DonorsChoose API to find a project and sends the
+ * Queries DonorsChoose API to find a STEM project by zip and sends the
  * project details back to the user.
  *
  * @see https://data.donorschoose.org/docs/project-listing/json-requests/
@@ -132,8 +132,8 @@ DonorsChooseDonationController.prototype.findProject = function(mobileNumber, zi
   requestUrlString += '&costToCompleteRange=' + DONATION_AMOUNT + '+TO+' + COST_TO_COMPLETE_UPPER_LIMIT; 
   requestUrlString += '&max=1';
   requestUrlString += '&zip=' + zip;
-  requestUrlString += '&APIKey=' + donorsChooseApiKey;
   logger.log('debug', 'DonorsChoose.findProject request:%s', requestUrlString);
+  requestUrlString += '&APIKey=' + donorsChooseApiKey;
 
   requestHttp.get(requestUrlString, function(error, response, data) {
     if (!error) {
@@ -447,7 +447,7 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
 
     // Find previous donation history and increment the count if found
     for (i = 0; i < doc.donations.length; i++) {
-      logger.log('verbose', 'donorsChoose.incrementDonationCount i=', i);
+      logger.log('verbose', 'donorsChoose.incrementDonationCount i=' + i);
       if (doc.donations[i].config_id == donorsChooseConfig.moco_campaign) {
         logger.log('verbose', 'donorsChoose.incrementDonationCount oc.donations[i].config_id == donorsChooseConfig.moco_campaign');
         doc.donations[i].count += 1;
@@ -512,22 +512,24 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
  * @param response
  *   Express Response object
  */
-DonorsChooseDonationController.prototype.retrieveLocation = function(request, response) {
+DonorsChooseDonationController.prototype.retrieveZip = function(request, response) {
   if (typeof request.body.phone === 'undefined' || typeof request.body.args === 'undefined') {
     response.status(406).send('Missing required params.');
     return;
   }
 
   response.send();
-  var phone = request.body.phone;
+  var mobile = request.body.phone;
   var zip = smsHelper.getFirstWord(request.body.args);
+  logger.log('debug', 'DonorsChoose.retrieveZip:%s for user:%s', zip, mobile);
+
 
   if (!stringValidator.isValidZip(zip)) {
-    mobilecommons.profile_update(phone, donorsChooseConfig.oip_invalid_zip);
-    logger.log('debug', 'DonorsChoose.retrieveLocation invalid zip:%s user:%s', zip, phone);
+    mobilecommons.profile_update(mobile, donorsChooseConfig.oip_invalid_zip);
+    logger.log('debug', 'DonorsChoose.retrieveZip invalid zip:%s user:%s', zip, mobile);
     return;
   }
-  this.findProject(phone, zip);
+  this.findProject(mobile, zip);
 };
 
 /**
