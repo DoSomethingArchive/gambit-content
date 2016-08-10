@@ -65,9 +65,7 @@ exports.profile_update = function(phone, optInPathId, customFields) {
   var trace = new Error().stack;
   var callback = function(error, response, body) {
     if (error) {
-      logger.error('mobilecommons.profile_update for user:'
-        + phone + ' | form data: ' + JSON.stringify(postData.form) 
-        + ' | error: ' + error + ' | stack: ' + trace);
+      logger.error('mobilecommons.profile_update user:%s form:%s error:%s', phone, JSON.stringify(postData.form), error);
     }
     else if (response && response.statusCode != 200) {
       logger.error('mobilecommons.profile_update for user:'

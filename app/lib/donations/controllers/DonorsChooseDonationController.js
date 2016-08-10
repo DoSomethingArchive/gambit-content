@@ -132,69 +132,67 @@ DonorsChooseDonationController.prototype.findProject = function(mobileNumber, zi
   requestUrlString += '&APIKey=' + donorsChooseApiKey;
 
   requestHttp.get(requestUrlString, function(error, response, data) {
-    if (!error) {
-      var donorsChooseResponse;
-      try {
-        donorsChooseResponse = JSON.parse(data);
-        if (!donorsChooseResponse.proposals || donorsChooseResponse.proposals.length == 0) {
-          throw new Error('No proposals returned from Donors Choose');
-        }
-        else {
-          var selectedProposal = donorsChooseResponse.proposals[0];
-        }    
-      }
-      catch (e) {
-        mobilecommons.profile_update(mobileNumber, donorsChooseConfig.oip_error);
-        // JSON.parse will throw a SyntaxError exception if data is not valid JSON
-        logger.error('DonorsChoose.findProject invalid JSON data received from DonorsChoose API for user: ' 
-          + mobileNumber + ' , or selected proposal does not contain necessary fields. Error: ' + e);
-        return;
-      }
-
-      if (selectedProposal) {
-        var entities = new Entities(); // Calling 'html-entities' module to decode escaped characters.
-        var location = entities.decode(selectedProposal.city) + ', ' + entities.decode(selectedProposal.state)
-
-        var mobileCommonsCustomFields = {
-          SS_fulfillment_trailer:   entities.decode(selectedProposal.fulfillmentTrailer), 
-          SS_teacher_name :         entities.decode(selectedProposal.teacherName), 
-          SS_school_name :          entities.decode(selectedProposal.schoolName),
-          SS_proj_location:         location
-        };
-      }
-      else {
-        mobilecommons.profile_update(mobileNumber, donorsChooseConfig.oip_error);
-        logger.error('DonorsChoose.findProject API response for user:' + mobileNumber 
-          + ' has not returned with a valid proposal. response:'  + donorsChooseResponse);
-        return;
-      }
-
-      // Email and first_name can be overwritten later. Included in case of error, transaction can still be completed. 
-      var currentDonationInfo = {
-        mobile: mobileNumber,
-        email: 'donorschoose@dosomething.org', 
-        first_name: 'Anonymous',
-        location: location,
-        project_id: selectedProposal.id,
-        project_url: selectedProposal.proposalURL,
-        donation_complete: false
-      }
-
-      // .profile_update call placed within the donationModel.create() callback to 
-      // ensure that the ORIGINAL DOCUMENT IS CREATED before the user texts back 
-      // their email address and attempts to find the document to be updated. 
-      donationModel.create(currentDonationInfo).then(function(doc) {
-        logger.log('debug', 'DonorsChoose.findProject created donation_infos document:%s for user:%s', JSON.stringify(doc), mobileNumber);
-        mobilecommons.profile_update(mobileNumber, donorsChooseConfig.oip_ask_first_name, mobileCommonsCustomFields);
-      }, promiseErrorCallback('DonorsChoose.findProject unable to create donation_infos document for user: ' + mobileNumber));
-    }
-    else {
+    if (error) {
       mobilecommons.profile_update(mobileNumber, donorsChooseConfig.oip_error);
-      logger.error('DonorsChoose.findProject error for user:' + mobileNumber 
-        + ' in retrieving proposal info from DonorsChoose or in uploading to MobileCommons custom fields: ' + error);
+      logger.error('DonorsChoose.findProject user:%s error:%s', mobileNumber, error);
+      return;
+    }
+
+    try {
+      var donorsChooseResponse = JSON.parse(data);
+      if (!donorsChooseResponse.proposals || donorsChooseResponse.proposals.length == 0) {
+        // If no proposals, could potentially prompt user for different zip code.
+        // For now, send back error message per existing functionality.
+        mobilecommons.profile_update(mobileNumber, donorsChooseConfig.oip_error);
+        logger.error('DonorsChoose.findProject API no proposals found for zip:%s user:%s', zip, mobileNumber);
+        return;
+      }
+      createDonationDoc(mobileNumber, donorsChooseResponse.proposals[0]);
+    }
+    catch (e) {
+      mobilecommons.profile_update(mobileNumber, donorsChooseConfig.oip_error);
+      // JSON.parse will throw a SyntaxError exception if data is not valid JSON
+      logger.error('DonorsChoose.findProject invalid JSON data received from DonorsChoose API for user: ' 
+        + mobileNumber + ' , or selected proposal does not contain necessary fields. Error: ' + e);
       return;
     }
   });
+}
+
+/**
+ * Creates a donation_infos document for given mobileNumber and DonorsChoose project.
+ * Opts user into next step in conversation upon success.
+ */
+function createDonationDoc(mobileNumber, selectedProposal) {
+  var entities = new Entities(); // Calling 'html-entities' module to decode escaped characters.
+  var location = entities.decode(selectedProposal.city) + ', ' + entities.decode(selectedProposal.state)
+
+  // Email and first_name can be overwritten later. Included in case of error, transaction can still be completed. 
+  var currentDonationInfo = {
+    mobile: mobileNumber,
+    email: 'donorschoose@dosomething.org', 
+    first_name: 'Anonymous',
+    location: location,
+    project_id: selectedProposal.id,
+    project_url: selectedProposal.proposalURL,
+    donation_complete: false
+  }
+
+  // .profile_update call placed within the donationModel.create() callback to 
+  // ensure that the ORIGINAL DOCUMENT IS CREATED before the user texts back 
+  // their email address and attempts to find the document to be updated. 
+  donationModel.create(currentDonationInfo).then(function(doc) {
+    logger.log('debug', 'DonorsChoose.findProject created donation_infos document:%s for user:%s', JSON.stringify(doc), mobileNumber);
+    var customFields = {
+      SS_fulfillment_trailer:   entities.decode(selectedProposal.fulfillmentTrailer), 
+      SS_teacher_name :         entities.decode(selectedProposal.teacherName), 
+      SS_school_name :          entities.decode(selectedProposal.schoolName),
+      SS_proj_location:         location
+    };
+    // @todo: Nice to have, shouldn't have to prompt for first name if already stored to profile.
+    // @see https://github.com/DoSomething/gambit/issues/552 
+    mobilecommons.profile_update(mobileNumber, donorsChooseConfig.oip_ask_first_name, customFields);
+  }, promiseErrorCallback('DonorsChoose.findProject unable to create donation_infos document for user: ' + mobileNumber));
 }
 
 /**
