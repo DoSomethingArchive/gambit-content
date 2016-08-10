@@ -1,7 +1,7 @@
-ds-mdata-responder
+gambit
 ==================
 
-The `ds-mdata-responder` powers all of DoSomething.org's text-message-driven campaigns. It interacts with the MobileCommons platform to send messages, handling MData requests and sending responses while computing conversation logic (what message should be sent to which user when). 
+Gambit powers all of DoSomething.org's SMS campaigns. It interacts with the MobileCommons platform to send messages, handling MData requests and sending responses while computing conversation logic (what message should be sent to which user when). 
 
 ## Prerequisites
 * [Node](http://nodejs.org/download/)
@@ -9,4 +9,4 @@ The `ds-mdata-responder` powers all of DoSomething.org's text-message-driven cam
 
 ## Getting Started
 * Clone this repo
-* Follow instructions in the [setup page](https://github.com/DoSomething/ds-mdata-responder/wiki/Setup) in the responder's wiki.
+* Follow instructions in the [setup page](https://github.com/DoSomething/gambit/wiki/Setup).
