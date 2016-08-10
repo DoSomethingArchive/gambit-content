@@ -73,6 +73,20 @@ function DonorsChooseDonationController() {
 DonorsChooseDonationController.prototype.resourceName = 'donors-choose';
 
 /**
+ * For given user document, return # of donations completed for our current Donation campaign.
+ */
+function getDonationCount(userDocument) {
+  if (userDocument && userDocument.donations) {
+    for (var i = 0; i < userDocument.donations.length; i++) {
+      if (donorsChooseConfig.moco_campaign == userDocument.donations[i].config_id) {
+        return userDocument.donations[i].count;
+      }
+    }
+  }
+  return 0;
+}
+
+/**
  * Start the donation flow by validating that this user is
  * allowed to make a donation.
  *
@@ -82,35 +96,16 @@ DonorsChooseDonationController.prototype.resourceName = 'donors-choose';
  *   Express Response object
  */
 DonorsChooseDonationController.prototype.start = function(request, response) {
-  var self = this;
-
   var phone = smsHelper.getNormalizedPhone(request.body.phone);
   userModel.findOne({phone: phone}, onUserFound);
   response.send();
 
-  function onUserFound(err, doc) {
-    logger.log('debug', 'DonorsChoose.onUserFound:%s', JSON.stringify(doc));
-
-    var config;
-    var donationsCount;
-    var i;
-
+  function onUserFound(err, userDocument) {
+    logger.log('debug', 'DonorsChoose.onUserFound:%s', JSON.stringify(userDocument));
     if (err) {
       logger.error('DonorsChoose.onUserFound err:%s', JSON.stringify(err));
     }
-
-    donationsCount = 0;
-    if (doc && doc.donations) {
-      for (i = 0; i < doc.donations.length; i++) {
-        // Check for number of donations from this specific Donation Flow MoCo Campaign.
-        if (donorsChooseConfig.moco_campaign == doc.donations[i].config_id) {
-          donationsCount = doc.donations[i].count;
-          break;
-        }
-      }
-    }
-
-    if (donationsCount <= donorsChooseConfig.max_donations_allowed) {
+    if (getDonationCount(userDocument) <= donorsChooseConfig.max_donations_allowed) {
       mobilecommons.profile_update(phone, donorsChooseConfig.oip_ask_zip);
     }
     else {
