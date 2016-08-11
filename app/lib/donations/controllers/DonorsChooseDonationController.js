@@ -68,9 +68,10 @@ var dcConfig = {
   msg_ask_email: "Rad, what's your email? the teacher would like to send a thank you.",
   msg_ask_first_name: "Rad, what's your first name?",
   msg_ask_zip: "Rad, let's find a project in or near ur town. What's ur zipcode?",
-  msg_donation_complete: "Rad! You donated!",
+  msg_donation_success: "Because you played Science Sleuth, you're helping support STEM (science,tech,math & engineering) classes at ",
   msg_invalid_zip: "Whoops! C'mon now, that's not a valid zip code. Try again.",
-  msg_max_donations: "Sorry, out of donations"
+  msg_max_donations: "Sorry, out of donations",
+  msg_project_link: "You can find your name and updates on the project here: ",
 }
 
 function DonorsChooseDonationController() {
@@ -95,12 +96,13 @@ function sendSMS(mobileNumber, optInPath, message, customFields) {
   mobilecommons.profile_update(mobileNumber, optInPath, customFields);
 }
 
-function continueConversation(mobileNumber, message, customFields) {
-  // Send to the chat OIP to listen for a response to respond back to.
+function respondAndListen(mobileNumber, message, customFields) {
+  // Send to the chat OIP to listen for a member response to respond back to.
   sendSMS(mobileNumber, 211133, message, customFields);
 }
 
-function endConversation(mobileNumber, message, customFields) {
+function respond(mobileNumber, message, customFields) {
+  // Send to OIP without mData, and no longer listen for member responses.
   sendSMS(mobileNumber, 211195, message, customFields);
 }
 
@@ -126,50 +128,54 @@ DonorsChooseDonationController.prototype.chat = function(request, response) {
     }
 
     if (getDonationCount(userDocument) > donorsChooseConfig.max_donations_allowed) {
-      continueConversation(phone, dcConfig.msg_max_donations);
+      respondAndListen(phone, dcConfig.msg_max_donations);
       return;
     }
 
     if (!member.profile_postal_code) {
       if (!firstWord) {
-        continueConversation(phone, dcConfig.msg_ask_zip);
+        respondAndListen(phone, dcConfig.msg_ask_zip);
         return;
       }
       if (!stringValidator.isValidZip(firstWord)) {
-        continueConversation(phone, dcConfig.msg_invalid_zip);
+        respondAndListen(phone, dcConfig.msg_invalid_zip);
         return;
       }
-      continueConversation(phone, dcConfig.msg_ask_first_name, {postal_code: firstWord});
+      respondAndListen(phone, dcConfig.msg_ask_first_name, {postal_code: firstWord});
       return;
     }
 
     if (!member.profile_first_name) {
       if (!firstWord) {
-        continueConversation(phone, dcConfig.msg_ask_first_name);
+        respondAndListen(phone, dcConfig.msg_ask_first_name);
         return;
       }
       if (stringValidator.containsNaughtyWords(firstWord)) {
-        continueConversation(phone, "Pls don't use that tone with me. " + dcConfig.msg_ask_first_name);
+        respondAndListen(phone, "Pls don't use that tone with me. " + dcConfig.msg_ask_first_name);
         return;
       }
-      continueConversation(phone, dcConfig.msg_ask_email, {first_name: firstWord});
+      respondAndListen(phone, dcConfig.msg_ask_email, {first_name: firstWord});
       return;
     }
 
     if (!member.profile_email_address) {
       if (!firstWord) {
-        continueConversation(phone, dcConfig.msg_ask_email);
+        respondAndListen(phone, dcConfig.msg_ask_email);
         return;
       }
       if (!stringValidator.isValidEmail(firstWord)) {
-        continueConversation(phone, "Whoops, that's not a valid email address. " + dcConfig.msg_ask_email);
+        respondAndListen(phone, "Whoops, that's not a valid email address. " + dcConfig.msg_ask_email);
         return;
       }
-      endConversation(phone, dcConfig.msg_donation_complete, {email_address: firstWord});
+      respondAndListen(phone, "Looking for a project by you, just a moment...", {email_address: firstWord});
+
+      setTimeout(function() {
+        findProjectAndRespond(phone, member.profile_postal_code);
+      }, END_MESSAGE_DELAY);
       return;
     }
 
-    endConversation(phone, dcConfig.msg_donation_complete);
+    findProjectAndRespond(phone, member.profile_postal_code);
   }
 };
 
@@ -222,7 +228,7 @@ DonorsChooseDonationController.prototype.start = function(request, response) {
  * @see https://data.donorschoose.org/docs/project-listing/json-requests/
  *
  */
-DonorsChooseDonationController.prototype.findProject = function(mobileNumber, zip) {
+function findProjectAndRespond(mobileNumber, zip) {
   var requestUrlString = donorsChooseProposalsQueryBaseURL;
   requestUrlString += '?subject4=-4'; 
   requestUrlString += '&sortBy=2'; 
@@ -248,7 +254,9 @@ DonorsChooseDonationController.prototype.findProject = function(mobileNumber, zi
         logger.error('DonorsChoose.findProject API no proposals found for zip:%s user:%s', zip, mobileNumber);
         return;
       }
-      createDonationDoc(mobileNumber, donorsChooseResponse.proposals[0]);
+      var project = decodeDonorsChooseProposal(donorsChooseResponse.proposals[0]);
+      sendSuccessMessages(mobileNumber, project);
+      // createDonationDoc(mobileNumber, donorsChooseResponse.proposals[0]);
     }
     catch (e) {
       mobilecommons.profile_update(mobileNumber, donorsChooseConfig.oip_error);
@@ -258,6 +266,18 @@ DonorsChooseDonationController.prototype.findProject = function(mobileNumber, zi
       return;
     }
   });
+}
+
+function decodeDonorsChooseProposal(proposal) {
+  var entities = new Entities();
+  return {
+    id:proposal.id,
+    description:  entities.decode(proposal.fulfillmentTrailer),
+    location: entities.decode(proposal.city) + ', ' + entities.decode(proposal.state),
+    schoolName: entities.decode(proposal.schoolName),
+    teacherName: entities.decode(proposal.teacherName),
+    url:proposal.proposalURL
+  };
 }
 
 /**
@@ -567,34 +587,33 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
     ).exec();
     logger.log('debug', 'DonorsChoose.incrementDonationCount complete for user:%s donations:%s', doc.phone, JSON.stringify(doc.donations));
   }
-
-  /**
-   * Sends multiple messages to user after a successful donation.
-   *
-   * @param url
-   *   URL to the DonorsChoose project
-   */
-  function sendSuccessMessages(mobileNumber, projectUrl) {
-    logger.log('debug', 'DonorsChoose.sendSuccessMessages user:%s projectUrl%s', mobileNumber, projectUrl);
-
-    mobilecommons.profile_update(mobileNumber, donorsChooseConfig.oip_donation_complete_1);
-
-    setTimeout(function() {
-      logger.log('verbose', 'DonorsChoose.sendSuccessMessages timeout 1');
-      mobilecommons.profile_update(mobileNumber, donorsChooseConfig.oip_donation_complete_2);
-    }, END_MESSAGE_DELAY)
-
-    setTimeout(function() {
-      shortenLink(projectUrl, function(shortenedLink) {
-        logger.log('verbose', 'DonorsChoose.sendSuccessMessages timeout 2');
-        var customFields = {
-          SS_donation_url: shortenedLink
-        };
-        mobilecommons.profile_update(donorPhone, donorsChooseConfig.oip_donation_complete_3, customFields);
-      });
-    }, END_MESSAGE_DELAY + END_MESSAGE_DELAY)
-  }
 };
+
+/**
+ * Sends multiple messages to user after a successful donation.
+ *
+ * @param project
+ *   Decoded DonorsChoose proposal object.
+ */
+function sendSuccessMessages(mobileNumber, project) {
+  logger.log('debug', 'DonorsChoose.sendSuccessMessages user:%s project%s', mobileNumber, project);
+
+  var firstMessage = dcConfig.msg_donation_success + project.schoolName + ".";
+  respondAndListen(mobileNumber, firstMessage);
+
+  setTimeout(function() {
+    var secondMessage = project.teacherName + 'says: "' + project.description + '"';
+    respondAndListen(mobileNumber, secondMessage);
+  }, END_MESSAGE_DELAY);
+
+  setTimeout(function() {
+    shortenLink(project.url, function(shortenedLink) {
+      logger.log('debug', 'DonorsChoose.sendSuccessMessages user:%s shortenedLink:%s', mobileNumber, shortenedLink);
+      var thirdMessage = dcConfig.msg_project_link + shortenedLink;
+      respond(mobileNumber, thirdMessage);
+    });
+  }, 2 * END_MESSAGE_DELAY);
+}
 
 /**
  * Retrieves the zip code of a user to use for finding a project.

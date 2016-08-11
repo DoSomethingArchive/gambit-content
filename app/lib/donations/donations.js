@@ -45,7 +45,6 @@ function loadController(controllerName) {
  */
 function implementsInterface(controller) {
   if (typeof controller.resourceName === 'string' &&
-      typeof controller.findProject === 'function' &&
       typeof controller.retrieveEmail === 'function' &&
       typeof controller.retrieveFirstName === 'function' &&
       typeof controller.retrieveZip === 'function' &&
