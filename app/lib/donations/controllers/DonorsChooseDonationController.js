@@ -82,7 +82,8 @@ function DonorsChooseDonationController() {
  */
 DonorsChooseDonationController.prototype.resourceName = 'donors-choose';
 
-function sendSMS(mobileNumber, message, customFields) {
+function sendSMS(mobileNumber, optInPath, message, customFields) {
+  // We store the message to send the user in the slothbot_response MoCo custom field.
   if (typeof customFields === 'undefined') {
     customFields = {slothbot_response: message};
   }
@@ -91,7 +92,16 @@ function sendSMS(mobileNumber, message, customFields) {
   }
   // ScienceSleuth Experiment campaign.
   // @see https://secure.mcommons.com/campaigns/146943/opt_in_paths/211133
-  mobilecommons.profile_update(mobileNumber, 211133, customFields);
+  mobilecommons.profile_update(mobileNumber, optInPath, customFields);
+}
+
+function continueConversation(mobileNumber, message, customFields) {
+  // Send to the chat OIP to listen for a response to respond back to.
+  sendSMS(mobileNumber, 211133, message, customFields);
+}
+
+function endConversation(mobileNumber, message, customFields) {
+  sendSMS(mobileNumber, 211195, message, customFields);
 }
 
 DonorsChooseDonationController.prototype.chat = function(request, response) {
@@ -116,50 +126,50 @@ DonorsChooseDonationController.prototype.chat = function(request, response) {
     }
 
     if (getDonationCount(userDocument) > donorsChooseConfig.max_donations_allowed) {
-      sendSMS(phone, dcConfig.msg_max_donations);
+      continueConversation(phone, dcConfig.msg_max_donations);
       return;
     }
 
     if (!member.profile_postal_code) {
       if (!firstWord) {
-        sendSMS(phone, dcConfig.msg_ask_zip);
+        continueConversation(phone, dcConfig.msg_ask_zip);
         return;
       }
       if (!stringValidator.isValidZip(firstWord)) {
-        sendSMS(phone, dcConfig.msg_invalid_zip);
+        continueConversation(phone, dcConfig.msg_invalid_zip);
         return;
       }
-      sendSMS(phone, dcConfig.msg_ask_first_name, {postal_code: firstWord});
+      continueConversation(phone, dcConfig.msg_ask_first_name, {postal_code: firstWord});
       return;
     }
 
     if (!member.profile_first_name) {
       if (!firstWord) {
-        sendSMS(phone, dcConfig.msg_ask_first_name);
+        continueConversation(phone, dcConfig.msg_ask_first_name);
         return;
       }
       if (stringValidator.containsNaughtyWords(firstWord)) {
-        sendSMS(phone, "Pls don't use that tone with me. " + dcConfig.msg_ask_first_name);
+        continueConversation(phone, "Pls don't use that tone with me. " + dcConfig.msg_ask_first_name);
         return;
       }
-      sendSMS(phone, dcConfig.msg_ask_email, {first_name: firstWord});
+      continueConversation(phone, dcConfig.msg_ask_email, {first_name: firstWord});
       return;
     }
 
     if (!member.profile_email_address) {
       if (!firstWord) {
-        sendSMS(phone, dcConfig.msg_ask_email);
+        continueConversation(phone, dcConfig.msg_ask_email);
         return;
       }
       if (!stringValidator.isValidEmail(firstWord)) {
-        sendSMS(phone, "Whoops, that's not a valid email address. " + dcConfig.msg_ask_email);
+        continueConversation(phone, "Whoops, that's not a valid email address. " + dcConfig.msg_ask_email);
         return;
       }
-      sendSMS(phone, dcConfig.msg_donation_complete, {email_address: firstWord});
+      endConversation(phone, dcConfig.msg_donation_complete, {email_address: firstWord});
       return;
     }
 
-    sendSMS(phone, dcConfig.msg_donation_complete);
+    endConversation(phone, dcConfig.msg_donation_complete);
   }
 };
 
