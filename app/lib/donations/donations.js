@@ -57,6 +57,17 @@ function implementsInterface(controller) {
   }
 }
 
+router.post('/:controller/chat', function(request, response) {
+  var controller = loadController(request.params.controller);
+  if (controller) {
+    controller.chat(request, response);
+  }
+  else {
+    response.status(404).send('Request not available for: ' + request.params.controller);
+  }
+});
+
+
 /**
  * Starts the donation flow. Any validation needed before a donation flow
  * begins should happen here. This endpoint will typically need to be
