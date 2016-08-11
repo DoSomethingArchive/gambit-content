@@ -43,18 +43,12 @@ var dcConfig = {
   msg_ask_zip: "Rad, let's find a project in or near ur town. What's ur zipcode?",
   msg_donation_success: "Because you played Science Sleuth, you're helping support STEM (science,tech,math & engineering) classes at ",
   msg_invalid_zip: "Whoops! C'mon now, that's not a valid zip code. Try again.",
-  msg_max_donations: "Sorry, out of donations",
   msg_project_link: "You can find your name and updates on the project here: ",
 }
 
 function DonorsChooseDonationController() {
   this.resourceName; // Resource name identifier. Specifies controller to route. 
 };
-
-/**
- * Resource name identifier. Routes will use this to specify the controller to use.
- */
-DonorsChooseDonationController.prototype.resourceName = 'donors-choose';
 
 /**
  * Posts profile_update request to Mobile Commons to send messageText as SMS.
@@ -109,16 +103,17 @@ function respondWithGenericFail(member) {
 
 DonorsChooseDonationController.prototype.chat = function(request, response) {
   var member = request.body;
-  logger.log('verbose', 'DonorsChoose.chat member:', member);
+  logger.log('verbose', 'dc.chat member:', member);
   response.send();
 
   var firstWord = null;
   if (request.body.args) {
     firstWord = smsHelper.getFirstWord(request.body.args);
   }
-  logger.log('debug', 'DonorsChoose.chat phone:%s firstWord:%s', member.phone, firstWord);
+  logger.log('debug', 'dc.chat user:%s firstWord:%s', member.phone, firstWord);
 
-  // @todo Sanity check that member donation count is not max
+  // @todo Could add sanity check in code that member donation count is not max.
+  // Planning to rely on Liquid logic within Start OIP conversation.
 
   if (!member.profile_postal_code) {
     if (!firstWord) {
@@ -183,33 +178,32 @@ function findProjectAndRespond(member) {
   requestUrlString += '&costToCompleteRange=' + DONATION_AMOUNT + '+TO+' + COST_TO_COMPLETE_UPPER_LIMIT; 
   requestUrlString += '&max=1';
   requestUrlString += '&zip=' + zip;
-  logger.log('debug', 'DonorsChoose.findProject request:%s', requestUrlString);
+  logger.log('debug', 'dc.findProject request:%s', requestUrlString);
   requestUrlString += '&APIKey=' + donorsChooseApiKey;
 
   requestHttp.get(requestUrlString, function(error, response, data) {
     if (error) {
       respondWithGenericFail(member);
-      logger.error('DonorsChoose.findProject user:%s error:%s', mobileNumber, error);
+      logger.error('dc.findProject user:%s error:%s', mobileNumber, error);
       return;
     }
 
     try {
-      var donorsChooseResponse = JSON.parse(data);
-      if (!donorsChooseResponse.proposals || donorsChooseResponse.proposals.length == 0) {
+      var dcResponse = JSON.parse(data);
+      if (!dcResponse.proposals || dcResponse.proposals.length == 0) {
         // If no proposals, could potentially prompt user for different zip code.
         // For now, send back error message per existing functionality.
-        respond(member, "Hmm, no projects found.");
-        logger.error('DonorsChoose.findProject API no proposals found for zip:%s user:%s', zip, mobileNumber);
+        respond(member, "Hmm, no projects found. Try again later.");
+        logger.error('dc.findProject no results for zip:%s user:%s', zip, 
+          mobileNumber);
         return;
       }
-      var project = decodeDonorsChooseProposal(donorsChooseResponse.proposals[0]);
+      var project = decodeDonorsChooseProposal(dcResponse.proposals[0]);
       postDonation(member, project);
     }
     catch (e) {
       respondWithGenericFail(member);
-      // JSON.parse will throw a SyntaxError exception if data is not valid JSON
-      logger.error('DonorsChoose.findProject invalid JSON data received from DonorsChoose API for user: ' 
-        + mobileNumber + ' , or selected proposal does not contain necessary fields. Error: ' + e);
+      logger.error('ds.findProject user:%s error:%s', mobileNumber, e); 
       return;
     }
   });
@@ -250,7 +244,7 @@ function createDonationDoc(mobileNumber, selectedProposal) {
   // ensure that the ORIGINAL DOCUMENT IS CREATED before the user texts back 
   // their email address and attempts to find the document to be updated. 
   donationModel.create(currentDonationInfo).then(function(doc) {
-    logger.log('debug', 'DonorsChoose.findProject created donation_infos document:%s for user:%s', JSON.stringify(doc), mobileNumber);
+    logger.log('debug', 'dc.findProject created donation_infos document:%s for user:%s', JSON.stringify(doc), mobileNumber);
     var customFields = {
       SS_fulfillment_trailer:   entities.decode(selectedProposal.fulfillmentTrailer), 
       SS_teacher_name :         entities.decode(selectedProposal.teacherName), 
@@ -260,7 +254,7 @@ function createDonationDoc(mobileNumber, selectedProposal) {
     // @todo: Nice to have, shouldn't have to prompt for first name if already stored to profile.
     // @see https://github.com/DoSomething/gambit/issues/552 
     mobilecommons.profile_update(mobileNumber, donorsChooseConfig.oip_ask_first_name, customFields);
-  }, promiseErrorCallback('DonorsChoose.findProject unable to create donation_infos document for user: ' + mobileNumber));
+  }, promiseErrorCallback('dc.findProject unable to create donation_infos document for user: ' + mobileNumber));
 }
 
 /**
@@ -274,7 +268,7 @@ function createDonationDoc(mobileNumber, selectedProposal) {
  */
 function postDonation(member, project) {
   var donorPhone = member.phone;
-  logger.log('debug', 'DonorsChoose.submitDonation user:%s proposalId:%s', 
+  logger.log('debug', 'dc.submitDonation user:%s proposalId:%s', 
     donorPhone, project.id);
 
   requestToken().then(requestDonation,
@@ -292,27 +286,27 @@ function postDonation(member, project) {
       'apipassword': donorsChooseApiPassword, 
       'action': 'token'
     }}
-    logger.log('debug', 'DonorsChoose.requestToken POST user:%s', donorPhone);
+    logger.log('debug', 'dc.requestToken POST user:%s', donorPhone);
     requestHttp.post(DONATE_API_URL, retrieveTokenParams, function(err, response, body) {
       if (!err) {
         try {
           var jsonBody = JSON.parse(body);
           if (jsonBody.statusDescription === 'success') {
-            logger.log('debug', 'DonorsChoose.requestToken success user:%s', donorPhone);
+            logger.log('debug', 'dc.requestToken success user:%s', donorPhone);
             deferred.resolve(JSON.parse(body).token);
           }
           else {
-            logger.error('DonorsChoose.requestToken statusDescription!=success user:%s', donorPhone);
+            logger.error('dc.requestToken statusDescription!=success user:%s', donorPhone);
             respondWithGenericFail(member);
           }
         }
         catch (e) {
-          logger.error('DonorsChoose.requestToken failed user:'  + donorPhone + ' error:' + JSON.stringify(error));
+          logger.error('dc.requestToken failed user:'  + donorPhone + ' error:' + JSON.stringify(error));
           respondWithGenericFail(member);
         }
       }
       else {
-        deferred.reject('DonorsChoose.requestToken error user: ' + donorPhone + 'error: ' + JSON.stringify(err));
+        deferred.reject('dc.requestToken error user: ' + donorPhone + 'error: ' + JSON.stringify(err));
         respondWithGenericFail(member);
       }
     });
@@ -385,7 +379,7 @@ function sendSuccessMessages(member, project) {
   respondAndListen(member, firstMessage);
 
   setTimeout(function() {
-    var secondMessage = '@' + project.teacherName + ': Thanks! ' + project.description;
+    var secondMessage = '@' + project.teacherName + ': Thx! ' + project.description;
     respondAndListen(member, secondMessage);
   }, END_MESSAGE_DELAY);
 

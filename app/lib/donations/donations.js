@@ -7,7 +7,7 @@ var express = require('express')
 
 var DonorsChoose = require('./controllers/DonorsChooseDonationController');
 
-router.post('/:controller/chat', function(request, response) {
+router.post('/donors-choose/', function(request, response) {
   var controller = new DonorsChoose();
   if (controller) {
     controller.chat(request, response);
