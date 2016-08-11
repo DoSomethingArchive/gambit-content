@@ -1,11 +1,11 @@
 {
-  "name": "ds-mdata-responder",
-  "version": "1.1.0",
+  "name": "gambit",
+  "version": "1.1.1",
   "description": "Interface for interacting with DoSomething.org SMS experiences.",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/DoSomething/ds-mdata-responder.git"
+    "url": "git+https://github.com/DoSomething/gambit.git"
   },
   "dependencies": {
     "body-parser": "^1.9.2",
@@ -35,7 +35,6 @@
     "test": "make test",
     "start": "node server"
   },
-  "subdomain": "ds-mdata-responder",
   "engines": {
     "node": ">=4.4.x"
   }
