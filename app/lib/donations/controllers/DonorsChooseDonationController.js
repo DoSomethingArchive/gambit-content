@@ -49,25 +49,29 @@ var connectionOperations = rootRequire('app/config/connectionOperations')
   ;
 
 // @todo: Read values from config document again, or set as environment variables.
+// OIP's from ScienceSleuth2016 Staging: 
 var donorsChooseConfig = {
   max_donations_allowed: 5,
   moco_campaign: 146307,
-  msg_ask_email: "Rad, what's your email? the teacher would like to send a thank you.",
   oip_ask_email: 209781,
-  msg_ask_first_name: "Rad, what's your first name?",
   oip_ask_first_name: 209779,
-  msg_ask_zip: "Rad, let's find a project in or near ur town. What's ur zipcode?",
   oip_ask_zip: 211113,
-  msg_donation_complete: "Rad! You donated!",
   oip_donation_complete_1: 209783,
   oip_donation_complete_2: 209785,
   oip_donation_complete_3: 209787,
   oip_error: 209791,
-  msg_invalid_zip: "Whoops! C'mon now, that's not a valid zip code. Try again.",
   oip_invalid_zip: 211115,
-  msg_max_donations: "Sorry, out of donations",
   oip_max_donations: 209789
 };
+
+var dcConfig = {
+  msg_ask_email: "Rad, what's your email? the teacher would like to send a thank you.",
+  msg_ask_first_name: "Rad, what's your first name?",
+  msg_ask_zip: "Rad, let's find a project in or near ur town. What's ur zipcode?",
+  msg_donation_complete: "Rad! You donated!",
+  msg_invalid_zip: "Whoops! C'mon now, that's not a valid zip code. Try again.",
+  msg_max_donations: "Sorry, out of donations"
+}
 
 function DonorsChooseDonationController() {
   this.resourceName; // Resource name identifier. Specifies controller to route. 
@@ -80,10 +84,10 @@ DonorsChooseDonationController.prototype.resourceName = 'donors-choose';
 
 function sendSMS(mobileNumber, message, customFields) {
   if (typeof customFields === 'undefined') {
-    customFields = {sciencesleuth_response: message};
+    customFields = {slothbot_response: message};
   }
   else {
-    customFields.sciencesleuth_response = message;
+    customFields.slothbot_response = message;
   }
   // ScienceSleuth Experiment campaign.
   // @see https://secure.mcommons.com/campaigns/146943/opt_in_paths/211133
@@ -92,12 +96,16 @@ function sendSMS(mobileNumber, message, customFields) {
 
 DonorsChooseDonationController.prototype.chat = function(request, response) {
   var member = request.body;
+  logger.log('verbose', 'DonorsChoose.chat member:', member);
   var phone = smsHelper.getNormalizedPhone(member.phone);
   userModel.findOne({phone: phone}, onUserFound);
   response.send();
 
-  var firstWord = smsHelper.getFirstWord(request.body.args)
-  console.log(phone + ' firstWord:' + firstWord);
+  var firstWord = null;
+  if (request.body.args) {
+    firstWord = smsHelper.getFirstWord(request.body.args);
+  }
+  logger.log('debug', 'DonorsChoose.chat phone:%s firstWord:%s', phone, firstWord);
 
   function onUserFound(err, userDocument) {
     logger.log('debug', 'DonorsChoose.onUserFound:%s', JSON.stringify(userDocument));
@@ -108,50 +116,50 @@ DonorsChooseDonationController.prototype.chat = function(request, response) {
     }
 
     if (getDonationCount(userDocument) > donorsChooseConfig.max_donations_allowed) {
-      sendSMS(phone, donorsChooseConfig.msg_max_donations);
+      sendSMS(phone, dcConfig.msg_max_donations);
       return;
     }
 
     if (!member.profile_postal_code) {
       if (!firstWord) {
-        sendSMS(phone, donorsChooseConfig.msg_ask_zip);
+        sendSMS(phone, dcConfig.msg_ask_zip);
         return;
       }
       if (!stringValidator.isValidZip(firstWord)) {
-        sendSMS(phone, donorsChooseConfig.msg_invalid_zip);
+        sendSMS(phone, dcConfig.msg_invalid_zip);
         return;
       }
-      sendSMS(phone, donorsChooseConfig.msg_ask_first_name, {postal_code: firstWord});
+      sendSMS(phone, dcConfig.msg_ask_first_name, {postal_code: firstWord});
       return;
     }
 
     if (!member.profile_first_name) {
       if (!firstWord) {
-        sendSMS(phone, donorsChooseConfig.msg_ask_first_name);
+        sendSMS(phone, dcConfig.msg_ask_first_name);
         return;
       }
       if (stringValidator.containsNaughtyWords(firstWord)) {
-        sendSMS(phone, "Pls don't use that tone with me. " + donorsChooseConfig.msg_ask_first_name);
+        sendSMS(phone, "Pls don't use that tone with me. " + dcConfig.msg_ask_first_name);
         return;
       }
-      sendSMS(phone, donorsChooseConfig.msg_ask_email, {first_name: firstWord});
+      sendSMS(phone, dcConfig.msg_ask_email, {first_name: firstWord});
       return;
     }
 
     if (!member.profile_email_address) {
       if (!firstWord) {
-        sendSMS(phone, donorsChooseConfig.msg_ask_email);
+        sendSMS(phone, dcConfig.msg_ask_email);
         return;
       }
       if (!stringValidator.isValidEmail(firstWord)) {
-        sendSMS(phone, "Whoops, that's not a valid email address. " + donorsChooseConfig.msg_ask_email);
+        sendSMS(phone, "Whoops, that's not a valid email address. " + dcConfig.msg_ask_email);
         return;
       }
-      sendSMS(phone, donorsChooseConfig.msg_donation_complete, {email_address: firstWord});
+      sendSMS(phone, dcConfig.msg_donation_complete, {email_address: firstWord});
       return;
     }
 
-    sendSMS(phone, donorsChooseConfig.msg_donation_complete);
+    sendSMS(phone, dcConfig.msg_donation_complete);
   }
 };
 
