@@ -20,6 +20,9 @@ var DONATION_AMOUNT = (process.env.DONORSCHOOSE_DONATION_AMOUNT || 10)
   , DONATE_API_URL = donorsChooseDonationBaseURL + '?APIKey=' + donorsChooseApiKey
   , END_MESSAGE_DELAY = 2500;
 
+// Name of MoCo Custom Field used to store member's number of donations.
+var DONATION_COUNT_FIELDNAME = 'ss2016_donation_count';
+
 var Q = require('q')
   , requestHttp = require('request')
   , Entities = require('html-entities').AllHtmlEntities
@@ -369,7 +372,12 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
  *   Decoded DonorsChoose proposal object.
  */
 function sendSuccessMessages(member, project) {
-  logger.log('debug', 'DonorsChoose.sendSuccessMessages user:%s project%s', member.phone, project);
+  logger.log('debug', 'dc.sendSuccessMessages user:%s project%s', 
+    member.phone, project);
+
+  var donationCount = parseInt(member['profile_' + DONATION_COUNT_FIELDNAME]);
+  var customFields = {};
+  customFields[DONATION_COUNT_FIELDNAME] = donationCount + 1;
 
   var firstMessage = dcConfig.msg_donation_success + project.schoolName + ".";
   respondAndListen(member, firstMessage);
@@ -381,9 +389,10 @@ function sendSuccessMessages(member, project) {
 
   setTimeout(function() {
     shortenLink(project.url, function(shortenedLink) {
-      logger.log('debug', 'DonorsChoose.sendSuccessMessages user:%s shortenedLink:%s', member.phone, shortenedLink);
+      logger.log('debug', 'dc.sendSuccessMessages user:%s shortenedLink:%s', 
+        member.phone, shortenedLink);
       var thirdMessage = dcConfig.msg_project_link + shortenedLink;
-      respond(member, thirdMessage);
+      respond(member, thirdMessage, customFields);
     });
   }, 2 * END_MESSAGE_DELAY);
 }
