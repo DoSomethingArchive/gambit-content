@@ -8,7 +8,7 @@ var donorsChooseApiKey = (process.env.DONORSCHOOSE_API_KEY || 'DONORSCHOOSE')
   , donorsChooseApiPassword = (process.env.DONORSCHOOSE_API_PASSWORD || 'helpClassrooms!')
   , donorsChooseDonationBaseURL = 'https://apisecure.donorschoose.org/common/json_api.html?'
   , donorsChooseProposalsQueryBaseURL = 'https://api.donorschoose.org/common/json_feed.html'
-  , defaultDonorsChooseTransactionEmail = (process.env.DONORSCHOOSE_DEFAULT_EMAIL || null);
+  , defaultDonorsChooseTransactionEmail = (process.env.DONORSCHOOSE_DEFAULT_EMAIL || 'donorschoose@dosomething.org');
 
 if (process.env.NODE_ENV != 'production') {
   donorsChooseProposalsQueryBaseURL = 'https://qa.donorschoose.org/common/json_feed.html';
@@ -176,12 +176,13 @@ DonorsChooseDonationController.prototype.chat = function(request, response) {
  */
 function findProjectAndRespond(member) {
   var mobileNumber = member.phone;
+  var zip = member.profile_postal_code;
   var requestUrlString = donorsChooseProposalsQueryBaseURL;
   requestUrlString += '?subject4=-4'; 
   requestUrlString += '&sortBy=2'; 
   requestUrlString += '&costToCompleteRange=' + DONATION_AMOUNT + '+TO+' + COST_TO_COMPLETE_UPPER_LIMIT; 
   requestUrlString += '&max=1';
-  requestUrlString += '&zip=' + member.profile_postal_code;
+  requestUrlString += '&zip=' + zip;
   logger.log('debug', 'DonorsChoose.findProject request:%s', requestUrlString);
   requestUrlString += '&APIKey=' + donorsChooseApiKey;
 
@@ -202,8 +203,7 @@ function findProjectAndRespond(member) {
         return;
       }
       var project = decodeDonorsChooseProposal(donorsChooseResponse.proposals[0]);
-      sendSuccessMessages(member, project);
-      // createDonationDoc(mobileNumber, donorsChooseResponse.proposals[0]);
+      postDonation(member, project);
     }
     catch (e) {
       respondWithGenericFail(member);
@@ -272,12 +272,13 @@ function createDonationDoc(mobileNumber, selectedProposal) {
  * @param proposalId, the DonorsChoose proposal ID 
  *
  */
-DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObject, proposalId) {
-  var donorPhone = donorInfoObject.donorPhoneNumber;
-  logger.log('debug', 'DonorsChoose.submitDonation user:%s amount:%s info:%s proposal:%s', donorPhone, DONATION_AMOUNT, JSON.stringify(donorInfoObject), proposalId);
+function postDonation(member, project) {
+  var donorPhone = member.phone;
+  logger.log('debug', 'DonorsChoose.submitDonation user:%s proposalId:%s', 
+    donorPhone, project.id);
 
   requestToken().then(requestDonation,
-    promiseErrorCallback('DonorsChoose.submitDonation failed for user:' + donorPhone)
+    promiseErrorCallback('dc.submitDonation failed for user:' + donorPhone)
   );
 
   /**
@@ -291,28 +292,28 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
       'apipassword': donorsChooseApiPassword, 
       'action': 'token'
     }}
-    logger.log('debug', 'DonorsChoose.requestToken user:%s', donorPhone);
+    logger.log('debug', 'DonorsChoose.requestToken POST user:%s', donorPhone);
     requestHttp.post(DONATE_API_URL, retrieveTokenParams, function(err, response, body) {
       if (!err) {
         try {
           var jsonBody = JSON.parse(body);
-          if (jsonBody.statusDescription == 'success') {
+          if (jsonBody.statusDescription === 'success') {
             logger.log('debug', 'DonorsChoose.requestToken success user:%s', donorPhone);
             deferred.resolve(JSON.parse(body).token);
           }
           else {
             logger.error('DonorsChoose.requestToken statusDescription!=success user:%s', donorPhone);
-            mobilecommons.profile_update(donorPhone, donorsChooseConfig.oip_error);
+            respondWithGenericFail(member);
           }
         }
         catch (e) {
           logger.error('DonorsChoose.requestToken failed user:'  + donorPhone + ' error:' + JSON.stringify(error));
-          mobilecommons.profile_update(donorPhone, donorsChooseConfig.oip_error);
+          respondWithGenericFail(member);
         }
       }
       else {
         deferred.reject('DonorsChoose.requestToken error user: ' + donorPhone + 'error: ' + JSON.stringify(err));
-        mobilecommons.profile_update(donorPhone, donorsChooseConfig.oip_error);
+        respondWithGenericFail(member);
       }
     });
     return deferred.promise;
@@ -322,46 +323,47 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
    * After promise we make the second request: donation transaction.
    */
   function requestDonation(tokenData) {
-    var donateParams = {'form': {
+    logger.log('debug', 'dc.requestDonation POST user:%s proposalId:%s email:%s first:%s', 
+      donorPhone, project.id, member.profile_email, member.profile_first_name);
+    var donateFormParams = {'form': {
       'APIKey': donorsChooseApiKey,
       'apipassword': donorsChooseApiPassword, 
       'action': 'donate',
       'token': tokenData,
-      'proposalId': proposalId,
+      'proposalId': project.id,
       'amount': DONATION_AMOUNT,
       'email': defaultDonorsChooseTransactionEmail,
-      'honoreeEmail': donorInfoObject.donorEmail,
-      'honoreeFirst': donorInfoObject.donorFirstName,
+      'honoreeEmail': member.profile_email,
+      'honoreeFirst': member.profile_first_name,
     }};
-
-    logger.log('debug', 'DonorsChoose.requestDonation POST user:' + donorInfoObject.donorPhoneNumber + ' proposalId:' + proposalId + ' amount:' + DONATION_AMOUNT + ' honoreeEmail:%s honoreeFirst:%s', donorInfoObject.donorEmail, donorInfoObject.donorFirstName);
-    requestHttp.post(DONATE_API_URL, donateParams, function(err, response, body) {
+    requestHttp.post(DONATE_API_URL, donateFormParams, function(err, response, body) {
       if (err) {
-        logger.error('DonorsChoose.requestDonation requestHttp error user:' + donorInfoObject.donorPhoneNumber + 'error: ' + err);
-        mobilecommons.profile_update(donorPhone,  donorsChooseConfig.oip_error);
+        logger.error('dc.requestDonation POST user:%s error:%s',
+          member.phone, error);
+        respondWithGenericFail(member);
       }
       else if (response && response.statusCode != 200) {
-        logger.error('DonorsChoose.requestDonation response.statusCode:%s for user:%s', response.statusCode, donorInfoObject.donorPhoneNumber);
-        mobilecommons.profile_update(donorPhone, donorsChooseConfig.oip_error);
+        logger.error('dc.requestDonation response.statusCode:%s for user:%s', 
+          response.statusCode, member.phone); 
       }
       else {
         try {
           var jsonBody = JSON.parse(body);
-          if (jsonBody.statusDescription == 'success') {
-            logger.info('DonorsChoose.requestDonation success user:' + donorPhone + ' proposalId:' + proposalId + ' body:', jsonBody);
-            sendSuccessMessages(donorPhone, jsonBody.proposalURL);
+          if (jsonBody.statusDescription === 'success') {
+            logger.info('dc.requestDonation success user:' + donorPhone + ' proposalId:' + project.id + ' body:', jsonBody);
+            sendSuccessMessages(member, project);
+            return;
           }
           else {
-            logger.error('DonorsChoose.requestDonation failed user:' + donorPhone + ' proposalId:' + proposalId + ' body:', jsonBody);
-            mobilecommons.profile_update(donorPhone, donorsChooseConfig.oip_error);
+            logger.error('dc.requestDonation failed user:' + donorPhone + ' proposalId:' + project.id + ' body:', jsonBody);
           }
         }
         catch (e) {
-          logger.error('DonorsChoose.requestDonation catch exception for user:%s e:%s', donorPhone, e.message);
-          mobilecommons.profile_update(donorPhone, donorsChooseConfig.oip_error);
+          logger.error('dc.requestDonation catch exception for user:%s e:%s', donorPhone, e.message);
         }
       }
-    })
+      respondWithGenericFail(member);
+    });
   }
 };
 
