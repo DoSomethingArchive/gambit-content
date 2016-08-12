@@ -4,31 +4,28 @@
  */
 var mongoose = require('mongoose');
 
-var donorschooseConfigSchema = new mongoose.Schema({
+var schema = new mongoose.Schema({
 
-  // Reassigning the _id value. 
-  _id : Number,
+  // Corresponds to Mobile Commons Campaign ID used for Donation conversation.
+  // v1 Used numeric convetion 101 for 2014 SS, 201 for 2015 SS.
+  _id: Number,
 
-  // Contextual information about the donorschoose donation flow. 
+  // Contextual information about Campaign, used for Compose admin readability. 
   __comments: String,
 
-  start_donation_flow: Number,
+  // Chatbot config:
+  msg_ask_email: String,
+  msg_ask_first_name: String,
+  msg_ask_zip: String,
+  msg_donation_success: String,
+  msg_error_generic: String,
+  msg_invalid_zip: String,
+  msg_project_link: String,
+  oip_chat: Number,
+  oip_end_chat: Number
 
-  ask_email: Number,
-
-  donation_complete_project_info_A: Number,
-
-  donation_complete_project_info_B: Number,
-
-  donation_complete_give_url: Number,
-
-  max_donations_reached_oip: Number,
-
-  error_start_again: Number,
-
-  max_donations_allowed: Number
-})
+});
 
 module.exports = function(connection) {
-  return connection.model(app.ConfigName.DONORSCHOOSE, donorschooseConfigSchema, 'donorschoose'); // Third param explicitly setting the name of the collection. 
-}
+  return connection.model(app.ConfigName.DONORSCHOOSE, schema, 'donorschoose');
+};

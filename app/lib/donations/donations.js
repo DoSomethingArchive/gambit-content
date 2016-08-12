@@ -10,7 +10,7 @@ var DonorsChoose = require('./controllers/DonorsChooseDonationController');
 router.post('/donors-choose/', function(request, response) {
   var controller = new DonorsChoose();
   if (controller) {
-    controller.chat(request, response);
+    controller.chatbot(request, response);
   }
   else {
     response.status(404).send('Request not available for: ' + request.params.controller);
