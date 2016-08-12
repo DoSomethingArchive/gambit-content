@@ -37,7 +37,8 @@ var connectionOperations = rootRequire('app/config/connectionOperations');
 var donationModel = require('../models/DonationInfo')(connectionOperations);
 
 function DonorsChooseDonationController() {
-  this.dcConfig = app.getConfig(app.ConfigName.DONORSCHOOSE, 146943); 
+  var mocoCampaignId = process.env.DONORSCHOOSE_MOCO_CAMPAIGN_ID;
+  this.dcConfig = app.getConfig(app.ConfigName.DONORSCHOOSE, mocoCampaignId); 
 };
 
 /**
@@ -69,6 +70,8 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
   var member = request.body;
   logger.log('verbose', 'dc.chat member:', member);
   response.send();
+
+  // @todo Add sanity check to make sure this.dcConfig exists
 
   var firstWord = null;
   if (request.body.args) {
