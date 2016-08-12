@@ -246,7 +246,7 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
   logger.log('debug', 'dc.submitDonation user:%s proposalId:%s', 
     donorPhone, project.id);
 
-  requestToken().then(requestDonation,
+  requestToken().then(postDonation,
     promiseErrorCallback('dc.submitDonation failed for user:' + donorPhone)
   );
 
@@ -291,8 +291,8 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
   /**
    * After promise we make the second request: donation transaction.
    */
-  function requestDonation(tokenData) {
-    logger.log('debug', 'dc.requestDonation POST user:%s proposalId:%s email:%s first:%s', 
+  function postDonation(tokenData) {
+    logger.log('debug', 'dc.postDonation POST user:%s proposalId:%s email:%s first:%s', 
       donorPhone, project.id, member.profile_email, member.profile_first_name);
     var donateFormParams = {'form': {
       'APIKey': donorsChooseApiKey,
@@ -307,28 +307,34 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
     }};
     requestHttp.post(DONATE_API_URL, donateFormParams, function(err, response, body) {
       if (err) {
-        logger.error('dc.requestDonation POST user:%s error:%s',
+        logger.error('dc.postDonation POST user:%s error:%s',
           member.phone, error);
         self.endChatWithFail(member);
       }
       else if (response && response.statusCode != 200) {
-        logger.error('dc.requestDonation response.statusCode:%s for user:%s', 
+        logger.error('dc.postDonation response.statusCode:%s for user:%s', 
           response.statusCode, member.phone); 
       }
       else {
         try {
           var jsonBody = JSON.parse(body);
           if (jsonBody.statusDescription === 'success') {
-            logger.info('dc.requestDonation success user:' + donorPhone + ' proposalId:' + project.id + ' body:', jsonBody);
+            var logMsg = 'dc.postDonation POST success user:' + donorPhone;
+            logMsg += ' proposalId:' + project.id;
+            logMsg += ' donationId:' + jsonBody.donationId;
+            logger.info(logMsg);
             self.respondWithSuccess(member, project);
             return;
           }
           else {
-            logger.error('dc.requestDonation failed user:' + donorPhone + ' proposalId:' + project.id + ' body:', jsonBody);
+            var logMsg = 'dc.postDonation POST failed user:' + donorPhone;
+            logMsg += ' proposalId:' + project.id;
+            logMsg += ' statusDescription:' + jsonBody.statusDescription;
+            logger.error(logMsg);
           }
         }
         catch (e) {
-          logger.error('dc.requestDonation catch exception for user:%s e:%s', donorPhone, e.message);
+          logger.error('dc.postDonation catch exception for user:%s e:%s', donorPhone, e.message);
         }
       }
       self.endChatWithFail(member);
