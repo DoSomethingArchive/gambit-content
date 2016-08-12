@@ -67,6 +67,7 @@ DonorsChooseDonationController.prototype.endChatWithFail = function(member) {
 }
 
 DonorsChooseDonationController.prototype.chatbot = function(request, response) {
+  var self = this;
   var member = request.body;
   logger.log('verbose', 'dc.chat member:', member);
   response.send();
@@ -86,41 +87,42 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
 
   if (!member.profile_postal_code) {
     if (!firstWord) {
-      this.chat(member, this.dcConfig.msg_ask_zip);
+      self.chat(member, self.dcConfig.msg_ask_zip);
       return;
     }
     if (!stringValidator.isValidZip(firstWord)) {
-      this.chat(member, this.dcConfig.msg_invalid_zip);
+      self.chat(member, self.dcConfig.msg_invalid_zip);
       return;
     }
-    this.chat(member, this.dcConfig.msg_ask_first_name, {postal_code: firstWord});
+    self.chat(member, self.dcConfig.msg_ask_first_name, {postal_code: firstWord});
     return;
   }
 
   if (!member.profile_first_name) {
     if (!firstWord) {
-      this.chat(member, this.dcConfig.msg_ask_first_name);
+      self.chat(member, self.dcConfig.msg_ask_first_name);
       return;
     }
     if (stringValidator.containsNaughtyWords(firstWord)) {
-      this.chat(member, "Pls don't use that tone with me. " + this.dcConfig.msg_ask_first_name);
+      self.chat(member, "Pls don't use that tone with me. " + self.dcConfig.msg_ask_first_name);
       return;
     }
-    this.chat(member, this.dcConfig.msg_ask_email, {first_name: firstWord});
+    self.chat(member, self.dcConfig.msg_ask_email, {first_name: firstWord});
     return;
   }
 
-  if (!member.profile_email_address) {
+  if (!member.profile_email) {
     if (!firstWord) {
-      this.chat(member, this.dcConfig.msg_ask_email);
+      self.chat(member, self.dcConfig.msg_ask_email);
       return;
     }
     if (!stringValidator.isValidEmail(firstWord)) {
-      this.chat(member, "Whoops, that's not a valid email address. " + this.dcConfig.msg_ask_email);
+      self.chat(member, "Whoops, that's not a valid email address. " + self.dcConfig.msg_ask_email);
       return;
     }
     // @todo Does this ever get called?
-    this.chat(member, "Looking for a project by you, just a moment...", {email_address: firstWord});
+    self.chat(member, "Looking for a project by you, just a moment...",
+      {email_address: firstWord});
 
     setTimeout(function() {
       findProjectAndRespond(member);
@@ -128,7 +130,7 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
     return;
   }
 
-  this.findProjectAndRespond(member);
+  self.findProjectAndRespond(member);
 };
 
 /**
@@ -139,6 +141,9 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
  *
  */
 DonorsChooseDonationController.prototype.findProjectAndRespond = function(member) {
+  var self = this;
+  logger.log('debug', 'dc.findProjectAndRespond user:%s zip:%s', member.phone,
+    member.profile_postal_code);
   var mobileNumber = member.phone;
   var zip = member.profile_postal_code;
   var requestUrlString = donorsChooseProposalsQueryBaseURL;
@@ -152,8 +157,8 @@ DonorsChooseDonationController.prototype.findProjectAndRespond = function(member
 
   requestHttp.get(requestUrlString, function(error, response, data) {
     if (error) {
-      this.endChatWithFail(member);
       logger.error('dc.findProject user:%s error:%s', mobileNumber, error);
+      self.endChatWithFail(member);
       return;
     }
 
@@ -162,16 +167,16 @@ DonorsChooseDonationController.prototype.findProjectAndRespond = function(member
       if (!dcResponse.proposals || dcResponse.proposals.length == 0) {
         // If no proposals, could potentially prompt user to try different zip.
         // For now, send back error message per existing functionality.
-        this.endChat(member, "Hmm, no projects found. Try again later.");
+        self.endChat(member, "Hmm, no projects found. Try again later.");
         logger.error('dc.findProject no results for zip:%s user:%s', zip, 
           mobileNumber);
         return;
       }
       var project = decodeDonorsChooseProposal(dcResponse.proposals[0]);
-      this.postDonation(member, project);
+      self.postDonation(member, project);
     }
     catch (e) {
-      this.endChatWithFail(member);
+      self.endChatWithFail(member);
       logger.error('ds.findProject user:%s error:%s', mobileNumber, e); 
       return;
     }
@@ -236,6 +241,7 @@ function createDonationDoc(mobileNumber, selectedProposal) {
  *
  */
 DonorsChooseDonationController.prototype.postDonation = function(member, project) {
+  var self = this;
   var donorPhone = member.phone;
   logger.log('debug', 'dc.submitDonation user:%s proposalId:%s', 
     donorPhone, project.id);
@@ -266,17 +272,17 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
           }
           else {
             logger.error('dc.requestToken statusDescription!=success user:%s', donorPhone);
-            this.endChatWithFail(member);
+            self.endChatWithFail(member);
           }
         }
         catch (e) {
           logger.error('dc.requestToken failed user:'  + donorPhone + ' error:' + JSON.stringify(error));
-          this.endChatWithFail(member);
+          self.endChatWithFail(member);
         }
       }
       else {
         deferred.reject('dc.requestToken error user: ' + donorPhone + 'error: ' + JSON.stringify(err));
-        this.endChatWithFail(member);
+        self.endChatWithFail(member);
       }
     });
     return deferred.promise;
@@ -303,7 +309,7 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
       if (err) {
         logger.error('dc.requestDonation POST user:%s error:%s',
           member.phone, error);
-        this.endChatWithFail(member);
+        self.endChatWithFail(member);
       }
       else if (response && response.statusCode != 200) {
         logger.error('dc.requestDonation response.statusCode:%s for user:%s', 
@@ -314,7 +320,7 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
           var jsonBody = JSON.parse(body);
           if (jsonBody.statusDescription === 'success') {
             logger.info('dc.requestDonation success user:' + donorPhone + ' proposalId:' + project.id + ' body:', jsonBody);
-            this.respondWithSuccess(member, project);
+            self.respondWithSuccess(member, project);
             return;
           }
           else {
@@ -325,7 +331,7 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
           logger.error('dc.requestDonation catch exception for user:%s e:%s', donorPhone, e.message);
         }
       }
-      this.endChatWithFail(member);
+      self.endChatWithFail(member);
     });
   }
 };
@@ -337,6 +343,7 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
  *   Decoded DonorsChoose proposal object.
  */
 DonorsChooseDonationController.prototype.respondWithSuccess = function(member, project) {
+  var self = this;
   logger.log('debug', 'dc.respondWithSuccess user:%s project%s', 
     member.phone, project);
 
@@ -344,20 +351,20 @@ DonorsChooseDonationController.prototype.respondWithSuccess = function(member, p
   var customFields = {};
   customFields[DONATION_COUNT_FIELDNAME] = donationCount + 1;
 
-  var firstMessage = this.dcConfig.msg_donation_success + project.schoolName + ".";
-  this.endChat(member, firstMessage);
+  var firstMessage = self.dcConfig.msg_donation_success + project.schoolName + ".";
+  self.endChat(member, firstMessage);
 
   setTimeout(function() {
     var secondMessage = '@' + project.teacherName + ': Thx! ' + project.description;
-    this.endChat(member, secondMessage);
+    self.endChat(member, secondMessage);
   }, END_MESSAGE_DELAY);
 
   setTimeout(function() {
     shortenLink(project.url, function(shortenedLink) {
       logger.log('debug', 'dc.sendSuccessMessages user:%s shortenedLink:%s', 
         member.phone, shortenedLink);
-      var thirdMessage = this.dcConfig.msg_project_link + shortenedLink;
-      this.endChat(member, thirdMessage, customFields);
+      var thirdMessage = self.dcConfig.msg_project_link + shortenedLink;
+      self.endChat(member, thirdMessage, customFields);
     });
   }, 2 * END_MESSAGE_DELAY);
 }
@@ -392,7 +399,7 @@ function promiseErrorCallback(message, member) {
 function onPromiseErrorCallback(err) {
   if (err) {
     logger.error(this.message + '\n', err.stack);
-    this.endChatWithFail(this.member);
+//    this.endChatWithFail(this.member);
   }
 }
 
