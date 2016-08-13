@@ -34,7 +34,7 @@ var Q = require('q')
   ;
 
 var connectionOperations = rootRequire('app/config/connectionOperations');
-var donationModel = require('../models/DonationInfo')(connectionOperations);
+var donationModel = require('../models/donorsChooseDonationModel')(connectionOperations);
 
 function DonorsChooseDonationController() {
   var mocoCampaignId = process.env.DONORSCHOOSE_MOCO_CAMPAIGN_ID;
@@ -186,49 +186,14 @@ DonorsChooseDonationController.prototype.findProjectAndRespond = function(member
 function decodeDonorsChooseProposal(proposal) {
   var entities = new Entities();
   return {
-    id:proposal.id,
-    description:  entities.decode(proposal.fulfillmentTrailer),
-    location: entities.decode(proposal.city) + ', ' + entities.decode(proposal.state),
+    id: proposal.id,
+    description: entities.decode(proposal.fulfillmentTrailer),
+    city: entities.decode(proposal.city),
+    state: entities.decode(proposal.state),
     schoolName: entities.decode(proposal.schoolName),
     teacherName: entities.decode(proposal.teacherName),
-    url:proposal.proposalURL
+    url: proposal.proposalURL
   };
-}
-
-/**
- * Creates a donation_infos document for given mobileNumber and DonorsChoose project.
- * Opts user into next step in conversation upon success.
- */
-function createDonationDoc(mobileNumber, selectedProposal) {
-  var entities = new Entities(); // Calling 'html-entities' module to decode escaped characters.
-  var location = entities.decode(selectedProposal.city) + ', ' + entities.decode(selectedProposal.state)
-
-  // Email and first_name can be overwritten later. Included in case of error, transaction can still be completed. 
-  var currentDonationInfo = {
-    mobile: mobileNumber,
-    email: 'donorschoose@dosomething.org', 
-    first_name: 'Anonymous',
-    location: location,
-    project_id: selectedProposal.id,
-    project_url: selectedProposal.proposalURL,
-    donation_complete: false
-  }
-
-  // .profile_update call placed within the donationModel.create() callback to 
-  // ensure that the ORIGINAL DOCUMENT IS CREATED before the user texts back 
-  // their email address and attempts to find the document to be updated. 
-  donationModel.create(currentDonationInfo).then(function(doc) {
-    logger.log('debug', 'dc.findProject created donation_infos document:%s for user:%s', JSON.stringify(doc), mobileNumber);
-    var customFields = {
-      SS_fulfillment_trailer:   entities.decode(selectedProposal.fulfillmentTrailer), 
-      SS_teacher_name :         entities.decode(selectedProposal.teacherName), 
-      SS_school_name :          entities.decode(selectedProposal.schoolName),
-      SS_proj_location:         location
-    };
-    // @todo: Nice to have, shouldn't have to prompt for first name if already stored to profile.
-    // @see https://github.com/DoSomething/gambit/issues/552 
-    mobilecommons.profile_update(mobileNumber, donorsChooseConfig.oip_ask_first_name, customFields);
-  }, promiseErrorCallback('dc.findProject unable to create donation_infos document for user: ' + mobileNumber));
 }
 
 /**
@@ -323,6 +288,8 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
             logMsg += ' proposalId:' + project.id;
             logMsg += ' donationId:' + jsonBody.donationId;
             logger.info(logMsg);
+            logger.log('debug', jsonBody);
+            createDonationDoc(jsonBody);
             self.respondWithSuccess(member, project);
             return;
           }
@@ -339,6 +306,25 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
       }
       self.endChatWithFail(member);
     });
+
+    function createDonationDoc(donation) {
+      var donationLogData = {
+        mobile: member.phone,
+        email: member.profile_email,
+        first_name: member.profile_first_name,
+        postal_code: member.profile_postal_code,
+        proposal_id: project.id,
+        donation_id: donation.donationId,
+        donation_amount: DONATION_AMOUNT,
+        remaining_amount: donation.remainingProposalAmount,
+        city: project.city,
+        state: project.state,
+        url: project.url
+      };
+      donationModel.create(donationLogData).then(function(doc) {
+        logger.log('debug', 'dc.createDonationDoc success:%s', donation);
+      }, promiseErrorCallback('dc.createDonationDoc user: ' + member.phone));
+    };
   }
 };
 
