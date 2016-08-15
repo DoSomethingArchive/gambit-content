@@ -18,8 +18,9 @@ var schema = new mongoose.Schema({
   proposal_id: Number,
   donation_amount: Number,
   remaining_amount: Number,
-  city: String,
-  state: String,
+  school_name: String,
+  school_city: String,
+  school_state: String,
   url: String
 
 })

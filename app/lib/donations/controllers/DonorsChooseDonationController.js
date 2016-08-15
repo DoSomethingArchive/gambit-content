@@ -155,15 +155,15 @@ DonorsChooseDonationController.prototype.findProjectAndRespond = function(member
   logger.log('debug', 'dc.findProject request:%s', requestUrlString);
   requestUrlString += '&APIKey=' + donorsChooseApiKey;
 
-  requestHttp.get(requestUrlString, function(error, response, data) {
+  requestHttp.get(requestUrlString, function(error, response, body) {
     if (error) {
-      logger.error('dc.findProject user:%s error:%s', mobileNumber, error);
+      logger.error('dc.findProject user:%s get error:%s', mobileNumber, error);
       self.endChatWithFail(member);
       return;
     }
 
     try {
-      var dcResponse = JSON.parse(data);
+      var dcResponse = JSON.parse(body);
       if (!dcResponse.proposals || dcResponse.proposals.length == 0) {
         // If no proposals, could potentially prompt user to try different zip.
         // For now, send back error message per existing functionality.
@@ -172,12 +172,18 @@ DonorsChooseDonationController.prototype.findProjectAndRespond = function(member
           mobileNumber);
         return;
       }
+      // When DC API is down, it sends html as response.
+      else if (typeof dcResponse !== 'object') {
+        self.endChatWithFail;
+        logger.error('dc.findProject user%s invalid JSON.', mobileNumber);
+        return;
+      }
       var project = decodeDonorsChooseProposal(dcResponse.proposals[0]);
       self.postDonation(member, project);
     }
     catch (e) {
       self.endChatWithFail(member);
-      logger.error('ds.findProject user:%s error:%s', mobileNumber, e); 
+      logger.error('ds.findProject user:%s e:%s', mobileNumber, e); 
       return;
     }
   });
@@ -317,8 +323,9 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
         donation_id: donation.donationId,
         donation_amount: DONATION_AMOUNT,
         remaining_amount: donation.remainingProposalAmount,
-        city: project.city,
-        state: project.state,
+        school_name: project.schoolName,
+        school_city: project.city,
+        school_state: project.state,
         url: project.url
       };
       donationModel.create(donationLogData).then(function(doc) {
