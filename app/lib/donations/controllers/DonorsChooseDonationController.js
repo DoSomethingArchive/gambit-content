@@ -175,7 +175,7 @@ DonorsChooseDonationController.prototype.findProjectAndRespond = function(member
       // When DC API is down, it sends html as response.
       else if (typeof dcResponse !== 'object') {
         self.endChatWithFail;
-        logger.error('dc.findProject user%s invalid JSON.', mobileNumber);
+        logger.error('dc.findProject user:%s invalid JSON.', mobileNumber);
         return;
       }
       var project = decodeDonorsChooseProposal(dcResponse.proposals[0]);
@@ -236,18 +236,25 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
     requestHttp.post(DONATE_API_URL, retrieveTokenParams, function(err, response, body) {
       if (!err) {
         try {
+          logger.log('verbose', 'dc.requestToken POST body:%s', body);
+          // Handles when we get 403/Forbidden but steps in when sufficient funds.
+          // if (typeof body !== 'object') {
+          //   self.endChatWithFail(member);
+          //   logger.error('dc.requestToken user:%s invalid body:%s', donorPhone, body);
+          //   return;
+          // }
           var jsonBody = JSON.parse(body);
           if (jsonBody.statusDescription === 'success') {
             logger.log('debug', 'dc.requestToken success user:%s', donorPhone);
             deferred.resolve(JSON.parse(body).token);
           }
           else {
-            logger.error('dc.requestToken statusDescription!=success user:%s', donorPhone);
+            logger.error('dc.requestToken failed user:%s body:%s', donorPhone, jsonBody);
             self.endChatWithFail(member);
           }
         }
         catch (e) {
-          logger.error('dc.requestToken failed user:'  + donorPhone + ' error:' + JSON.stringify(error));
+          logger.error('dc.requestToken failed user:'  + donorPhone + ' error:' + JSON.stringify(e));
           self.endChatWithFail(member);
         }
       }
@@ -302,7 +309,7 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
           else {
             var logMsg = 'dc.postDonation POST failed user:' + donorPhone;
             logMsg += ' proposalId:' + project.id;
-            logMsg += ' statusDescription:' + jsonBody.statusDescription;
+            logMsg += ' body:' + JSON.stringify(jsonBody);
             logger.error(logMsg);
           }
         }
