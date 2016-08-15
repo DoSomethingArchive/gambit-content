@@ -1,10 +1,8 @@
+require ('newrelic');
+
 // Wrapper around require to set relative path at app root
 global.rootRequire = function(name) {
   return require(__dirname + '/' + name);
-}
-
-if (process.env.NODE_ENV == 'production' || process.env.NEW_RELIC_ENABLED) {
-  require ('newrelic');
 }
 
 var express = require('express')
