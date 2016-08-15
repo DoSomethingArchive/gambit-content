@@ -20,6 +20,7 @@ var DONATION_AMOUNT = (process.env.DONORSCHOOSE_DONATION_AMOUNT || 10);
 var COST_TO_COMPLETE_UPPER_LIMIT = 10000
 var DONATE_API_URL = donorsChooseDonationsHost + 'common/json_api.html?APIKey=' + donorsChooseApiKey;
 var END_MESSAGE_DELAY = 2500;
+var MAX_DONATIONS_ALLOWED = (process.env.DONORSCHOOSE_MAX_DONATIONS_ALLOWED || 5);
 
 // Name of MoCo Custom Field used to store member's number of donations.
 var DONATION_COUNT_FIELDNAME = 'ss2016_donation_count';
@@ -81,10 +82,12 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
   }
   logger.log('debug', 'dc.chat user:%s firstWord:%s', member.phone, firstWord);
 
-  // @todo Could add sanity check in code that member donation count is not max.
-  // Planning to rely on Liquid logic within Start OIP conversation.
-
-  // @todo Liquid in Start OIP will need to match sequence we check here
+  if (getDonationCount(member) >= MAX_DONATIONS_ALLOWED) {
+    logger.log('debug', 'dc.chat msg_max_donations_reached user:%s', 
+      member.phone);
+    self.endChat(member, self.dcConfig.msg_max_donations_reached);
+    return;
+  }
 
   if (!member.profile_postal_code) {
     if (!firstWord) {
@@ -359,7 +362,7 @@ DonorsChooseDonationController.prototype.respondWithSuccess = function(member, p
   logger.log('debug', 'dc.respondWithSuccess user:%s project%s', 
     member.phone, project);
 
-  var donationCount = parseInt(member['profile_' + DONATION_COUNT_FIELDNAME]);
+  var donationCount = getDonationCount(member);
   var customFields = {};
   customFields[DONATION_COUNT_FIELDNAME] = donationCount + 1;
 
@@ -399,6 +402,16 @@ function sendSMS(member, optInPath, messageText, customFields) {
     customFields.slothbot_response = messageText;
   }
   mobilecommons.profile_update(mobileNumber, optInPath, customFields);
+}
+
+/**
+ * Returns the number of times member has donated to current Donation campaign.
+ *
+ * @param {object} member 
+ * @return {number}
+ */
+function getDonationCount(member) {
+  return parseInt(member['profile_' + DONATION_COUNT_FIELDNAME]);
 }
 
 /**
