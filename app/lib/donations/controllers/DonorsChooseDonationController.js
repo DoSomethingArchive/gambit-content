@@ -4,21 +4,22 @@
  * Submits a donation to DonorsChoose.org on behalf of a MoCo member.
  * Currently only used for Science Sleuth.
  */
-var donorsChooseApiKey = (process.env.DONORSCHOOSE_API_KEY || 'DONORSCHOOSE')
-  , donorsChooseApiPassword = (process.env.DONORSCHOOSE_API_PASSWORD || 'helpClassrooms!')
-  , donorsChooseDonationBaseURL = 'https://apisecure.donorschoose.org/common/json_api.html?'
-  , donorsChooseProposalsQueryBaseURL = 'https://api.donorschoose.org/common/json_feed.html'
-  , defaultDonorsChooseTransactionEmail = (process.env.DONORSCHOOSE_DEFAULT_EMAIL || 'donorschoose@dosomething.org');
+var donorsChooseApiKey = (process.env.DONORSCHOOSE_API_KEY || null);
+var donorsChooseApiPassword = (process.env.DONORSCHOOSE_API_PASSWORD || null);
+var donorsChooseProposalsHost = 'https://api.donorschoose.org/';
+var donorsChooseDonationsHost = 'https://apisecure.donorschoose.org/';
 
 if (process.env.NODE_ENV != 'production') {
-  donorsChooseProposalsQueryBaseURL = 'https://qa.donorschoose.org/common/json_feed.html';
-  donorsChooseDonationBaseURL = 'https://apiqasecure.donorschoose.org/common/json_api.html';
+  donorsChooseApiKey = 'DONORSCHOOSE';
+  donorsChooseApiPassword = 'helpClassrooms!';
+  donorsChooseProposalsHost = 'https://qa.donorschoose.org/';
+  donorsChooseDonationsHost = 'https://apiqasecure.donorschoose.org/';
 }
 
-var DONATION_AMOUNT = (process.env.DONORSCHOOSE_DONATION_AMOUNT || 10)
-  , COST_TO_COMPLETE_UPPER_LIMIT = 10000
-  , DONATE_API_URL = donorsChooseDonationBaseURL + '?APIKey=' + donorsChooseApiKey
-  , END_MESSAGE_DELAY = 2500;
+var DONATION_AMOUNT = (process.env.DONORSCHOOSE_DONATION_AMOUNT || 10);
+var COST_TO_COMPLETE_UPPER_LIMIT = 10000
+var DONATE_API_URL = donorsChooseDonationsHost + 'common/json_api.html?APIKey=' + donorsChooseApiKey;
+var END_MESSAGE_DELAY = 2500;
 
 // Name of MoCo Custom Field used to store member's number of donations.
 var DONATION_COUNT_FIELDNAME = 'ss2016_donation_count';
@@ -142,17 +143,20 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
  */
 DonorsChooseDonationController.prototype.findProjectAndRespond = function(member) {
   var self = this;
+
   logger.log('debug', 'dc.findProjectAndRespond user:%s zip:%s', member.phone,
     member.profile_postal_code);
   var mobileNumber = member.phone;
   var zip = member.profile_postal_code;
-  var requestUrlString = donorsChooseProposalsQueryBaseURL;
+
+  var requestUrlString = donorsChooseProposalsHost + 'common/json_feed.html';
   requestUrlString += '?subject4=-4'; 
   requestUrlString += '&sortBy=2'; 
   requestUrlString += '&costToCompleteRange=' + DONATION_AMOUNT + '+TO+' + COST_TO_COMPLETE_UPPER_LIMIT; 
   requestUrlString += '&max=1';
   requestUrlString += '&zip=' + zip;
-  logger.log('debug', 'dc.findProject request:%s', requestUrlString);
+  logger.log('debug', 'dc.findProject user:%s request:%s', member.phone, 
+    requestUrlString);
   requestUrlString += '&APIKey=' + donorsChooseApiKey;
 
   requestHttp.get(requestUrlString, function(error, response, body) {
@@ -232,16 +236,17 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
       'apipassword': donorsChooseApiPassword, 
       'action': 'token'
     }}
-    logger.log('debug', 'dc.requestToken POST user:%s', donorPhone);
+    logger.log('debug', 'dc.requestToken POST %s user:%s', DONATE_API_URL, donorPhone);
     requestHttp.post(DONATE_API_URL, retrieveTokenParams, function(err, response, body) {
       if (!err) {
         try {
-          logger.log('verbose', 'dc.requestToken POST body:%s', body);
+          logger.log('verbose', 'dc.requestToken POST user:%s body:%s', 
+            donorPhone, body);
           // Handles when we get 403/Forbidden but steps in when sufficient funds.
           // if (typeof body !== 'object') {
           //   self.endChatWithFail(member);
           //   logger.error('dc.requestToken user:%s invalid body:%s', donorPhone, body);
-          //   return;
+          //   return deferred.promise;
           // }
           var jsonBody = JSON.parse(body);
           if (jsonBody.statusDescription === 'success') {
@@ -272,6 +277,7 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
   function postDonation(tokenData) {
     logger.log('debug', 'dc.postDonation POST user:%s proposalId:%s email:%s first:%s', 
       donorPhone, project.id, member.profile_email, member.profile_first_name);
+    var email = (process.env.DONORSCHOOSE_DEFAULT_EMAIL || 'donorschoose@dosomething.org');
     var donateFormParams = {'form': {
       'APIKey': donorsChooseApiKey,
       'apipassword': donorsChooseApiPassword, 
@@ -279,7 +285,7 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
       'token': tokenData,
       'proposalId': project.id,
       'amount': DONATION_AMOUNT,
-      'email': defaultDonorsChooseTransactionEmail,
+      'email': email,
       'honoreeEmail': member.profile_email,
       'honoreeFirst': member.profile_first_name,
     }};
