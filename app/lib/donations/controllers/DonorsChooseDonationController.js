@@ -170,10 +170,7 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
  */
 DonorsChooseDonationController.prototype.findProjectAndRespond = function(member, customFields) {
   var self = this;
-
-  var msgTxt = '@slothbot: Looking for a classroom by your zip ('; 
-  msgTxt += member.profile_postal_code + ') - one moment pls...';
-  self.endChat(member, msgTxt, customFields);
+  self.endChat(member, this.dcConfig.msg_searching_by_zip, customFields);
 
   logger.log('debug', 'dc.findProjectAndRespond user:%s zip:%s', member.phone,
     member.profile_postal_code);
@@ -420,15 +417,17 @@ DonorsChooseDonationController.prototype.respondWithSuccess = function(member, p
  * @param {string} messageText
  * @param {object|null} customFields Key/values to store as MoCo Custom Fields.
  */
-function sendSMS(member, optInPath, messageText, customFields) {
+function sendSMS(member, optInPath, msgTxt, customFields) {
   var mobileNumber = smsHelper.getNormalizedPhone(member.phone);
-  // Save as slothbot_response MoCo custom field to display in Liquid via MoCo.
+  var msgTxt = msgTxt.replace('{{postal_code}}', member.profile_postal_code);
+
   if (typeof customFields === 'undefined') {
-    customFields = {slothbot_response: messageText};
+    customFields = {slothbot_response: msgTxt};
   }
   else {
-    customFields.slothbot_response = messageText;
+    customFields.slothbot_response = msgTxt;
   }
+
   mobilecommons.profile_update(mobileNumber, optInPath, customFields);
 }
 
