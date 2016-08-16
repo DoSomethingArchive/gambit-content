@@ -22,6 +22,7 @@ var schema = new mongoose.Schema({
   msg_invalid_zip: String,
   msg_project_link: String,
   msg_max_donations_reached: String,
+  msg_searching_by_zip: String,
   oip_chat: Number,
   oip_end_chat: Number
 

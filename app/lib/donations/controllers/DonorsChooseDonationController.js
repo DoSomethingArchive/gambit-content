@@ -90,48 +90,54 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
   }
 
   if (!member.profile_postal_code) {
+
     if (!firstWord) {
       self.chat(member, self.dcConfig.msg_ask_zip);
       return;
     }
+
     if (!stringValidator.isValidZip(firstWord)) {
       self.chat(member, self.dcConfig.msg_invalid_zip);
       return;
     }
+
     self.chat(member, self.dcConfig.msg_ask_first_name, {postal_code: firstWord});
     return;
+
   }
 
   if (!member.profile_first_name) {
+
     if (!firstWord) {
       self.chat(member, self.dcConfig.msg_ask_first_name);
       return;
     }
+
     if (stringValidator.containsNaughtyWords(firstWord)) {
       self.chat(member, "Pls don't use that tone with me. " + self.dcConfig.msg_ask_first_name);
       return;
     }
+
     self.chat(member, self.dcConfig.msg_ask_email, {first_name: firstWord});
     return;
+
   }
 
   if (!member.profile_email) {
+
     if (!firstWord) {
       self.chat(member, self.dcConfig.msg_ask_email);
       return;
     }
+
     if (!stringValidator.isValidEmail(firstWord)) {
       self.chat(member, "Whoops, that's not a valid email address. " + self.dcConfig.msg_ask_email);
       return;
     }
-    // @todo Does this ever get called?
-    self.chat(member, "Looking for a project by you, just a moment...",
-      {email_address: firstWord});
 
-    setTimeout(function() {
-      findProjectAndRespond(member);
-    }, END_MESSAGE_DELAY);
+    self.findProjectAndRespond(member, {email: firstWord});
     return;
+
   }
 
   self.findProjectAndRespond(member);
@@ -144,8 +150,9 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
  * @see https://data.donorschoose.org/docs/project-listing/json-requests/
  *
  */
-DonorsChooseDonationController.prototype.findProjectAndRespond = function(member) {
+DonorsChooseDonationController.prototype.findProjectAndRespond = function(member, customFields) {
   var self = this;
+  self.endChat(member, this.dcConfig.msg_searching_by_zip, customFields);
 
   logger.log('debug', 'dc.findProjectAndRespond user:%s zip:%s', member.phone,
     member.profile_postal_code);
@@ -392,15 +399,17 @@ DonorsChooseDonationController.prototype.respondWithSuccess = function(member, p
  * @param {string} messageText
  * @param {object|null} customFields Key/values to store as MoCo Custom Fields.
  */
-function sendSMS(member, optInPath, messageText, customFields) {
+function sendSMS(member, optInPath, msgTxt, customFields) {
   var mobileNumber = smsHelper.getNormalizedPhone(member.phone);
-  // Save as slothbot_response MoCo custom field to display in Liquid via MoCo.
+  var msgTxt = msgTxt.replace('{{postal_code}}', member.profile_postal_code);
+
   if (typeof customFields === 'undefined') {
-    customFields = {slothbot_response: messageText};
+    customFields = {slothbot_response: msgTxt};
   }
   else {
-    customFields.slothbot_response = messageText;
+    customFields.slothbot_response = msgTxt;
   }
+
   mobilecommons.profile_update(mobileNumber, optInPath, customFields);
 }
 
