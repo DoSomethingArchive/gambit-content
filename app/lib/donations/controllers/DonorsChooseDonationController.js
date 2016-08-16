@@ -262,12 +262,9 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
         try {
           logger.log('verbose', 'dc.requestToken POST user:%s body:%s', 
             donorPhone, body);
-          // Handles when we get 403/Forbidden but steps in when sufficient funds.
-          // if (typeof body !== 'object') {
-          //   self.endChatWithFail(member);
-          //   logger.error('dc.requestToken user:%s invalid body:%s', donorPhone, body);
-          //   return deferred.promise;
-          // }
+          if (typeof body !== 'object') {
+            logger.error('dc.requestToken user:%s invalid JSON:%s', donorPhone, body);
+          }
           var jsonBody = JSON.parse(body);
           if (jsonBody.statusDescription === 'success') {
             logger.log('debug', 'dc.requestToken success user:%s', donorPhone);
