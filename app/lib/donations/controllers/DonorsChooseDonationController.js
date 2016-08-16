@@ -82,24 +82,6 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
   }
   logger.log('debug', 'dc.chat user:%s firstWord:%s', member.phone, firstWord);
 
-  if (process.env.DONORSCHOOSE_CLEANSLATE_ENABLED) {
-    if (firstWord === process.env.DONORSCHOOSE_CLEANSLATE_KEYWORD) {
-      logger.log('debug', 'dc.chat DONORSCHOOSE_CLEANSLATE_KEYWORD user:%s', 
-        member.phone);
-      // @todo: Email, first_name, and postal_code aren't resetting here.
-      var profileFields = {
-        email: null,
-        first_name: null,
-        postal_code: null,
-      };
-      // Resetting our count works.
-      profileFields[DONATION_COUNT_FIELDNAME] = 0;
-      var msgTxt = '@slothbot: Whoop! Your donation count has been reset.';
-      self.endChat(member, msgTxt, profileFields);
-      return;
-    }
-  }
-
   if (getDonationCount(member) >= MAX_DONATIONS_ALLOWED) {
     logger.log('debug', 'dc.chat msg_max_donations_reached user:%s', 
       member.phone);
