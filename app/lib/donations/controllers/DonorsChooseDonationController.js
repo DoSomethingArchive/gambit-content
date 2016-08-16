@@ -142,13 +142,15 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
       self.chat(member, "Whoops, that's not a valid email address. " + self.dcConfig.msg_ask_email);
       return;
     }
-    // @todo Does this ever get called?
-    self.chat(member, "Looking for a project by you, just a moment...",
-      {email_address: firstWord});
+
+    var msgTxt = '@slothbot: Looking for a classroom by your zip ('; 
+    msgTxt += member.profile_postal_code + ') - one moment pls...';
+    self.chat(member, msgTxt, {email_address: firstWord});
 
     setTimeout(function() {
-      findProjectAndRespond(member);
+      self.findProjectAndRespond(member);
     }, END_MESSAGE_DELAY);
+
     return;
   }
 
