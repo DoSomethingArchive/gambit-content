@@ -82,7 +82,7 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
   if (request.query.start) {
     logger.log('debug', 'dc.chat user:%s start', member.phone);
   }
-  // Otherwise inspect the text member has sent back.
+  // Otherwise inspect message that the member has sent back.
   else if (request.body.args) {
     firstWord = smsHelper.getFirstWord(request.body.args);
     logger.log('debug', 'dc.chat user:%s firstWord:%s', member.phone, firstWord);
@@ -92,7 +92,7 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
   }
 
   if (getDonationCount(member) >= MAX_DONATIONS_ALLOWED) {
-    logger.log('debug', 'dc.chat msg_max_donations_reached user:%s', 
+    logger.log('info', 'dc.chat msg_max_donations_reached user:%s', 
       member.phone);
     self.endChat(member, self.dcConfig.msg_max_donations_reached);
     return;
@@ -110,7 +110,8 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
       return;
     }
 
-    self.chat(member, self.dcConfig.msg_ask_first_name, {postal_code: firstWord});
+    self.chat(member, self.dcConfig.msg_ask_first_name,
+      {postal_code: firstWord});
     return;
 
   }
@@ -123,7 +124,7 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
     }
 
     if (stringValidator.containsNaughtyWords(firstWord)) {
-      self.chat(member, "Pls don't use that tone with me. " + self.dcConfig.msg_ask_first_name);
+      self.chat(member, self.dcConfig.msg_invalid_first_name);
       return;
     }
 
@@ -140,7 +141,7 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
     }
 
     if (!stringValidator.isValidEmail(firstWord)) {
-      self.chat(member, "Whoops, that's not a valid email address. " + self.dcConfig.msg_ask_email);
+      self.chat(member, self.dcConfig.msg_invalid_email);
       return;
     }
 
@@ -161,7 +162,7 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
  */
 DonorsChooseDonationController.prototype.findProjectAndRespond = function(member, customFields) {
   var self = this;
-  self.endChat(member, this.dcConfig.msg_searching_by_zip, customFields);
+  self.endChat(member, this.dcConfig.msg_search_start, customFields);
 
   logger.log('debug', 'dc.findProjectAndRespond user:%s zip:%s', member.phone,
     member.profile_postal_code);
@@ -190,7 +191,7 @@ DonorsChooseDonationController.prototype.findProjectAndRespond = function(member
       if (!dcResponse.proposals || dcResponse.proposals.length == 0) {
         // If no proposals, could potentially prompt user to try different zip.
         // For now, send back error message per existing functionality.
-        self.endChat(member, "Hmm, no projects found. Try again later.");
+        self.endChat(member, this.dcConfig.msg_search_no_results);
         logger.error('dc.findProject no results for zip:%s user:%s', zip, 
           mobileNumber);
         return;
