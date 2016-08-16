@@ -77,10 +77,19 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
   // @todo Add sanity check to make sure this.dcConfig exists
 
   var firstWord = null;
-  if (request.body.args) {
-    firstWord = smsHelper.getFirstWord(request.body.args);
+
+  // Start query parameter is used to start conversation and wait for response.
+  if (request.query.start) {
+    logger.log('debug', 'dc.chat user:%s start', member.phone);
   }
-  logger.log('debug', 'dc.chat user:%s firstWord:%s', member.phone, firstWord);
+  // Otherwise inspect the text member has sent back.
+  else if (request.body.args) {
+    firstWord = smsHelper.getFirstWord(request.body.args);
+    logger.log('debug', 'dc.chat user:%s firstWord:%s', member.phone, firstWord);
+  }
+  else {
+    logger.log('warn', 'dc.chat user:%s no start, no args');
+  }
 
   if (getDonationCount(member) >= MAX_DONATIONS_ALLOWED) {
     logger.log('debug', 'dc.chat msg_max_donations_reached user:%s', 
