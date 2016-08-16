@@ -262,9 +262,11 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
         try {
           logger.log('verbose', 'dc.requestToken POST user:%s body:%s', 
             donorPhone, body);
-          if (typeof body !== 'object') {
-            logger.error('dc.requestToken user:%s invalid JSON:%s', donorPhone, body);
-          }
+          // Aimed to log HTML we get back from DonorsChoose errors:
+          // @see https://github.com/DoSomething/gambit/pull/580#discussion-diff-75017991
+          // if (typeof body !== 'object') {
+          //   logger.error('dc.requestToken user:%s invalid JSON:%s', donorPhone, body);
+          // }
           var jsonBody = JSON.parse(body);
           if (jsonBody.statusDescription === 'success') {
             logger.log('debug', 'dc.requestToken success user:%s', donorPhone);
