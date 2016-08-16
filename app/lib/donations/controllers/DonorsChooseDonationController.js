@@ -108,50 +108,54 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
   }
 
   if (!member.profile_postal_code) {
+
     if (!firstWord) {
       self.chat(member, self.dcConfig.msg_ask_zip);
       return;
     }
+
     if (!stringValidator.isValidZip(firstWord)) {
       self.chat(member, self.dcConfig.msg_invalid_zip);
       return;
     }
+
     self.chat(member, self.dcConfig.msg_ask_first_name, {postal_code: firstWord});
     return;
+
   }
 
   if (!member.profile_first_name) {
+
     if (!firstWord) {
       self.chat(member, self.dcConfig.msg_ask_first_name);
       return;
     }
+
     if (stringValidator.containsNaughtyWords(firstWord)) {
       self.chat(member, "Pls don't use that tone with me. " + self.dcConfig.msg_ask_first_name);
       return;
     }
+
     self.chat(member, self.dcConfig.msg_ask_email, {first_name: firstWord});
     return;
+
   }
 
   if (!member.profile_email) {
+
     if (!firstWord) {
       self.chat(member, self.dcConfig.msg_ask_email);
       return;
     }
+
     if (!stringValidator.isValidEmail(firstWord)) {
       self.chat(member, "Whoops, that's not a valid email address. " + self.dcConfig.msg_ask_email);
       return;
     }
 
-    var msgTxt = '@slothbot: Looking for a classroom by your zip ('; 
-    msgTxt += member.profile_postal_code + ') - one moment pls...';
-    self.chat(member, msgTxt, {email_address: firstWord});
-
-    setTimeout(function() {
-      self.findProjectAndRespond(member);
-    }, END_MESSAGE_DELAY);
-
+    self.findProjectAndRespond(member, {email_address: firstWord});
     return;
+
   }
 
   self.findProjectAndRespond(member);
@@ -164,8 +168,12 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
  * @see https://data.donorschoose.org/docs/project-listing/json-requests/
  *
  */
-DonorsChooseDonationController.prototype.findProjectAndRespond = function(member) {
+DonorsChooseDonationController.prototype.findProjectAndRespond = function(member, customFields) {
   var self = this;
+
+  var msgTxt = '@slothbot: Looking for a classroom by your zip ('; 
+  msgTxt += member.profile_postal_code + ') - one moment pls...';
+  self.endChat(member, msgTxt, customFields);
 
   logger.log('debug', 'dc.findProjectAndRespond user:%s zip:%s', member.phone,
     member.profile_postal_code);
