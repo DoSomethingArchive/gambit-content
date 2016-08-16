@@ -1,37 +1,29 @@
 "use strict";
 
 /**
- * DonorsChoose.org implementation of the donation interface.
- *
- * The flow a user should be guided through:
- *   1. start
- *      - sends the appropriate optin path to start the donation and retrieveZip
- *      - unless a max number of donations have been made, then a message
- *        is sent to notify the user about that
- *   2. retrieveZip
- *      - calls findProject to respond to user with project details
- *        and ask for their first name
- *   3. retrieveFirstName
- *      - calls retrieveEmail
- *   4. retrieveEmail
- *      - will call submitDonation, which reponds to user with success message.
+ * Submits a donation to DonorsChoose.org on behalf of a MoCo member.
+ * Currently only used for Science Sleuth.
  */
-
-var donorsChooseApiKey = (process.env.DONORSCHOOSE_API_KEY || 'DONORSCHOOSE')
-  , donorsChooseApiPassword = (process.env.DONORSCHOOSE_API_PASSWORD || 'helpClassrooms!')
-  , donorsChooseDonationBaseURL = 'https://apisecure.donorschoose.org/common/json_api.html?'
-  , donorsChooseProposalsQueryBaseURL = 'https://api.donorschoose.org/common/json_feed.html'
-  , defaultDonorsChooseTransactionEmail = (process.env.DONORSCHOOSE_DEFAULT_EMAIL || null);
+var donorsChooseApiKey = (process.env.DONORSCHOOSE_API_KEY || null);
+var donorsChooseApiPassword = (process.env.DONORSCHOOSE_API_PASSWORD || null);
+var donorsChooseProposalsHost = 'https://api.donorschoose.org/';
+var donorsChooseDonationsHost = 'https://apisecure.donorschoose.org/';
 
 if (process.env.NODE_ENV != 'production') {
-  donorsChooseProposalsQueryBaseURL = 'https://qa.donorschoose.org/common/json_feed.html';
-  donorsChooseDonationBaseURL = 'https://apiqasecure.donorschoose.org/common/json_api.html';
+  donorsChooseApiKey = 'DONORSCHOOSE';
+  donorsChooseApiPassword = 'helpClassrooms!';
+  donorsChooseProposalsHost = 'https://qa.donorschoose.org/';
+  donorsChooseDonationsHost = 'https://apiqasecure.donorschoose.org/';
 }
 
-var DONATION_AMOUNT = (process.env.DONORSCHOOSE_DONATION_AMOUNT || 10)
-  , COST_TO_COMPLETE_UPPER_LIMIT = 10000
-  , DONATE_API_URL = donorsChooseDonationBaseURL + '?APIKey=' + donorsChooseApiKey
-  , END_MESSAGE_DELAY = 2500;
+var DONATION_AMOUNT = (process.env.DONORSCHOOSE_DONATION_AMOUNT || 10);
+var COST_TO_COMPLETE_UPPER_LIMIT = 10000
+var DONATE_API_URL = donorsChooseDonationsHost + 'common/json_api.html?APIKey=' + donorsChooseApiKey;
+var END_MESSAGE_DELAY = 2500;
+var MAX_DONATIONS_ALLOWED = (process.env.DONORSCHOOSE_MAX_DONATIONS_ALLOWED || 5);
+
+// Name of MoCo Custom Field used to store member's number of donations.
+var DONATION_COUNT_FIELDNAME = 'ss2016_donation_count';
 
 var Q = require('q')
   , requestHttp = require('request')
@@ -43,75 +35,112 @@ var Q = require('q')
   , stringValidator = rootRequire('app/lib/string-validators')
   ;
 
-var connectionOperations = rootRequire('app/config/connectionOperations')
-  , donationModel = require('../models/DonationInfo')(connectionOperations)
-  , userModel = rootRequire('app/lib/sms-games/models/sgUser')(connectionOperations)
-  ;
-
-// @todo: Read values from config document again, or set as environment variables.
-var donorsChooseConfig = {
-  max_donations_allowed: 5,
-  moco_campaign: 146307,
-  oip_ask_email: 209781,
-  oip_ask_first_name: 209779,
-  oip_ask_zip: 211113,
-  oip_donation_complete_1: 209783,
-  oip_donation_complete_2: 209785,
-  oip_donation_complete_3: 209787,
-  oip_error: 209791,
-  oip_invalid_zip: 211115,
-  oip_max_donations: 209789
-};
+var connectionOperations = rootRequire('app/config/connectionOperations');
+var donationModel = require('../models/donorsChooseDonationModel')(connectionOperations);
 
 function DonorsChooseDonationController() {
-  this.resourceName; // Resource name identifier. Specifies controller to route. 
+  var mocoCampaignId = process.env.DONORSCHOOSE_MOCO_CAMPAIGN_ID;
+  this.dcConfig = app.getConfig(app.ConfigName.DONORSCHOOSE, mocoCampaignId); 
 };
 
 /**
- * Resource name identifier. Routes will use this to specify the controller to use.
+ * Sends SMS mesage and listens for a MoCo response.
+ *
+ * @see sendSMS(member, optInPath, messageText, customFields)
  */
-DonorsChooseDonationController.prototype.resourceName = 'donors-choose';
-
-/**
- * For given user document, return # of donations completed for our current Donation campaign.
- */
-function getDonationCount(userDocument) {
-  if (userDocument && userDocument.donations) {
-    for (var i = 0; i < userDocument.donations.length; i++) {
-      if (donorsChooseConfig.moco_campaign == userDocument.donations[i].config_id) {
-        return userDocument.donations[i].count;
-      }
-    }
-  }
-  return 0;
+DonorsChooseDonationController.prototype.chat = function(member, msgText, profileFields) {
+  sendSMS(member, this.dcConfig.oip_chat, msgText, profileFields);
 }
 
 /**
- * Start the donation flow by validating that this user is
- * allowed to make a donation.
+ * Sends SMS message and ends conversation.
  *
- * @param request
- *   Express Request object
- * @param response
- *   Express Response object
+ * @see sendSMS(member, optInPath, messageText, customFields)
  */
-DonorsChooseDonationController.prototype.start = function(request, response) {
-  var phone = smsHelper.getNormalizedPhone(request.body.phone);
-  userModel.findOne({phone: phone}, onUserFound);
+DonorsChooseDonationController.prototype.endChat = function(member, msgText, profileFields) {
+  sendSMS(member, this.dcConfig.oip_end_chat, msgText, profileFields);
+}
+
+/**
+ * Sends SMS message with generic failure text and ends conversation.
+ */
+DonorsChooseDonationController.prototype.endChatWithFail = function(member) {
+  this.endChat(member, this.dcConfig.msg_error_generic);
+}
+
+DonorsChooseDonationController.prototype.chatbot = function(request, response) {
+  var self = this;
+  var member = request.body;
+  logger.log('verbose', 'dc.chat member:', member);
   response.send();
 
-  function onUserFound(err, userDocument) {
-    logger.log('debug', 'DonorsChoose.onUserFound:%s', JSON.stringify(userDocument));
-    if (err) {
-      logger.error('DonorsChoose.onUserFound err:%s', JSON.stringify(err));
-    }
-    if (getDonationCount(userDocument) <= donorsChooseConfig.max_donations_allowed) {
-      mobilecommons.profile_update(phone, donorsChooseConfig.oip_ask_zip);
-    }
-    else {
-      mobilecommons.profile_update(phone, donorsChooseConfig.oip_max_donations);
-    }
+  // @todo Add sanity check to make sure this.dcConfig exists
+
+  var firstWord = null;
+  if (request.body.args) {
+    firstWord = smsHelper.getFirstWord(request.body.args);
   }
+  logger.log('debug', 'dc.chat user:%s firstWord:%s', member.phone, firstWord);
+
+  if (getDonationCount(member) >= MAX_DONATIONS_ALLOWED) {
+    logger.log('debug', 'dc.chat msg_max_donations_reached user:%s', 
+      member.phone);
+    self.endChat(member, self.dcConfig.msg_max_donations_reached);
+    return;
+  }
+
+  if (!member.profile_postal_code) {
+
+    if (!firstWord) {
+      self.chat(member, self.dcConfig.msg_ask_zip);
+      return;
+    }
+
+    if (!stringValidator.isValidZip(firstWord)) {
+      self.chat(member, self.dcConfig.msg_invalid_zip);
+      return;
+    }
+
+    self.chat(member, self.dcConfig.msg_ask_first_name, {postal_code: firstWord});
+    return;
+
+  }
+
+  if (!member.profile_first_name) {
+
+    if (!firstWord) {
+      self.chat(member, self.dcConfig.msg_ask_first_name);
+      return;
+    }
+
+    if (stringValidator.containsNaughtyWords(firstWord)) {
+      self.chat(member, "Pls don't use that tone with me. " + self.dcConfig.msg_ask_first_name);
+      return;
+    }
+
+    self.chat(member, self.dcConfig.msg_ask_email, {first_name: firstWord});
+    return;
+
+  }
+
+  if (!member.profile_email) {
+
+    if (!firstWord) {
+      self.chat(member, self.dcConfig.msg_ask_email);
+      return;
+    }
+
+    if (!stringValidator.isValidEmail(firstWord)) {
+      self.chat(member, "Whoops, that's not a valid email address. " + self.dcConfig.msg_ask_email);
+      return;
+    }
+
+    self.findProjectAndRespond(member, {email: firstWord});
+    return;
+
+  }
+
+  self.findProjectAndRespond(member);
 };
 
 /**
@@ -121,181 +150,71 @@ DonorsChooseDonationController.prototype.start = function(request, response) {
  * @see https://data.donorschoose.org/docs/project-listing/json-requests/
  *
  */
-DonorsChooseDonationController.prototype.findProject = function(mobileNumber, zip) {
-  var requestUrlString = donorsChooseProposalsQueryBaseURL;
+DonorsChooseDonationController.prototype.findProjectAndRespond = function(member, customFields) {
+  var self = this;
+  self.endChat(member, this.dcConfig.msg_searching_by_zip, customFields);
+
+  logger.log('debug', 'dc.findProjectAndRespond user:%s zip:%s', member.phone,
+    member.profile_postal_code);
+  var mobileNumber = member.phone;
+  var zip = member.profile_postal_code;
+
+  var requestUrlString = donorsChooseProposalsHost + 'common/json_feed.html';
   requestUrlString += '?subject4=-4'; 
   requestUrlString += '&sortBy=2'; 
   requestUrlString += '&costToCompleteRange=' + DONATION_AMOUNT + '+TO+' + COST_TO_COMPLETE_UPPER_LIMIT; 
   requestUrlString += '&max=1';
   requestUrlString += '&zip=' + zip;
-  logger.log('debug', 'DonorsChoose.findProject request:%s', requestUrlString);
+  logger.log('debug', 'dc.findProject user:%s request:%s', member.phone, 
+    requestUrlString);
   requestUrlString += '&APIKey=' + donorsChooseApiKey;
 
-  requestHttp.get(requestUrlString, function(error, response, data) {
+  requestHttp.get(requestUrlString, function(error, response, body) {
     if (error) {
-      mobilecommons.profile_update(mobileNumber, donorsChooseConfig.oip_error);
-      logger.error('DonorsChoose.findProject user:%s error:%s', mobileNumber, error);
+      logger.error('dc.findProject user:%s get error:%s', mobileNumber, error);
+      self.endChatWithFail(member);
       return;
     }
 
     try {
-      var donorsChooseResponse = JSON.parse(data);
-      if (!donorsChooseResponse.proposals || donorsChooseResponse.proposals.length == 0) {
-        // If no proposals, could potentially prompt user for different zip code.
+      var dcResponse = JSON.parse(body);
+      if (!dcResponse.proposals || dcResponse.proposals.length == 0) {
+        // If no proposals, could potentially prompt user to try different zip.
         // For now, send back error message per existing functionality.
-        mobilecommons.profile_update(mobileNumber, donorsChooseConfig.oip_error);
-        logger.error('DonorsChoose.findProject API no proposals found for zip:%s user:%s', zip, mobileNumber);
+        self.endChat(member, "Hmm, no projects found. Try again later.");
+        logger.error('dc.findProject no results for zip:%s user:%s', zip, 
+          mobileNumber);
         return;
       }
-      createDonationDoc(mobileNumber, donorsChooseResponse.proposals[0]);
+      // When DC API is down, it sends html as response.
+      else if (typeof dcResponse !== 'object') {
+        self.endChatWithFail;
+        logger.error('dc.findProject user:%s invalid JSON.', mobileNumber);
+        return;
+      }
+      var project = decodeDonorsChooseProposal(dcResponse.proposals[0]);
+      self.postDonation(member, project);
     }
     catch (e) {
-      mobilecommons.profile_update(mobileNumber, donorsChooseConfig.oip_error);
-      // JSON.parse will throw a SyntaxError exception if data is not valid JSON
-      logger.error('DonorsChoose.findProject invalid JSON data received from DonorsChoose API for user: ' 
-        + mobileNumber + ' , or selected proposal does not contain necessary fields. Error: ' + e);
+      self.endChatWithFail(member);
+      logger.error('ds.findProject user:%s e:%s', mobileNumber, e); 
       return;
     }
   });
 }
 
-/**
- * Creates a donation_infos document for given mobileNumber and DonorsChoose project.
- * Opts user into next step in conversation upon success.
- */
-function createDonationDoc(mobileNumber, selectedProposal) {
-  var entities = new Entities(); // Calling 'html-entities' module to decode escaped characters.
-  var location = entities.decode(selectedProposal.city) + ', ' + entities.decode(selectedProposal.state)
-
-  // Email and first_name can be overwritten later. Included in case of error, transaction can still be completed. 
-  var currentDonationInfo = {
-    mobile: mobileNumber,
-    email: 'donorschoose@dosomething.org', 
-    first_name: 'Anonymous',
-    location: location,
-    project_id: selectedProposal.id,
-    project_url: selectedProposal.proposalURL,
-    donation_complete: false
-  }
-
-  // .profile_update call placed within the donationModel.create() callback to 
-  // ensure that the ORIGINAL DOCUMENT IS CREATED before the user texts back 
-  // their email address and attempts to find the document to be updated. 
-  donationModel.create(currentDonationInfo).then(function(doc) {
-    logger.log('debug', 'DonorsChoose.findProject created donation_infos document:%s for user:%s', JSON.stringify(doc), mobileNumber);
-    var customFields = {
-      SS_fulfillment_trailer:   entities.decode(selectedProposal.fulfillmentTrailer), 
-      SS_teacher_name :         entities.decode(selectedProposal.teacherName), 
-      SS_school_name :          entities.decode(selectedProposal.schoolName),
-      SS_proj_location:         location
-    };
-    // @todo: Nice to have, shouldn't have to prompt for first name if already stored to profile.
-    // @see https://github.com/DoSomething/gambit/issues/552 
-    mobilecommons.profile_update(mobileNumber, donorsChooseConfig.oip_ask_first_name, customFields);
-  }, promiseErrorCallback('DonorsChoose.findProject unable to create donation_infos document for user: ' + mobileNumber));
+function decodeDonorsChooseProposal(proposal) {
+  var entities = new Entities();
+  return {
+    id: proposal.id,
+    description: entities.decode(proposal.fulfillmentTrailer),
+    city: entities.decode(proposal.city),
+    state: entities.decode(proposal.state),
+    schoolName: entities.decode(proposal.schoolName),
+    teacherName: entities.decode(proposal.teacherName),
+    url: proposal.proposalURL
+  };
 }
-
-/**
- * Retrieves the user's first name to submit with the donation transaction.
- *
- * @param request
- *   Express Request object
- * @param response
- *   Express Response object
- */
-DonorsChooseDonationController.prototype.retrieveFirstName = function(request, response) {
-  var userSubmittedName = smsHelper.getFirstWord(request.body.args);
-  var mobile = smsHelper.getNormalizedPhone(request.body.phone);
-  logger.log('debug', 'DonorsChoose.retrieveFirstName:%s for user:%s', userSubmittedName, mobile);
-
-  if (stringValidator.containsNaughtyWords(userSubmittedName) || !userSubmittedName) {
-    userSubmittedName = 'Anonymous';
-    logger.log('debug', 'DonorsChoose.retrieveFirstName set to %s for user:%s', userSubmittedName, mobile);
-  }
-
-  donationModel.findOneAndUpdate(
-    {
-      $and : [
-        { mobile: mobile },
-        { donation_complete: false }
-      ]
-    },
-    {$set: {
-      first_name: userSubmittedName
-    }},
-    function(err, num, raw) {
-      if (err) {
-        logger.error('Error in retrieving first name of user for user mobile: ' 
-          + req.body.phone + ' | Error: ' + err);
-        mobilecommons.profile_update(mobile, donorsChooseConfig.oip_error);
-      }
-      else {
-        mobilecommons.profile_update(mobile, donorsChooseConfig.oip_ask_email, { SS_user_first_name: userSubmittedName });
-      }
-    }
-  )
-  response.send();
-};
-
-/**
- * Retrieves an email from the user to submit with the donation transaction. For
- * a Donors Choose donation, this is optional.
- *
- * @param request
- *   Express Request object
- * @param response
- *   Express Response object
- */
-DonorsChooseDonationController.prototype.retrieveEmail = function(request, response) {
-  var userSubmittedEmail = smsHelper.getFirstWord(request.body.args);
-  var mobile = smsHelper.getNormalizedPhone(request.body.phone);
-  logger.log('debug', 'DonorsChoose.retrieveEmail:%s for user:%s', userSubmittedEmail, mobile);
-
-  var updateObject = { $set: { donation_complete: true }};
-  var self = this;
-  var req = request; 
-
-  if (stringValidator.isValidEmail(userSubmittedEmail) && !stringValidator.containsNaughtyWords(userSubmittedEmail)) {
-    updateObject['$set'].email = userSubmittedEmail;
-  }
-  
-  donationModel.findOneAndUpdate(
-    {
-      $and : [
-        { mobile: mobile },
-        { donation_complete: false }
-      ]
-    },
-    updateObject,
-    function(err, donorDocument) {
-      if (err) {
-        logger.error('DonorsChoose.retrieveEmail error for user:' + mobile + ' in donationModel.findOneAndUpdate: ' + err);
-        mobilecommons.profile_update(mobile, donorsChooseConfig.oip_error);
-      } 
-      else if (donorDocument) {
-        logger.log('debug', 'DonorsChoose.retrieveEmail donorDocument:%s: for user:%s', JSON.stringify(donorDocument), mobile);
-        // In the case that the user is out of order in the donation flow, 
-        // or our app hasn't found a proposal (aka project) and attached a 
-        // project_id to the document, we opt the user back into the start donation flow.  
-        if (!donorDocument.project_id) {
-          mobilecommons.profile_update(mobile, donorsChooseConfig.oip_error);
-        }
-        else {
-          var donorInfoObject = {
-            donorEmail: donorDocument.email, 
-            donorFirstName: (donorDocument.first_name || 'Anonymous'),
-            donorPhoneNumber: mobile
-          }
-          self.submitDonation(donorInfoObject, donorDocument.project_id);
-        }
-      }
-      else {
-        logger.log('error', 'DonorsChoose.retrieveEmail donorDocument not set.');
-      }
-    }
-  )
-  response.send();
-};
 
 /**
  * Submits a donation transaction to Donors Choose.
@@ -306,12 +225,14 @@ DonorsChooseDonationController.prototype.retrieveEmail = function(request, respo
  * @param proposalId, the DonorsChoose proposal ID 
  *
  */
-DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObject, proposalId) {
-  var donorPhone = donorInfoObject.donorPhoneNumber;
-  logger.log('debug', 'DonorsChoose.submitDonation user:%s amount:%s info:%s proposal:%s', donorPhone, DONATION_AMOUNT, JSON.stringify(donorInfoObject), proposalId);
+DonorsChooseDonationController.prototype.postDonation = function(member, project) {
+  var self = this;
+  var donorPhone = member.phone;
+  logger.log('debug', 'dc.submitDonation user:%s proposalId:%s', 
+    donorPhone, project.id);
 
-  requestToken().then(requestDonation,
-    promiseErrorCallback('DonorsChoose.submitDonation failed for user:' + donorPhone)
+  requestToken().then(postDonation,
+    promiseErrorCallback('dc.submitDonation failed for user:' + donorPhone)
   );
 
   /**
@@ -325,28 +246,36 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
       'apipassword': donorsChooseApiPassword, 
       'action': 'token'
     }}
-    logger.log('debug', 'DonorsChoose.requestToken user:%s', donorPhone);
+    logger.log('debug', 'dc.requestToken POST %s user:%s', DONATE_API_URL, donorPhone);
     requestHttp.post(DONATE_API_URL, retrieveTokenParams, function(err, response, body) {
       if (!err) {
         try {
+          logger.log('verbose', 'dc.requestToken POST user:%s body:%s', 
+            donorPhone, body);
+          // Handles when we get 403/Forbidden but steps in when sufficient funds.
+          // if (typeof body !== 'object') {
+          //   self.endChatWithFail(member);
+          //   logger.error('dc.requestToken user:%s invalid body:%s', donorPhone, body);
+          //   return deferred.promise;
+          // }
           var jsonBody = JSON.parse(body);
-          if (jsonBody.statusDescription == 'success') {
-            logger.log('debug', 'DonorsChoose.requestToken success user:%s', donorPhone);
+          if (jsonBody.statusDescription === 'success') {
+            logger.log('debug', 'dc.requestToken success user:%s', donorPhone);
             deferred.resolve(JSON.parse(body).token);
           }
           else {
-            logger.error('DonorsChoose.requestToken statusDescription!=success user:%s', donorPhone);
-            mobilecommons.profile_update(donorPhone, donorsChooseConfig.oip_error);
+            logger.error('dc.requestToken failed user:%s body:%s', donorPhone, jsonBody);
+            self.endChatWithFail(member);
           }
         }
         catch (e) {
-          logger.error('DonorsChoose.requestToken failed user:'  + donorPhone + ' error:' + JSON.stringify(error));
-          mobilecommons.profile_update(donorPhone, donorsChooseConfig.oip_error);
+          logger.error('dc.requestToken failed user:'  + donorPhone + ' error:' + JSON.stringify(e));
+          self.endChatWithFail(member);
         }
       }
       else {
-        deferred.reject('DonorsChoose.requestToken error user: ' + donorPhone + 'error: ' + JSON.stringify(err));
-        mobilecommons.profile_update(donorPhone, donorsChooseConfig.oip_error);
+        deferred.reject('dc.requestToken error user: ' + donorPhone + 'error: ' + JSON.stringify(err));
+        self.endChatWithFail(member);
       }
     });
     return deferred.promise;
@@ -355,185 +284,156 @@ DonorsChooseDonationController.prototype.submitDonation = function(donorInfoObje
   /**
    * After promise we make the second request: donation transaction.
    */
-  function requestDonation(tokenData) {
-    var donateParams = {'form': {
+  function postDonation(tokenData) {
+    logger.log('debug', 'dc.postDonation POST user:%s proposalId:%s email:%s first:%s', 
+      donorPhone, project.id, member.profile_email, member.profile_first_name);
+    var email = (process.env.DONORSCHOOSE_DEFAULT_EMAIL || 'donorschoose@dosomething.org');
+    var donateFormParams = {'form': {
       'APIKey': donorsChooseApiKey,
       'apipassword': donorsChooseApiPassword, 
       'action': 'donate',
       'token': tokenData,
-      'proposalId': proposalId,
+      'proposalId': project.id,
       'amount': DONATION_AMOUNT,
-      'email': defaultDonorsChooseTransactionEmail,
-      'honoreeEmail': donorInfoObject.donorEmail,
-      'honoreeFirst': donorInfoObject.donorFirstName,
+      'email': email,
+      'honoreeEmail': member.profile_email,
+      'honoreeFirst': member.profile_first_name,
     }};
-
-    logger.log('debug', 'DonorsChoose.requestDonation POST user:' + donorInfoObject.donorPhoneNumber + ' proposalId:' + proposalId + ' amount:' + DONATION_AMOUNT + ' honoreeEmail:%s honoreeFirst:%s', donorInfoObject.donorEmail, donorInfoObject.donorFirstName);
-    requestHttp.post(DONATE_API_URL, donateParams, function(err, response, body) {
+    requestHttp.post(DONATE_API_URL, donateFormParams, function(err, response, body) {
       if (err) {
-        logger.error('DonorsChoose.requestDonation requestHttp error user:' + donorInfoObject.donorPhoneNumber + 'error: ' + err);
-        mobilecommons.profile_update(donorPhone,  donorsChooseConfig.oip_error);
+        logger.error('dc.postDonation POST user:%s error:%s',
+          member.phone, error);
+        self.endChatWithFail(member);
       }
       else if (response && response.statusCode != 200) {
-        logger.error('DonorsChoose.requestDonation response.statusCode:%s for user:%s', response.statusCode, donorInfoObject.donorPhoneNumber);
-        mobilecommons.profile_update(donorPhone, donorsChooseConfig.oip_error);
+        logger.error('dc.postDonation response.statusCode:%s for user:%s', 
+          response.statusCode, member.phone); 
       }
       else {
         try {
           var jsonBody = JSON.parse(body);
-          if (jsonBody.statusDescription == 'success') {
-            logger.info('DonorsChoose.requestDonation success user:' + donorPhone + ' proposalId:' + proposalId + ' body:', jsonBody);
-            updateUserWithDonation();
-            sendSuccessMessages(donorPhone, jsonBody.proposalURL);
+          if (jsonBody.statusDescription === 'success') {
+            var logMsg = 'dc.postDonation POST success user:' + donorPhone;
+            logMsg += ' proposalId:' + project.id;
+            logMsg += ' donationId:' + jsonBody.donationId;
+            logger.info(logMsg);
+            logger.log('debug', jsonBody);
+            createDonationDoc(jsonBody);
+            self.respondWithSuccess(member, project);
+            return;
           }
           else {
-            logger.error('DonorsChoose.requestDonation failed user:' + donorPhone + ' proposalId:' + proposalId + ' body:', jsonBody);
-            mobilecommons.profile_update(donorPhone, donorsChooseConfig.oip_error);
+            var logMsg = 'dc.postDonation POST failed user:' + donorPhone;
+            logMsg += ' proposalId:' + project.id;
+            logMsg += ' body:' + JSON.stringify(jsonBody);
+            logger.error(logMsg);
           }
         }
         catch (e) {
-          logger.error('DonorsChoose.requestDonation catch exception for user:%s e:%s', donorPhone, e.message);
-          mobilecommons.profile_update(donorPhone, donorsChooseConfig.oip_error);
+          logger.error('dc.postDonation catch exception for user:%s e:%s', donorPhone, e.message);
         }
       }
-    })
-  }
-
-  /**
-   * Start donation process.
-   */
-  function updateUserWithDonation() {
-    logger.log('debug', 'donorsChoose.updateUserWithDonation user:%s', donorPhone);
-    userModel.findOne({phone: donorPhone}, function(err, doc) {
-      if (err) {
-        logger.error('debug', 'DonorsChoose.updateUserWithDonation error:', err);
-        return;
-      }
-
-      if (!doc) {
-        logger.log('debug', 'donorsChoose.updateUserWithDonation userModel.create for user:%s', donorPhone);
-        userModel.create({phone: donorPhone})
-          .then(incrementDonationCount);
-      }
-      else {
-        logger.log('debug', 'donorsChoose.updateUserWithDonation userModel doc exists for user:%s', donorPhone);
-        incrementDonationCount(doc);
-      }
+      self.endChatWithFail(member);
     });
-  }
 
-  /**
-   * Updates the donation count in a user's donation history.
-   *
-   * @param doc
-   *   Document for user that made a donation
-   */
-  function incrementDonationCount(doc) {
-    var i;
-    var countUpdated = false;
-
-    if (!doc) {
-      logger.log('debug', 'donorsChoose.incrementDonationCount !doc');
-      return;
-    }
-    logger.log('debug', 'donorsChoose.incrementDonationCount doc:%s', JSON.stringify(doc));
-
-    // Find previous donation history and increment the count if found
-    for (i = 0; i < doc.donations.length; i++) {
-      logger.log('verbose', 'donorsChoose.incrementDonationCount i=' + i);
-      if (doc.donations[i].config_id == donorsChooseConfig.moco_campaign) {
-        logger.log('verbose', 'donorsChoose.incrementDonationCount oc.donations[i].config_id == donorsChooseConfig.moco_campaign');
-        doc.donations[i].count += 1;
-        countUpdated = true;
-        break;
-      }
-    }
-
-    // If no previous donation found, add a new item
-    if (!countUpdated) {
-      logger.log('verbose', 'donorsChoose.incrementDonationCount !countUpdated');
-      // @todo: Store as moco_campaign instead of config_id?
-      doc.donations[doc.donations.length] = {
-        config_id: donorsChooseConfig.moco_campaign,
-        count: 1
-      }
-    }
-
-    // Update the user document
-    userModel.update(
-      {phone: doc.phone},
-      {$set: {donations: doc.donations}}
-    ).exec();
-    logger.log('debug', 'DonorsChoose.incrementDonationCount complete for user:%s donations:%s', doc.phone, JSON.stringify(doc.donations));
-  }
-
-  /**
-   * Sends multiple messages to user after a successful donation.
-   *
-   * @param url
-   *   URL to the DonorsChoose project
-   */
-  function sendSuccessMessages(mobileNumber, projectUrl) {
-    logger.log('debug', 'DonorsChoose.sendSuccessMessages user:%s projectUrl%s', mobileNumber, projectUrl);
-
-    mobilecommons.profile_update(mobileNumber, donorsChooseConfig.oip_donation_complete_1);
-
-    setTimeout(function() {
-      logger.log('verbose', 'DonorsChoose.sendSuccessMessages timeout 1');
-      mobilecommons.profile_update(mobileNumber, donorsChooseConfig.oip_donation_complete_2);
-    }, END_MESSAGE_DELAY)
-
-    setTimeout(function() {
-      shortenLink(projectUrl, function(shortenedLink) {
-        logger.log('verbose', 'DonorsChoose.sendSuccessMessages timeout 2');
-        var customFields = {
-          SS_donation_url: shortenedLink
-        };
-        mobilecommons.profile_update(donorPhone, donorsChooseConfig.oip_donation_complete_3, customFields);
-      });
-    }, END_MESSAGE_DELAY + END_MESSAGE_DELAY)
+    function createDonationDoc(donation) {
+      var donationLogData = {
+        mobile: member.phone,
+        email: member.profile_email,
+        first_name: member.profile_first_name,
+        postal_code: member.profile_postal_code,
+        proposal_id: project.id,
+        donation_id: donation.donationId,
+        donation_amount: DONATION_AMOUNT,
+        remaining_amount: donation.remainingProposalAmount,
+        school_name: project.schoolName,
+        school_city: project.city,
+        school_state: project.state,
+        url: project.url
+      };
+      donationModel.create(donationLogData).then(function(doc) {
+        logger.log('debug', 'dc.createDonationDoc success:%s', donation);
+      }, promiseErrorCallback('dc.createDonationDoc user: ' + member.phone));
+    };
   }
 };
 
 /**
- * Retrieves the zip code of a user to use for finding a project.
+ * Sends multiple messages to user after a successful donation.
  *
- * @param request
- *   Express Request object
- * @param response
- *   Express Response object
+ * @param project
+ *   Decoded DonorsChoose proposal object.
  */
-DonorsChooseDonationController.prototype.retrieveZip = function(request, response) {
-  if (typeof request.body.phone === 'undefined' || typeof request.body.args === 'undefined') {
-    response.status(406).send('Missing required params.');
-    return;
+DonorsChooseDonationController.prototype.respondWithSuccess = function(member, project) {
+  var self = this;
+  logger.log('debug', 'dc.respondWithSuccess user:%s project%s', 
+    member.phone, project);
+
+  var donationCount = getDonationCount(member);
+  var customFields = {};
+  customFields[DONATION_COUNT_FIELDNAME] = donationCount + 1;
+
+  var firstMessage = self.dcConfig.msg_donation_success + project.schoolName + ".";
+  self.endChat(member, firstMessage);
+
+  setTimeout(function() {
+    var secondMessage = '@' + project.teacherName + ': Thx! ' + project.description;
+    self.endChat(member, secondMessage);
+  }, END_MESSAGE_DELAY);
+
+  setTimeout(function() {
+    shortenLink(project.url, function(shortenedLink) {
+      logger.log('debug', 'dc.sendSuccessMessages user:%s shortenedLink:%s', 
+        member.phone, shortenedLink);
+      var thirdMessage = self.dcConfig.msg_project_link + shortenedLink;
+      self.endChat(member, thirdMessage, customFields);
+    });
+  }, 2 * END_MESSAGE_DELAY);
+}
+
+/**
+ * Posts profile_update request to Mobile Commons to send messageText as SMS.
+ *
+ * @param {object} member The MoCo request.body sent, containing member info.
+ * @param {number} optInPath
+ * @param {string} messageText
+ * @param {object|null} customFields Key/values to store as MoCo Custom Fields.
+ */
+function sendSMS(member, optInPath, msgTxt, customFields) {
+  var mobileNumber = smsHelper.getNormalizedPhone(member.phone);
+  var msgTxt = msgTxt.replace('{{postal_code}}', member.profile_postal_code);
+
+  if (typeof customFields === 'undefined') {
+    customFields = {slothbot_response: msgTxt};
+  }
+  else {
+    customFields.slothbot_response = msgTxt;
   }
 
-  response.send();
-  var mobile = request.body.phone;
-  var zip = smsHelper.getFirstWord(request.body.args);
-  logger.log('debug', 'DonorsChoose.retrieveZip:%s for user:%s', zip, mobile);
+  mobilecommons.profile_update(mobileNumber, optInPath, customFields);
+}
 
-
-  if (!stringValidator.isValidZip(zip)) {
-    mobilecommons.profile_update(mobile, donorsChooseConfig.oip_invalid_zip);
-    logger.log('debug', 'DonorsChoose.retrieveZip invalid zip:%s user:%s', zip, mobile);
-    return;
-  }
-  this.findProject(mobile, zip);
-};
+/**
+ * Returns the number of times member has donated to current Donation campaign.
+ *
+ * @param {object} member 
+ * @return {number}
+ */
+function getDonationCount(member) {
+  return parseInt(member['profile_' + DONATION_COUNT_FIELDNAME]);
+}
 
 /**
  * The following two functions are for handling Mongoose Promise chain errors.
  */
-function promiseErrorCallback(message, userPhone) {
-  return onPromiseErrorCallback.bind({message: message, userPhone: userPhone});
+function promiseErrorCallback(message, member) {
+  return onPromiseErrorCallback.bind({message: message, member: member});
 }
 
 function onPromiseErrorCallback(err) {
   if (err) {
     logger.error(this.message + '\n', err.stack);
-    mobilecommons.profile_update(this.userPhone, donorsChooseConfig.error_start_again)
+//    this.endChatWithFail(this.member);
   }
 }
 

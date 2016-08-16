@@ -13,13 +13,13 @@
       "required": true
     },
     "DONORSCHOOSE_API_KEY": {
-      "required": true
+      "required": false
     },
     "DONORSCHOOSE_API_PASSWORD": {
-      "required": true
+      "required": false
     },
     "DONORSCHOOSE_DEFAULT_EMAIL": {
-      "required": true
+      "required": false
     },
     "DS_CONTENT_API_PASSWORD": {
       "required": true
@@ -52,7 +52,7 @@
       "required": true
     },
     "NEW_RELIC_LOGGING_LEVEL": {
-      "required": true
+      "required": false
     },
     "NODE_ENV": {
       "required": true
