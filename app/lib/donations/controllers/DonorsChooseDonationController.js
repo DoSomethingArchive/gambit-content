@@ -153,7 +153,7 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
       return;
     }
 
-    self.findProjectAndRespond(member, {email_address: firstWord});
+    self.findProjectAndRespond(member, {email: firstWord});
     return;
 
   }
