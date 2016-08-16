@@ -443,6 +443,7 @@ function promiseErrorCallback(message, member) {
 function onPromiseErrorCallback(err) {
   if (err) {
     logger.error(this.message + '\n', err.stack);
+    // @todo Don't we have enough of these to not use this?
 //    this.endChatWithFail(this.member);
   }
 }
