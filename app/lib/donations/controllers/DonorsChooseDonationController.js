@@ -39,8 +39,8 @@ var connectionOperations = rootRequire('app/config/connectionOperations');
 var donationModel = require('../models/donorsChooseDonationModel')(connectionOperations);
 
 function DonorsChooseDonationController() {
-  var mocoCampaignId = process.env.DONORSCHOOSE_MOCO_CAMPAIGN_ID;
-  this.dcConfig = app.getConfig(app.ConfigName.DONORSCHOOSE, mocoCampaignId); 
+  var botId = process.env.DONORSCHOOSE_BOT_ID;
+  this.dcConfig = app.getConfig(app.ConfigName.DONORSCHOOSE, botId); 
 };
 
 /**
@@ -430,6 +430,53 @@ function sendSMS(member, optInPath, msgTxt, customFields) {
  */
 function getDonationCount(member) {
   return parseInt(member['profile_' + DONATION_COUNT_FIELDNAME]);
+}
+
+/**
+ * Queries DonorsChoose API to find a STEM project by zip and sends the
+ * project details back to the user.
+ *
+ * @see https://data.donorschoose.org/docs/project-listing/json-requests/
+ *
+ */
+DonorsChooseDonationController.prototype.syncBotConfig = function(req, res) {
+  var self = this;
+  var botId = process.env.DONORSCHOOSE_BOT_ID;
+  var url = 'http://dev-gambit-jr.pantheonsite.io/wp-json/wp/v2/donorschoose_bots/';
+  url += botId;
+  console.log(url);
+
+  requestHttp.get(url, function(error, response, body) {
+    if (error) {
+      res.status(404).send('No donation bot found for ID:' + botId);
+      return;
+    }
+    
+    var configContent = JSON.parse(body);
+    var propertyNames = [
+      'msg_ask_email',
+      'msg_ask_first_name',
+      'msg_ask_zip',
+      'msg_donation_success',
+      'msg_error_generic',
+      'msg_invalid_email',
+      'msg_invalid_first_name',
+      'msg_invalid_zip',
+      'msg_project_link',
+      'msg_max_donations_reached',
+      'msg_search_start',
+      'msg_search_no_results',
+      'oip_chat',
+      'oip_end_chat'
+    ];
+    for (var i = 0; i < propertyNames.length; i++) {
+      var propertyName = propertyNames[i];
+      self.dcConfig[propertyName] = configContent[propertyName];
+    }
+    console.log(self.dcConfig);
+    self.dcConfig.save();
+    res.send();
+  });
 }
 
 /**

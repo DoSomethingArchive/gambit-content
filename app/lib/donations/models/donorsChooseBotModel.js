@@ -5,15 +5,16 @@
 var mongoose = require('mongoose');
 
 var schema = new mongoose.Schema({
-
-  // Corresponds to Mobile Commons Campaign ID used for Donation conversation.
-  // v1 Used numeric convetion 101 for 2014 SS, 201 for 2015 SS.
+  // Corresponds to the donorschoose_bot ID in Gambit Jr. API.
   _id: Number,
+  // Last refresh from Gambit Jr. API.
+  refreshed_at: Date,
 
-  // Contextual information about Campaign, used for Compose admin readability. 
-  __comments: String,
+  // Correponds to the Mobile Commons Opt-in Paths to send SMS messages to.
+  oip_chat: Number,
+  oip_end_chat: Number,
 
-  // Chatbot config:
+  // Cached donation_bot message values from Gambit Jr. API.
   msg_ask_email: String,
   msg_ask_first_name: String,
   msg_ask_zip: String,
@@ -25,12 +26,9 @@ var schema = new mongoose.Schema({
   msg_project_link: String,
   msg_max_donations_reached: String,
   msg_search_start: String,
-  msg_search_no_results: String,
-  oip_chat: Number,
-  oip_end_chat: Number
-
+  msg_search_no_results: String
 });
 
 module.exports = function(connection) {
-  return connection.model(app.ConfigName.DONORSCHOOSE, schema, 'donorschoose');
+  return connection.model(app.ConfigName.DONORSCHOOSE, schema, 'donorschoose_bots');
 };
