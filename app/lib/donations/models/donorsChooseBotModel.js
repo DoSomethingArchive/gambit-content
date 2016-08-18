@@ -7,7 +7,6 @@ var mongoose = require('mongoose');
 var schema = new mongoose.Schema({
   // Corresponds to the donorschoose_bot ID in Gambit Jr. API.
   _id: Number,
-  name: String,
   // Last refresh from Gambit Jr. API.
   refreshed_at: Date,
   // Donation_bot properties are loaded from Gambit Jr. API.

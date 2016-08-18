@@ -20,7 +20,7 @@ router.post('/donors-choose/', function(request, response) {
 router.post('/donors-choose/sync', function(request, response) {
   var controller = new DonorsChoose();
   if (controller) {
-    controller.syncBotConfig(request, response);
+    controller.syncBotConfigs(request, response);
   }
   else {
     response.status(404).send('Request not available for: ' + request.params.controller);

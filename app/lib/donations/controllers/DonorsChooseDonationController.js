@@ -440,10 +440,10 @@ function getDonationCount(member) {
  * @param {object} req Express request
  * @param {object} res Express response
  */
-DonorsChooseDonationController.prototype.syncBotConfig = function(req, res) {
+DonorsChooseDonationController.prototype.syncBotConfigs = function(req, res) {
   var self = this;
-  if (!req.body.apiKey || req.body.apiKey !== process.env.GAMBIT_API_KEY) {
-    res.status(403).send('Invalid or missing apiKey.');
+  if (!req.body.api_key || req.body.api_key !== process.env.GAMBIT_API_KEY) {
+    res.status(403).send('Invalid api_key.');
     return;
   }
   var url = 'http://dev-gambit-jr.pantheonsite.io/wp-json/wp/v2/donorschoose_bots/';
@@ -472,18 +472,19 @@ DonorsChooseDonationController.prototype.syncBotConfig = function(req, res) {
     var bot, configDoc, propertyName;
     for (var i = 0; i < bots.length; i++) {
       bot = bots[i];
-      configDoc = app.getConfig(app.ConfigName.DONORSCHOOSE_BOT, bot.id);
+      configDoc = app.getConfig(app.ConfigName.DONORSCHOOSE_BOTS, bot.id);
       if (!configDoc) {
-        logger.log('info', 'dc.syncBotConfig doc not found for id:%s', bot.id);
+        logger.log('info', 'dc.syncBotConfigs doc not found for id:%s', bot.id);
         continue;
       }
       for (var j = 0; j < propertyNames.length; j++) {
         propertyName = propertyNames[j];
         configDoc[propertyName] = bot[propertyName];
       }
+      configDoc.name = bot.title;
       configDoc.refreshed_at = Date.now();
       configDoc.save();
-      logger.log('info', 'dc.syncBotConfig success for id:%s', bot.id);
+      logger.log('info', 'dc.syncBotConfigs success for id:%s', bot.id);
     }
     res.send();
   });
