@@ -9,19 +9,23 @@ var schema = new mongoose.Schema({
 
   // Member profile information:
   mobile: {type: String, index: true},
-  email: String,
-  first_name: String,
-  postal_code: String,
+  profile_email: String,
+  profile_first_name: String,
+  profile_postal_code: String,
 
-  // Donation transaction information:
+  // Keep config info for record-keeping:
+  moco_campaign_id: Number,
+  donorschoose_bot_id: Number,
+
+  // DonorsChoose information:
   donation_id: Number,
-  proposal_id: Number,
   donation_amount: Number,
-  remaining_amount: Number,
+  proposal_id: Number,
+  proposal_url: String,
+  proposal_remaining_amount: Number,
   school_name: String,
   school_city: String,
-  school_state: String,
-  url: String
+  school_state: String
 
 })
 

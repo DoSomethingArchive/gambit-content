@@ -1,6 +1,10 @@
 /**
- * Model for the DonorsChoose SMS configuration document. Each 
- * object corresponds to one DonorsChoose donation endgame flow.
+ * Model for Gambit Jr. API donorschoose_bot. 
+ * Each document contains content to use for each message sent in
+ * DonorsChoose donation endgame flow.
+ *
+ * We keep a cache of each donorschoose_bot to avoid making
+ * more network connections to the Gambir Jr. API
  */
 var mongoose = require('mongoose');
 
@@ -9,7 +13,6 @@ var schema = new mongoose.Schema({
   _id: Number,
   // Last refresh from Gambit Jr. API.
   refreshed_at: Date,
-  // Donation_bot properties are loaded from Gambit Jr. API.
   msg_ask_email: String,
   msg_ask_first_name: String,
   msg_ask_zip: String,
