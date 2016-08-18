@@ -153,7 +153,7 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
       return;
     }
 
-    self.findProjectAndRespond(member, {email: firstWord});
+    self.findProjectAndRespond(member, firstWord);
     return;
 
   }
@@ -164,16 +164,24 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
 /**
  * Queries DonorsChoose API to find a project, donate to it, and respond back.
  * @param {object} member
- * @param {object} profileFields
+ * @param {string} [email] - If passed, save email to profile.
  */
-DonorsChooseDonationController.prototype.findProjectAndRespond = function(member, profileFields) {
+DonorsChooseDonationController.prototype.findProjectAndRespond = function(member, email) {
   var self = this;
+
+  var profileFields = null;
+  if (typeof email === 'string') {
+    // We'll need member.profile_email later when we write donation document.
+    member.profile_email = email.toLowerCase();
+    profileFields = {email: member.profile_email};
+  }
   self.endChat(member, this.bot.msg_search_start, profileFields);
 
   logger.log('debug', 'dc.findProjectAndRespond user:%s zip:%s', member.phone,
     member.profile_postal_code);
   var mobileNumber = member.phone;
   var zip = member.profile_postal_code;
+
 
   // @see https://data.donorschoose.org/docs/project-listing/json-requests/
   var requestUrlString = donorsChooseProposalsHost + 'common/json_feed.html';
@@ -418,7 +426,7 @@ DonorsChooseDonationController.prototype.respondWithSuccess = function(member, p
  * @param {object} member
  * @param {number} optInPath - Should contain {{slothbot_response}} as Liquid
  * @param {string} msgTxt - Value to save to our slothboth_response Custom Field
- * @param {object|null} profileFields - Key/values to save as MoCo Custom Fields
+ * @param {object} [profileFields] - Key/values to save as MoCo Custom Fields
  */
 function sendSMS(member, optInPath, msgTxt, profileFields) {
   var mobileNumber = smsHelper.getNormalizedPhone(member.phone);
