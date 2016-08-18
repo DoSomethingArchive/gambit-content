@@ -1,6 +1,6 @@
 /**
  * Model for the DonorsChoose SMS configuration document. Each 
- * object corresponds to one DonorsChoose donation endgame flow.
+ * object corresponds to one DonorsChoose Donation Mobile Commons campaign.
  */
 var mongoose = require('mongoose');
 

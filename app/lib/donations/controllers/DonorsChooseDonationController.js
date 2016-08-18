@@ -2,7 +2,8 @@
 
 /**
  * Submits a donation to DonorsChoose.org on behalf of a MoCo member.
- * Currently only used for Science Sleuth.
+ * Currently only supports running one DonorsChoose Donation Campaign at a time,
+ * set by the DONORSCHOOSE_MOCO_CAMPAIGN_ID environment variable.
  */
 var donorsChooseApiKey = (process.env.DONORSCHOOSE_API_KEY || null);
 var donorsChooseApiPassword = (process.env.DONORSCHOOSE_API_PASSWORD || null);
@@ -17,27 +18,24 @@ if (process.env.NODE_ENV != 'production') {
 }
 
 var DONATION_AMOUNT = (process.env.DONORSCHOOSE_DONATION_AMOUNT || 10);
-var COST_TO_COMPLETE_UPPER_LIMIT = 10000
-var DONATE_API_URL = donorsChooseDonationsHost + 'common/json_api.html?APIKey=' + donorsChooseApiKey;
-var END_MESSAGE_DELAY = 2500;
+var DONATION_COUNT_FIELDNAME = 'ss2016_donation_count';
 var MAX_DONATIONS_ALLOWED = (process.env.DONORSCHOOSE_MAX_DONATIONS_ALLOWED || 5);
 
-// Name of MoCo Custom Field used to store member's number of donations.
-var DONATION_COUNT_FIELDNAME = 'ss2016_donation_count';
-
-var Q = require('q')
-  , requestHttp = require('request')
-  , Entities = require('html-entities').AllHtmlEntities
-  , logger = rootRequire('app/lib/logger')
-  , mobilecommons = rootRequire('mobilecommons')
-  , smsHelper = rootRequire('app/lib/smsHelpers')
-  , shortenLink = rootRequire('app/lib/bitly')
-  , stringValidator = rootRequire('app/lib/string-validators')
-  ;
-
+var Q = require('q');
+var requestHttp = require('request');
+var Entities = require('html-entities').AllHtmlEntities
+var logger = rootRequire('app/lib/logger');
+var mobilecommons = rootRequire('mobilecommons');
+var smsHelper = rootRequire('app/lib/smsHelpers');
+var shortenLink = rootRequire('app/lib/bitly');
+var stringValidator = rootRequire('app/lib/string-validators');
 var connectionOperations = rootRequire('app/config/connectionOperations');
 var donationModel = require('../models/donorsChooseDonationModel')(connectionOperations);
 
+/**
+ * DonorsChooseDonationController
+ * @constructor
+ */
 function DonorsChooseDonationController() {
   var mocoCampaignId = process.env.DONORSCHOOSE_MOCO_CAMPAIGN_ID;
   this.mocoConfig = app.getConfig(app.ConfigName.DONORSCHOOSE, mocoCampaignId);
@@ -47,8 +45,9 @@ function DonorsChooseDonationController() {
 
 /**
  * Sends SMS mesage and listens for a MoCo response.
- *
- * @see sendSMS(member, optInPath, messageText, customFields)
+ * @param {object} member - MoCo request.body
+ * @param {string} msgText
+ * @param {object} profileFields - key/value MoCo Custom Fields to update
  */
 DonorsChooseDonationController.prototype.chat = function(member, msgText, profileFields) {
   sendSMS(member, this.mocoConfig.oip_chat, msgText, profileFields);
@@ -56,8 +55,9 @@ DonorsChooseDonationController.prototype.chat = function(member, msgText, profil
 
 /**
  * Sends SMS message and ends conversation.
- *
- * @see sendSMS(member, optInPath, messageText, customFields)
+ * @param {object} member - MoCo request.body
+ * @param {string} msgText
+ * @param {object} profileFields - key/value MoCo Custom Fields to update
  */
 DonorsChooseDonationController.prototype.endChat = function(member, msgText, profileFields) {
   sendSMS(member, this.mocoConfig.oip_end_chat, msgText, profileFields);
@@ -65,18 +65,24 @@ DonorsChooseDonationController.prototype.endChat = function(member, msgText, pro
 
 /**
  * Sends SMS message with generic failure text and ends conversation.
+ * @param {object} member - MoCo request.body
  */
 DonorsChooseDonationController.prototype.endChatWithFail = function(member) {
   this.endChat(member, this.bot.msg_error_generic);
 }
 
+/**
+ * Responds to DonorsChoose Donation requests sent from MoCo mData's.
+ * @param {object} request - Express request
+ * @param {object} response - Express response
+ */
 DonorsChooseDonationController.prototype.chatbot = function(request, response) {
   var self = this;
   var member = request.body;
   logger.log('verbose', 'dc.chat member:', member);
   response.send();
 
-  // @todo Add sanity check to make sure this.dcConfig exists
+  // @todo Add sanity checks to make sure this.config, this.bot exist
 
   var firstWord = null;
 
@@ -156,25 +162,24 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
 };
 
 /**
- * Queries DonorsChoose API to find a STEM project by zip and sends the
- * project details back to the user.
- *
- * @see https://data.donorschoose.org/docs/project-listing/json-requests/
- *
+ * Queries DonorsChoose API to find a project, donate to it, and respond back.
+ * @param {object} member
+ * @param {object} profileFields
  */
-DonorsChooseDonationController.prototype.findProjectAndRespond = function(member, customFields) {
+DonorsChooseDonationController.prototype.findProjectAndRespond = function(member, profileFields) {
   var self = this;
-  self.endChat(member, this.bot.msg_search_start, customFields);
+  self.endChat(member, this.bot.msg_search_start, profileFields);
 
   logger.log('debug', 'dc.findProjectAndRespond user:%s zip:%s', member.phone,
     member.profile_postal_code);
   var mobileNumber = member.phone;
   var zip = member.profile_postal_code;
 
+  // @see https://data.donorschoose.org/docs/project-listing/json-requests/
   var requestUrlString = donorsChooseProposalsHost + 'common/json_feed.html';
   requestUrlString += '?subject4=-4'; 
   requestUrlString += '&sortBy=2'; 
-  requestUrlString += '&costToCompleteRange=' + DONATION_AMOUNT + '+TO+' + COST_TO_COMPLETE_UPPER_LIMIT; 
+  requestUrlString += '&costToCompleteRange=' + DONATION_AMOUNT + '+TO+10000'; 
   requestUrlString += '&max=1';
   requestUrlString += '&zip=' + zip;
   logger.log('debug', 'dc.findProject user:%s request:%s', member.phone, 
@@ -215,6 +220,11 @@ DonorsChooseDonationController.prototype.findProjectAndRespond = function(member
   });
 }
 
+/**
+ * Decodes proposal returned from DonorsChoose API.
+ * @param {object} proposal
+ * @return {object}
+ */
 function decodeDonorsChooseProposal(proposal) {
   var entities = new Entities();
   return {
@@ -229,13 +239,9 @@ function decodeDonorsChooseProposal(proposal) {
 }
 
 /**
- * Submits a donation transaction to Donors Choose.
- *
- * @see https://data.donorschoose.org/docs/transactions/
- *
- * @param donorInfoObject = {donorEmail: string, donorFirstName: string}
- * @param proposalId, the DonorsChoose proposal ID 
- *
+ * Posts donation to DonorsChoose API for given project, behalf of given member.
+ * @param {object} member
+ * @param {object} project
  */
 DonorsChooseDonationController.prototype.postDonation = function(member, project) {
   var self = this;
@@ -243,12 +249,15 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
   logger.log('debug', 'dc.submitDonation user:%s proposalId:%s', 
     donorPhone, project.id);
 
+  var apiUrl = donorsChooseDonationsHost + 'common/json_api.html?APIKey=';
+  apiUrl += donorsChooseApiKey;
   requestToken().then(postDonation,
     promiseErrorCallback('dc.submitDonation failed for user:' + donorPhone)
   );
 
   /**
-   * First request: obtains a unique token for the donation.
+   * First request: obtain a unique token for the donation.
+   * @see https://data.donorschoose.org/docs/transactions/
    */
   function requestToken() {
     // Creates promise-storing object.
@@ -258,8 +267,8 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
       'apipassword': donorsChooseApiPassword, 
       'action': 'token'
     }}
-    logger.log('debug', 'dc.requestToken POST %s user:%s', DONATE_API_URL, donorPhone);
-    requestHttp.post(DONATE_API_URL, retrieveTokenParams, function(err, response, body) {
+    logger.log('debug', 'dc.requestToken POST %s user:%s', apiUrl, donorPhone);
+    requestHttp.post(apiUrl, retrieveTokenParams, function(err, response, body) {
       if (!err) {
         try {
           logger.log('verbose', 'dc.requestToken POST user:%s body:%s', 
@@ -310,7 +319,7 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
       'honoreeEmail': member.profile_email,
       'honoreeFirst': member.profile_first_name,
     }};
-    requestHttp.post(DONATE_API_URL, donateFormParams, function(err, response, body) {
+    requestHttp.post(apiUrl, donateFormParams, function(err, response, body) {
       if (err) {
         logger.error('dc.postDonation POST user:%s error:%s',
           member.phone, error);
@@ -370,10 +379,9 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
 };
 
 /**
- * Sends multiple messages to user after a successful donation.
- *
- * @param project
- *   Decoded DonorsChoose proposal object.
+ * Responds to member with confirmation of donation to the given project.
+ * @param {object} member
+ * @param {object} project
  */
 DonorsChooseDonationController.prototype.respondWithSuccess = function(member, project) {
   var self = this;
@@ -387,10 +395,11 @@ DonorsChooseDonationController.prototype.respondWithSuccess = function(member, p
   var firstMessage = self.bot.msg_donation_success + ' ' + project.schoolName + ".";
   self.endChat(member, firstMessage);
 
+  var delay = 2500;
   setTimeout(function() {
     var secondMessage = '@' + project.teacherName + ': Thx! ' + project.description;
     self.endChat(member, secondMessage);
-  }, END_MESSAGE_DELAY);
+  }, delay);
 
   setTimeout(function() {
     shortenLink(project.url, function(shortenedLink) {
@@ -399,34 +408,32 @@ DonorsChooseDonationController.prototype.respondWithSuccess = function(member, p
       var thirdMessage = self.bot.msg_project_link + ' ' + shortenedLink;
       self.endChat(member, thirdMessage, customFields);
     });
-  }, 2 * END_MESSAGE_DELAY);
+  }, 2 * delay);
 }
 
 /**
- * Posts profile_update request to Mobile Commons to send messageText as SMS.
- *
- * @param {object} member The MoCo request.body sent, containing member info.
- * @param {number} optInPath
- * @param {string} messageText
- * @param {object|null} customFields Key/values to store as MoCo Custom Fields.
+ * Posts MoCo profile_update to save msgTxt to member profile and send as SMS.
+ * @param {object} member
+ * @param {number} optInPath - Should contain {{slothbot_response}} as Liquid
+ * @param {string} msgTxt - Value to save to our slothboth_response Custom Field
+ * @param {object|null} profileFields - Key/values to save as MoCo Custom Fields
  */
-function sendSMS(member, optInPath, msgTxt, customFields) {
+function sendSMS(member, optInPath, msgTxt, profileFields) {
   var mobileNumber = smsHelper.getNormalizedPhone(member.phone);
   var msgTxt = msgTxt.replace('{{postal_code}}', member.profile_postal_code);
 
-  if (typeof customFields === 'undefined') {
-    customFields = {slothbot_response: msgTxt};
+  if (typeof profileFields === 'undefined') {
+    profileFields = {slothbot_response: msgTxt};
   }
   else {
-    customFields.slothbot_response = msgTxt;
+    profileFields.slothbot_response = msgTxt;
   }
 
-  mobilecommons.profile_update(mobileNumber, optInPath, customFields);
+  mobilecommons.profile_update(mobileNumber, optInPath, profileFields);
 }
 
 /**
- * Returns the number of times member has donated to current Donation campaign.
- *
+ * Returns number of times member has donated to current Donation campaign.
  * @param {object} member 
  * @return {number}
  */
@@ -436,9 +443,8 @@ function getDonationCount(member) {
 
 /**
  * Queries Gambit Jr. API to sync donorschoose_bots config documents.
- *
- * @param {object} req Express request
- * @param {object} res Express response
+ * @param {object} req - Express request
+ * @param {object} res - Express response
  */
 DonorsChooseDonationController.prototype.syncBotConfigs = function(req, res) {
   var self = this;
@@ -500,8 +506,8 @@ function promiseErrorCallback(message, member) {
 function onPromiseErrorCallback(err) {
   if (err) {
     logger.error(this.message + '\n', err.stack);
-    // @todo Don't we have enough of these to not use this?
-//    this.endChatWithFail(this.member);
+    // @todo Can likely uncomment this and remove the many other calls we have
+    // this.endChatWithFail(this.member);
   }
 }
 
