@@ -168,6 +168,8 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
  */
 DonorsChooseDonationController.prototype.findProjectAndRespond = function(member, email) {
   var self = this;
+  logger.log('debug', 'dc.findProjectAndRespond user:%s zip:%s', member.phone,
+    member.profile_postal_code);
 
   var profileFields = null;
   if (typeof email === 'string') {
@@ -177,26 +179,15 @@ DonorsChooseDonationController.prototype.findProjectAndRespond = function(member
   }
   self.endChat(member, this.bot.msg_search_start, profileFields);
 
-  logger.log('debug', 'dc.findProjectAndRespond user:%s zip:%s', member.phone,
-    member.profile_postal_code);
-  var mobileNumber = member.phone;
+  var phone = member.phone;
   var zip = member.profile_postal_code;
+  var apiUrl = getDonorsChooseProposalsQueryURL(zip);
+  logger.log('debug', 'dc.findProject user:%s request:%s', phone, apiUrl);
+  apiUrl += '&APIKey=' + donorsChooseApiKey;
 
-
-  // @see https://data.donorschoose.org/docs/project-listing/json-requests/
-  var requestUrlString = donorsChooseProposalsHost + 'common/json_feed.html';
-  requestUrlString += '?subject4=-4'; 
-  requestUrlString += '&sortBy=2'; 
-  requestUrlString += '&costToCompleteRange=' + DONATION_AMOUNT + '+TO+10000'; 
-  requestUrlString += '&max=1';
-  requestUrlString += '&zip=' + zip;
-  logger.log('debug', 'dc.findProject user:%s request:%s', member.phone, 
-    requestUrlString);
-  requestUrlString += '&APIKey=' + donorsChooseApiKey;
-
-  requestHttp.get(requestUrlString, function(error, response, body) {
+  requestHttp.get(apiUrl, function(error, response, body) {
     if (error) {
-      logger.error('dc.findProject user:%s get error:%s', mobileNumber, error);
+      logger.error('dc.findProject user:%s get error:%s', phone, error);
       self.endChatWithFail(member);
       return;
     }
@@ -208,13 +199,13 @@ DonorsChooseDonationController.prototype.findProjectAndRespond = function(member
         // For now, send back error message per existing functionality.
         self.endChat(member, this.bot.msg_search_no_results);
         logger.error('dc.findProject no results for zip:%s user:%s', zip, 
-          mobileNumber);
+          phone);
         return;
       }
       // When DC API is down, it sends html as response.
       else if (typeof dcResponse !== 'object') {
         self.endChatWithFail;
-        logger.error('dc.findProject user:%s invalid JSON.', mobileNumber);
+        logger.error('dc.findProject user:%s invalid JSON.', phone);
         return;
       }
       var project = decodeDonorsChooseProposal(dcResponse.proposals[0]);
@@ -222,7 +213,7 @@ DonorsChooseDonationController.prototype.findProjectAndRespond = function(member
     }
     catch (e) {
       self.endChatWithFail(member);
-      logger.error('ds.findProject user:%s e:%s', mobileNumber, e); 
+      logger.error('ds.findProject user:%s e:%s', phone, e); 
       return;
     }
   });
@@ -453,6 +444,22 @@ function getDonationCount(member) {
     return 0;
   }
   return count;
+}
+
+/**
+ * Returns URL string to query for DonorsChoose projects.
+ * @param {string} zip 
+ * @return {string}
+ */
+function getDonorsChooseProposalsQueryURL(zip) {
+  // @see https://data.donorschoose.org/docs/project-listing/json-requests/
+  var url = donorsChooseProposalsHost + 'common/json_feed.html';
+  url += '?subject4=-4'; 
+  url += '&sortBy=2'; 
+  url += '&costToCompleteRange=' + DONATION_AMOUNT + '+TO+10000'; 
+  url += '&max=1';
+  url += '&zip=' + zip;
+  return url;
 }
 
 /**
