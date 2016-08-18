@@ -438,7 +438,11 @@ function sendSMS(member, optInPath, msgTxt, profileFields) {
  * @return {number}
  */
 function getDonationCount(member) {
-  return parseInt(member['profile_' + DONATION_COUNT_FIELDNAME]);
+  var count = parseInt(member['profile_' + DONATION_COUNT_FIELDNAME]);
+  if (!count) {
+    return 0;
+  }
+  return count;
 }
 
 /**
