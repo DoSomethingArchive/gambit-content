@@ -19,7 +19,9 @@ if (process.env.NODE_ENV != 'production') {
 
 var DONATION_AMOUNT = (process.env.DONORSCHOOSE_DONATION_AMOUNT || 10);
 var DONATION_COUNT_FIELDNAME = 'ss2016_donation_count';
+var DONORSCHOOSE_BOT_ID = process.env.DONORSCHOOSE_BOT_ID;
 var MAX_DONATIONS_ALLOWED = (process.env.DONORSCHOOSE_MAX_DONATIONS_ALLOWED || 5);
+var MOCO_CAMPAIGN_ID = process.env.DONORSCHOOSE_MOCO_CAMPAIGN_ID;
 
 var Q = require('q');
 var requestHttp = require('request');
@@ -37,10 +39,8 @@ var donationModel = require('../models/donorsChooseDonationModel')(connectionOpe
  * @constructor
  */
 function DonorsChooseDonationController() {
-  var mocoCampaignId = process.env.DONORSCHOOSE_MOCO_CAMPAIGN_ID;
-  this.mocoConfig = app.getConfig(app.ConfigName.DONORSCHOOSE, mocoCampaignId);
-  var botId = process.env.DONORSCHOOSE_BOT_ID;
-  this.bot = app.getConfig(app.ConfigName.DONORSCHOOSE_BOTS, botId);
+  this.mocoConfig = app.getConfig(app.ConfigName.DONORSCHOOSE, MOCO_CAMPAIGN_ID);
+  this.bot = app.getConfig(app.ConfigName.DONORSCHOOSE_BOTS, DONORSCHOOSE_BOT_ID);
 };
 
 /**
@@ -359,17 +359,19 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
     function createDonationDoc(donation) {
       var donationLogData = {
         mobile: member.phone,
-        email: member.profile_email,
-        first_name: member.profile_first_name,
-        postal_code: member.profile_postal_code,
-        proposal_id: project.id,
+        profile_email: member.profile_email,
+        profile_first_name: member.profile_first_name,
+        profile_postal_code: member.profile_postal_code,
+        moco_campaign_id: MOCO_CAMPAIGN_ID,
+        donorschoose_bot_id: DONORSCHOOSE_BOT_ID,
         donation_id: donation.donationId,
         donation_amount: DONATION_AMOUNT,
-        remaining_amount: donation.remainingProposalAmount,
+        proposal_id: project.id,
+        proposal_remaining_amount: donation.remainingProposalAmount,
+        proposal_url: project.url,
         school_name: project.schoolName,
         school_city: project.city,
-        school_state: project.state,
-        url: project.url
+        school_state: project.state
       };
       donationModel.create(donationLogData).then(function(doc) {
         logger.log('debug', 'dc.createDonationDoc success:%s', donation);
