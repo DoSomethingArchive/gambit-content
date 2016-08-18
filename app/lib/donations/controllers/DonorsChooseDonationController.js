@@ -220,24 +220,6 @@ DonorsChooseDonationController.prototype.findProjectAndRespond = function(member
 }
 
 /**
- * Decodes proposal returned from DonorsChoose API.
- * @param {object} proposal
- * @return {object}
- */
-function decodeDonorsChooseProposal(proposal) {
-  var entities = new Entities();
-  return {
-    id: proposal.id,
-    description: entities.decode(proposal.fulfillmentTrailer),
-    city: entities.decode(proposal.city),
-    state: entities.decode(proposal.state),
-    schoolName: entities.decode(proposal.schoolName),
-    teacherName: entities.decode(proposal.teacherName),
-    url: proposal.proposalURL
-  };
-}
-
-/**
  * Posts donation to DonorsChoose API for given project, behalf of given member.
  * @param {object} member
  * @param {object} project
@@ -460,6 +442,24 @@ function getDonorsChooseProposalsQueryURL(zip) {
   url += '&max=1';
   url += '&zip=' + zip;
   return url;
+}
+
+/**
+ * Decodes proposal returned from DonorsChoose API.
+ * @param {object} proposal
+ * @return {object}
+ */
+function decodeDonorsChooseProposal(proposal) {
+  var entities = new Entities();
+  return {
+    id: proposal.id,
+    description: entities.decode(proposal.fulfillmentTrailer),
+    city: entities.decode(proposal.city),
+    state: entities.decode(proposal.state),
+    schoolName: entities.decode(proposal.schoolName),
+    teacherName: entities.decode(proposal.teacherName),
+    url: proposal.proposalURL
+  };
 }
 
 /**
