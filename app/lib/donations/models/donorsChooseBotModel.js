@@ -7,14 +7,10 @@ var mongoose = require('mongoose');
 var schema = new mongoose.Schema({
   // Corresponds to the donorschoose_bot ID in Gambit Jr. API.
   _id: Number,
+  name: String,
   // Last refresh from Gambit Jr. API.
   refreshed_at: Date,
-
-  // Correponds to the Mobile Commons Opt-in Paths to send SMS messages to.
-  oip_chat: Number,
-  oip_end_chat: Number,
-
-  // Cached donation_bot message values from Gambit Jr. API.
+  // Donation_bot properties are loaded from Gambit Jr. API.
   msg_ask_email: String,
   msg_ask_first_name: String,
   msg_ask_zip: String,
@@ -30,5 +26,5 @@ var schema = new mongoose.Schema({
 });
 
 module.exports = function(connection) {
-  return connection.model(app.ConfigName.DONORSCHOOSE, schema, 'donorschoose_bots');
+  return connection.model(app.ConfigName.DONORSCHOOSE_BOTS, schema, 'donorschoose_bots');
 };
