@@ -382,7 +382,7 @@ DonorsChooseDonationController.prototype.respondWithSuccess = function(member, p
   var customFields = {};
   customFields[DONATION_COUNT_FIELDNAME] = donationCount + 1;
 
-  var firstMessage = self.dcConfig.msg_donation_success + project.schoolName + ".";
+  var firstMessage = self.dcConfig.msg_donation_success + ' ' + project.schoolName + ".";
   self.endChat(member, firstMessage);
 
   setTimeout(function() {
@@ -394,7 +394,7 @@ DonorsChooseDonationController.prototype.respondWithSuccess = function(member, p
     shortenLink(project.url, function(shortenedLink) {
       logger.log('debug', 'dc.sendSuccessMessages user:%s shortenedLink:%s', 
         member.phone, shortenedLink);
-      var thirdMessage = self.dcConfig.msg_project_link + shortenedLink;
+      var thirdMessage = self.dcConfig.msg_project_link + ' ' + shortenedLink;
       self.endChat(member, thirdMessage, customFields);
     });
   }, 2 * END_MESSAGE_DELAY);
@@ -433,11 +433,10 @@ function getDonationCount(member) {
 }
 
 /**
- * Queries DonorsChoose API to find a STEM project by zip and sends the
- * project details back to the user.
+ * Queries Gambit Jr. API to sync donorschoose_bots config documents.
  *
- * @see https://data.donorschoose.org/docs/project-listing/json-requests/
- *
+ * @param {object} req Express request
+ * @param {object} res Express response
  */
 DonorsChooseDonationController.prototype.syncBotConfig = function(req, res) {
   var self = this;
