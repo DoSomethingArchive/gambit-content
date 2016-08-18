@@ -441,18 +441,19 @@ function getDonationCount(member) {
  */
 DonorsChooseDonationController.prototype.syncBotConfig = function(req, res) {
   var self = this;
-  var botId = process.env.DONORSCHOOSE_BOT_ID;
+  if (!req.body.apiKey || req.body.apiKey !== process.env.GAMBIT_API_KEY) {
+    res.status(403).send('Invalid or missing apiKey.');
+    return;
+  }
   var url = 'http://dev-gambit-jr.pantheonsite.io/wp-json/wp/v2/donorschoose_bots/';
-  url += botId;
   console.log(url);
 
   requestHttp.get(url, function(error, response, body) {
     if (error) {
-      res.status(404).send('No donation bot found for ID:' + botId);
+      res.status(500);
       return;
     }
-    
-    var configContent = JSON.parse(body);
+    var bots = JSON.parse(body);
     var propertyNames = [
       'msg_ask_email',
       'msg_ask_first_name',
@@ -469,12 +470,22 @@ DonorsChooseDonationController.prototype.syncBotConfig = function(req, res) {
       'oip_chat',
       'oip_end_chat'
     ];
-    for (var i = 0; i < propertyNames.length; i++) {
-      var propertyName = propertyNames[i];
-      self.dcConfig[propertyName] = configContent[propertyName];
+    var bot, configDoc, propertyName;
+    for (var i = 0; i < bots.length; i++) {
+      bot = bots[i];
+      configDoc = app.getConfig(app.ConfigName.DONORSCHOOSE, bot.id);
+      if (!configDoc) {
+        logger.log('info', 'dc.syncBotConfig doc not found for id:%s', bot.id);
+        continue;
+      }
+      for (var j = 0; j < propertyNames.length; j++) {
+        propertyName = propertyNames[j];
+        configDoc[propertyName] = bot[propertyName];
+      }
+      configDoc.refreshed_at = Date.now();
+      configDoc.save();
+      logger.log('info', 'dc.syncBotConfig success for id:%s', bot.id);
     }
-    console.log(self.dcConfig);
-    self.dcConfig.save();
     res.send();
   });
 }
