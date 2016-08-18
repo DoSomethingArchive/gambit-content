@@ -40,7 +40,9 @@ var donationModel = require('../models/donorsChooseDonationModel')(connectionOpe
 
 function DonorsChooseDonationController() {
   var mocoCampaignId = process.env.DONORSCHOOSE_MOCO_CAMPAIGN_ID;
-  this.dcConfig = app.getConfig(app.ConfigName.DONORSCHOOSE, mocoCampaignId); 
+  this.mocoConfig = app.getConfig(app.ConfigName.DONORSCHOOSE, mocoCampaignId);
+  var botId = process.env.DONORSCHOOSE_BOT_ID;
+  this.bot = app.getConfig(app.ConfigName.DONORSCHOOSE_BOTS, botId);
 };
 
 /**
@@ -49,7 +51,7 @@ function DonorsChooseDonationController() {
  * @see sendSMS(member, optInPath, messageText, customFields)
  */
 DonorsChooseDonationController.prototype.chat = function(member, msgText, profileFields) {
-  sendSMS(member, this.dcConfig.oip_chat, msgText, profileFields);
+  sendSMS(member, this.mocoConfig.oip_chat, msgText, profileFields);
 }
 
 /**
@@ -58,14 +60,14 @@ DonorsChooseDonationController.prototype.chat = function(member, msgText, profil
  * @see sendSMS(member, optInPath, messageText, customFields)
  */
 DonorsChooseDonationController.prototype.endChat = function(member, msgText, profileFields) {
-  sendSMS(member, this.dcConfig.oip_end_chat, msgText, profileFields);
+  sendSMS(member, this.mocoConfig.oip_end_chat, msgText, profileFields);
 }
 
 /**
  * Sends SMS message with generic failure text and ends conversation.
  */
 DonorsChooseDonationController.prototype.endChatWithFail = function(member) {
-  this.endChat(member, this.dcConfig.msg_error_generic);
+  this.endChat(member, this.bot.msg_error_generic);
 }
 
 DonorsChooseDonationController.prototype.chatbot = function(request, response) {
@@ -94,23 +96,23 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
   if (getDonationCount(member) >= MAX_DONATIONS_ALLOWED) {
     logger.log('info', 'dc.chat msg_max_donations_reached user:%s', 
       member.phone);
-    self.endChat(member, self.dcConfig.msg_max_donations_reached);
+    self.endChat(member, self.bot.msg_max_donations_reached);
     return;
   }
 
   if (!member.profile_postal_code) {
 
     if (!firstWord) {
-      self.chat(member, self.dcConfig.msg_ask_zip);
+      self.chat(member, self.bot.msg_ask_zip);
       return;
     }
 
     if (!stringValidator.isValidZip(firstWord)) {
-      self.chat(member, self.dcConfig.msg_invalid_zip);
+      self.chat(member, self.bot.msg_invalid_zip);
       return;
     }
 
-    self.chat(member, self.dcConfig.msg_ask_first_name,
+    self.chat(member, self.bot.msg_ask_first_name,
       {postal_code: firstWord});
     return;
 
@@ -119,16 +121,16 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
   if (!member.profile_first_name) {
 
     if (!firstWord) {
-      self.chat(member, self.dcConfig.msg_ask_first_name);
+      self.chat(member, self.bot.msg_ask_first_name);
       return;
     }
 
     if (stringValidator.containsNaughtyWords(firstWord)) {
-      self.chat(member, self.dcConfig.msg_invalid_first_name);
+      self.chat(member, self.bot.msg_invalid_first_name);
       return;
     }
 
-    self.chat(member, self.dcConfig.msg_ask_email, {first_name: firstWord});
+    self.chat(member, self.bot.msg_ask_email, {first_name: firstWord});
     return;
 
   }
@@ -136,12 +138,12 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
   if (!member.profile_email) {
 
     if (!firstWord) {
-      self.chat(member, self.dcConfig.msg_ask_email);
+      self.chat(member, self.bot.msg_ask_email);
       return;
     }
 
     if (!stringValidator.isValidEmail(firstWord)) {
-      self.chat(member, self.dcConfig.msg_invalid_email);
+      self.chat(member, self.bot.msg_invalid_email);
       return;
     }
 
@@ -162,7 +164,7 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
  */
 DonorsChooseDonationController.prototype.findProjectAndRespond = function(member, customFields) {
   var self = this;
-  self.endChat(member, this.dcConfig.msg_search_start, customFields);
+  self.endChat(member, this.bot.msg_search_start, customFields);
 
   logger.log('debug', 'dc.findProjectAndRespond user:%s zip:%s', member.phone,
     member.profile_postal_code);
@@ -191,7 +193,7 @@ DonorsChooseDonationController.prototype.findProjectAndRespond = function(member
       if (!dcResponse.proposals || dcResponse.proposals.length == 0) {
         // If no proposals, could potentially prompt user to try different zip.
         // For now, send back error message per existing functionality.
-        self.endChat(member, this.dcConfig.msg_search_no_results);
+        self.endChat(member, this.bot.msg_search_no_results);
         logger.error('dc.findProject no results for zip:%s user:%s', zip, 
           mobileNumber);
         return;
@@ -382,7 +384,7 @@ DonorsChooseDonationController.prototype.respondWithSuccess = function(member, p
   var customFields = {};
   customFields[DONATION_COUNT_FIELDNAME] = donationCount + 1;
 
-  var firstMessage = self.dcConfig.msg_donation_success + project.schoolName + ".";
+  var firstMessage = self.bot.msg_donation_success + ' ' + project.schoolName + ".";
   self.endChat(member, firstMessage);
 
   setTimeout(function() {
@@ -394,7 +396,7 @@ DonorsChooseDonationController.prototype.respondWithSuccess = function(member, p
     shortenLink(project.url, function(shortenedLink) {
       logger.log('debug', 'dc.sendSuccessMessages user:%s shortenedLink:%s', 
         member.phone, shortenedLink);
-      var thirdMessage = self.dcConfig.msg_project_link + shortenedLink;
+      var thirdMessage = self.bot.msg_project_link + ' ' + shortenedLink;
       self.endChat(member, thirdMessage, customFields);
     });
   }, 2 * END_MESSAGE_DELAY);
@@ -430,6 +432,62 @@ function sendSMS(member, optInPath, msgTxt, customFields) {
  */
 function getDonationCount(member) {
   return parseInt(member['profile_' + DONATION_COUNT_FIELDNAME]);
+}
+
+/**
+ * Queries Gambit Jr. API to sync donorschoose_bots config documents.
+ *
+ * @param {object} req Express request
+ * @param {object} res Express response
+ */
+DonorsChooseDonationController.prototype.syncBotConfigs = function(req, res) {
+  var self = this;
+  if (!req.body.api_key || req.body.api_key !== process.env.GAMBIT_API_KEY) {
+    res.status(403).send('Invalid api_key.');
+    return;
+  }
+  var url = 'http://dev-gambit-jr.pantheonsite.io/wp-json/wp/v2/donorschoose_bots/';
+  console.log(url);
+
+  requestHttp.get(url, function(error, response, body) {
+    if (error) {
+      res.status(500);
+      return;
+    }
+    var bots = JSON.parse(body);
+    var propertyNames = [
+      'msg_ask_email',
+      'msg_ask_first_name',
+      'msg_ask_zip',
+      'msg_donation_success',
+      'msg_error_generic',
+      'msg_invalid_email',
+      'msg_invalid_first_name',
+      'msg_invalid_zip',
+      'msg_project_link',
+      'msg_max_donations_reached',
+      'msg_search_start',
+      'msg_search_no_results'
+    ];
+    var bot, configDoc, propertyName;
+    for (var i = 0; i < bots.length; i++) {
+      bot = bots[i];
+      configDoc = app.getConfig(app.ConfigName.DONORSCHOOSE_BOTS, bot.id);
+      if (!configDoc) {
+        logger.log('info', 'dc.syncBotConfigs doc not found for id:%s', bot.id);
+        continue;
+      }
+      for (var j = 0; j < propertyNames.length; j++) {
+        propertyName = propertyNames[j];
+        configDoc[propertyName] = bot[propertyName];
+      }
+      configDoc.name = bot.title;
+      configDoc.refreshed_at = Date.now();
+      configDoc.save();
+      logger.log('info', 'dc.syncBotConfigs success for id:%s', bot.id);
+    }
+    res.send();
+  });
 }
 
 /**

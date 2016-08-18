@@ -6,6 +6,7 @@ app.ConfigName = {
   CAMPAIGN_TRANSITIONS: 'start_campaign_transition',
   COMPETITIVE_STORIES: 'competitive_story',
   DONORSCHOOSE: 'donorschoose',
+  DONORSCHOOSE_BOTS: 'donorschoose_bots',
   REPORTBACK: 'reportback',
   TIPS: 'tips',
   YES_NO_PATHS: 'yes_no_path'
@@ -15,6 +16,7 @@ var connectionOperations = require('./connectionOperations')
   , connectionConfig = require('./connectionConfig')
   , configModelArray = [
       rootRequire('app/lib/ds-routing/config/tipsConfigModel')(connectionConfig)
+    , rootRequire('app/lib/donations/models/donorsChooseBotModel')(connectionConfig)
     , rootRequire('app/lib/donations/models/donorsChooseConfigModel')(connectionConfig)
     , rootRequire('app/lib/ds-routing/config/campaignStartConfigModel')(connectionConfig)
     , rootRequire('app/lib/ds-routing/config/startCampaignTransitionsConfigModel')(connectionConfig)
