@@ -13,13 +13,6 @@ router.get('/', function (req, res) {
   res.send('hi');
 });
 
-// Custom DS routing to Mobile Commons paths for campaigns.
-router.use('/ds-routing', dsCampaignRouter);
-
-// Standard Staff Pick campaign report back.
-router.use('/reportback', reportback);
-
-// @todo: Move me
 router.use(function(req, res, next) {
   if (req.headers['x-gambit-api-key'] !== process.env.GAMBIT_API_KEY) {
     logger.warn('missing api key request:', req.url);
@@ -27,6 +20,12 @@ router.use(function(req, res, next) {
   }
   next();
 });
+
+// Custom DS routing to Mobile Commons paths for campaigns.
+router.use('/ds-routing', dsCampaignRouter);
+
+// Standard Staff Pick campaign report back.
+router.use('/reportback', reportback);
 
 // Internal module for handling SMS donations.
 router.use('/donations', donationsRouter);
