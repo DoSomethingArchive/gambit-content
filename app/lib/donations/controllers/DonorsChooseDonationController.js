@@ -168,16 +168,17 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
  */
 DonorsChooseDonationController.prototype.findProjectAndRespond = function(member, email) {
   var self = this;
-  logger.log('debug', 'dc.findProjectAndRespond user:%s zip:%s', member.phone,
-    member.profile_postal_code);
+  logger.log('debug', 'dc.findProjectAndRespond user:%s zip:%s email:%s', member.phone,
+    member.profile_postal_code, email);
 
-  var profileFields = null;
   if (typeof email === 'string') {
     // We'll need member.profile_email later when we write donation document.
     member.profile_email = email.toLowerCase();
-    profileFields = {email: member.profile_email};
+    self.endChat(member, this.bot.msg_search_start, {email: member.profile_email});
   }
-  self.endChat(member, this.bot.msg_search_start, profileFields);
+  else {
+    self.endChat(member, this.bot.msg_search_start);
+  }
 
   var phone = member.phone;
   var zip = member.profile_postal_code;
