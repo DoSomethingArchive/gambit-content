@@ -9,6 +9,10 @@ var slothbot = require('./lib/slothbot');
 
 app.use('/', router);
 
+router.get('/', function (req, res) {
+  res.send('hi');
+});
+
 // Custom DS routing to Mobile Commons paths for campaigns.
 router.use('/ds-routing', dsCampaignRouter);
 
