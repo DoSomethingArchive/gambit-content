@@ -1,27 +1,34 @@
 var express = require('express')
-  , router = express.Router();
+var router = express.Router();
 
-var multiplayerGameRouter = require('./lib/sms-games')
-  , donationsRouter = require('./lib/donations')
-  , dsCampaignRouter = require('./lib/ds-routing')
-  , reportback = require('./lib/reportback')
-  , slothbot = require('./lib/slothbot')
-  ;
+var logger = rootRequire('app/lib/logger');
+var donationsRouter = require('./lib/donations');
+var dsCampaignRouter = require('./lib/ds-routing');
+var reportback = require('./lib/reportback');
+var slothbot = require('./lib/slothbot');
 
-// Directs all requests to the top-level router. 
 app.use('/', router);
 
-// Directs multiplayer game requests to the appropriate router. 
-router.use('/sms-multiplayer-game', multiplayerGameRouter);
+router.get('/', function (req, res) {
+  res.send('hi');
+});
 
-// Internal module for handling SMS donations.
-router.use('/donations', donationsRouter);
+router.use(function(req, res, next) {
+  if (req.headers['x-gambit-api-key'] !== process.env.GAMBIT_API_KEY) {
+    logger.warn('missing api key request:', req.url);
+    return res.sendStatus(403);
+  }
+  next();
+});
 
 // Custom DS routing to Mobile Commons paths for campaigns.
 router.use('/ds-routing', dsCampaignRouter);
 
 // Standard Staff Pick campaign report back.
 router.use('/reportback', reportback);
+
+// Internal module for handling SMS donations.
+router.use('/donations', donationsRouter);
 
 // Season 2.
 router.use('/slothbot', slothbot);

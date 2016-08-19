@@ -470,13 +470,8 @@ function decodeDonorsChooseProposal(proposal) {
  */
 DonorsChooseDonationController.prototype.syncBotConfigs = function(req, res) {
   var self = this;
-  if (!req.body.api_key || req.body.api_key !== process.env.GAMBIT_API_KEY) {
-    res.status(403).send('Invalid api_key.');
-    return;
-  }
-  var url = 'http://dev-gambit-jr.pantheonsite.io/wp-json/wp/v2/donorschoose_bots/';
-  console.log(url);
 
+  var url = 'http://dev-gambit-jr.pantheonsite.io/wp-json/wp/v2/donorschoose_bots/';
   requestHttp.get(url, function(error, response, body) {
     if (error) {
       res.status(500);
