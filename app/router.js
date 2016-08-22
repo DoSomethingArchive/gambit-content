@@ -14,8 +14,9 @@ router.get('/', function (req, res) {
 });
 
 router.use(function(req, res, next) {
-  if (req.headers['x-gambit-api-key'] !== process.env.GAMBIT_API_KEY) {
-    logger.warn('missing api key request:', req.url);
+  var apiKey = process.env.GAMBIT_API_KEY;
+  if (req.method === 'POST' && req.headers['x-gambit-api-key'] !== apiKey) {
+    logger.warn('router invalid x-gambit-api-key:', req.url);
     return res.sendStatus(403);
   }
   next();
