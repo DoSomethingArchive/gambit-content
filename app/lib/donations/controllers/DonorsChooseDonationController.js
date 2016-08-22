@@ -2,7 +2,8 @@
 
 /**
  * Submits a donation to DonorsChoose.org on behalf of a MoCo member.
- * Currently only used for Science Sleuth.
+ * Currently only supports running one DonorsChoose Donation Campaign at a time,
+ * set by the DONORSCHOOSE_MOCO_CAMPAIGN_ID environment variable.
  */
 var donorsChooseApiKey = (process.env.DONORSCHOOSE_API_KEY || null);
 var donorsChooseApiPassword = (process.env.DONORSCHOOSE_API_PASSWORD || null);
@@ -17,91 +18,108 @@ if (process.env.NODE_ENV != 'production') {
 }
 
 var DONATION_AMOUNT = (process.env.DONORSCHOOSE_DONATION_AMOUNT || 10);
-var COST_TO_COMPLETE_UPPER_LIMIT = 10000
-var DONATE_API_URL = donorsChooseDonationsHost + 'common/json_api.html?APIKey=' + donorsChooseApiKey;
-var END_MESSAGE_DELAY = 2500;
-var MAX_DONATIONS_ALLOWED = (process.env.DONORSCHOOSE_MAX_DONATIONS_ALLOWED || 5);
-
-// Name of MoCo Custom Field used to store member's number of donations.
 var DONATION_COUNT_FIELDNAME = 'ss2016_donation_count';
+var DONORSCHOOSE_BOT_ID = process.env.DONORSCHOOSE_BOT_ID;
+var MAX_DONATIONS_ALLOWED = (process.env.DONORSCHOOSE_MAX_DONATIONS_ALLOWED || 5);
+var MOCO_CAMPAIGN_ID = process.env.DONORSCHOOSE_MOCO_CAMPAIGN_ID;
 
-var Q = require('q')
-  , requestHttp = require('request')
-  , Entities = require('html-entities').AllHtmlEntities
-  , logger = rootRequire('app/lib/logger')
-  , mobilecommons = rootRequire('mobilecommons')
-  , smsHelper = rootRequire('app/lib/smsHelpers')
-  , shortenLink = rootRequire('app/lib/bitly')
-  , stringValidator = rootRequire('app/lib/string-validators')
-  ;
-
+var Q = require('q');
+var requestHttp = require('request');
+var Entities = require('html-entities').AllHtmlEntities
+var logger = rootRequire('app/lib/logger');
+var mobilecommons = rootRequire('mobilecommons');
+var smsHelper = rootRequire('app/lib/smsHelpers');
+var shortenLink = rootRequire('app/lib/bitly');
+var stringValidator = rootRequire('app/lib/string-validators');
 var connectionOperations = rootRequire('app/config/connectionOperations');
 var donationModel = require('../models/donorsChooseDonationModel')(connectionOperations);
 
+/**
+ * DonorsChooseDonationController
+ * @constructor
+ */
 function DonorsChooseDonationController() {
-  var mocoCampaignId = process.env.DONORSCHOOSE_MOCO_CAMPAIGN_ID;
-  this.dcConfig = app.getConfig(app.ConfigName.DONORSCHOOSE, mocoCampaignId); 
+  this.mocoConfig = app.getConfig(app.ConfigName.DONORSCHOOSE, MOCO_CAMPAIGN_ID);
+  this.bot = app.getConfig(app.ConfigName.DONORSCHOOSE_BOTS, DONORSCHOOSE_BOT_ID);
 };
 
 /**
  * Sends SMS mesage and listens for a MoCo response.
- *
- * @see sendSMS(member, optInPath, messageText, customFields)
+ * @param {object} member - MoCo request.body
+ * @param {string} msgText
+ * @param {object} profileFields - key/value MoCo Custom Fields to update
  */
 DonorsChooseDonationController.prototype.chat = function(member, msgText, profileFields) {
-  sendSMS(member, this.dcConfig.oip_chat, msgText, profileFields);
+  sendSMS(member, this.mocoConfig.oip_chat, msgText, profileFields);
 }
 
 /**
  * Sends SMS message and ends conversation.
- *
- * @see sendSMS(member, optInPath, messageText, customFields)
+ * @param {object} member - MoCo request.body
+ * @param {string} msgText
+ * @param {object} profileFields - key/value MoCo Custom Fields to update
  */
 DonorsChooseDonationController.prototype.endChat = function(member, msgText, profileFields) {
-  sendSMS(member, this.dcConfig.oip_end_chat, msgText, profileFields);
+  sendSMS(member, this.mocoConfig.oip_end_chat, msgText, profileFields);
 }
 
 /**
  * Sends SMS message with generic failure text and ends conversation.
+ * @param {object} member - MoCo request.body
  */
 DonorsChooseDonationController.prototype.endChatWithFail = function(member) {
-  this.endChat(member, this.dcConfig.msg_error_generic);
+  this.endChat(member, this.bot.msg_error_generic);
 }
 
+/**
+ * Responds to DonorsChoose Donation requests sent from MoCo mData's.
+ * @param {object} request - Express request
+ * @param {object} response - Express response
+ */
 DonorsChooseDonationController.prototype.chatbot = function(request, response) {
   var self = this;
   var member = request.body;
   logger.log('verbose', 'dc.chat member:', member);
   response.send();
 
-  // @todo Add sanity check to make sure this.dcConfig exists
+  // @todo Add sanity checks to make sure this.config, this.bot exist
 
   var firstWord = null;
-  if (request.body.args) {
-    firstWord = smsHelper.getFirstWord(request.body.args);
+
+  // Start query parameter is used to start conversation and wait for response.
+  if (request.query.start) {
+    logger.log('debug', 'dc.chat user:%s start', member.phone);
   }
-  logger.log('debug', 'dc.chat user:%s firstWord:%s', member.phone, firstWord);
+  // Otherwise inspect message that the member has sent back.
+  else if (request.body.args) {
+    firstWord = smsHelper.getFirstWord(request.body.args);
+    logger.log('debug', 'dc.chat user:%s firstWord:%s', member.phone, firstWord);
+  }
+  else {
+    logger.log('warn', 'dc.chat user:%s no start, no args');
+  }
 
   if (getDonationCount(member) >= MAX_DONATIONS_ALLOWED) {
-    logger.log('debug', 'dc.chat msg_max_donations_reached user:%s', 
+    logger.log('info', 'dc.chat msg_max_donations_reached user:%s', 
       member.phone);
-    self.endChat(member, self.dcConfig.msg_max_donations_reached);
+    self.endChat(member, self.bot.msg_max_donations_reached);
     return;
   }
 
   if (!member.profile_postal_code) {
 
     if (!firstWord) {
-      self.chat(member, self.dcConfig.msg_ask_zip);
+      self.chat(member, self.bot.msg_ask_zip);
       return;
     }
 
     if (!stringValidator.isValidZip(firstWord)) {
-      self.chat(member, self.dcConfig.msg_invalid_zip);
+      self.chat(member, self.bot.msg_invalid_zip);
       return;
     }
 
-    self.chat(member, self.dcConfig.msg_ask_first_name, {postal_code: firstWord});
+    self.chat(member, self.bot.msg_ask_first_name,
+      {postal_code: firstWord});
     return;
 
   }
@@ -109,16 +127,16 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
   if (!member.profile_first_name) {
 
     if (!firstWord) {
-      self.chat(member, self.dcConfig.msg_ask_first_name);
+      self.chat(member, self.bot.msg_ask_first_name);
       return;
     }
 
     if (stringValidator.containsNaughtyWords(firstWord)) {
-      self.chat(member, "Pls don't use that tone with me. " + self.dcConfig.msg_ask_first_name);
+      self.chat(member, self.bot.msg_invalid_first_name);
       return;
     }
 
-    self.chat(member, self.dcConfig.msg_ask_email, {first_name: firstWord});
+    self.chat(member, self.bot.msg_ask_email, {first_name: firstWord});
     return;
 
   }
@@ -126,16 +144,16 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
   if (!member.profile_email) {
 
     if (!firstWord) {
-      self.chat(member, self.dcConfig.msg_ask_email);
+      self.chat(member, self.bot.msg_ask_email);
       return;
     }
 
     if (!stringValidator.isValidEmail(firstWord)) {
-      self.chat(member, "Whoops, that's not a valid email address. " + self.dcConfig.msg_ask_email);
+      self.chat(member, self.bot.msg_invalid_email);
       return;
     }
 
-    self.findProjectAndRespond(member, {email: firstWord});
+    self.findProjectAndRespond(member, firstWord);
     return;
 
   }
@@ -144,34 +162,33 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
 };
 
 /**
- * Queries DonorsChoose API to find a STEM project by zip and sends the
- * project details back to the user.
- *
- * @see https://data.donorschoose.org/docs/project-listing/json-requests/
- *
+ * Queries DonorsChoose API to find a project, donate to it, and respond back.
+ * @param {object} member
+ * @param {string} [email] - If passed, save email to profile.
  */
-DonorsChooseDonationController.prototype.findProjectAndRespond = function(member, customFields) {
+DonorsChooseDonationController.prototype.findProjectAndRespond = function(member, email) {
   var self = this;
-  self.endChat(member, this.dcConfig.msg_searching_by_zip, customFields);
+  logger.log('debug', 'dc.findProjectAndRespond user:%s zip:%s email:%s', member.phone,
+    member.profile_postal_code, email);
 
-  logger.log('debug', 'dc.findProjectAndRespond user:%s zip:%s', member.phone,
-    member.profile_postal_code);
-  var mobileNumber = member.phone;
+  if (typeof email === 'string') {
+    // We'll need member.profile_email later when we write donation document.
+    member.profile_email = email.toLowerCase();
+    self.endChat(member, this.bot.msg_search_start, {email: member.profile_email});
+  }
+  else {
+    self.endChat(member, this.bot.msg_search_start);
+  }
+
+  var phone = member.phone;
   var zip = member.profile_postal_code;
+  var apiUrl = getDonorsChooseProposalsQueryURL(zip);
+  logger.log('debug', 'dc.findProject user:%s request:%s', phone, apiUrl);
+  apiUrl += '&APIKey=' + donorsChooseApiKey;
 
-  var requestUrlString = donorsChooseProposalsHost + 'common/json_feed.html';
-  requestUrlString += '?subject4=-4'; 
-  requestUrlString += '&sortBy=2'; 
-  requestUrlString += '&costToCompleteRange=' + DONATION_AMOUNT + '+TO+' + COST_TO_COMPLETE_UPPER_LIMIT; 
-  requestUrlString += '&max=1';
-  requestUrlString += '&zip=' + zip;
-  logger.log('debug', 'dc.findProject user:%s request:%s', member.phone, 
-    requestUrlString);
-  requestUrlString += '&APIKey=' + donorsChooseApiKey;
-
-  requestHttp.get(requestUrlString, function(error, response, body) {
+  requestHttp.get(apiUrl, function(error, response, body) {
     if (error) {
-      logger.error('dc.findProject user:%s get error:%s', mobileNumber, error);
+      logger.error('dc.findProject user:%s get error:%s', phone, error);
       self.endChatWithFail(member);
       return;
     }
@@ -181,15 +198,15 @@ DonorsChooseDonationController.prototype.findProjectAndRespond = function(member
       if (!dcResponse.proposals || dcResponse.proposals.length == 0) {
         // If no proposals, could potentially prompt user to try different zip.
         // For now, send back error message per existing functionality.
-        self.endChat(member, "Hmm, no projects found. Try again later.");
+        self.endChat(member, this.bot.msg_search_no_results);
         logger.error('dc.findProject no results for zip:%s user:%s', zip, 
-          mobileNumber);
+          phone);
         return;
       }
       // When DC API is down, it sends html as response.
       else if (typeof dcResponse !== 'object') {
         self.endChatWithFail;
-        logger.error('dc.findProject user:%s invalid JSON.', mobileNumber);
+        logger.error('dc.findProject user:%s invalid JSON.', phone);
         return;
       }
       var project = decodeDonorsChooseProposal(dcResponse.proposals[0]);
@@ -197,33 +214,16 @@ DonorsChooseDonationController.prototype.findProjectAndRespond = function(member
     }
     catch (e) {
       self.endChatWithFail(member);
-      logger.error('ds.findProject user:%s e:%s', mobileNumber, e); 
+      logger.error('ds.findProject user:%s e:%s', phone, e); 
       return;
     }
   });
 }
 
-function decodeDonorsChooseProposal(proposal) {
-  var entities = new Entities();
-  return {
-    id: proposal.id,
-    description: entities.decode(proposal.fulfillmentTrailer),
-    city: entities.decode(proposal.city),
-    state: entities.decode(proposal.state),
-    schoolName: entities.decode(proposal.schoolName),
-    teacherName: entities.decode(proposal.teacherName),
-    url: proposal.proposalURL
-  };
-}
-
 /**
- * Submits a donation transaction to Donors Choose.
- *
- * @see https://data.donorschoose.org/docs/transactions/
- *
- * @param donorInfoObject = {donorEmail: string, donorFirstName: string}
- * @param proposalId, the DonorsChoose proposal ID 
- *
+ * Posts donation to DonorsChoose API for given project, behalf of given member.
+ * @param {object} member
+ * @param {object} project
  */
 DonorsChooseDonationController.prototype.postDonation = function(member, project) {
   var self = this;
@@ -231,12 +231,15 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
   logger.log('debug', 'dc.submitDonation user:%s proposalId:%s', 
     donorPhone, project.id);
 
+  var apiUrl = donorsChooseDonationsHost + 'common/json_api.html?APIKey=';
+  apiUrl += donorsChooseApiKey;
   requestToken().then(postDonation,
     promiseErrorCallback('dc.submitDonation failed for user:' + donorPhone)
   );
 
   /**
-   * First request: obtains a unique token for the donation.
+   * First request: obtain a unique token for the donation.
+   * @see https://data.donorschoose.org/docs/transactions/
    */
   function requestToken() {
     // Creates promise-storing object.
@@ -246,17 +249,16 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
       'apipassword': donorsChooseApiPassword, 
       'action': 'token'
     }}
-    logger.log('debug', 'dc.requestToken POST %s user:%s', DONATE_API_URL, donorPhone);
-    requestHttp.post(DONATE_API_URL, retrieveTokenParams, function(err, response, body) {
+    logger.log('debug', 'dc.requestToken POST %s user:%s', apiUrl, donorPhone);
+    requestHttp.post(apiUrl, retrieveTokenParams, function(err, response, body) {
       if (!err) {
         try {
           logger.log('verbose', 'dc.requestToken POST user:%s body:%s', 
             donorPhone, body);
-          // Handles when we get 403/Forbidden but steps in when sufficient funds.
+          // Aimed to log HTML we get back from DonorsChoose errors:
+          // @see https://github.com/DoSomething/gambit/pull/580#discussion-diff-75017991
           // if (typeof body !== 'object') {
-          //   self.endChatWithFail(member);
-          //   logger.error('dc.requestToken user:%s invalid body:%s', donorPhone, body);
-          //   return deferred.promise;
+          //   logger.error('dc.requestToken user:%s invalid JSON:%s', donorPhone, body);
           // }
           var jsonBody = JSON.parse(body);
           if (jsonBody.statusDescription === 'success') {
@@ -299,7 +301,7 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
       'honoreeEmail': member.profile_email,
       'honoreeFirst': member.profile_first_name,
     }};
-    requestHttp.post(DONATE_API_URL, donateFormParams, function(err, response, body) {
+    requestHttp.post(apiUrl, donateFormParams, function(err, response, body) {
       if (err) {
         logger.error('dc.postDonation POST user:%s error:%s',
           member.phone, error);
@@ -339,17 +341,19 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
     function createDonationDoc(donation) {
       var donationLogData = {
         mobile: member.phone,
-        email: member.profile_email,
-        first_name: member.profile_first_name,
-        postal_code: member.profile_postal_code,
-        proposal_id: project.id,
+        profile_email: member.profile_email,
+        profile_first_name: member.profile_first_name,
+        profile_postal_code: member.profile_postal_code,
+        moco_campaign_id: MOCO_CAMPAIGN_ID,
+        donorschoose_bot_id: DONORSCHOOSE_BOT_ID,
         donation_id: donation.donationId,
         donation_amount: DONATION_AMOUNT,
-        remaining_amount: donation.remainingProposalAmount,
+        proposal_id: project.id,
+        proposal_remaining_amount: donation.remainingProposalAmount,
+        proposal_url: project.url,
         school_name: project.schoolName,
         school_city: project.city,
-        school_state: project.state,
-        url: project.url
+        school_state: project.state
       };
       donationModel.create(donationLogData).then(function(doc) {
         logger.log('debug', 'dc.createDonationDoc success:%s', donation);
@@ -359,10 +363,9 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
 };
 
 /**
- * Sends multiple messages to user after a successful donation.
- *
- * @param project
- *   Decoded DonorsChoose proposal object.
+ * Responds to member with confirmation of donation to the given project.
+ * @param {object} member
+ * @param {object} project
  */
 DonorsChooseDonationController.prototype.respondWithSuccess = function(member, project) {
   var self = this;
@@ -373,54 +376,141 @@ DonorsChooseDonationController.prototype.respondWithSuccess = function(member, p
   var customFields = {};
   customFields[DONATION_COUNT_FIELDNAME] = donationCount + 1;
 
-  var firstMessage = self.dcConfig.msg_donation_success + project.schoolName + ".";
+  var firstMessage = self.bot.msg_donation_success + ' ' + project.schoolName + ".";
   self.endChat(member, firstMessage);
 
+  var delay = 2500;
   setTimeout(function() {
     var secondMessage = '@' + project.teacherName + ': Thx! ' + project.description;
     self.endChat(member, secondMessage);
-  }, END_MESSAGE_DELAY);
+  }, delay);
 
   setTimeout(function() {
     shortenLink(project.url, function(shortenedLink) {
       logger.log('debug', 'dc.sendSuccessMessages user:%s shortenedLink:%s', 
         member.phone, shortenedLink);
-      var thirdMessage = self.dcConfig.msg_project_link + shortenedLink;
+      var thirdMessage = self.bot.msg_project_link + ' ' + shortenedLink;
       self.endChat(member, thirdMessage, customFields);
     });
-  }, 2 * END_MESSAGE_DELAY);
+  }, 2 * delay);
 }
 
 /**
- * Posts profile_update request to Mobile Commons to send messageText as SMS.
- *
- * @param {object} member The MoCo request.body sent, containing member info.
- * @param {number} optInPath
- * @param {string} messageText
- * @param {object|null} customFields Key/values to store as MoCo Custom Fields.
+ * Posts MoCo profile_update to save msgTxt to member profile and send as SMS.
+ * @param {object} member
+ * @param {number} optInPath - Should contain {{slothbot_response}} as Liquid
+ * @param {string} msgTxt - Value to save to our slothboth_response Custom Field
+ * @param {object} [profileFields] - Key/values to save as MoCo Custom Fields
  */
-function sendSMS(member, optInPath, msgTxt, customFields) {
+function sendSMS(member, optInPath, msgTxt, profileFields) {
   var mobileNumber = smsHelper.getNormalizedPhone(member.phone);
   var msgTxt = msgTxt.replace('{{postal_code}}', member.profile_postal_code);
 
-  if (typeof customFields === 'undefined') {
-    customFields = {slothbot_response: msgTxt};
+  if (typeof profileFields === 'undefined') {
+    profileFields = {slothbot_response: msgTxt};
   }
   else {
-    customFields.slothbot_response = msgTxt;
+    profileFields.slothbot_response = msgTxt;
   }
 
-  mobilecommons.profile_update(mobileNumber, optInPath, customFields);
+  mobilecommons.profile_update(mobileNumber, optInPath, profileFields);
 }
 
 /**
- * Returns the number of times member has donated to current Donation campaign.
- *
+ * Returns number of times member has donated to current Donation campaign.
  * @param {object} member 
  * @return {number}
  */
 function getDonationCount(member) {
-  return parseInt(member['profile_' + DONATION_COUNT_FIELDNAME]);
+  var count = parseInt(member['profile_' + DONATION_COUNT_FIELDNAME]);
+  if (!count) {
+    return 0;
+  }
+  return count;
+}
+
+/**
+ * Returns URL string to query for DonorsChoose projects.
+ * @param {string} zip 
+ * @return {string}
+ */
+function getDonorsChooseProposalsQueryURL(zip) {
+  // @see https://data.donorschoose.org/docs/project-listing/json-requests/
+  var url = donorsChooseProposalsHost + 'common/json_feed.html';
+  url += '?subject4=-4'; 
+  url += '&sortBy=2'; 
+  url += '&costToCompleteRange=' + DONATION_AMOUNT + '+TO+10000'; 
+  url += '&max=1';
+  url += '&zip=' + zip;
+  return url;
+}
+
+/**
+ * Decodes proposal returned from DonorsChoose API.
+ * @param {object} proposal
+ * @return {object}
+ */
+function decodeDonorsChooseProposal(proposal) {
+  var entities = new Entities();
+  return {
+    id: proposal.id,
+    description: entities.decode(proposal.fulfillmentTrailer),
+    city: entities.decode(proposal.city),
+    state: entities.decode(proposal.state),
+    schoolName: entities.decode(proposal.schoolName),
+    teacherName: entities.decode(proposal.teacherName),
+    url: proposal.proposalURL
+  };
+}
+
+/**
+ * Queries Gambit Jr. API to sync donorschoose_bots config documents.
+ * @param {object} req - Express request
+ * @param {object} res - Express response
+ */
+DonorsChooseDonationController.prototype.syncBotConfigs = function(req, res) {
+  var self = this;
+
+  var url = 'http://dev-gambit-jr.pantheonsite.io/wp-json/wp/v2/donorschoose_bots/';
+  requestHttp.get(url, function(error, response, body) {
+    if (error) {
+      res.status(500);
+      return;
+    }
+    var bots = JSON.parse(body);
+    var propertyNames = [
+      'msg_ask_email',
+      'msg_ask_first_name',
+      'msg_ask_zip',
+      'msg_donation_success',
+      'msg_error_generic',
+      'msg_invalid_email',
+      'msg_invalid_first_name',
+      'msg_invalid_zip',
+      'msg_project_link',
+      'msg_max_donations_reached',
+      'msg_search_start',
+      'msg_search_no_results'
+    ];
+    var bot, configDoc, propertyName;
+    for (var i = 0; i < bots.length; i++) {
+      bot = bots[i];
+      configDoc = app.getConfig(app.ConfigName.DONORSCHOOSE_BOTS, bot.id);
+      if (!configDoc) {
+        logger.log('info', 'dc.syncBotConfigs doc not found for id:%s', bot.id);
+        continue;
+      }
+      for (var j = 0; j < propertyNames.length; j++) {
+        propertyName = propertyNames[j];
+        configDoc[propertyName] = bot[propertyName];
+      }
+      configDoc.name = bot.title;
+      configDoc.refreshed_at = Date.now();
+      configDoc.save();
+      logger.log('info', 'dc.syncBotConfigs success for id:%s', bot.id);
+    }
+    res.send();
+  });
 }
 
 /**
@@ -433,7 +523,8 @@ function promiseErrorCallback(message, member) {
 function onPromiseErrorCallback(err) {
   if (err) {
     logger.error(this.message + '\n', err.stack);
-//    this.endChatWithFail(this.member);
+    // @todo Can likely uncomment this and remove the many other calls we have
+    // this.endChatWithFail(this.member);
   }
 }
 
