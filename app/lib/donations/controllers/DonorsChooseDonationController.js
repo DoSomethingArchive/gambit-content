@@ -68,7 +68,7 @@ DonorsChooseDonationController.prototype.endChat = function(member, msgText, pro
  * @param {object} member - MoCo request.body
  */
 DonorsChooseDonationController.prototype.endChatWithFail = function(member) {
-  sendSMS(member, this.mocoConfig.oip_error, msgText, profileFields);
+  sendSMS(member, this.mocoConfig.oip_error, this.bot.msg_error_generic);
 }
 
 /**
