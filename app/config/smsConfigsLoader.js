@@ -13,7 +13,7 @@ var connectionOperations = require('./connectionOperations');
 var connectionConfig = require('./connectionConfig');
 var configModelArray = [
   rootRequire('app/lib/donations/models/donorsChooseBotModel')(connectionConfig),
-  rootRequire('app/lib/donations/models/donorsChooseConfigModel')(connectionConfig),
+  rootRequire('app/lib/donations/models/donorsChooseMocoCampaignModel')(connectionConfig),
   rootRequire('app/lib/ds-routing/config/startCampaignTransitionsConfigModel')(connectionConfig),
   rootRequire('app/lib/ds-routing/config/yesNoPathsConfigModel')(connectionConfig),
   rootRequire('app/lib/reportback/reportbackConfigModel')(connectionConfig),

@@ -1,6 +1,5 @@
 /**
- * Model for the DonorsChoose SMS configuration document. Each 
- * object corresponds to one DonorsChoose Donation Mobile Commons campaign.
+ * Each object corresponds to one DonorsChoose Donation Mobile Commons campaign.
  */
 var mongoose = require('mongoose');
 
@@ -15,5 +14,5 @@ var schema = new mongoose.Schema({
 });
 
 module.exports = function(connection) {
-  return connection.model(app.ConfigName.DONORSCHOOSE, schema, 'donorschoose');
+  return connection.model(app.ConfigName.DONORSCHOOSE, schema, 'donorschoose_moco_campaigns');
 };
