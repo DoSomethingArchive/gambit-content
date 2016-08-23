@@ -9,22 +9,20 @@ app.ConfigName = {
   YES_NO_PATHS: 'yes_no_path'
 };
 
-var connectionOperations = require('./connectionOperations');
-var connectionConfig = require('./connectionConfig');
+var conn = require('./connectionConfig');
 var configModelArray = [
-  rootRequire('app/lib/donations/models/donorsChooseBotModel')(connectionConfig),
-  rootRequire('app/lib/donations/models/donorsChooseMocoCampaignModel')(connectionConfig),
-  rootRequire('app/lib/ds-routing/config/startCampaignTransitionsConfigModel')(connectionConfig),
-  rootRequire('app/lib/ds-routing/config/yesNoPathsConfigModel')(connectionConfig),
-  rootRequire('app/lib/reportback/reportbackConfigModel')(connectionConfig),
+  rootRequire('app/lib/donations/models/donorsChooseBotModel')(conn),
+  rootRequire('app/lib/donations/models/donorsChooseMocoCampaignModel')(conn),
+  rootRequire('app/lib/ds-routing/config/startCampaignTransitionsConfigModel')(conn),
+  rootRequire('app/lib/ds-routing/config/yesNoPathsConfigModel')(conn),
+  rootRequire('app/lib/reportback/reportbackConfigModel')(conn),
 ];
 
 var logger = rootRequire('app/lib/logger');
 
-var configObject = {}
-  , callback
-  , numberOfModelsRemaining = configModelArray.length
-  ;
+var configObject = {};
+var callback;
+var numberOfModelsRemaining = configModelArray.length;
 
 /*
  * Imports the responder's configuration files and returns them through a callback. 
@@ -72,14 +70,11 @@ function onRetrievedConfig() {
  */
 app.getConfig = function(modelName, documentId, key) {
   logger.debug('smsConfigsLoader.getConfig for modelName:' + modelName + ' documentId:' + documentId + ' key:' + key);
-  var configArray
-    , i
-    , keyMatches
-    , idMatches
-    ;
 
-  configArray = this.configs[modelName];
-  for (i = 0; i < configArray.length; i++) {
+  var keyMatches;
+  var idMatches;
+  var configArray = this.configs[modelName];
+  for (var i = 0; i < configArray.length; i++) {
     keyMatches = typeof key !== 'undefined' && configArray[i][key] == documentId;
     idMatches = configArray[i]._id == documentId;
 
