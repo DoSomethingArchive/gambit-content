@@ -3,7 +3,6 @@
  */
 app.ConfigName = {
   CAMPAIGN_TRANSITIONS: 'start_campaign_transition',
-  COMPETITIVE_STORIES: 'competitive_story',
   DONORSCHOOSE: 'donorschoose',
   DONORSCHOOSE_BOTS: 'donorschoose_bots',
   REPORTBACK: 'reportback',
@@ -17,7 +16,6 @@ var configModelArray = [
   rootRequire('app/lib/donations/models/donorsChooseConfigModel')(connectionConfig),
   rootRequire('app/lib/ds-routing/config/startCampaignTransitionsConfigModel')(connectionConfig),
   rootRequire('app/lib/ds-routing/config/yesNoPathsConfigModel')(connectionConfig),
-  rootRequire('app/lib/sms-games/config/competitiveStoriesConfigModel')(connectionConfig),
   rootRequire('app/lib/reportback/reportbackConfigModel')(connectionConfig),
 ];
 
