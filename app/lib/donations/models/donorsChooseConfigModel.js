@@ -10,7 +10,8 @@ var schema = new mongoose.Schema({
   _id: Number,
   __comments: String,
   oip_chat: Number,
-  oip_end_chat: Number
+  oip_success: Number,
+  oip_error: Number
 });
 
 module.exports = function(connection) {
