@@ -11,8 +11,8 @@ app.ConfigName = {
 
 var conn = require('./connectionConfig');
 var configModelArray = [
-  rootRequire('app/lib/donations/models/donorsChooseBotModel')(conn),
-  rootRequire('app/lib/donations/models/donorsChooseMocoCampaignModel')(conn),
+  rootRequire('app/lib/donorschoose/models/donorsChooseBotModel')(conn),
+  rootRequire('app/lib/donorschoose/models/donorsChooseMocoCampaignModel')(conn),
   rootRequire('app/lib/ds-routing/config/startCampaignTransitionsConfigModel')(conn),
   rootRequire('app/lib/ds-routing/config/yesNoPathsConfigModel')(conn),
   rootRequire('app/lib/reportback/reportbackConfigModel')(conn),

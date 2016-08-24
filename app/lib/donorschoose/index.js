@@ -5,7 +5,7 @@
 var express = require('express')
   , router = express.Router();
 
-var DonorsChoose = require('./controllers/DonorsChooseDonationController');
+var DonorsChoose = require('./controllers/DonorsChooseBotController');
 
 router.post('/', function(request, response) {
   var controller = new DonorsChoose();

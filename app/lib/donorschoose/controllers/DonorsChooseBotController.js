@@ -35,10 +35,10 @@ var connectionOperations = rootRequire('app/config/connectionOperations');
 var donationModel = require('../models/donorsChooseDonationModel')(connectionOperations);
 
 /**
- * DonorsChooseDonationController
+ * DonorsChooseBotController
  * @constructor
  */
-function DonorsChooseDonationController() {
+function DonorsChooseBotController() {
   this.mocoCampaign = app.getConfig(app.ConfigName.DONORSCHOOSE, MOCO_CAMPAIGN_ID);
   this.bot = app.getConfig(app.ConfigName.DONORSCHOOSE_BOTS, DONORSCHOOSE_BOT_ID);
 };
@@ -49,7 +49,7 @@ function DonorsChooseDonationController() {
  * @param {string} msgText
  * @param {object} profileFields - key/value MoCo Custom Fields to update
  */
-DonorsChooseDonationController.prototype.chat = function(member, msgText, profileFields) {
+DonorsChooseBotController.prototype.chat = function(member, msgText, profileFields) {
   sendSMS(member, this.mocoCampaign.oip_chat, msgText, profileFields);
 }
 
@@ -59,7 +59,7 @@ DonorsChooseDonationController.prototype.chat = function(member, msgText, profil
  * @param {string} msgText
  * @param {object} profileFields - key/value MoCo Custom Fields to update
  */
-DonorsChooseDonationController.prototype.endChat = function(member, msgText, profileFields) {
+DonorsChooseBotController.prototype.endChat = function(member, msgText, profileFields) {
   sendSMS(member, this.mocoCampaign.oip_success, msgText, profileFields);
 }
 
@@ -67,7 +67,7 @@ DonorsChooseDonationController.prototype.endChat = function(member, msgText, pro
  * Sends SMS message with generic failure text and ends conversation.
  * @param {object} member - MoCo request.body
  */
-DonorsChooseDonationController.prototype.endChatWithFail = function(member) {
+DonorsChooseBotController.prototype.endChatWithFail = function(member) {
   sendSMS(member, this.mocoCampaign.oip_error, this.bot.msg_error_generic);
 }
 
@@ -76,7 +76,7 @@ DonorsChooseDonationController.prototype.endChatWithFail = function(member) {
  * @param {object} request - Express request
  * @param {object} response - Express response
  */
-DonorsChooseDonationController.prototype.chatbot = function(request, response) {
+DonorsChooseBotController.prototype.chatbot = function(request, response) {
   var self = this;
   var member = request.body;
   logger.log('verbose', 'dc.chat member:', member);
@@ -168,7 +168,7 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
  * @param {object} member
  * @param {string} [email] - If passed, save email to profile.
  */
-DonorsChooseDonationController.prototype.findProjectAndRespond = function(member, email) {
+DonorsChooseBotController.prototype.findProjectAndRespond = function(member, email) {
   var self = this;
   logger.log('debug', 'dc.findProjectAndRespond user:%s zip:%s email:%s', member.phone,
     member.profile_postal_code, email);
@@ -227,7 +227,7 @@ DonorsChooseDonationController.prototype.findProjectAndRespond = function(member
  * @param {object} member
  * @param {object} project
  */
-DonorsChooseDonationController.prototype.postDonation = function(member, project) {
+DonorsChooseBotController.prototype.postDonation = function(member, project) {
   var self = this;
   var donorPhone = member.phone;
   logger.log('debug', 'dc.submitDonation user:%s proposalId:%s', 
@@ -369,7 +369,7 @@ DonorsChooseDonationController.prototype.postDonation = function(member, project
  * @param {object} member
  * @param {object} project
  */
-DonorsChooseDonationController.prototype.respondWithSuccess = function(member, project) {
+DonorsChooseBotController.prototype.respondWithSuccess = function(member, project) {
   var self = this;
   logger.log('debug', 'dc.respondWithSuccess user:%s project%s', 
     member.phone, project);
@@ -474,7 +474,7 @@ function decodeDonorsChooseProposal(proposal) {
  * @param {object} req - Express request
  * @param {object} res - Express response
  */
-DonorsChooseDonationController.prototype.syncBotConfigs = function(req, res) {
+DonorsChooseBotController.prototype.syncBotConfigs = function(req, res) {
   var self = this;
 
   var url = 'http://dev-gambit-jr.pantheonsite.io/wp-json/wp/v2/donorschoose_bots/';
@@ -534,4 +534,4 @@ function onPromiseErrorCallback(err) {
   }
 }
 
-module.exports = DonorsChooseDonationController;
+module.exports = DonorsChooseBotController;

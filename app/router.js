@@ -2,7 +2,7 @@ var express = require('express')
 var router = express.Router();
 
 var logger = rootRequire('app/lib/logger');
-var donorsChooseRouter = require('./lib/donations');
+var donorsChooseRouter = require('./lib/donorschoose');
 var dsCampaignRouter = require('./lib/ds-routing');
 var reportbackRouter = require('./lib/reportback');
 var slothbotRouter = require('./lib/slothbot');
