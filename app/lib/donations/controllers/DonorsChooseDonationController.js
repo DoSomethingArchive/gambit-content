@@ -60,7 +60,7 @@ DonorsChooseDonationController.prototype.chat = function(member, msgText, profil
  * @param {object} profileFields - key/value MoCo Custom Fields to update
  */
 DonorsChooseDonationController.prototype.endChat = function(member, msgText, profileFields) {
-  sendSMS(member, this.mocoConfig.oip_end_chat, msgText, profileFields);
+  sendSMS(member, this.mocoConfig.oip_success, msgText, profileFields);
 }
 
 /**
@@ -68,7 +68,7 @@ DonorsChooseDonationController.prototype.endChat = function(member, msgText, pro
  * @param {object} member - MoCo request.body
  */
 DonorsChooseDonationController.prototype.endChatWithFail = function(member) {
-  this.endChat(member, this.bot.msg_error_generic);
+  sendSMS(member, this.mocoConfig.oip_error, this.bot.msg_error_generic);
 }
 
 /**
@@ -403,6 +403,10 @@ DonorsChooseDonationController.prototype.respondWithSuccess = function(member, p
  * @param {object} [profileFields] - Key/values to save as MoCo Custom Fields
  */
 function sendSMS(member, optInPath, msgTxt, profileFields) {
+  if (typeof optInPath === 'undefined') {
+    logger.error('dc.sendSMS undefined optInPath user:%s msgText:%s', member, msgTxt);
+    return;
+  }
   var mobileNumber = smsHelper.getNormalizedPhone(member.phone);
   var msgTxt = msgTxt.replace('{{postal_code}}', member.profile_postal_code);
 
