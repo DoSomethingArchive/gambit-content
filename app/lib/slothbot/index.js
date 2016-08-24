@@ -9,7 +9,7 @@ var express = require('express')
   , logger = rootRequire('app/lib/logger')
   ;
 
-router.post('/mobilecommons', function(request, response) {
+router.post('/', function(request, response) {
   // @todo Move hardcoded value into environment variable.
   var optin = 210045;
   phone = smsHelper.getNormalizedPhone(request.body.phone);
