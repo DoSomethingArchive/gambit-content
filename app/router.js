@@ -29,7 +29,7 @@ router.use('/ds-routing', dsCampaignRouter);
 router.use('/reportback', reportback);
 
 // Internal module for handling SMS donations.
-router.use('/donations', donationsRouter);
+router.use('/v2/donations', donationsRouter);
 
 // Season 2.
-router.use('/slothbot', slothbot);
+router.use('/v2/slothbot', slothbot);
