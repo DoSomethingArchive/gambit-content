@@ -7,7 +7,7 @@ var express = require('express')
 
 var DonorsChoose = require('./controllers/DonorsChooseDonationController');
 
-router.post('/donors-choose/', function(request, response) {
+router.post('/', function(request, response) {
   var controller = new DonorsChoose();
   if (controller) {
     controller.chatbot(request, response);
@@ -17,7 +17,7 @@ router.post('/donors-choose/', function(request, response) {
   }
 });
 
-router.post('/donors-choose/sync', function(request, response) {
+router.post('/sync', function(request, response) {
   var controller = new DonorsChoose();
   if (controller) {
     controller.syncBotConfigs(request, response);

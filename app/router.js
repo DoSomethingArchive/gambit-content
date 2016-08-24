@@ -2,10 +2,10 @@ var express = require('express')
 var router = express.Router();
 
 var logger = rootRequire('app/lib/logger');
-var donationsRouter = require('./lib/donations');
+var donorsChooseRouter = require('./lib/donations');
 var dsCampaignRouter = require('./lib/ds-routing');
-var reportback = require('./lib/reportback');
-var slothbot = require('./lib/slothbot');
+var reportbackRouter = require('./lib/reportback');
+var slothbotRouter = require('./lib/slothbot');
 
 app.use('/', router);
 
@@ -26,10 +26,10 @@ router.use(function(req, res, next) {
 router.use('/ds-routing', dsCampaignRouter);
 
 // Standard Staff Pick campaign report back.
-router.use('/reportback', reportback);
+router.use('/reportback', reportbackRouter);
 
-// Internal module for handling SMS donations.
-router.use('/v2/donations', donationsRouter);
+// Integrates with our DS DonorsChoose API account and donates to proposals.
+router.use('/v2/bots/donorschoose', donorsChooseRouter);
 
 // Season 2.
-router.use('/v2/slothbot', slothbot);
+router.use('/v2/bots/slothbot', slothbotRouter);
