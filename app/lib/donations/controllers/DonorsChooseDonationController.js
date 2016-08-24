@@ -39,7 +39,7 @@ var donationModel = require('../models/donorsChooseDonationModel')(connectionOpe
  * @constructor
  */
 function DonorsChooseDonationController() {
-  this.mocoConfig = app.getConfig(app.ConfigName.DONORSCHOOSE, MOCO_CAMPAIGN_ID);
+  this.mocoCampaign = app.getConfig(app.ConfigName.DONORSCHOOSE, MOCO_CAMPAIGN_ID);
   this.bot = app.getConfig(app.ConfigName.DONORSCHOOSE_BOTS, DONORSCHOOSE_BOT_ID);
 };
 
@@ -50,7 +50,7 @@ function DonorsChooseDonationController() {
  * @param {object} profileFields - key/value MoCo Custom Fields to update
  */
 DonorsChooseDonationController.prototype.chat = function(member, msgText, profileFields) {
-  sendSMS(member, this.mocoConfig.oip_chat, msgText, profileFields);
+  sendSMS(member, this.mocoCampaign.oip_chat, msgText, profileFields);
 }
 
 /**
@@ -60,7 +60,7 @@ DonorsChooseDonationController.prototype.chat = function(member, msgText, profil
  * @param {object} profileFields - key/value MoCo Custom Fields to update
  */
 DonorsChooseDonationController.prototype.endChat = function(member, msgText, profileFields) {
-  sendSMS(member, this.mocoConfig.oip_success, msgText, profileFields);
+  sendSMS(member, this.mocoCampaign.oip_success, msgText, profileFields);
 }
 
 /**
@@ -68,7 +68,7 @@ DonorsChooseDonationController.prototype.endChat = function(member, msgText, pro
  * @param {object} member - MoCo request.body
  */
 DonorsChooseDonationController.prototype.endChatWithFail = function(member) {
-  sendSMS(member, this.mocoConfig.oip_error, this.bot.msg_error_generic);
+  sendSMS(member, this.mocoCampaign.oip_error, this.bot.msg_error_generic);
 }
 
 /**
@@ -80,10 +80,12 @@ DonorsChooseDonationController.prototype.chatbot = function(request, response) {
   var self = this;
   var member = request.body;
   logger.log('verbose', 'dc.chat member:', member);
+
+  if (!this.bot || !this.mocoCampaign) {
+    response.sendStatus(500);
+    return;
+  }
   response.send();
-
-  // @todo Add sanity checks to make sure this.config, this.bot exist
-
   var firstWord = null;
 
   // Start query parameter is used to start conversation and wait for response.
