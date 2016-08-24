@@ -37,7 +37,8 @@ var appConfig = require('./app/config')()
 
 // Retrieves all SMS config files before starting server.
 smsConfigsLoader(function() {
-  app.listen(app.get('port'), function() {
-    logger.log('info', 'Express server listening on port %d in %s mode...\n\n', app.get('port'), app.settings.env);
+  var port = process.env.PORT || 5000;
+  app.listen(port, function() {
+    logger.log('info', 'Express server listening on port %d in %s mode...\n\n', port, app.settings.env);
   });
 });
