@@ -19,6 +19,6 @@ Endpoint                                       | Functionality
 
 Endpoint                                       | Functionality                                           
 ---------------------------------------------- | --------------------------------------------------------
-`POST /ds-routing/campaign-transition` | [Mobile Commons campaign transition](endpoints/ds-routing.md#campaign-transition)
-`POST /ds-routing/yes-no-gateway` | [Submit yes or no](endpoints/ds-routing.md#yes-no-gateway)
-`POST /reportback/:campaignName` | [Reportback chat](endpoints/reportback.md)
+`POST /ds-routing/campaign-transition` | [Mobile Commons campaign transition](https://github.com/DoSomething/gambit/wiki/API#moco-campaign-transition)
+`POST /ds-routing/yes-no-gateway` | [Submit yes or no](https://github.com/DoSomething/gambit/wiki/API#yes-no)
+`POST /reportback/:campaignName` | [Reportback chat](https://github.com/DoSomething/gambit/wiki/API#reportback)
