@@ -16,16 +16,17 @@ function SlothBotController() {};
  * @param {object} response - Express response
  */
 SlothBotController.prototype.chatbot = function(request, response) {
-  console.log(request.body);
-
   var phone = smsHelper.getNormalizedPhone(request.body.phone);
-  logger.debug("user:" + phone + " sent @slothbot a message:" + request.body.args);
-  response.send();  
-  var mobileCommonsCustomFields = {
-    slothbot_response: request.body.args
-  };
+  var incomingMsg = request.body.args;
+  logger.debug("user:" + phone + " sent @slothbot a message:" + incomingMsg);
+  response.send();
+
+  var reply = '@slothbot: Thank you so much for talking to me. ';
+  reply += 'I just sit on an office couch all day. ';
+  reply += 'You just told me:\n\n' + incomingMsg;
+
   // @todo Move hardcoded value into environment variable.
-  mobilecommons.profile_update(phone, 210045, mobileCommonsCustomFields); 
+  mobilecommons.profile_update(phone, 210045, {gambit_chatbot_response: reply}); 
 }
 
 module.exports = SlothBotController;
