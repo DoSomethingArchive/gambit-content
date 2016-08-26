@@ -1,6 +1,6 @@
 "use strict";
 
-var mobilecommons = rootRequire('mobilecommons');
+var mobilecommons = rootRequire('lib/mobilecommons');
 var smsHelper = rootRequire('app/lib/smsHelpers');
 var logger = rootRequire('app/lib/logger');
 
