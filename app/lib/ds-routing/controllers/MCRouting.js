@@ -4,7 +4,7 @@
 
 var mobilecommons = rootRequire('mobilecommons');
 var logger = rootRequire('app/lib/logger');
-var smsHelper = rootRequire('app/lib/smsHelpers');
+var helpers = rootRequire('app/lib/smsHelpers');
 
 /**
  * MCRouting
@@ -32,12 +32,12 @@ MCRouting.prototype.yesNoGateway = function(request, response) {
     response.sendStatus(204);
     return;
   }
-  
-  logger.log('debug', 'MCRouting.yesNoGateway user:%s sent:%s', phone, request.body.args);
+  var incomingMsg =request.body.args;
+  logger.debug('MCRouting.yesNoGateway user:%s sent:%s', phone, incomingMsg);
 
   var optinPath = path.no;
   var optinDesc = 'NO';
-  if (smsHelper.isYesResponse(request.body.args)) {
+  if (helpers.isYesResponse(incomingMsg)) {
     optinDesc = 'YES';
     optinPath = path.yes;
   }
