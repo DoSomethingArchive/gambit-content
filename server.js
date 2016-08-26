@@ -9,7 +9,7 @@ var express = require('express');
 var path = require('path');
 var http = require('http');
 var logger = rootRequire('app/lib/logger');
-var phoenix = rootRequire('app/lib/ds-content-api')();
+var phoenix = rootRequire('lib/phoenix')();
 
 // Default is 5. Increasing # of concurrent sockets per host.
 http.globalAgent.maxSockets = 100;

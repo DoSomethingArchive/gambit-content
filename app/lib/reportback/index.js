@@ -9,7 +9,7 @@ var express = require('express')
   , mobilecommons = rootRequire('lib/mobilecommons')
   , emitter = rootRequire('app/eventEmitter')
   , logger = rootRequire('app/lib/logger')
-  , phoenix = rootRequire('app/lib/ds-content-api')()
+  , phoenix = rootRequire('lib/phoenix')()
   , REPORTBACK_PERMALINK_BASE_URL
   , shortenLink = rootRequire('lib/bitly')
   , Q = require('q')
