@@ -4,7 +4,7 @@
 
 var express = require('express')
   , router = express.Router()
-  , connectionOperations = rootRequire('app/config/connectionOperations')
+  , connectionOperations = rootRequire('config/connectionOperations')
   , model = require('./reportbackModel')(connectionOperations)
   , mobilecommons = rootRequire('lib/mobilecommons')
   , emitter = rootRequire('app/eventEmitter')

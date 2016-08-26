@@ -1,7 +1,7 @@
 var assert = require('assert')
   , express = require('express')
   , emitter = require('../app/eventEmitter')
-  , connectionOperations = rootRequire('app/config/connectionOperations')
+  , connectionOperations = rootRequire('config/connectionOperations')
   , gameMappingModel = rootRequire('app/lib/sms-games/models/sgGameMapping')(connectionOperations)
   , gameModel = rootRequire('app/lib/sms-games/models/sgCompetitiveStory')(connectionOperations)
   , userModel = rootRequire('app/lib/sms-games/models/sgUser')(connectionOperations)

@@ -10,7 +10,7 @@ describe('Running all responder tests', function() {
   app = express();
 
   var appConfig = rootRequire('app/config')()
-    , smsConfigsLoader = rootRequire('app/config/smsConfigsLoader');
+    , smsConfigsLoader = rootRequire('config/smsConfigsLoader');
 
   it('loads the sms configuration documents into memory from the database', function(done) {
     smsConfigsLoader(function() {

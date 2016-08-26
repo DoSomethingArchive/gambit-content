@@ -5,7 +5,7 @@
 var assert = require('assert')
   , express = require('express')
   , emitter = rootRequire('app/eventEmitter')
-  , connectionOperations = rootRequire('app/config/connectionOperations')
+  , connectionOperations = rootRequire('config/connectionOperations')
   ;
 
 describe('ds-routing tests', function() {
