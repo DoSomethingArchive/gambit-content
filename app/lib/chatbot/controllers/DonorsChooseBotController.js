@@ -28,7 +28,6 @@ var requestHttp = require('request');
 var Entities = require('html-entities').AllHtmlEntities
 var logger = rootRequire('lib/logger');
 var mobilecommons = rootRequire('lib/mobilecommons');
-var smsHelper = rootRequire('app/lib/smsHelpers');
 var shortenLink = rootRequire('lib/bitly');
 var helpers = rootRequire('lib/helpers');
 var connectionOperations = rootRequire('app/config/connectionOperations');

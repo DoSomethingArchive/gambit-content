@@ -4,7 +4,7 @@
 
 var mobilecommons = rootRequire('lib/mobilecommons');
 var logger = rootRequire('lib/logger');
-var helpers = rootRequire('app/lib/smsHelpers');
+var helpers = rootRequire('lib/helpers');
 
 /**
  * MCRouting
