@@ -93,7 +93,7 @@ DonorsChooseBotController.prototype.chatbot = function(request, response) {
   }
   // Otherwise inspect message that the member has sent back.
   else if (request.body.args) {
-    firstWord = smsHelper.getFirstWord(request.body.args);
+    firstWord = helpers.getFirstWord(request.body.args);
     logger.log('debug', 'dc.chat user:%s firstWord:%s', member.phone, firstWord);
   }
   else {
@@ -408,7 +408,7 @@ function sendSMS(member, optInPath, msgTxt, profileFields) {
     logger.error('dc.sendSMS undefined optInPath user:%s msgText:%s', member, msgTxt);
     return;
   }
-  var mobileNumber = smsHelper.getNormalizedPhone(member.phone);
+  var mobileNumber = helpers.getNormalizedPhone(member.phone);
   var msgTxt = msgTxt.replace('{{postal_code}}', member.profile_postal_code);
 
   if (typeof profileFields === 'undefined') {
