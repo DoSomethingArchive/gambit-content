@@ -11,7 +11,7 @@ var express = require('express')
   , logger = rootRequire('app/lib/logger')
   , phoenix = rootRequire('app/lib/ds-content-api')()
   , REPORTBACK_PERMALINK_BASE_URL
-  , shortenLink = rootRequire('app/lib/bitly')
+  , shortenLink = rootRequire('lib/bitly')
   , Q = require('q')
   , parseForDigits = require('count-von-count')
   ;
