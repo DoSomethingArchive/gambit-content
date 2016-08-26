@@ -30,7 +30,7 @@ var logger = rootRequire('lib/logger');
 var mobilecommons = rootRequire('lib/mobilecommons');
 var smsHelper = rootRequire('app/lib/smsHelpers');
 var shortenLink = rootRequire('lib/bitly');
-var stringValidator = rootRequire('app/lib/string-validators');
+var helpers = rootRequire('lib/helpers');
 var connectionOperations = rootRequire('app/config/connectionOperations');
 var donationModel = require('../models/donorsChooseDonationModel')(connectionOperations);
 
@@ -115,7 +115,7 @@ DonorsChooseBotController.prototype.chatbot = function(request, response) {
       return;
     }
 
-    if (!stringValidator.isValidZip(firstWord)) {
+    if (!helpers.isValidZip(firstWord)) {
       self.chat(member, self.bot.msg_invalid_zip);
       return;
     }
@@ -133,7 +133,7 @@ DonorsChooseBotController.prototype.chatbot = function(request, response) {
       return;
     }
 
-    if (stringValidator.containsNaughtyWords(firstWord)) {
+    if (helpers.containsNaughtyWords(firstWord)) {
       self.chat(member, self.bot.msg_invalid_first_name);
       return;
     }
@@ -150,7 +150,7 @@ DonorsChooseBotController.prototype.chatbot = function(request, response) {
       return;
     }
 
-    if (!stringValidator.isValidEmail(firstWord)) {
+    if (!helpers.isValidEmail(firstWord)) {
       self.chat(member, self.bot.msg_invalid_email);
       return;
     }
