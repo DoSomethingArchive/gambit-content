@@ -73,24 +73,19 @@ module.exports.isYesResponse = function(message) {
   var m = message.toUpperCase().trim();
   m = getFirstWord(m);
 
-  var yesResponses = [
-    'Y',
-    'YA',
-    'YAH',
-    'YAS',
-    'YEA',
-    'YEAH',
-    'YEP',
-    'YES',
-    'YUP'
+  var noResponses = [
+    'N',
+    'NA',
+    'NAH',
+    'NO',
+    'NIL'
   ];
 
-  if (yesResponses.indexOf(m) >= 0) {
-    return true;
-  }
-  else {
+  if (noResponses.indexOf(m) >= 0) {
     return false;
   }
+  return true;
+
 }
 
 /**
