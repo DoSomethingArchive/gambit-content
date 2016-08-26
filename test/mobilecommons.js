@@ -3,7 +3,7 @@
  */
 
 var assert = require('assert')
-  , mobilecommons = rootRequire('mobilecommons')
+  , mobilecommons = rootRequire('lib/mobilecommons');
   , emitter = rootRequire('app/eventEmitter')
   , _ = require('underscore')
   ;

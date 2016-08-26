@@ -4,14 +4,14 @@
 
 var express = require('express')
   , router = express.Router()
-  , connectionOperations = rootRequire('app/config/connectionOperations')
+  , connectionOperations = rootRequire('config/connectionOperations')
   , model = require('./reportbackModel')(connectionOperations)
-  , mobilecommons = rootRequire('mobilecommons')
+  , mobilecommons = rootRequire('lib/mobilecommons')
   , emitter = rootRequire('app/eventEmitter')
-  , logger = rootRequire('app/lib/logger')
-  , phoenix = rootRequire('app/lib/ds-content-api')()
+  , logger = rootRequire('lib/logger')
+  , phoenix = rootRequire('lib/phoenix')()
   , REPORTBACK_PERMALINK_BASE_URL
-  , shortenLink = rootRequire('app/lib/bitly')
+  , shortenLink = rootRequire('lib/bitly')
   , Q = require('q')
   , parseForDigits = require('count-von-count')
   ;

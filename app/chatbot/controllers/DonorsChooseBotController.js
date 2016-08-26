@@ -26,12 +26,11 @@ var MOCO_CAMPAIGN_ID = process.env.DONORSCHOOSE_MOCO_CAMPAIGN_ID;
 var Q = require('q');
 var requestHttp = require('request');
 var Entities = require('html-entities').AllHtmlEntities
-var logger = rootRequire('app/lib/logger');
-var mobilecommons = rootRequire('mobilecommons');
-var smsHelper = rootRequire('app/lib/smsHelpers');
-var shortenLink = rootRequire('app/lib/bitly');
-var stringValidator = rootRequire('app/lib/string-validators');
-var connectionOperations = rootRequire('app/config/connectionOperations');
+var logger = rootRequire('lib/logger');
+var mobilecommons = rootRequire('lib/mobilecommons');
+var shortenLink = rootRequire('lib/bitly');
+var helpers = rootRequire('lib/helpers');
+var connectionOperations = rootRequire('config/connectionOperations');
 var donationModel = require('../models/donorsChooseDonationModel')(connectionOperations);
 
 /**
@@ -94,7 +93,7 @@ DonorsChooseBotController.prototype.chatbot = function(request, response) {
   }
   // Otherwise inspect message that the member has sent back.
   else if (request.body.args) {
-    firstWord = smsHelper.getFirstWord(request.body.args);
+    firstWord = helpers.getFirstWord(request.body.args);
     logger.log('debug', 'dc.chat user:%s firstWord:%s', member.phone, firstWord);
   }
   else {
@@ -115,7 +114,7 @@ DonorsChooseBotController.prototype.chatbot = function(request, response) {
       return;
     }
 
-    if (!stringValidator.isValidZip(firstWord)) {
+    if (!helpers.isValidZip(firstWord)) {
       self.chat(member, self.bot.msg_invalid_zip);
       return;
     }
@@ -133,7 +132,7 @@ DonorsChooseBotController.prototype.chatbot = function(request, response) {
       return;
     }
 
-    if (stringValidator.containsNaughtyWords(firstWord)) {
+    if (helpers.containsNaughtyWords(firstWord)) {
       self.chat(member, self.bot.msg_invalid_first_name);
       return;
     }
@@ -150,7 +149,7 @@ DonorsChooseBotController.prototype.chatbot = function(request, response) {
       return;
     }
 
-    if (!stringValidator.isValidEmail(firstWord)) {
+    if (!helpers.isValidEmail(firstWord)) {
       self.chat(member, self.bot.msg_invalid_email);
       return;
     }
@@ -409,7 +408,7 @@ function sendSMS(member, optInPath, msgTxt, profileFields) {
     logger.error('dc.sendSMS undefined optInPath user:%s msgText:%s', member, msgTxt);
     return;
   }
-  var mobileNumber = smsHelper.getNormalizedPhone(member.phone);
+  var mobileNumber = helpers.getNormalizedPhone(member.phone);
   var msgTxt = msgTxt.replace('{{postal_code}}', member.profile_postal_code);
 
   if (typeof profileFields === 'undefined') {

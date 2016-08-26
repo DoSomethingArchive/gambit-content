@@ -8,8 +8,8 @@ global.rootRequire = function(name) {
 var express = require('express');
 var path = require('path');
 var http = require('http');
-var logger = rootRequire('app/lib/logger');
-var phoenix = rootRequire('app/lib/ds-content-api')();
+var logger = rootRequire('lib/logger');
+var phoenix = rootRequire('lib/phoenix')();
 
 // Default is 5. Increasing # of concurrent sockets per host.
 http.globalAgent.maxSockets = 100;
@@ -28,9 +28,9 @@ phoenix.userLogin(
  */
 app = express();
 
-var appConfig = require('./app/config')();
+var appConfig = require('./config')();
 var router = require('./app/router');
-var smsConfigsLoader = require('./app/config/smsConfigsLoader');
+var smsConfigsLoader = require('./config/smsConfigsLoader');
 
 // Retrieves all SMS config files before starting server.
 smsConfigsLoader(function() {

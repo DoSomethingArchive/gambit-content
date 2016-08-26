@@ -1,1 +1,1 @@
-rootRequire('app/lib/reportback/test/reportback.test')();
+rootRequire('app/reportback/test/reportback.test')();

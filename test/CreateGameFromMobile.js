@@ -1,11 +1,11 @@
 var assert = require('assert')
   , express = require('express')
   , emitter = rootRequire('app/eventEmitter')
-  , connectionOperations = rootRequire('app/config/connectionOperations')
-  , gameCreateConfigModel = rootRequire('app/lib/sms-games/models/sgGameCreateConfig')(connectionOperations)
-  , gameModel = rootRequire('app/lib/sms-games/models/sgCompetitiveStory')(connectionOperations)
-  , SGCreateFromMobileController = rootRequire('app/lib/sms-games/controllers/SGCreateFromMobileController')
-  , smsHelper = rootRequire('app/lib/smsHelpers')
+  , connectionOperations = rootRequire('config/connectionOperations')
+  , gameCreateConfigModel = rootRequire('app/sms-games/models/sgGameCreateConfig')(connectionOperations)
+  , gameModel = rootRequire('app/sms-games/models/sgCompetitiveStory')(connectionOperations)
+  , SGCreateFromMobileController = rootRequire('app/sms-games/controllers/SGCreateFromMobileController')
+  , smsHelper = rootRequire('app/smsHelpers')
   , _ = require('underscore')
   ;
 

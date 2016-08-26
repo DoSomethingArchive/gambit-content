@@ -1,10 +1,10 @@
 var express = require('express')
 var router = express.Router();
 
-var logger = rootRequire('app/lib/logger');
-var chatbotRouter = require('./lib/chatbot');
-var dsCampaignRouter = require('./lib/ds-routing');
-var reportbackRouter = require('./lib/reportback');
+var logger = rootRequire('lib/logger');
+var chatbotRouter = require('./chatbot');
+var mocoRouter = require('./moco-routing');
+var reportbackRouter = require('./reportback');
 
 app.use('/', router);
 
@@ -22,5 +22,5 @@ router.use(function(req, res, next) {
 });
 
 router.use('/v1/chatbot', chatbotRouter);
-router.use('/ds-routing', dsCampaignRouter);
+router.use('/ds-routing', mocoRouter);
 router.use('/reportback', reportbackRouter);

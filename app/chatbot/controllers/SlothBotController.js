@@ -1,8 +1,7 @@
 "use strict";
 
-var mobilecommons = rootRequire('mobilecommons');
-var smsHelper = rootRequire('app/lib/smsHelpers');
-var logger = rootRequire('app/lib/logger');
+var mobilecommons = rootRequire('lib/mobilecommons');
+var logger = rootRequire('lib/logger');
 
 /**
  * SlothBotController
@@ -16,7 +15,7 @@ function SlothBotController() {};
  * @param {object} response - Express response
  */
 SlothBotController.prototype.chatbot = function(request, response) {
-  var phone = smsHelper.getNormalizedPhone(request.body.phone);
+  var phone = request.body.phone;
   var incomingMsg = request.body.args;
   logger.debug("user:" + phone + " sent @slothbot a message:" + incomingMsg);
   response.send();
