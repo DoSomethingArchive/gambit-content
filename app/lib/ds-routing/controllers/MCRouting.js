@@ -4,7 +4,12 @@
 
 var mobilecommons = rootRequire('mobilecommons');
 var logger = rootRequire('app/lib/logger');
+var helpers = rootRequire('app/lib/smsHelpers');
 
+/**
+ * MCRouting
+ * @constructor
+ */
 var MCRouting = function() {}
 
 /**
@@ -19,7 +24,7 @@ MCRouting.prototype.yesNoGateway = function(request, response) {
   }
   var phone = request.body.phone;
   var incomingOptIn = parseInt(request.body.opt_in_path_id);
-  logger.log('debug', 'MCRouting.yesNoGateway request from user:%s from oip:%d', phone, incomingOptIn);
+  logger.debug('debug', 'MCRouting.yesNoGateway request from user:%s from oip:%d', phone, incomingOptIn);
   var path = app.getConfig(app.ConfigName.YES_NO_PATHS, incomingOptIn);
 
   if (path === undefined) {
@@ -27,25 +32,16 @@ MCRouting.prototype.yesNoGateway = function(request, response) {
     response.sendStatus(204);
     return;
   }
-  
-  var args = request.body.args.trim().toLowerCase();
-  // Just check based on the first word in the message.
-  args = args.split(' ');
-  var firstWord = args[0];
-  logger.log('debug', 'MCRouting.yesNoGateway user:%s sent:%s', phone, request.body.args);
+  var incomingMsg =request.body.args;
+  logger.debug('MCRouting.yesNoGateway user:%s sent:%s', phone, incomingMsg);
 
-  // Default to the 'no' response. Change to 'yes' response if appropriate answer found.
   var optinPath = path.no;
   var optinDesc = 'NO';
-  var yesAnswers = ['y', 'yes', 'ya', 'yea'];
-  for (var i = 0; i < yesAnswers.length; i++) {
-    if (yesAnswers[i] === firstWord) {
-      optinDesc = 'YES';
-      optinPath = path.yes;
-      break;
-    }
+  if (helpers.isYesResponse(incomingMsg)) {
+    optinDesc = 'YES';
+    optinPath = path.yes;
   }
-  logger.log('debug', 'MCRouting.yesNoGateway user:%s firstWord:%s to %s oip:%d', phone, firstWord, optinDesc, optinPath);
+  logger.debug('MCRouting.yesNoGateway user:%s %s oip:%d', phone, optinDesc, optinPath);
 
   // Execute the opt-in.
   var args = {
