@@ -9,9 +9,9 @@ var assert = require('assert')
   ;
 
 describe('ds-routing tests', function() {
-  var MCRouting = rootRequire('app/lib/ds-routing/controllers/MCRouting')
-    , Tips = rootRequire('app/lib/ds-routing/controllers/Tips')
-    , tipModel = rootRequire('app/lib/ds-routing/models/tip')(connectionOperations)
+  var MCRouting = rootRequire('app/moco-routing/controllers/MCRouting')
+    , Tips = rootRequire('app/moco-routing/controllers/Tips')
+    , tipModel = rootRequire('app/moco-routing/models/tip')(connectionOperations)
     ;
     
   var mcRouting = new MCRouting;
