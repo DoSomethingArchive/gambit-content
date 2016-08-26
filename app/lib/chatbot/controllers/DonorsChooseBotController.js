@@ -413,10 +413,10 @@ function sendSMS(member, optInPath, msgTxt, profileFields) {
   var msgTxt = msgTxt.replace('{{postal_code}}', member.profile_postal_code);
 
   if (typeof profileFields === 'undefined') {
-    profileFields = {slothbot_response: msgTxt};
+    profileFields = {gambit_chatbot_response: msgTxt};
   }
   else {
-    profileFields.slothbot_response = msgTxt;
+    profileFields.gambit_chatbot_response = msgTxt;
   }
 
   mobilecommons.profile_update(mobileNumber, optInPath, profileFields);

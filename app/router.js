@@ -2,10 +2,9 @@ var express = require('express')
 var router = express.Router();
 
 var logger = rootRequire('app/lib/logger');
-var donorsChooseRouter = require('./lib/donorschoose');
+var chatbotRouter = require('./lib/chatbot');
 var dsCampaignRouter = require('./lib/ds-routing');
 var reportbackRouter = require('./lib/reportback');
-var slothbotRouter = require('./lib/slothbot');
 
 app.use('/', router);
 
@@ -22,14 +21,6 @@ router.use(function(req, res, next) {
   next();
 });
 
-// Custom DS routing to Mobile Commons paths for campaigns.
+router.use('/v1/chatbot', chatbotRouter);
 router.use('/ds-routing', dsCampaignRouter);
-
-// Standard Staff Pick campaign report back.
 router.use('/reportback', reportbackRouter);
-
-// Integrates with our DS DonorsChoose API account and donates to proposals.
-router.use('/v2/bots/donorschoose', donorsChooseRouter);
-
-// Season 2.
-router.use('/v2/bots/slothbot', slothbotRouter);
