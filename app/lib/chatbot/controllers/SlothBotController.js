@@ -2,7 +2,7 @@
 
 var mobilecommons = rootRequire('lib/mobilecommons');
 var smsHelper = rootRequire('app/lib/smsHelpers');
-var logger = rootRequire('app/lib/logger');
+var logger = rootRequire('lib/logger');
 
 /**
  * SlothBotController

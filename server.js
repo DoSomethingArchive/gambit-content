@@ -8,7 +8,7 @@ global.rootRequire = function(name) {
 var express = require('express');
 var path = require('path');
 var http = require('http');
-var logger = rootRequire('app/lib/logger');
+var logger = rootRequire('lib/logger');
 var phoenix = rootRequire('lib/phoenix')();
 
 // Default is 5. Increasing # of concurrent sockets per host.

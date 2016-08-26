@@ -8,7 +8,7 @@ var express = require('express')
   , model = require('./reportbackModel')(connectionOperations)
   , mobilecommons = rootRequire('lib/mobilecommons')
   , emitter = rootRequire('app/eventEmitter')
-  , logger = rootRequire('app/lib/logger')
+  , logger = rootRequire('lib/logger')
   , phoenix = rootRequire('lib/phoenix')()
   , REPORTBACK_PERMALINK_BASE_URL
   , shortenLink = rootRequire('lib/bitly')

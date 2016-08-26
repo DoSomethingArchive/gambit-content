@@ -3,7 +3,7 @@
  */
 
 var mobilecommons = rootRequire('lib/mobilecommons');
-var logger = rootRequire('app/lib/logger');
+var logger = rootRequire('lib/logger');
 var helpers = rootRequire('app/lib/smsHelpers');
 
 /**

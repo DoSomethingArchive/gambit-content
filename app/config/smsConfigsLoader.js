@@ -18,7 +18,7 @@ var configModelArray = [
   rootRequire('app/lib/reportback/reportbackConfigModel')(conn),
 ];
 
-var logger = rootRequire('app/lib/logger');
+var logger = rootRequire('lib/logger');
 
 var configObject = {};
 var callback;
