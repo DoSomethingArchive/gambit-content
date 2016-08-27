@@ -29,7 +29,7 @@ phoenix.userLogin(
 app = express();
 
 var appConfig = require('./config')();
-var router = require('./app/router');
+var router = require('./api/router');
 var smsConfigsLoader = require('./config/smsConfigsLoader');
 
 // Retrieves all SMS config files before starting server.

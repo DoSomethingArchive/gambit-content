@@ -11,11 +11,11 @@ app.ConfigName = {
 
 var conn = require('./connectionConfig');
 var configModelArray = [
-  rootRequire('app/chatbot/models/donorsChooseBotModel')(conn),
-  rootRequire('app/chatbot/models/donorsChooseMocoCampaignModel')(conn),
-  rootRequire('app/moco-routing/config/startCampaignTransitionsConfigModel')(conn),
-  rootRequire('app/moco-routing/config/yesNoPathsConfigModel')(conn),
-  rootRequire('app/reportback/reportbackConfigModel')(conn),
+  rootRequire('api/models/donorsChooseBotModel')(conn),
+  rootRequire('api/models/donorsChooseMocoCampaignModel')(conn),
+  rootRequire('api/legacy/ds-routing/config/startCampaignTransitionsConfigModel')(conn),
+  rootRequire('api/legacy/ds-routing/config/yesNoPathsConfigModel')(conn),
+  rootRequire('api/legacy/reportback/reportbackConfigModel')(conn),
 ];
 
 var logger = rootRequire('lib/logger');

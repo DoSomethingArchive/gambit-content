@@ -2,9 +2,11 @@ var express = require('express')
 var router = express.Router();
 
 var logger = rootRequire('lib/logger');
-var chatbotRouter = require('./chatbot');
-var mocoRouter = require('./moco-routing');
-var reportbackRouter = require('./reportback');
+var mocoRouter = require('./legacy/ds-routing');
+var reportbackRouter = require('./legacy/reportback');
+var DonorsChooseBot = require('./controllers/DonorsChooseBotController');
+var Slothbot = require('./controllers/SlothBotController');
+
 
 app.use('/', router);
 
@@ -21,6 +23,28 @@ router.use(function(req, res, next) {
   next();
 });
 
-router.use('/v1/chatbot', chatbotRouter);
 router.use('/ds-routing', mocoRouter);
 router.use('/reportback', reportbackRouter);
+
+
+router.post('/v1/chatbot', function(request, response) {
+
+  var controller;
+  switch (request.query.bot_type) {
+    case 'donorschoose':
+      controller = new DonorsChooseBot();
+      break;
+    default:
+      controller = new Slothbot();
+  }
+
+  controller.chatbot(request, response);
+
+});
+
+router.post('v1/chatbot/sync', function(request, response) {
+
+  var controller = new DonorsChooseBot();
+  controller.syncBotConfigs(request, response);
+
+});
