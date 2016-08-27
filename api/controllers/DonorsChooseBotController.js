@@ -31,7 +31,7 @@ var mobilecommons = rootRequire('lib/mobilecommons');
 var shortenLink = rootRequire('lib/bitly');
 var helpers = rootRequire('lib/helpers');
 var connectionOperations = rootRequire('config/connectionOperations');
-var donationModel = require('../models/donorsChooseDonationModel')(connectionOperations);
+var donationModel = require('../models/DonorsChooseDonation')(connectionOperations);
 
 /**
  * DonorsChooseBotController
