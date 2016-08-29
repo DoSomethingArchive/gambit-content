@@ -25,7 +25,7 @@ SlothBotController.prototype.chatbot = function(request, response) {
   reply += 'You just told me:\n\n' + incomingMsg;
 
   // @todo Move hardcoded value into environment variable.
-  mobilecommons.profile_update(phone, 210045, {gambit_chatbot_response: reply}); 
+  mobilecommons.chatbot(request.body, 210045, reply);
 }
 
 module.exports = SlothBotController;
