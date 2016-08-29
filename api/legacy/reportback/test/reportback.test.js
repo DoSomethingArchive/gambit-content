@@ -2,7 +2,7 @@ var assert = require('assert')
   , reportback = require('../')
   , connectionOperations = rootRequire('config/connectionOperations')
   , model = require('../reportbackModel')(connectionOperations)
-  , emitter = rootRequire('app/eventEmitter')
+  , emitter = rootRequire('api/eventEmitter')
   , dscontentapi = rootRequire('lib/phoenix')()
   ;
 

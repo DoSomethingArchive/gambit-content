@@ -3,7 +3,7 @@
  */
 app.ConfigName = {
   CAMPAIGN_TRANSITIONS: 'start_campaign_transition',
-  DONORSCHOOSE: 'donorschoose_moco_campaigns',
+  CHATBOT_MOBILECOMMONS_CAMPAIGNS: 'chatbot_mobilecommons_campaigns',
   DONORSCHOOSE_BOTS: 'donorschoose_bots',
   REPORTBACK: 'reportback',
   YES_NO_PATHS: 'yes_no_path'
@@ -11,11 +11,11 @@ app.ConfigName = {
 
 var conn = require('./connectionConfig');
 var configModelArray = [
-  rootRequire('app/chatbot/models/donorsChooseBotModel')(conn),
-  rootRequire('app/chatbot/models/donorsChooseMocoCampaignModel')(conn),
-  rootRequire('app/moco-routing/config/startCampaignTransitionsConfigModel')(conn),
-  rootRequire('app/moco-routing/config/yesNoPathsConfigModel')(conn),
-  rootRequire('app/reportback/reportbackConfigModel')(conn),
+  rootRequire('api/models/ChatbotMobileCommonsCampaign')(conn),
+  rootRequire('api/models/DonorsChooseBot')(conn),
+  rootRequire('api/legacy/ds-routing/config/startCampaignTransitionsConfigModel')(conn),
+  rootRequire('api/legacy/ds-routing/config/yesNoPathsConfigModel')(conn),
+  rootRequire('api/legacy/reportback/reportbackConfigModel')(conn),
 ];
 
 var logger = rootRequire('lib/logger');
