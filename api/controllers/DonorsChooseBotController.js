@@ -7,13 +7,6 @@
  */
 var donorsChooseApiKey = process.env.DONORSCHOOSE_API_KEY;
 var donorsChooseApiPassword = process.env.DONORSCHOOSE_API_PASSWORD;
-var donorsChooseProposalsHost = 'https://api.donorschoose.org/';
-var donorsChooseDonationsHost = 'https://apisecure.donorschoose.org/';
-
-if (process.env.NODE_ENV != 'production') {
-  donorsChooseProposalsHost = 'https://qa.donorschoose.org/';
-  donorsChooseDonationsHost = 'https://apiqasecure.donorschoose.org/';
-}
 
 var DONATION_AMOUNT = (process.env.DONORSCHOOSE_DONATION_AMOUNT || 10);
 var DONATION_COUNT_FIELDNAME = 'ss2016_donation_count';
@@ -23,11 +16,11 @@ var MOCO_CAMPAIGN_ID = process.env.DONORSCHOOSE_MOCO_CAMPAIGN_ID;
 
 var Q = require('q');
 var requestHttp = require('request');
-var Entities = require('html-entities').AllHtmlEntities
 var logger = rootRequire('lib/logger');
 var mobilecommons = rootRequire('lib/mobilecommons');
 var shortenLink = rootRequire('lib/bitly');
 var helpers = rootRequire('lib/helpers');
+var donorschoose = rootRequire('lib/donorschoose');
 var connectionOperations = rootRequire('config/connectionOperations');
 var donationModel = require('../models/DonorsChooseDonation')(connectionOperations);
 
@@ -181,7 +174,7 @@ DonorsChooseBotController.prototype.findProjectAndRespond = function(member, ema
 
   var phone = member.phone;
   var zip = member.profile_postal_code;
-  var apiUrl = getDonorsChooseProposalsQueryURL(zip);
+  var apiUrl = donorschoose.getProposalsQueryUrl(zip, DONATION_AMOUNT);
   logger.log('debug', 'dc.findProject user:%s request:%s', phone, apiUrl);
   apiUrl += '&APIKey=' + donorsChooseApiKey;
 
@@ -208,7 +201,7 @@ DonorsChooseBotController.prototype.findProjectAndRespond = function(member, ema
         logger.error('dc.findProject user:%s invalid JSON.', phone);
         return;
       }
-      var project = decodeDonorsChooseProposal(dcResponse.proposals[0]);
+      var project = donorschoose.decodeProposal(dcResponse.proposals[0]);
       self.postDonation(member, project);
     }
     catch (e) {
@@ -230,8 +223,8 @@ DonorsChooseBotController.prototype.postDonation = function(member, project) {
   logger.log('debug', 'dc.submitDonation user:%s proposalId:%s', 
     donorPhone, project.id);
 
-  var apiUrl = donorsChooseDonationsHost + 'common/json_api.html?APIKey=';
-  apiUrl += donorsChooseApiKey;
+  var apiUrl = donorschoose.getDonationsPostUrl();
+  apiUrl += '?APIKey=' + donorsChooseApiKey;
   requestToken().then(postDonation,
     promiseErrorCallback('dc.submitDonation failed for user:' + donorPhone)
   );
@@ -380,7 +373,7 @@ DonorsChooseBotController.prototype.respondWithSuccess = function(member, projec
 
   var delay = 2500;
   setTimeout(function() {
-    var secondMessage = project.teacherName + ' says: Thanks! ' + project.description;
+    var secondMessage = project.teacherName + ' says: Thanks! ' + project.fulfillmentTrailer;
     self.endChat(member, secondMessage);
   }, delay);
 
@@ -405,40 +398,6 @@ function getDonationCount(member) {
     return 0;
   }
   return count;
-}
-
-/**
- * Returns URL string to query for DonorsChoose projects.
- * @param {string} zip 
- * @return {string}
- */
-function getDonorsChooseProposalsQueryURL(zip) {
-  // @see https://data.donorschoose.org/docs/project-listing/json-requests/
-  var url = donorsChooseProposalsHost + 'common/json_feed.html';
-  url += '?subject4=-4'; 
-  url += '&sortBy=2'; 
-  url += '&costToCompleteRange=' + DONATION_AMOUNT + '+TO+10000'; 
-  url += '&max=1';
-  url += '&zip=' + zip;
-  return url;
-}
-
-/**
- * Decodes proposal returned from DonorsChoose API.
- * @param {object} proposal
- * @return {object}
- */
-function decodeDonorsChooseProposal(proposal) {
-  var entities = new Entities();
-  return {
-    id: proposal.id,
-    description: entities.decode(proposal.fulfillmentTrailer),
-    city: entities.decode(proposal.city),
-    state: entities.decode(proposal.state),
-    schoolName: entities.decode(proposal.schoolName),
-    teacherName: entities.decode(proposal.teacherName),
-    url: proposal.proposalURL
-  };
 }
 
 /**
