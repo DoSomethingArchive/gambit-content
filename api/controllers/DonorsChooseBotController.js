@@ -5,14 +5,12 @@
  * Currently only supports running one DonorsChoose Donation Campaign at a time,
  * set by the DONORSCHOOSE_MOCO_CAMPAIGN_ID environment variable.
  */
-var donorsChooseApiKey = (process.env.DONORSCHOOSE_API_KEY || null);
-var donorsChooseApiPassword = (process.env.DONORSCHOOSE_API_PASSWORD || null);
+var donorsChooseApiKey = process.env.DONORSCHOOSE_API_KEY;
+var donorsChooseApiPassword = process.env.DONORSCHOOSE_API_PASSWORD;
 var donorsChooseProposalsHost = 'https://api.donorschoose.org/';
 var donorsChooseDonationsHost = 'https://apisecure.donorschoose.org/';
 
 if (process.env.NODE_ENV != 'production') {
-  donorsChooseApiKey = 'DONORSCHOOSE';
-  donorsChooseApiPassword = 'helpClassrooms!';
   donorsChooseProposalsHost = 'https://qa.donorschoose.org/';
   donorsChooseDonationsHost = 'https://apiqasecure.donorschoose.org/';
 }
