@@ -5,18 +5,16 @@ global.rootRequire = function(name) {
   return require(__dirname + '/' + name);
 }
 
-var express = require('express')
-  , path = require('path')
-  , http = require('http')
-  , logger = rootRequire('app/lib/logger')
-  , dscontentapi = rootRequire('app/lib/ds-content-api')()
-  ;
+var express = require('express');
+var path = require('path');
+var http = require('http');
+var logger = rootRequire('lib/logger');
+var phoenix = rootRequire('lib/phoenix')();
 
 // Default is 5. Increasing # of concurrent sockets per host.
 http.globalAgent.maxSockets = 100;
 
-// Authenticate app with Phoenix API.
-dscontentapi.userLogin(
+phoenix.userLogin(
   process.env.DS_CONTENT_API_USERNAME,
   process.env.DS_CONTENT_API_PASSWORD,
   function(err, response, body) {
@@ -30,10 +28,9 @@ dscontentapi.userLogin(
  */
 app = express();
 
-var appConfig = require('./app/config')()
-  , router = require('./app/router')
-  , smsConfigsLoader = require('./app/config/smsConfigsLoader')
-  ;
+var appConfig = require('./config')();
+var router = require('./api/router');
+var smsConfigsLoader = require('./config/smsConfigsLoader');
 
 // Retrieves all SMS config files before starting server.
 smsConfigsLoader(function() {
