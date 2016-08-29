@@ -2,11 +2,10 @@ var express = require('express')
 var router = express.Router();
 
 var logger = rootRequire('lib/logger');
-var mocoRouter = require('./legacy/ds-routing');
+var campaignRouter = require('./legacy/ds-routing');
 var reportbackRouter = require('./legacy/reportback');
 var DonorsChooseBot = require('./controllers/DonorsChooseBotController');
 var Slothbot = require('./controllers/SlothBotController');
-
 
 app.use('/', router);
 
@@ -23,9 +22,9 @@ router.use(function(req, res, next) {
   next();
 });
 
-router.use('/ds-routing', mocoRouter);
-router.use('/reportback', reportbackRouter);
+router.use('/ds-routing', campaignRouter);
 
+router.use('/reportback', reportbackRouter);
 
 router.post('/v1/chatbot', function(request, response) {
 

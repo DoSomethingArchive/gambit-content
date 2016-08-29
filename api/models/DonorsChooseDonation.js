@@ -14,7 +14,7 @@ var schema = new mongoose.Schema({
   profile_postal_code: String,
 
   // Keep config info for record-keeping:
-  moco_campaign_id: Number,
+  mobilecommons_campaign_id: Number,
   donorschoose_bot_id: Number,
 
   // DonorsChoose information:

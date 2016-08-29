@@ -38,7 +38,7 @@ var donationModel = require('../models/DonorsChooseDonation')(connectionOperatio
  * @constructor
  */
 function DonorsChooseBotController() {
-  this.mocoCampaign = app.getConfig(app.ConfigName.DONORSCHOOSE, MOCO_CAMPAIGN_ID);
+  this.mocoCampaign = app.getConfig(app.ConfigName.CHATBOT_MOBILECOMMONS_CAMPAIGNS, MOCO_CAMPAIGN_ID);
   this.bot = app.getConfig(app.ConfigName.DONORSCHOOSE_BOTS, DONORSCHOOSE_BOT_ID);
 };
 
@@ -345,7 +345,7 @@ DonorsChooseBotController.prototype.postDonation = function(member, project) {
         profile_email: member.profile_email,
         profile_first_name: member.profile_first_name,
         profile_postal_code: member.profile_postal_code,
-        moco_campaign_id: MOCO_CAMPAIGN_ID,
+        mobilecommons_campaign_id: MOCO_CAMPAIGN_ID,
         donorschoose_bot_id: DONORSCHOOSE_BOT_ID,
         donation_id: donation.donationId,
         donation_amount: DONATION_AMOUNT,
