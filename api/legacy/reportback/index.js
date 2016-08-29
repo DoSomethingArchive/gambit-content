@@ -7,7 +7,7 @@ var express = require('express')
   , connectionOperations = rootRequire('config/connectionOperations')
   , model = require('./reportbackModel')(connectionOperations)
   , mobilecommons = rootRequire('lib/mobilecommons')
-  , emitter = rootRequire('api/eventEmitter')
+  , emitter = rootRequire('lib/eventEmitter')
   , logger = rootRequire('lib/logger')
   , phoenix = rootRequire('lib/phoenix')()
   , REPORTBACK_PERMALINK_BASE_URL

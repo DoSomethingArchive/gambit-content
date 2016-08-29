@@ -41,7 +41,7 @@ router.post('/v1/chatbot', function(request, response) {
 
 });
 
-router.post('v1/chatbot/sync', function(request, response) {
+router.post('/v1/chatbot/sync', function(request, response) {
 
   var controller = new DonorsChooseBot();
   controller.syncBotConfigs(request, response);
