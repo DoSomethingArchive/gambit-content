@@ -16,7 +16,6 @@ var MOCO_CAMPAIGN_ID = process.env.DONORSCHOOSE_MOCO_CAMPAIGN_ID;
 
 var Q = require('q');
 var requestHttp = require('request');
-var Entities = require('html-entities').AllHtmlEntities
 var logger = rootRequire('lib/logger');
 var mobilecommons = rootRequire('lib/mobilecommons');
 var shortenLink = rootRequire('lib/bitly');
@@ -202,7 +201,7 @@ DonorsChooseBotController.prototype.findProjectAndRespond = function(member, ema
         logger.error('dc.findProject user:%s invalid JSON.', phone);
         return;
       }
-      var project = decodeDonorsChooseProposal(dcResponse.proposals[0]);
+      var project = donorschoose.decodeProposal(dcResponse.proposals[0]);
       self.postDonation(member, project);
     }
     catch (e) {
@@ -374,7 +373,7 @@ DonorsChooseBotController.prototype.respondWithSuccess = function(member, projec
 
   var delay = 2500;
   setTimeout(function() {
-    var secondMessage = project.teacherName + ' says: Thanks! ' + project.description;
+    var secondMessage = project.teacherName + ' says: Thanks! ' + project.fulfillmentTrailer;
     self.endChat(member, secondMessage);
   }, delay);
 
@@ -399,24 +398,6 @@ function getDonationCount(member) {
     return 0;
   }
   return count;
-}
-
-/**
- * Decodes proposal returned from DonorsChoose API.
- * @param {object} proposal
- * @return {object}
- */
-function decodeDonorsChooseProposal(proposal) {
-  var entities = new Entities();
-  return {
-    id: proposal.id,
-    description: entities.decode(proposal.fulfillmentTrailer),
-    city: entities.decode(proposal.city),
-    state: entities.decode(proposal.state),
-    schoolName: entities.decode(proposal.schoolName),
-    teacherName: entities.decode(proposal.teacherName),
-    url: proposal.proposalURL
-  };
 }
 
 /**
