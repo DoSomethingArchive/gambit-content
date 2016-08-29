@@ -47,7 +47,7 @@ function DonorsChooseBotController() {
  * @param {object} profileFields - key/value MoCo Custom Fields to update
  */
 DonorsChooseBotController.prototype.chat = function(member, msgText, profileFields) {
-  sendSMS(member, this.mocoCampaign.oip_chat, msgText, profileFields);
+  mobilecommons.chatbot(member, this.mocoCampaign.oip_chat, msgText, profileFields);
 }
 
 /**
@@ -57,7 +57,7 @@ DonorsChooseBotController.prototype.chat = function(member, msgText, profileFiel
  * @param {object} profileFields - key/value MoCo Custom Fields to update
  */
 DonorsChooseBotController.prototype.endChat = function(member, msgText, profileFields) {
-  sendSMS(member, this.mocoCampaign.oip_success, msgText, profileFields);
+  mobilecommons.chatbot(member, this.mocoCampaign.oip_success, msgText, profileFields);
 }
 
 /**
@@ -65,7 +65,7 @@ DonorsChooseBotController.prototype.endChat = function(member, msgText, profileF
  * @param {object} member - MoCo request.body
  */
 DonorsChooseBotController.prototype.endChatWithFail = function(member) {
-  sendSMS(member, this.mocoCampaign.oip_error, this.bot.msg_error_generic);
+  mobilecommons.chatbot(member, this.mocoCampaign.oip_error, this.bot.msg_error_generic);
 }
 
 /**
@@ -392,31 +392,6 @@ DonorsChooseBotController.prototype.respondWithSuccess = function(member, projec
       self.endChat(member, thirdMessage, customFields);
     });
   }, 2 * delay);
-}
-
-/**
- * Posts MoCo profile_update to save msgTxt to member profile and send as SMS.
- * @param {object} member
- * @param {number} optInPath - Should contain {{slothbot_response}} as Liquid
- * @param {string} msgTxt - Value to save to our slothboth_response Custom Field
- * @param {object} [profileFields] - Key/values to save as MoCo Custom Fields
- */
-function sendSMS(member, optInPath, msgTxt, profileFields) {
-  if (typeof optInPath === 'undefined') {
-    logger.error('dc.sendSMS undefined optInPath user:%s msgText:%s', member, msgTxt);
-    return;
-  }
-  var mobileNumber = helpers.getNormalizedPhone(member.phone);
-  var msgTxt = msgTxt.replace('{{postal_code}}', member.profile_postal_code);
-
-  if (typeof profileFields === 'undefined') {
-    profileFields = {gambit_chatbot_response: msgTxt};
-  }
-  else {
-    profileFields.gambit_chatbot_response = msgTxt;
-  }
-
-  mobilecommons.profile_update(mobileNumber, optInPath, profileFields);
 }
 
 /**
