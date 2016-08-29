@@ -380,7 +380,7 @@ DonorsChooseBotController.prototype.respondWithSuccess = function(member, projec
 
   var delay = 2500;
   setTimeout(function() {
-    var secondMessage = '@' + project.teacherName + ': Thx! ' + project.description;
+    var secondMessage = project.teacherName + ' says: Thanks! ' + project.description;
     self.endChat(member, secondMessage);
   }, delay);
 
