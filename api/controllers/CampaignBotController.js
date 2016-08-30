@@ -60,16 +60,14 @@ CampaignBotController.prototype.onFindCampaign = function(err, res, body) {
     var incomingMsg = parseInt(this.request.body.args);
     msgTxt = '@stg: Got you down for ' + incomingMsg;
     msgTxt += ' ' + rbInfo.noun + ' ' + rbInfo.verb + '.';
-    var created = Date.now();
     var submission = {
-      _id: created,
-      created_at: created,
       campaign: parseInt(campaign.id),
       mobile: member.phone,
       quantity: incomingMsg
     }
     reportbackSubmissions.create(submission).then(function(doc) {
-      logger.debug('CampaignBot.reportbackSubmissions created:%s', submission);
+      logger.debug('campaignBot created reportbackSubmission._id:%s for:%s', 
+        doc['_id'], submission);
     });
   }
 

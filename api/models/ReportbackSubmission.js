@@ -5,9 +5,7 @@ var mongoose = require('mongoose');
 
 var schema = new mongoose.Schema({
 
-  _id: Number,
-
-  created_at: Number,
+  created_at: {type: Date, default: Date.now},
 
   mobile: {type: String, index: true},
 
