@@ -3,6 +3,7 @@
  */
 app.ConfigName = {
   CAMPAIGN_TRANSITIONS: 'start_campaign_transition',
+  CAMPAIGNS: 'campaigns',
   CHATBOT_MOBILECOMMONS_CAMPAIGNS: 'chatbot_mobilecommons_campaigns',
   DONORSCHOOSE_BOTS: 'donorschoose_bots',
   REPORTBACK: 'reportback',
@@ -11,6 +12,7 @@ app.ConfigName = {
 
 var conn = require('./connectionConfig');
 var configModelArray = [
+  rootRequire('api/models/Campaign')(conn),
   rootRequire('api/models/ChatbotMobileCommonsCampaign')(conn),
   rootRequire('api/models/DonorsChooseBot')(conn),
   rootRequire('api/legacy/ds-routing/config/startCampaignTransitionsConfigModel')(conn),

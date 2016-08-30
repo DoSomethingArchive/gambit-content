@@ -15,6 +15,7 @@ var users = require('../models/User')(connOps);
  */
 function CampaignBotController(campaignId) {
   this.campaignId = campaignId;
+  this.campaign = app.getConfig(app.ConfigName.CAMPAIGNS, campaignId);
 };
 
 /**
@@ -26,10 +27,11 @@ CampaignBotController.prototype.chatbot = function(request, response) {
   var self = this;
   var member = request.body;
 
-  if (!this.campaignId) {
-    response.sendStatus(422);
+  if (!this.campaign) {
+    response.sendStatus(500);
     return;
   }
+  response.send();
 
   users.findOne({ '_id': member.phone }, function (err, userDoc) {
 
@@ -37,6 +39,8 @@ CampaignBotController.prototype.chatbot = function(request, response) {
       logger.error(err);
       return;
     }
+
+    var msgTxt;
 
     if (!userDoc) {
       users.create({
@@ -46,69 +50,47 @@ CampaignBotController.prototype.chatbot = function(request, response) {
       }).then(function(doc) {
         logger.debug('campaignBot created user._id:%', doc['_id']);
       });
+      // @todo: Eventually need to safetycheck by querying for Signup from DS API
+      msgTxt = self.getSignupConfirmMessage(campaign);
     }
 
     else {
       logger.debug('campaignBot found user:%s', userDoc._id);
+      if (request.query.start || !request.body.args)  {
+        msgTxt = self.getSignupConfirmMessage();
+      }
+      else {
+        var quantity = parseInt(request.body.args);
+        msgTxt = self.getReportbackConfirmMessage(quantity);
+
+        reportbackSubmissions.create({
+          campaign: self.campaignId,
+          mobile: member.phone,
+          quantity: quantity
+        }).then(function(doc) {
+          logger.debug('campaignBot created reportbackSubmission._id:%s for:%s', 
+            doc['_id'], submission);
+        });
+      }
     }
 
+    sendMessage(member, msgTxt);
+
   });
-
-  var context = {
-    request: request,
-    response: response
-  };
-  phoenix.campaignGet(this.campaignId, self.onFindCampaign.bind(context));
-}
-
-/**
- * Callback for successful loading of Campaign from Phoenix API.
- */
-CampaignBotController.prototype.onFindCampaign = function(err, res, body) {
-  var member = this.request.body;
-
-  var phoenixResponse = JSON.parse(body);
-  var campaign = phoenixResponse.data;
-  if (!campaign) {
-    this.response.sendStatus(404);
-    return;
-  }
-  this.response.send();
-
-
-  var msgTxt;
-  if (this.request.query.start || !this.request.body.args) {
-    msgTxt = getSignupConfirmMessage(campaign);
-  }
-  else {
-    var quantity = parseInt(this.request.body.args);
-    msgTxt = getReportbackConfirmMessage(campaign, quantity);
-
-    reportbackSubmissions.create({
-      campaign: parseInt(campaign.id),
-      mobile: member.phone,
-      quantity: quantity
-    }).then(function(doc) {
-      logger.debug('campaignBot created reportbackSubmission._id:%s for:%s', 
-        doc['_id'], submission);
-    });
-  }
-  sendMessage(member, msgTxt);
+  
 }
 
 
-function getSignupConfirmMessage(campaign) {
-  var rbInfo = campaign.reportback_info;
-  var msgTxt = '@stg: You\'re signed up for ' + campaign.title + '.\n\n';
-  msgTxt += 'When completed, text back the total number of ' + rbInfo.noun;
-  msgTxt += ' you have ' + rbInfo.verb + ' so far.';
+CampaignBotController.prototype.getSignupConfirmMessage = function() {
+  var msgTxt = '@stg: You\'re signed up for ' + this.campaign.title + '.\n\n';
+  msgTxt += 'When completed, text back the total number of ' + this.campaign.rb_noun;
+  msgTxt += ' you have ' + this.campaign.rb_verb + ' so far.';
   return msgTxt;
 }
 
-function getReportbackConfirmMessage(campaign, quantity) {
-  var rbInfo = campaign.reportback_info;
+CampaignBotController.prototype.getReportbackConfirmMessage = function(quantity) {
   var msgTxt = '@stg: Got you down for ' + quantity;
-  msgTxt += ' ' + rbInfo.noun + ' ' + rbInfo.verb + '.';
+  msgTxt += ' ' + this.campaign.rb_noun + ' ' + this.campaign.rb_verb + '.';
   return msgTxt;
 }
 
