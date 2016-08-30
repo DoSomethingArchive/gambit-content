@@ -3,6 +3,8 @@
 var logger = rootRequire('lib/logger');
 var mobilecommons = rootRequire('lib/mobilecommons');
 var phoenix = rootRequire('lib/phoenix')();
+var connOps = rootRequire('config/connectionOperations');
+var reportbackSubmissions = require('../models/ReportbackSubmission')(connOps);
 
 /**
  * CampaignBotController
@@ -19,6 +21,7 @@ function CampaignBotController(campaignId) {
  * @param {object} response - Express response
  */
 CampaignBotController.prototype.chatbot = function(request, response) {
+  var self = this;
   var member = request.body;
   var incomingMsg = request.body.args;
   if (!this.campaignId) {
@@ -29,13 +32,13 @@ CampaignBotController.prototype.chatbot = function(request, response) {
     request: request,
     response: response
   };
-  phoenix.campaignGet(this.campaignId, onFindCampaign.bind(context));
+  phoenix.campaignGet(this.campaignId, self.onFindCampaign.bind(context));
 }
 
 /**
  * Callback for successful loading of Campaign from Phoenix API.
  */
-function onFindCampaign(err, res, body) {
+CampaignBotController.prototype.onFindCampaign = function(err, res, body) {
   var member = this.request.body;
 
   var phoenixResponse = JSON.parse(body);
@@ -54,9 +57,20 @@ function onFindCampaign(err, res, body) {
     msgTxt += ' you have ' + rbInfo.verb + ' so far.';
   }
   else {
-    var incomingMsg = this.request.body.args;
+    var incomingMsg = parseInt(this.request.body.args);
     msgTxt = '@flynn: Got you down for ' + incomingMsg;
     msgTxt += ' ' + rbInfo.noun + ' ' + rbInfo.verb + '.';
+    var created = Date.now();
+    var submission = {
+      _id: created,
+      created_at: created,
+      campaign: parseInt(campaign.id),
+      mobile: member.phone,
+      quantity: incomingMsg
+    }
+    reportbackSubmissions.create(submission).then(function(doc) {
+      logger.debug('CampaignBot.reportbackSubmissions created:%s', submission);
+    });
   }
 
   mobilecommons.chatbot(member, 213849, msgTxt);
