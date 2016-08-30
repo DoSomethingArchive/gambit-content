@@ -26,7 +26,7 @@ CampaignBotController.prototype.chatbot = function(request, response) {
     return;
   }
   var context = {
-    member: member,
+    request: request,
     response: response
   };
   phoenix.campaignGet(this.campaignId, onFindCampaign.bind(context));
@@ -36,7 +36,7 @@ CampaignBotController.prototype.chatbot = function(request, response) {
  * Callback for successful loading of Campaign from Phoenix API.
  */
 function onFindCampaign(err, res, body) {
-  var member = this.member;
+  var member = this.request.body;
 
   var phoenixResponse = JSON.parse(body);
   var campaign = phoenixResponse.data;
@@ -45,9 +45,20 @@ function onFindCampaign(err, res, body) {
     return;
   }
   this.response.send();
-  var msgTxt = '@flynn: You signed up for ' + campaign.title;
+
   var rbInfo = campaign.reportback_info;
-  msgTxt += '\n\nHow many ' + rbInfo.noun + ' have you ' + rbInfo.verb + '?';
+  var msgTxt;
+  if (this.request.query.start) {
+    msgTxt = '@flynn: You\'re signed up for ' + campaign.title + '.\n\n';
+    msgTxt += 'When completed, text back the total number of ' + rbInfo.noun;
+    msgTxt += ' you have ' + rbInfo.verb + ' so far.';
+  }
+  else {
+    var incomingMsg = this.request.body.args;
+    msgTxt = '@flynn: Got you down for ' + incomingMsg;
+    msgTxt += ' ' + rbInfo.noun + ' ' + rbInfo.verb + '.';
+  }
+
   mobilecommons.chatbot(member, 213849, msgTxt);
 }
 
