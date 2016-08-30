@@ -46,6 +46,8 @@ function onFindCampaign(err, res, body) {
   }
   this.response.send();
   var msgTxt = '@flynn: You signed up for ' + campaign.title;
+  var rbInfo = campaign.reportback_info;
+  msgTxt += '\n\nHow many ' + rbInfo.noun + ' have you ' + rbInfo.verb + '?';
   mobilecommons.chatbot(member, 213849, msgTxt);
 }
 
