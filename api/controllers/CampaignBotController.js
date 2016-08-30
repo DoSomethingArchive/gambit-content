@@ -51,14 +51,14 @@ CampaignBotController.prototype.onFindCampaign = function(err, res, body) {
 
   var rbInfo = campaign.reportback_info;
   var msgTxt;
-  if (this.request.query.start) {
-    msgTxt = '@flynn: You\'re signed up for ' + campaign.title + '.\n\n';
+  if (this.request.query.start || !this.request.body.args) {
+    msgTxt = '@stg: You\'re signed up for ' + campaign.title + '.\n\n';
     msgTxt += 'When completed, text back the total number of ' + rbInfo.noun;
     msgTxt += ' you have ' + rbInfo.verb + ' so far.';
   }
   else {
     var incomingMsg = parseInt(this.request.body.args);
-    msgTxt = '@flynn: Got you down for ' + incomingMsg;
+    msgTxt = '@stg: Got you down for ' + incomingMsg;
     msgTxt += ' ' + rbInfo.noun + ' ' + rbInfo.verb + '.';
     var created = Date.now();
     var submission = {
