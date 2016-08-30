@@ -18,7 +18,7 @@ var Q = require('q');
 var requestHttp = require('request');
 var logger = rootRequire('lib/logger');
 var mobilecommons = rootRequire('lib/mobilecommons');
-var shortenLink = rootRequire('lib/bitly');
+var bitly = rootRequire('lib/bitly');
 var helpers = rootRequire('lib/helpers');
 var donorschoose = rootRequire('lib/donorschoose');
 var connectionOperations = rootRequire('config/connectionOperations');
@@ -378,7 +378,7 @@ DonorsChooseBotController.prototype.respondWithSuccess = function(member, projec
   }, delay);
 
   setTimeout(function() {
-    shortenLink(project.url, function(shortenedLink) {
+    bitly(project.url, function(shortenedLink) {
       logger.log('debug', 'dc.sendSuccessMessages user:%s shortenedLink:%s', 
         member.phone, shortenedLink);
       var thirdMessage = self.bot.msg_project_link + ' ' + shortenedLink;
