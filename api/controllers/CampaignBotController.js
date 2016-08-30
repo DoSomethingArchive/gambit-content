@@ -1,13 +1,17 @@
 "use strict";
 
-var mobilecommons = rootRequire('lib/mobilecommons');
 var logger = rootRequire('lib/logger');
+var mobilecommons = rootRequire('lib/mobilecommons');
+var phoenix = rootRequire('lib/phoenix')();
 
 /**
  * CampaignBotController
  * @constructor
+ * @param {integer} campaignId - our DS Campaign ID
  */
-function CampaignBotController() {};
+function CampaignBotController(campaignId) {
+  this.campaignId = campaignId;
+};
 
 /**
  * Chatbot endpoint for DS Campaign Signup and Reportback.
@@ -17,11 +21,32 @@ function CampaignBotController() {};
 CampaignBotController.prototype.chatbot = function(request, response) {
   var member = request.body;
   var incomingMsg = request.body.args;
-  response.send();
+  if (!this.campaignId) {
+    response.sendStatus(422);
+    return;
+  }
+  var context = {
+    member: member,
+    response: response
+  };
+  phoenix.campaignGet(this.campaignId, onFindCampaign.bind(context));
+}
 
-  var reply = '@flynn: Hi';
+/**
+ * Callback for successful loading of Campaign from Phoenix API.
+ */
+function onFindCampaign(err, res, body) {
+  var member = this.member;
 
-  mobilecommons.chatbot(member, 213849, reply);
+  var phoenixResponse = JSON.parse(body);
+  var campaign = phoenixResponse.data;
+  if (!campaign) {
+    this.response.sendStatus(404);
+    return;
+  }
+  this.response.send();
+  var msgTxt = '@flynn: You signed up for ' + campaign.title;
+  mobilecommons.chatbot(member, 213849, msgTxt);
 }
 
 module.exports = CampaignBotController;

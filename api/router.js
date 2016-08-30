@@ -32,7 +32,7 @@ router.post('/v1/chatbot', function(request, response) {
   var controller;
   switch (request.query.bot_type) {
     case 'campaign':
-      controller = new CampaignBot();
+      controller = new CampaignBot(request.query.campaign);
       break;
     case 'donorschoose':
       controller = new DonorsChooseBot();
