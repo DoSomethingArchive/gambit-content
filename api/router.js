@@ -4,6 +4,7 @@ var router = express.Router();
 var logger = rootRequire('lib/logger');
 var campaignRouter = require('./legacy/ds-routing');
 var reportbackRouter = require('./legacy/reportback');
+var CampaignBot = require('./controllers/CampaignBotController');
 var DonorsChooseBot = require('./controllers/DonorsChooseBotController');
 var Slothbot = require('./controllers/SlothBotController');
 
@@ -30,6 +31,9 @@ router.post('/v1/chatbot', function(request, response) {
 
   var controller;
   switch (request.query.bot_type) {
+    case 'campaign':
+      controller = new CampaignBot(request.query.campaign);
+      break;
     case 'donorschoose':
       controller = new DonorsChooseBot();
       break;

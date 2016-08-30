@@ -6,11 +6,18 @@ Currently hard-wired for usage in our Mobile Commons account to chat over SMS.
 POST /v1/chatbot
 ```
 
+**Headers**
+
+Name | Type | Description
+--- | --- | ---
+`x-gambit-api-key` | `string` | **Required.** Used to authenticate POST requests.
+
 **Parameters**
 
 Name | Type | Description
 --- | --- | ---
-`bot_type` | `string` | Type of bot to chat with, `donorschoose` or `slothbot`. Default: `slothbot`
+`bot_type` | `string` | Type of bot to chat with, `campaign`, `donorschoose` or `slothbot`. Default: `slothbot`
+`campaign` | `integer` | Required when `bot_type=campaign`, used to load Campaign from Phoenix API
 `start` | `boolean` | If set, the bot will begin a new conversation. Default: `false`
 
 **Input**
