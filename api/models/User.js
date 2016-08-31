@@ -10,7 +10,9 @@ var schema = new mongoose.Schema({
 
   mobile: {type: String, index: true},
 
-  first_name: String
+  first_name: String,
+
+  supports_mms: Boolean
 
 })
 
