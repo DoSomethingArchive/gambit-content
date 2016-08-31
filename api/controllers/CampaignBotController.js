@@ -8,6 +8,7 @@ var helpers = rootRequire('lib/helpers');
 var connOps = rootRequire('config/connectionOperations');
 var reportbackSubmissions = require('../models/ReportbackSubmission')(connOps);
 var users = require('../models/User')(connOps);
+var START_RB_COMMAND = 'next';
 
 /**
  * CampaignBotController
@@ -62,7 +63,7 @@ CampaignBotController.prototype.chatbot = function(request, response) {
       return;
     }
 
-    if (userReplyMsg === 'done') {
+    if (userReplyMsg.toLowerCase() === START_RB_COMMAND) {
       self.chatReportback(user, null);
     }
     else {
@@ -124,7 +125,7 @@ CampaignBotController.prototype.chatReportback = function(user, userReplyMsg) {
 CampaignBotController.prototype.sendSignupSuccessMsg = function(user) {
   var msgTxt = '@stg: You\'re signed up for ' + this.campaign.title + '.\n\n';
   msgTxt += 'When you have ' + this.campaign.rb_verb + ' some ';
-  msgTxt += this.campaign.rb_noun + ', text back DONE.';
+  msgTxt += this.campaign.rb_noun + ', text back ' + START_RB_COMMAND.toUpperCase();
   sendMessage(user, msgTxt);
 }
 
