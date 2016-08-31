@@ -130,11 +130,17 @@ CampaignBotController.prototype.supportsMMS = function() {
       // @todo
       // return handleError(err);
     }
-    self.sendMessage('@stg: How many nouns did you verb?');
+    self.askQuantity();
     return true;
   });
 
 };
+
+CampaignBotController.prototype.askQuantity = function() {
+  var msgTxt = '@stg: how many ' + this.campaign.rb_noun + ' have you ';
+  msgTxt += this.campaign.rb_verb + '?\n\nPls txt the exact number.';
+  this.sendMessage(msgTxt);
+}
 
 
 CampaignBotController.prototype.sendSignupSuccessMsg = function() {
