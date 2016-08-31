@@ -78,28 +78,8 @@ CampaignBotController.prototype.chatReportback = function(user, userReplyMsg) {
   logger.verbose('reportback %s', user);
   var self = this;
 
-  if (!user.supports_mms) {
-
-    if (!userReplyMsg) {
-      sendMessage(user, '@stg: Can you send photos from your phone?');
-      return;
-    }
-    
-    if (!helpers.isYesResponse(userReplyMsg)) {
-      sendMessage(user, '@stg: Sorry, you must submit a photo to complete.');
-      return;
-    }
-
-    user.supports_mms = true;
-    user.save(function (err) {
-      if (err) {
-        return handleError(err);
-      } 
-      sendMessage(user, '@stg: How many nouns did you verb?');
-    });
+  if (!self.supportsMMS(user, userReplyMsg)) {
     return;
-
-
   }
 
   var quantity = parseInt(userReplyMsg);
@@ -120,6 +100,34 @@ CampaignBotController.prototype.chatReportback = function(user, userReplyMsg) {
   });
 
 }
+
+CampaignBotController.prototype.supportsMMS = function(user, userMsg) {
+
+  if (user.supports_mms) {
+    return true;
+  }
+
+  if (!userMsg) {
+    sendMessage(user, '@stg: Can you send photos from your phone?');
+    return false;
+  }
+  
+  if (!helpers.isYesResponse(userMsg)) {
+    sendMessage(user, '@stg: Sorry, you must submit a photo to complete.');
+    return false;
+  }
+
+  user.supports_mms = true;
+  user.save(function(err) {
+    if (err) {
+      // @todo
+      // return handleError(err);
+    }
+    sendMessage(user, '@stg: How many nouns did you verb?');
+    return true;
+  });
+
+};
 
 
 CampaignBotController.prototype.sendSignupSuccessMsg = function(user) {
