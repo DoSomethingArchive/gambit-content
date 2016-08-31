@@ -56,29 +56,35 @@ CampaignBotController.prototype.chatbot = function(request, response) {
     }
 
     logger.debug('campaignBot found user:%s', user._id);
-    if (request.query.start || !request.body.args)  {
+    var userReplyMsg = helpers.getFirstWord(request.body.args);
+    if (request.query.start || !userReplyMsg)  {
       self.sendSignupSuccessMsg(user);
       return;
     }
 
-    self.reportback(user, request.body.args);
-
+    if (userReplyMsg === 'done') {
+      self.chatReportback(user, null);
+    }
+    else {
+      self.chatReportback(user, userReplyMsg);
+    }
+    
   });
   
 }
 
-CampaignBotController.prototype.reportback = function(user, incomingMsg) {
+CampaignBotController.prototype.chatReportback = function(user, userReplyMsg) {
   logger.verbose('reportback %s', user);
   var self = this;
 
   if (!user.supports_mms) {
 
-    if (!incomingMsg) {
+    if (!userReplyMsg) {
       sendMessage(user, '@stg: Can you send photos from your phone?');
       return;
     }
     
-    if (!helpers.isYesResponse(incomingMsg)) {
+    if (!helpers.isYesResponse(userReplyMsg)) {
       sendMessage(user, '@stg: Sorry, you must submit a photo to complete.');
       return;
     }
@@ -89,7 +95,7 @@ CampaignBotController.prototype.reportback = function(user, incomingMsg) {
 
   }
 
-  var quantity = parseInt(incomingMsg);
+  var quantity = parseInt(userReplyMsg);
   if (!quantity) {
     sendMessage(user, '@stg: Please provide a valid number.');
     return;
@@ -111,8 +117,8 @@ CampaignBotController.prototype.reportback = function(user, incomingMsg) {
 
 CampaignBotController.prototype.sendSignupSuccessMsg = function(user) {
   var msgTxt = '@stg: You\'re signed up for ' + this.campaign.title + '.\n\n';
-  msgTxt += 'When completed, text back the total number of ' + this.campaign.rb_noun;
-  msgTxt += ' you have ' + this.campaign.rb_verb + ' so far.';
+  msgTxt += 'When you have ' + this.campaign.rb_verb + ' some ';
+  msgTxt += this.campaign.rb_noun + ', text back DONE.';
   sendMessage(user, msgTxt);
 }
 
