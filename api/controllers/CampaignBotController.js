@@ -90,8 +90,14 @@ CampaignBotController.prototype.chatReportback = function(user, userReplyMsg) {
     }
 
     user.supports_mms = true;
-    user.save();
-    sendMessage(user, '@stg: How many nouns did you verb?');
+    user.save(function (err) {
+      if (err) {
+        return handleError(err);
+      } 
+      sendMessage(user, '@stg: How many nouns did you verb?');
+    });
+    return;
+
 
   }
 
