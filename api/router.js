@@ -29,7 +29,12 @@ router.use('/reportback', reportbackRouter);
 
 router.post('/v1/chatbot', function(request, response) {
 
+  // Store relevant info from incoming Mobile Commons requests.
+  request.incoming_message = request.body.args;
+  request.user_id = request.body.phone;
+
   var controller;
+
   switch (request.query.bot_type) {
     case 'campaign':
       controller = new CampaignBot(request.query.campaign);

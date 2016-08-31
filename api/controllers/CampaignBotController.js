@@ -16,7 +16,6 @@ var START_RB_COMMAND = 'next';
  * @param {integer} campaignId - our DS Campaign ID
  */
 function CampaignBotController(campaignId) {
-  this.campaignId = campaignId;
   this.campaign = app.getConfig(app.ConfigName.CAMPAIGNS, campaignId);
 };
 
@@ -27,15 +26,15 @@ function CampaignBotController(campaignId) {
  */
 CampaignBotController.prototype.chatbot = function(request, response) {
   var self = this;
-  var member = request.body;
 
-  if (!this.campaign) {
+  if (!self.campaign) {
     response.sendStatus(500);
     return;
   }
   response.send();
 
-  users.findOne({ '_id': member.phone }, function (err, user) {
+  // Load our current user document (creates first if document not found).
+  users.findOne({ '_id': request.user_id }, function (err, user) {
 
     if (err) {
       logger.error(err);
@@ -43,110 +42,118 @@ CampaignBotController.prototype.chatbot = function(request, response) {
     }
 
     if (!user) {
+
       users.create({
-        _id: member.phone,
-        first_name: member.profile_first_name,
-        mobile: member.phone
+
+        _id: request.user_id,
+        mobile: request.user_id
+
       }).then(function(newUser) {
+
+        self.user = newUser;
         logger.debug('campaignBot created user._id:%', newUser['_id']);
+
+        // Assuming our user hasn't signed up on web first for now.
         // @todo: Eventually need to safetycheck by querying for DS Signups API
-        self.sendSignupSuccessMsg(newUser);
+        self.sendSignupSuccessMsg();
+
       });
 
       return;
     }
 
-    logger.debug('campaignBot found user:%s', user._id);
-    var userReplyMsg = helpers.getFirstWord(request.body.args);
-    if (request.query.start || !userReplyMsg)  {
-      self.sendSignupSuccessMsg(user);
+    self.user = user;
+    logger.debug('campaignBot found user:%s', self.user._id);
+
+    self.incomingMsg = request.incoming_message;
+
+    if (request.query.start || !self.incomingMsg)  {
+      self.sendSignupSuccessMsg();
       return;
     }
 
-    if (userReplyMsg.toLowerCase() === START_RB_COMMAND) {
-      self.chatReportback(user, null);
-    }
-    else {
-      self.chatReportback(user, userReplyMsg);
-    }
-    
+    self.chatReportback();  
   });
   
 }
 
-CampaignBotController.prototype.chatReportback = function(user, userReplyMsg) {
-  logger.verbose('reportback %s', user);
+CampaignBotController.prototype.chatReportback = function() {
   var self = this;
 
-  if (!self.supportsMMS(user, userReplyMsg)) {
+  if (!self.supportsMMS()) {
     return;
   }
 
-  var quantity = parseInt(userReplyMsg);
+  var quantity = parseInt(self.incomingMsg);
   if (!quantity) {
-    sendMessage(user, '@stg: Please provide a valid number.');
+    self.sendMessage('@stg: Please provide a valid number.');
     return;
   }
     
   reportbackSubmissions.create({
-    campaign: self.campaignId,
-    mobile: user.mobile,
+
+    campaign: self.campaign._id,
+    mobile: self.user.mobile,
     quantity: quantity
-  }).then(function(doc) {
+
+  }).then(function(reportbackSubmission) {
+
     // @todo Add error handler in case of failed write
-    self.sendReportbackSuccessMsg(user, quantity);
-    logger.debug('campaignBot created reportbackSubmission._id:%s for:%s', 
-      doc['_id'], submission);
+    self.sendReportbackSuccessMsg(quantity);
+    logger.debug('campaignBot created reportbackSubmission._id:%s', 
+      reportbackSubmission['_id']);
+
   });
 
 }
 
-CampaignBotController.prototype.supportsMMS = function(user, userMsg) {
+CampaignBotController.prototype.supportsMMS = function() {
+  var self = this;
 
-  if (user.supports_mms) {
+  if (self.user.supports_mms) {
     return true;
   }
 
-  if (!userMsg) {
-    sendMessage(user, '@stg: Can you send photos from your phone?');
+  if (!self.incomingMsg) {
+    self.sendMessage('@stg: Can you send photos from your phone?');
     return false;
   }
   
-  if (!helpers.isYesResponse(userMsg)) {
-    sendMessage(user, '@stg: Sorry, you must submit a photo to complete.');
+  if (!helpers.isYesResponse(self.incomingMsg)) {
+    self.sendMessage('@stg: Sorry, you must submit a photo to complete.');
     return false;
   }
 
-  user.supports_mms = true;
-  user.save(function(err) {
+  self.user.supports_mms = true;
+  self.user.save(function(err) {
     if (err) {
       // @todo
       // return handleError(err);
     }
-    sendMessage(user, '@stg: How many nouns did you verb?');
+    self.sendMessage('@stg: How many nouns did you verb?');
     return true;
   });
 
 };
 
 
-CampaignBotController.prototype.sendSignupSuccessMsg = function(user) {
+CampaignBotController.prototype.sendSignupSuccessMsg = function() {
   var msgTxt = '@stg: You\'re signed up for ' + this.campaign.title + '.\n\n';
   msgTxt += 'When you have ' + this.campaign.rb_verb + ' some ';
   msgTxt += this.campaign.rb_noun + ', text back ' + START_RB_COMMAND.toUpperCase();
-  sendMessage(user, msgTxt);
+  this.sendMessage(msgTxt);
 }
 
-CampaignBotController.prototype.sendReportbackSuccessMsg = function(user, quantity) {
+CampaignBotController.prototype.sendReportbackSuccessMsg = function(quantity) {
   var msgTxt = '@stg: Got you down for ' + quantity;
   msgTxt += ' ' + this.campaign.rb_noun + ' ' + this.campaign.rb_verb + '.';
-  sendMessage(user, msgTxt);
+  this.sendMessage(msgTxt);
 }
 
-function sendMessage(user, msgTxt) {
-  logger.debug('campaignBot.sendMessage user:%s msgTxt:%s', user, msgTxt);
+CampaignBotController.prototype.sendMessage = function(msgTxt) {
+  logger.debug('campaignBot.sendMessage user:%s msgTxt:%s', this.user, msgTxt);
   var mobileCommonsProfile = {
-    phone: user._id
+    phone: this.user.mobile
   };
   mobilecommons.chatbot(mobileCommonsProfile, 213849, msgTxt);
 }
