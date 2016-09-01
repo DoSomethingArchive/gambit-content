@@ -68,24 +68,6 @@ CampaignBotController.prototype.chatbot = function(request, response) {
     self.user = user;
     logger.debug('campaignBot found user:%s', self.user._id);
 
-    // Load our current User's Signup for this Campaign.
-    if (self.user.campaigns[self.campaign._id]) {
-
-      var signupId = self.user.campaigns[self.campaign._id];
-      
-      signups.findOne({ '_id': signupId }, function (err, signupDoc) {
-
-        if (err) {
-          logger.error(err);
-        }
-
-        self.signup = signupDoc;
-        logger.debug('self.signup:%s', self.signup._id.toString());
-  
-      });
-
-    }
-
     self.incomingMsg = request.incoming_message;
     if (self.incomingMsg) {
       self.incomingMsg = self.incomingMsg.toLowerCase();
@@ -100,7 +82,25 @@ CampaignBotController.prototype.chatbot = function(request, response) {
       return;
     }
 
-    self.chatReportback();
+    // Load our current User's Signup for this Campaign.
+    if (self.user.campaigns[self.campaign._id]) {
+
+      var signupId = self.user.campaigns[self.campaign._id];
+      
+      signups.findOne({ '_id': signupId }, function (err, signupDoc) {
+
+        if (err) {
+          logger.error(err);
+        }
+
+        self.signup = signupDoc;
+        logger.debug('self.signup:%s', self.signup._id.toString());
+
+        self.chatReportback();
+  
+      });
+
+    }    
 
   });
   
@@ -128,10 +128,27 @@ CampaignBotController.prototype.chatReportback = function(isNewSubmission) {
 
   }).then(function(reportbackSubmission) {
 
-    // @todo Add error handler in case of failed write
-    self.sendReportbackSuccessMsg(quantity);
+    // @todo this is firing when not expecting it to, commented for now.
+    // if (err) {
+    //   return logger.error('reportbackSubmission.create error:%s', err);
+    // }
+
     logger.debug('campaignBot created reportbackSubmission._id:%s', 
       reportbackSubmission['_id']);
+
+    self.signup.reportback_submission = reportbackSubmission._id.toString();
+    self.signup.save(function(e) {
+
+      if (e) {
+        return logger.error('signup.save error:%s', e);
+      }
+
+      logger.debug('campaignBot saved reportbackSubmission:%s to signup:%s', 
+        self.signup.reportback_submission, self.signup._id);
+
+      self.sendReportbackSuccessMsg(quantity);
+
+    });
 
   });
 

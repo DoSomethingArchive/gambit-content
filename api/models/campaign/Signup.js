@@ -12,7 +12,9 @@ var schema = new mongoose.Schema({
 
   campaign: {type: Number, index: true},
 
-  created_at: {type: Date, default: Date.now}
+  created_at: {type: Date, default: Date.now},
+
+  reportback_submission: String
 
 })
 
