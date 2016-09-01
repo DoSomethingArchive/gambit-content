@@ -68,13 +68,31 @@ CampaignBotController.prototype.chatbot = function(request, response) {
     self.user = user;
     logger.debug('campaignBot found user:%s', self.user._id);
 
+    // Load our current User's Signup for this Campaign.
+    if (self.user.campaigns[self.campaign._id]) {
+
+      var signupId = self.user.campaigns[self.campaign._id];
+      
+      signups.findOne({ '_id': signupId }, function (err, signupDoc) {
+
+        if (err) {
+          logger.error(err);
+        }
+
+        self.signup = signupDoc;
+        logger.debug('self.signup:%s', self.signup._id.toString());
+  
+      });
+
+    }
+
     self.incomingMsg = request.incoming_message;
     if (self.incomingMsg) {
       self.incomingMsg = self.incomingMsg.toLowerCase();
     }
 
     if (request.query.start || !self.incomingMsg)  {
-      self.signup();
+      self.postSignup();
       return;
     }
 
@@ -148,7 +166,7 @@ CampaignBotController.prototype.supportsMMS = function() {
 
 };
 
-CampaignBotController.prototype.signup = function() {
+CampaignBotController.prototype.postSignup = function() {
   var self = this;
   var campaignId = self.campaign._id;
 
@@ -160,15 +178,15 @@ CampaignBotController.prototype.signup = function() {
 
   }).then(function(signupDoc) {
 
+    // Store signup ID in our user's campaigns for easy lookup.
     self.user.campaigns[campaignId] = signupDoc._id;
     self.user.markModified('campaigns');
-    self.user.save(function(err) {
 
+    self.user.save(function(err) {
       if (err) {
         logger.error(err);
       }
       self.sendSignupSuccessMsg();
-      logger.log('user saved');
     });
 
   });

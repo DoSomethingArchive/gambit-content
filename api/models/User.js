@@ -14,6 +14,7 @@ var schema = new mongoose.Schema({
 
   supports_mms: {type: Boolean, default: false},
 
+  // Hash table to store current signups: e.g. campaigns[campaignId] = signupId;
   campaigns: {type: Mixed, default: {}}
 
 })
