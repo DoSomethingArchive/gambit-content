@@ -6,8 +6,10 @@ var phoenix = rootRequire('lib/phoenix')();
 var helpers = rootRequire('lib/helpers');
 
 var connOps = rootRequire('config/connectionOperations');
-var reportbackSubmissions = require('../models/ReportbackSubmission')(connOps);
+var reportbackSubmissions = require('../models/campaign/ReportbackSubmission')(connOps);
+var signups = require('../models/campaign/Signup')(connOps);
 var users = require('../models/User')(connOps);
+
 var START_RB_COMMAND = 'next';
 
 /**
@@ -46,7 +48,8 @@ CampaignBotController.prototype.chatbot = function(request, response) {
       users.create({
 
         _id: request.user_id,
-        mobile: request.user_id
+        mobile: request.user_id,
+        campaigns: {}
 
       }).then(function(newUser) {
 
@@ -65,10 +68,13 @@ CampaignBotController.prototype.chatbot = function(request, response) {
     self.user = user;
     logger.debug('campaignBot found user:%s', self.user._id);
 
-    self.incomingMsg = request.incoming_message.toLowerCase();
+    self.incomingMsg = request.incoming_message;
+    if (self.incomingMsg) {
+      self.incomingMsg = self.incomingMsg.toLowerCase();
+    }
 
     if (request.query.start || !self.incomingMsg)  {
-      self.sendSignupSuccessMsg();
+      self.signup();
       return;
     }
 
@@ -99,7 +105,7 @@ CampaignBotController.prototype.chatReportback = function(isNewSubmission) {
   reportbackSubmissions.create({
 
     campaign: self.campaign._id,
-    mobile: self.user.mobile,
+    user: self.user._id,
     quantity: quantity
 
   }).then(function(reportbackSubmission) {
@@ -142,6 +148,32 @@ CampaignBotController.prototype.supportsMMS = function() {
 
 };
 
+CampaignBotController.prototype.signup = function() {
+  var self = this;
+  var campaignId = self.campaign._id;
+
+  // @todo Query DS API to check if Signup exists, post to API to get _id if not
+  signups.create({
+
+    campaign: campaignId,
+    user: self.user._id
+
+  }).then(function(signupDoc) {
+
+    self.user.campaigns[campaignId] = signupDoc._id;
+    self.user.markModified('campaigns');
+    self.user.save(function(err) {
+
+      if (err) {
+        logger.error(err);
+      }
+      self.sendSignupSuccessMsg();
+      logger.log('user saved');
+    });
+
+  });
+}
+
 CampaignBotController.prototype.sendAskQuantityMessage = function() {
   var msgTxt = '@stg: What`s the total number of ' + this.campaign.rb_noun;
   msgTxt += ' you ' + this.campaign.rb_verb + '?';
@@ -166,7 +198,6 @@ CampaignBotController.prototype.sendReportbackSuccessMsg = function(quantity) {
 }
 
 CampaignBotController.prototype.sendMessage = function(msgTxt) {
-  logger.debug('campaignBot.sendMessage user:%s msgTxt:%s', this.user, msgTxt);
   var mobileCommonsProfile = {
     phone: this.user.mobile
   };

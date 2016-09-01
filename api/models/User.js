@@ -1,7 +1,8 @@
 /**
- * Models a DS Member.
+ * Models a DS User.
  */
 var mongoose = require('mongoose');
+var Mixed = mongoose.Schema.Types.Mixed;
 
 var schema = new mongoose.Schema({
 
@@ -11,7 +12,9 @@ var schema = new mongoose.Schema({
 
   first_name: String,
 
-  supports_mms: {type: Boolean, default: false}
+  supports_mms: {type: Boolean, default: false},
+
+  campaigns: {type: Mixed, default: {}}
 
 })
 

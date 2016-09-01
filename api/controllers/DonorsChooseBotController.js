@@ -21,8 +21,8 @@ var mobilecommons = rootRequire('lib/mobilecommons');
 var bitly = rootRequire('lib/bitly');
 var helpers = rootRequire('lib/helpers');
 var donorschoose = rootRequire('lib/donorschoose');
-var connectionOperations = rootRequire('config/connectionOperations');
-var donationModel = require('../models/DonorsChooseDonation')(connectionOperations);
+var connOps = rootRequire('config/connectionOperations');
+var donationModel = require('../models/donation/DonorsChooseDonation')(connOps);
 
 /**
  * DonorsChooseBotController
