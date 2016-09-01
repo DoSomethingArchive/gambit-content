@@ -31,6 +31,8 @@ router.post('/v1/chatbot', function(request, response) {
 
   // Store relevant info from incoming Mobile Commons requests.
   request.incoming_message = request.body.args;
+  // We're using phone for now, Mobile Commons profile ID could make sense.
+  // Or potentially finding/creating our current user here to store Northstar ID
   request.user_id = request.body.phone;
 
   var controller;

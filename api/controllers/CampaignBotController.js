@@ -65,31 +65,37 @@ CampaignBotController.prototype.chatbot = function(request, response) {
     self.user = user;
     logger.debug('campaignBot found user:%s', self.user._id);
 
-    self.incomingMsg = request.incoming_message;
+    self.incomingMsg = request.incoming_message.toLowerCase();
 
     if (request.query.start || !self.incomingMsg)  {
       self.sendSignupSuccessMsg();
       return;
     }
 
-    self.chatReportback();  
+    if (!self.supportsMMS()) {
+      return;
+    }
+
+    self.chatReportback();
+
   });
   
 }
 
-CampaignBotController.prototype.chatReportback = function() {
+CampaignBotController.prototype.chatReportback = function(isNewSubmission) {
   var self = this;
 
-  if (!self.supportsMMS()) {
+  if (self.incomingMsg === START_RB_COMMAND || isNewSubmission === true) {
+    self.sendAskQuantityMessage();
     return;
   }
 
-  var quantity = parseInt(self.incomingMsg);
-  if (!quantity) {
+  var quantity = self.incomingMsg;
+  if (helpers.hasLetters(quantity) || !parseInt(quantity)) {
     self.sendMessage('@stg: Please provide a valid number.');
     return;
   }
-    
+  
   reportbackSubmissions.create({
 
     campaign: self.campaign._id,
@@ -110,11 +116,11 @@ CampaignBotController.prototype.chatReportback = function() {
 CampaignBotController.prototype.supportsMMS = function() {
   var self = this;
 
-  if (self.user.supports_mms) {
+  if (self.user.supports_mms === true) {
     return true;
   }
 
-  if (!self.incomingMsg) {
+  if (self.incomingMsg === START_RB_COMMAND || !self.incomingMsg) {
     self.sendMessage('@stg: Can you send photos from your phone?');
     return false;
   }
@@ -130,18 +136,18 @@ CampaignBotController.prototype.supportsMMS = function() {
       // @todo
       // return handleError(err);
     }
-    self.askQuantity();
+    self.chatReportback(true);
     return true;
   });
 
 };
 
-CampaignBotController.prototype.askQuantity = function() {
-  var msgTxt = '@stg: how many ' + this.campaign.rb_noun + ' have you ';
-  msgTxt += this.campaign.rb_verb + '?\n\nPls txt the exact number.';
+CampaignBotController.prototype.sendAskQuantityMessage = function() {
+  var msgTxt = '@stg: What`s the total number of ' + this.campaign.rb_noun;
+  msgTxt += ' you ' + this.campaign.rb_verb + '?';
+  msgTxt += '\n\nPlease text the exact number back.';
   this.sendMessage(msgTxt);
 }
-
 
 CampaignBotController.prototype.sendSignupSuccessMsg = function() {
   var msgTxt = '@stg: You\'re signed up for ' + this.campaign.title + '.\n\n';
@@ -153,6 +159,9 @@ CampaignBotController.prototype.sendSignupSuccessMsg = function() {
 CampaignBotController.prototype.sendReportbackSuccessMsg = function(quantity) {
   var msgTxt = '@stg: Got you down for ' + quantity;
   msgTxt += ' ' + this.campaign.rb_noun + ' ' + this.campaign.rb_verb + '.';
+  msgTxt += '\n---\nKeep it up! If you\'ve ' + this.campaign.rb_verb + ' any more ';
+  msgTxt += this.campaign.rb_noun + ', reply back with ';
+  msgTxt += START_RB_COMMAND.toUpperCase();
   this.sendMessage(msgTxt);
 }
 
