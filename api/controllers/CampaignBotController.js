@@ -58,7 +58,7 @@ CampaignBotController.prototype.chatbot = function(request, response) {
 
         // Assuming our user hasn't signed up on web first for now.
         // @todo: Eventually need to safetycheck by querying for DS Signups API
-        self.sendSignupSuccessMsg();
+        self.postSignup();
 
       });
 
@@ -68,18 +68,8 @@ CampaignBotController.prototype.chatbot = function(request, response) {
     self.user = user;
     logger.debug('campaignBot found user:%s', self.user._id);
 
-    self.incomingMsg = request.incoming_message;
-    if (self.incomingMsg) {
-      self.incomingMsg = self.incomingMsg.toLowerCase();
-    }
-
-    if (request.query.start || !self.incomingMsg)  {
-      self.postSignup();
-      return;
-    }
-
-    if (!self.supportsMMS()) {
-      return;
+    if (request.incoming_message) {
+      self.incomingMsg = request.incoming_message.toLowerCase();
     }
 
     // Load our current User's Signup for this Campaign.
@@ -96,20 +86,70 @@ CampaignBotController.prototype.chatbot = function(request, response) {
         self.signup = signupDoc;
         logger.debug('self.signup:%s', self.signup._id.toString());
 
+        if (!self.supportsMMS()) {
+          return;
+        }
+
         self.chatReportback();
+        return;
   
       });
 
-    }    
+    }
+
 
   });
   
 }
 
+/**
+ * Handles reportback conversations.
+ * @param {boolean} isNewSubmission - Whether to create new reportbackSubmission.
+ */
 CampaignBotController.prototype.chatReportback = function(isNewSubmission) {
   var self = this;
 
-  if (self.incomingMsg === START_RB_COMMAND || isNewSubmission === true) {
+  // Load the last reportbackSubmission stored for our current signup.
+  reportbackSubmissions.findOne(
+    { '_id': self.signup.reportback_submission },
+    function (err, reportbackSubmissionDoc) {
+
+    if (err) {
+      logger.error(err);
+      return;
+    }
+
+    self.reportbackSubmission = reportbackSubmissionDoc;
+
+    if (!self.reportbackSubmission || !self.reportbackSubmission.quantity) {
+      // @todo Won't want to allow START
+      var start = (self.incomingMsg === START_RB_COMMAND || isNewSubmission);
+      self.collectQuantity(start);
+      return;
+    }
+
+    if (!self.reportbackSubmission.why_participated) {
+      self.collectWhyParticipated();
+      return;
+    }
+
+    // if we've made it this far, we've already got a completed reportback.
+    self.sendMessage("You did it");
+    return;
+
+  });
+
+}
+
+/**
+ * Handles conversation for saving quantity to our current reportbackSubmission.
+ * Creates new reportbackSubmission document if none exists.
+ * @param {boolean} promptUser - Whether to lead off conversation with user.
+ */
+CampaignBotController.prototype.collectQuantity = function(promptUser) {
+  var self = this;
+
+  if (promptUser) {
     self.sendAskQuantityMessage();
     return;
   }
@@ -119,7 +159,7 @@ CampaignBotController.prototype.chatReportback = function(isNewSubmission) {
     self.sendMessage('@stg: Please provide a valid number.');
     return;
   }
-  
+
   reportbackSubmissions.create({
 
     campaign: self.campaign._id,
@@ -136,6 +176,7 @@ CampaignBotController.prototype.chatReportback = function(isNewSubmission) {
     logger.debug('campaignBot created reportbackSubmission._id:%s', 
       reportbackSubmission['_id']);
 
+    // Store to our signup for easy lookup later.
     self.signup.reportback_submission = reportbackSubmission._id.toString();
     self.signup.save(function(e) {
 
@@ -146,7 +187,7 @@ CampaignBotController.prototype.chatReportback = function(isNewSubmission) {
       logger.debug('campaignBot saved reportbackSubmission:%s to signup:%s', 
         self.signup.reportback_submission, self.signup._id);
 
-      self.sendReportbackSuccessMsg(quantity);
+      self.collectWhyParticipated(true);
 
     });
 
@@ -154,6 +195,32 @@ CampaignBotController.prototype.chatReportback = function(isNewSubmission) {
 
 }
 
+/**
+ * Handles conversation for saving why_participated to reportbackSubmission.
+ * @param {boolean} promptUser - Whether to lead off conversation with user.
+ */
+CampaignBotController.prototype.collectWhyParticipated = function(promptUser) {
+  var self = this;
+
+  if (promptUser) {
+    self.sendAskWhyParticipatedMessage();
+    return;
+  }
+
+  self.reportbackSubmission.why_participated = self.incomingMsg;
+  self.reportbackSubmission.save(function(e) {
+    if (e) {
+      return logger.error('whyParticipated error:%s', e);
+    }
+    self.sendMessage('@stg: This is why you participated: ' + self.incomingMsg);
+  });
+
+  return;
+}
+
+/**
+ * Handles conversation to save our current User's supportsMMS property.
+ */
 CampaignBotController.prototype.supportsMMS = function() {
   var self = this;
 
@@ -183,7 +250,12 @@ CampaignBotController.prototype.supportsMMS = function() {
 
 };
 
+/**
+ * Creates a Signup for our Campaign and current User, continues conversation.
+ */
 CampaignBotController.prototype.postSignup = function() {
+  logger.debug('postSignup');
+
   var self = this;
   var campaignId = self.campaign._id;
 
@@ -209,10 +281,19 @@ CampaignBotController.prototype.postSignup = function() {
   });
 }
 
+/**
+ * Bot message helper functions
+ * @todo Deprecate these via Gambit Jr. CampaignBot content configs.
+ */
 CampaignBotController.prototype.sendAskQuantityMessage = function() {
   var msgTxt = '@stg: What`s the total number of ' + this.campaign.rb_noun;
   msgTxt += ' you ' + this.campaign.rb_verb + '?';
   msgTxt += '\n\nPlease text the exact number back.';
+  this.sendMessage(msgTxt);
+}
+
+CampaignBotController.prototype.sendAskWhyParticipatedMessage = function() {
+  var msgTxt = '@stg: Why did you participate in ' + this.campaign.title + '?';
   this.sendMessage(msgTxt);
 }
 

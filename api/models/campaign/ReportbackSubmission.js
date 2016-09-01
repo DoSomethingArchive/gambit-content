@@ -11,7 +11,9 @@ var schema = new mongoose.Schema({
 
   created_at: {type: Date, default: Date.now},
 
-  quantity: Number
+  quantity: Number,
+
+  why_participated: String
 
 })
 
