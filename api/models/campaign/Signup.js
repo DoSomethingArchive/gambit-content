@@ -14,7 +14,18 @@ var schema = new mongoose.Schema({
 
   created_at: {type: Date, default: Date.now},
 
-  reportback_submission: String
+  // If user is in the middle of a Reportback Submission, we store its ID 
+  // for easy lookup.
+  draft_reportback_submission: String,
+
+  // Last quantity submitted by the user.
+  // We'll want to update this number from DS API once we're querying for
+  // any existing or updates to Reportbacks for this Signup.
+  total_quantity_submitted: Number,
+
+  // Corresponds to the submitted_at of User's most recent ReportbackSubmission.
+  // Set this value as last import date if we start querying for updates.
+  updated_at: Date
 
 })
 
