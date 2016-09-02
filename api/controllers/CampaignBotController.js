@@ -10,7 +10,7 @@ var reportbackSubmissions = require('../models/campaign/ReportbackSubmission')(c
 var signups = require('../models/campaign/Signup')(connOps);
 var users = require('../models/User')(connOps);
 
-var START_RB_COMMAND = 'next';
+var COMMAND_REPORTBACK = 'next';
 
 /**
  * CampaignBotController
@@ -97,16 +97,15 @@ CampaignBotController.prototype.chatbot = function(request, response) {
 
     }
 
-
   });
   
 }
 
 /**
  * Handles reportback conversations.
- * @param {boolean} isNewSubmission - Whether to create new reportbackSubmission.
+ * @param {boolean} createSubmission
  */
-CampaignBotController.prototype.chatReportback = function(isNewSubmission) {
+CampaignBotController.prototype.chatReportback = function(createSubmission) {
   var self = this;
 
   // Load the last reportbackSubmission stored for our current signup.
@@ -123,7 +122,7 @@ CampaignBotController.prototype.chatReportback = function(isNewSubmission) {
 
     if (!self.reportbackSubmission || !self.reportbackSubmission.quantity) {
       // @todo Won't want to allow START
-      var start = (self.incomingMsg === START_RB_COMMAND || isNewSubmission);
+      var start = (self.incomingMsg === COMMAND_REPORTBACK || createSubmission);
       self.collectQuantity(start);
       return;
     }
@@ -134,7 +133,7 @@ CampaignBotController.prototype.chatReportback = function(isNewSubmission) {
     }
 
     // if we've made it this far, we've already got a completed reportback.
-    self.sendMessage("You did it");
+    self.sendMessage("@stg: Stay tuned for more! Until then I repeat.");
     return;
 
   });
@@ -228,7 +227,7 @@ CampaignBotController.prototype.supportsMMS = function() {
     return true;
   }
 
-  if (self.incomingMsg === START_RB_COMMAND || !self.incomingMsg) {
+  if (self.incomingMsg === COMMAND_REPORTBACK || !self.incomingMsg) {
     self.sendMessage('@stg: Can you send photos from your phone?');
     return false;
   }
@@ -300,7 +299,7 @@ CampaignBotController.prototype.sendAskWhyParticipatedMessage = function() {
 CampaignBotController.prototype.sendSignupSuccessMsg = function() {
   var msgTxt = '@stg: You\'re signed up for ' + this.campaign.title + '.\n\n';
   msgTxt += 'When you have ' + this.campaign.rb_verb + ' some ';
-  msgTxt += this.campaign.rb_noun + ', text back ' + START_RB_COMMAND.toUpperCase();
+  msgTxt += this.campaign.rb_noun + ', text back ' + COMMAND_REPORTBACK.toUpperCase();
   this.sendMessage(msgTxt);
 }
 
@@ -309,7 +308,7 @@ CampaignBotController.prototype.sendReportbackSuccessMsg = function(quantity) {
   msgTxt += ' ' + this.campaign.rb_noun + ' ' + this.campaign.rb_verb + '.';
   msgTxt += '\n---\nKeep it up! If you\'ve ' + this.campaign.rb_verb + ' any more ';
   msgTxt += this.campaign.rb_noun + ', reply back with ';
-  msgTxt += START_RB_COMMAND.toUpperCase();
+  msgTxt += COMMAND_REPORTBACK.toUpperCase();
   this.sendMessage(msgTxt);
 }
 
