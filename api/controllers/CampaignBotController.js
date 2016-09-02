@@ -6,9 +6,11 @@ var phoenix = rootRequire('lib/phoenix')();
 var helpers = rootRequire('lib/helpers');
 
 var connOps = rootRequire('config/connectionOperations');
-var reportbackSubmissions = require('../models/ReportbackSubmission')(connOps);
+var reportbackSubmissions = require('../models/campaign/ReportbackSubmission')(connOps);
+var signups = require('../models/campaign/Signup')(connOps);
 var users = require('../models/User')(connOps);
-var START_RB_COMMAND = 'next';
+
+var COMMAND_REPORTBACK = 'next';
 
 /**
  * CampaignBotController
@@ -46,7 +48,8 @@ CampaignBotController.prototype.chatbot = function(request, response) {
       users.create({
 
         _id: request.user_id,
-        mobile: request.user_id
+        mobile: request.user_id,
+        campaigns: {}
 
       }).then(function(newUser) {
 
@@ -55,7 +58,7 @@ CampaignBotController.prototype.chatbot = function(request, response) {
 
         // Assuming our user hasn't signed up on web first for now.
         // @todo: Eventually need to safetycheck by querying for DS Signups API
-        self.sendSignupSuccessMsg();
+        self.postSignup();
 
       });
 
@@ -65,27 +68,87 @@ CampaignBotController.prototype.chatbot = function(request, response) {
     self.user = user;
     logger.debug('campaignBot found user:%s', self.user._id);
 
-    self.incomingMsg = request.incoming_message.toLowerCase();
-
-    if (request.query.start || !self.incomingMsg)  {
-      self.sendSignupSuccessMsg();
-      return;
+    if (request.incoming_message) {
+      self.incomingMsg = request.incoming_message.toLowerCase();
     }
 
-    if (!self.supportsMMS()) {
-      return;
-    }
+    // Load our current User's Signup for this Campaign.
+    if (self.user.campaigns[self.campaign._id]) {
 
-    self.chatReportback();
+      var signupId = self.user.campaigns[self.campaign._id];
+      
+      signups.findOne({ '_id': signupId }, function (err, signupDoc) {
+
+        if (err) {
+          logger.error(err);
+        }
+
+        self.signup = signupDoc;
+        logger.debug('self.signup:%s', self.signup._id.toString());
+
+        if (!self.supportsMMS()) {
+          return;
+        }
+
+        self.chatReportback();
+        return;
+  
+      });
+
+    }
 
   });
   
 }
 
-CampaignBotController.prototype.chatReportback = function(isNewSubmission) {
+/**
+ * Handles reportback conversations.
+ * @param {boolean} createSubmission
+ */
+CampaignBotController.prototype.chatReportback = function(createSubmission) {
   var self = this;
 
-  if (self.incomingMsg === START_RB_COMMAND || isNewSubmission === true) {
+  // Load the last reportbackSubmission stored for our current signup.
+  reportbackSubmissions.findOne(
+    { '_id': self.signup.reportback_submission },
+    function (err, reportbackSubmissionDoc) {
+
+    if (err) {
+      logger.error(err);
+      return;
+    }
+
+    self.reportbackSubmission = reportbackSubmissionDoc;
+
+    if (!self.reportbackSubmission || !self.reportbackSubmission.quantity) {
+      // @todo Won't want to allow START
+      var start = (self.incomingMsg === COMMAND_REPORTBACK || createSubmission);
+      self.collectQuantity(start);
+      return;
+    }
+
+    if (!self.reportbackSubmission.why_participated) {
+      self.collectWhyParticipated();
+      return;
+    }
+
+    // if we've made it this far, we've already got a completed reportback.
+    self.sendMessage("@stg: Stay tuned for more! Until then I repeat.");
+    return;
+
+  });
+
+}
+
+/**
+ * Handles conversation for saving quantity to our current reportbackSubmission.
+ * Creates new reportbackSubmission document if none exists.
+ * @param {boolean} promptUser - Whether to lead off conversation with user.
+ */
+CampaignBotController.prototype.collectQuantity = function(promptUser) {
+  var self = this;
+
+  if (promptUser) {
     self.sendAskQuantityMessage();
     return;
   }
@@ -95,24 +158,68 @@ CampaignBotController.prototype.chatReportback = function(isNewSubmission) {
     self.sendMessage('@stg: Please provide a valid number.');
     return;
   }
-  
+
   reportbackSubmissions.create({
 
     campaign: self.campaign._id,
-    mobile: self.user.mobile,
+    user: self.user._id,
     quantity: quantity
 
   }).then(function(reportbackSubmission) {
 
-    // @todo Add error handler in case of failed write
-    self.sendReportbackSuccessMsg(quantity);
+    // @todo this is firing when not expecting it to, commented for now.
+    // if (err) {
+    //   return logger.error('reportbackSubmission.create error:%s', err);
+    // }
+
     logger.debug('campaignBot created reportbackSubmission._id:%s', 
       reportbackSubmission['_id']);
+
+    // Store to our signup for easy lookup later.
+    self.signup.reportback_submission = reportbackSubmission._id.toString();
+    self.signup.save(function(e) {
+
+      if (e) {
+        return logger.error('signup.save error:%s', e);
+      }
+
+      logger.debug('campaignBot saved reportbackSubmission:%s to signup:%s', 
+        self.signup.reportback_submission, self.signup._id);
+
+      self.collectWhyParticipated(true);
+
+    });
 
   });
 
 }
 
+/**
+ * Handles conversation for saving why_participated to reportbackSubmission.
+ * @param {boolean} promptUser - Whether to lead off conversation with user.
+ */
+CampaignBotController.prototype.collectWhyParticipated = function(promptUser) {
+  var self = this;
+
+  if (promptUser) {
+    self.sendAskWhyParticipatedMessage();
+    return;
+  }
+
+  self.reportbackSubmission.why_participated = self.incomingMsg;
+  self.reportbackSubmission.save(function(e) {
+    if (e) {
+      return logger.error('whyParticipated error:%s', e);
+    }
+    self.sendMessage('@stg: This is why you participated: ' + self.incomingMsg);
+  });
+
+  return;
+}
+
+/**
+ * Handles conversation to save our current User's supportsMMS property.
+ */
 CampaignBotController.prototype.supportsMMS = function() {
   var self = this;
 
@@ -120,7 +227,7 @@ CampaignBotController.prototype.supportsMMS = function() {
     return true;
   }
 
-  if (self.incomingMsg === START_RB_COMMAND || !self.incomingMsg) {
+  if (self.incomingMsg === COMMAND_REPORTBACK || !self.incomingMsg) {
     self.sendMessage('@stg: Can you send photos from your phone?');
     return false;
   }
@@ -142,6 +249,41 @@ CampaignBotController.prototype.supportsMMS = function() {
 
 };
 
+/**
+ * Creates a Signup for our Campaign and current User, continues conversation.
+ */
+CampaignBotController.prototype.postSignup = function() {
+  logger.debug('postSignup');
+
+  var self = this;
+  var campaignId = self.campaign._id;
+
+  // @todo Query DS API to check if Signup exists, post to API to get _id if not
+  signups.create({
+
+    campaign: campaignId,
+    user: self.user._id
+
+  }).then(function(signupDoc) {
+
+    // Store signup ID in our user's campaigns for easy lookup.
+    self.user.campaigns[campaignId] = signupDoc._id;
+    self.user.markModified('campaigns');
+
+    self.user.save(function(err) {
+      if (err) {
+        logger.error(err);
+      }
+      self.sendSignupSuccessMsg();
+    });
+
+  });
+}
+
+/**
+ * Bot message helper functions
+ * @todo Deprecate these via Gambit Jr. CampaignBot content configs.
+ */
 CampaignBotController.prototype.sendAskQuantityMessage = function() {
   var msgTxt = '@stg: What`s the total number of ' + this.campaign.rb_noun;
   msgTxt += ' you ' + this.campaign.rb_verb + '?';
@@ -149,10 +291,15 @@ CampaignBotController.prototype.sendAskQuantityMessage = function() {
   this.sendMessage(msgTxt);
 }
 
+CampaignBotController.prototype.sendAskWhyParticipatedMessage = function() {
+  var msgTxt = '@stg: Why did you participate in ' + this.campaign.title + '?';
+  this.sendMessage(msgTxt);
+}
+
 CampaignBotController.prototype.sendSignupSuccessMsg = function() {
   var msgTxt = '@stg: You\'re signed up for ' + this.campaign.title + '.\n\n';
   msgTxt += 'When you have ' + this.campaign.rb_verb + ' some ';
-  msgTxt += this.campaign.rb_noun + ', text back ' + START_RB_COMMAND.toUpperCase();
+  msgTxt += this.campaign.rb_noun + ', text back ' + COMMAND_REPORTBACK.toUpperCase();
   this.sendMessage(msgTxt);
 }
 
@@ -161,12 +308,11 @@ CampaignBotController.prototype.sendReportbackSuccessMsg = function(quantity) {
   msgTxt += ' ' + this.campaign.rb_noun + ' ' + this.campaign.rb_verb + '.';
   msgTxt += '\n---\nKeep it up! If you\'ve ' + this.campaign.rb_verb + ' any more ';
   msgTxt += this.campaign.rb_noun + ', reply back with ';
-  msgTxt += START_RB_COMMAND.toUpperCase();
+  msgTxt += COMMAND_REPORTBACK.toUpperCase();
   this.sendMessage(msgTxt);
 }
 
 CampaignBotController.prototype.sendMessage = function(msgTxt) {
-  logger.debug('campaignBot.sendMessage user:%s msgTxt:%s', this.user, msgTxt);
   var mobileCommonsProfile = {
     phone: this.user.mobile
   };

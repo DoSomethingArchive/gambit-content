@@ -12,9 +12,9 @@ app.ConfigName = {
 
 var conn = require('./connectionConfig');
 var configModelArray = [
-  rootRequire('api/models/Campaign')(conn),
   rootRequire('api/models/ChatbotMobileCommonsCampaign')(conn),
-  rootRequire('api/models/DonorsChooseBot')(conn),
+  rootRequire('api/models/campaign/Campaign')(conn),
+  rootRequire('api/models/donation/DonorsChooseBot')(conn),
   rootRequire('api/legacy/ds-routing/config/startCampaignTransitionsConfigModel')(conn),
   rootRequire('api/legacy/ds-routing/config/yesNoPathsConfigModel')(conn),
   rootRequire('api/legacy/reportback/reportbackConfigModel')(conn),
