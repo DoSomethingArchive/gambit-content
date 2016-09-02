@@ -111,14 +111,15 @@ CampaignBotController.prototype.chatbot = function(request, response) {
 
 /**
  * Handles reportback conversations.
- * @param {boolean} createSubmission
+ * @param {boolean} newSubmission - Only gets passed from supportsMMS, when
+ *    member hsa already submitted the COMMAND_REPORTBACK to begin
  */
-CampaignBotController.prototype.chatReportback = function(createSubmission) {
+CampaignBotController.prototype.chatReportback = function(newSubmission) {
   var self = this;
 
-  // Load the last reportbackSubmission stored for our current signup.
+  // Check if our User is in the middle of a draft Reportback Submission.
   reportbackSubmissions.findOne(
-    { '_id': self.signup.reportback_submission },
+    { '_id': self.signup.draft_reportback_submission },
     function (err, reportbackSubmissionDoc) {
 
     if (err) {
@@ -130,7 +131,7 @@ CampaignBotController.prototype.chatReportback = function(createSubmission) {
 
     if (!self.reportbackSubmission || !self.reportbackSubmission.quantity) {
       // @todo Won't want to allow START
-      var start = (self.incomingMsg === COMMAND_REPORTBACK || createSubmission);
+      var start = (self.incomingMsg === COMMAND_REPORTBACK || newSubmission);
       self.collectQuantity(start);
       return;
     }
@@ -184,7 +185,7 @@ CampaignBotController.prototype.collectQuantity = function(promptUser) {
       reportbackSubmission['_id']);
 
     // Store to our signup for easy lookup later.
-    self.signup.reportback_submission = reportbackSubmission._id.toString();
+    self.signup.draft_reportback_submission = reportbackSubmission._id.toString();
     self.signup.save(function(e) {
 
       if (e) {
@@ -192,7 +193,7 @@ CampaignBotController.prototype.collectQuantity = function(promptUser) {
       }
 
       logger.debug('campaignBot saved reportbackSubmission:%s to signup:%s', 
-        self.signup.reportback_submission, self.signup._id);
+        self.signup.draft_reportback_submission, self.signup._id);
 
       self.collectWhyParticipated(true);
 
@@ -220,12 +221,45 @@ CampaignBotController.prototype.collectWhyParticipated = function(promptUser) {
     if (e) {
       return logger.error('whyParticipated error:%s', e);
     }
-
-    self.sendMessage('@stg: This is why you participated: ' + self.incomingMsg);
+    self.postReportback();
 
   });
 
   return;
+}
+
+/**
+ * Posts a completed ReportbackSubmission to API and updates our current Signup.
+ */
+CampaignBotController.prototype.postReportback = function() {
+  var self = this;
+
+  var dateSubmitted = Date.now();
+  self.reportbackSubmission.submitted_at = dateSubmitted;
+
+  self.reportbackSubmission.save(function(e) {
+
+    if (e) {
+      return logger.error('whyParticipated error:%s', e);
+    }
+
+    // @todo Post to DS API
+
+    self.signup.total_quantity_submitted = self.reportbackSubmission.quantity;
+    self.signup.updated_at = dateSubmitted;
+    self.signup.draft_reportback_submission = undefined;
+
+    self.signup.save(function(signupErr) {
+
+      var msgTxt = '@stg: Thank you for your submission! We\'ve got you down ';
+      msgTxt += 'for ' + self.signup.total_quantity_submitted + ' ';
+      msgTxt += self.campaign.rb_noun + ' ' + self.campaign.rb_verb;
+      msgTxt += '\n\nText back ' + COMMAND_REPORTBACK + ' to repeat.';
+      self.sendMessage(msgTxt);
+
+    });
+
+  });
 }
 
 /**

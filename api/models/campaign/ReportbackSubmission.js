@@ -13,7 +13,9 @@ var schema = new mongoose.Schema({
 
   quantity: Number,
 
-  why_participated: String
+  why_participated: String,
+
+  submitted_at: Date
 
 })
 
