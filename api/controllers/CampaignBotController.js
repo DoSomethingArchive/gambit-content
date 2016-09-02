@@ -72,30 +72,38 @@ CampaignBotController.prototype.chatbot = function(request, response) {
       self.incomingMsg = request.incoming_message.toLowerCase();
     }
 
-    // Load our current User's Signup for this Campaign.
-    if (self.user.campaigns[self.campaign._id]) {
-
-      var signupId = self.user.campaigns[self.campaign._id];
-      
-      signups.findOne({ '_id': signupId }, function (err, signupDoc) {
-
-        if (err) {
-          logger.error(err);
-        }
-
-        self.signup = signupDoc;
-        logger.debug('self.signup:%s', self.signup._id.toString());
-
-        if (!self.supportsMMS()) {
-          return;
-        }
-
-        self.chatReportback();
-        return;
-  
-      });
-
+    var signupId = self.user.campaigns[self.campaign._id];
+    if (!signupId) {
+      self.postSignup();
+      return;
     }
+
+    // Load and store our User's Signup for this Campaign.
+    signups.findOne({ '_id': signupId }, function (err, signupDoc) {
+
+      if (err) {
+        logger.error(err);
+      }
+
+      if (!signupDoc) {
+        // Edge case where our cached Signup ID in user.campaigns not found
+        // Could potentially lookup campaign/user in Signups to check for any
+        // Signup document to use, but for now let's log and assume wont happen.
+        logger.error('no signupDoc found for _id:%s', signupId);
+        return;
+      }
+
+      self.signup = signupDoc;
+      logger.debug('self.signup:%s', self.signup._id.toString());
+
+      if (!self.supportsMMS()) {
+        return;
+      }
+
+      self.chatReportback();
+      return;
+
+    });
 
   });
   
@@ -208,10 +216,13 @@ CampaignBotController.prototype.collectWhyParticipated = function(promptUser) {
 
   self.reportbackSubmission.why_participated = self.incomingMsg;
   self.reportbackSubmission.save(function(e) {
+
     if (e) {
       return logger.error('whyParticipated error:%s', e);
     }
+
     self.sendMessage('@stg: This is why you participated: ' + self.incomingMsg);
+
   });
 
   return;
