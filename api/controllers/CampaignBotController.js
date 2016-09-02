@@ -10,7 +10,7 @@ var reportbackSubmissions = require('../models/campaign/ReportbackSubmission')(c
 var signups = require('../models/campaign/Signup')(connOps);
 var users = require('../models/User')(connOps);
 
-var COMMAND_REPORTBACK = 'next';
+var CMD_REPORTBACK = 'next';
 
 /**
  * CampaignBotController
@@ -100,8 +100,20 @@ CampaignBotController.prototype.chatbot = function(request, response) {
         return;
       }
 
-      self.chatReportback();
-      return;
+      // User is in the middle of reporting back or hasn't ever submitted
+      if (self.signup.draft_reportback_submission || !self.signup.total_quantity_submitted) {
+        logger.debug('draft_reportback_submission:%s', self.signup.draft_reportback_submission);
+        self.chatReportback();
+        return;
+      }
+
+      // User wants to submit another ReportbackSubmission
+      if (self.incomingMsg === CMD_REPORTBACK) {
+        self.chatReportback(true);
+        return;
+      }
+
+      self.sendCompletedMenuMsg();
 
     });
 
@@ -112,10 +124,15 @@ CampaignBotController.prototype.chatbot = function(request, response) {
 /**
  * Handles reportback conversations.
  * @param {boolean} newSubmission - Only gets passed from supportsMMS, when
- *    member hsa already submitted the COMMAND_REPORTBACK to begin
+ *    member hsa already submitted the CMD_REPORTBACK to begin
  */
 CampaignBotController.prototype.chatReportback = function(newSubmission) {
   var self = this;
+
+  if (newSubmission) {
+    self.startReportbackSubmission();
+    return;
+  }
 
   // Check if our User is in the middle of a draft Reportback Submission.
   reportbackSubmissions.findOne(
@@ -127,12 +144,11 @@ CampaignBotController.prototype.chatReportback = function(newSubmission) {
       return;
     }
 
+    // Store reference to our draft document to save data in collect functions.
     self.reportbackSubmission = reportbackSubmissionDoc;
 
-    if (!self.reportbackSubmission || !self.reportbackSubmission.quantity) {
-      // @todo Won't want to allow START
-      var start = (self.incomingMsg === COMMAND_REPORTBACK || newSubmission);
-      self.collectQuantity(start);
+    if (!self.reportbackSubmission.quantity) {
+      self.collectQuantity();
       return;
     }
 
@@ -141,9 +157,50 @@ CampaignBotController.prototype.chatReportback = function(newSubmission) {
       return;
     }
 
-    // if we've made it this far, we've already got a completed reportback.
-    self.sendMessage("@stg: Stay tuned for more! Until then I repeat.");
-    return;
+    // @todo Could be edge case where error on submit here
+    logger.warn('no messages sent from chatReportback');
+
+  });
+
+}
+
+/**
+ * Creates new ReportbackSubmission, saves to Signup.draft_reportback_submission
+ */
+CampaignBotController.prototype.startReportbackSubmission = function() {
+  var self = this;
+
+  reportbackSubmissions.create({
+
+    campaign: self.campaign._id,
+    user: self.user._id,
+
+  }).then(function(reportbackSubmission) {
+
+    // @todo this is firing when not expecting it to, commented for now.
+    // if (err) {
+    //   return logger.error('reportbackSubmission.create error:%s', err);
+    // }
+
+    logger.debug('campaignBot created reportbackSubmission._id:%s', 
+      reportbackSubmission['_id']);
+
+    // Store to our signup for easy lookup in future requests.
+    self.signup.draft_reportback_submission = reportbackSubmission._id.toString();
+    self.signup.save(function(e) {
+
+      if (e) {
+        return logger.error('signup.save error:%s', e);
+      }
+
+      logger.debug('campaignBot saved reportbackSubmission:%s to signup:%s', 
+        self.signup.draft_reportback_submission, self.signup._id);
+
+      self.reportbackSubmission = reportbackSubmission;
+
+      self.collectQuantity(true);
+
+    });
 
   });
 
@@ -168,36 +225,14 @@ CampaignBotController.prototype.collectQuantity = function(promptUser) {
     return;
   }
 
-  reportbackSubmissions.create({
+  self.reportbackSubmission.quantity = parseInt(quantity);
+  self.reportbackSubmission.save(function(e) {
 
-    campaign: self.campaign._id,
-    user: self.user._id,
-    quantity: quantity
+    if (e) {
+      return logger.error('collectQuantity error:%s', e);
+    }
 
-  }).then(function(reportbackSubmission) {
-
-    // @todo this is firing when not expecting it to, commented for now.
-    // if (err) {
-    //   return logger.error('reportbackSubmission.create error:%s', err);
-    // }
-
-    logger.debug('campaignBot created reportbackSubmission._id:%s', 
-      reportbackSubmission['_id']);
-
-    // Store to our signup for easy lookup later.
-    self.signup.draft_reportback_submission = reportbackSubmission._id.toString();
-    self.signup.save(function(e) {
-
-      if (e) {
-        return logger.error('signup.save error:%s', e);
-      }
-
-      logger.debug('campaignBot saved reportbackSubmission:%s to signup:%s', 
-        self.signup.draft_reportback_submission, self.signup._id);
-
-      self.collectWhyParticipated(true);
-
-    });
+    self.collectWhyParticipated(true);
 
   });
 
@@ -219,8 +254,9 @@ CampaignBotController.prototype.collectWhyParticipated = function(promptUser) {
   self.reportbackSubmission.save(function(e) {
 
     if (e) {
-      return logger.error('whyParticipated error:%s', e);
+      return logger.error('collectWhyParticipated error:%s', e);
     }
+
     self.postReportback();
 
   });
@@ -251,11 +287,7 @@ CampaignBotController.prototype.postReportback = function() {
 
     self.signup.save(function(signupErr) {
 
-      var msgTxt = '@stg: Thank you for your submission! We\'ve got you down ';
-      msgTxt += 'for ' + self.signup.total_quantity_submitted + ' ';
-      msgTxt += self.campaign.rb_noun + ' ' + self.campaign.rb_verb;
-      msgTxt += '\n\nText back ' + COMMAND_REPORTBACK + ' to repeat.';
-      self.sendMessage(msgTxt);
+      self.sendCompletedMenuMsg();
 
     });
 
@@ -272,7 +304,7 @@ CampaignBotController.prototype.supportsMMS = function() {
     return true;
   }
 
-  if (self.incomingMsg === COMMAND_REPORTBACK || !self.incomingMsg) {
+  if (self.incomingMsg === CMD_REPORTBACK || !self.incomingMsg) {
     self.sendMessage('@stg: Can you send photos from your phone?');
     return false;
   }
@@ -316,10 +348,13 @@ CampaignBotController.prototype.postSignup = function() {
     self.user.markModified('campaigns');
 
     self.user.save(function(err) {
+
       if (err) {
         logger.error(err);
       }
-      self.sendSignupSuccessMsg();
+
+      self.sendStartMenuMsg();
+
     });
 
   });
@@ -341,19 +376,21 @@ CampaignBotController.prototype.sendAskWhyParticipatedMessage = function() {
   this.sendMessage(msgTxt);
 }
 
-CampaignBotController.prototype.sendSignupSuccessMsg = function() {
+// We need a start menu to first check whether member can send photos
+// (as opposed to immediately asking for quantity after Signup creation)
+CampaignBotController.prototype.sendStartMenuMsg = function() {
   var msgTxt = '@stg: You\'re signed up for ' + this.campaign.title + '.\n\n';
   msgTxt += 'When you have ' + this.campaign.rb_verb + ' some ';
-  msgTxt += this.campaign.rb_noun + ', text back ' + COMMAND_REPORTBACK.toUpperCase();
+  msgTxt += this.campaign.rb_noun + ', text back ' + CMD_REPORTBACK.toUpperCase();
   this.sendMessage(msgTxt);
 }
 
-CampaignBotController.prototype.sendReportbackSuccessMsg = function(quantity) {
-  var msgTxt = '@stg: Got you down for ' + quantity;
-  msgTxt += ' ' + this.campaign.rb_noun + ' ' + this.campaign.rb_verb + '.';
-  msgTxt += '\n---\nKeep it up! If you\'ve ' + this.campaign.rb_verb + ' any more ';
-  msgTxt += this.campaign.rb_noun + ', reply back with ';
-  msgTxt += COMMAND_REPORTBACK.toUpperCase();
+CampaignBotController.prototype.sendCompletedMenuMsg = function() {
+  var action = this.campaign.rb_noun + ' ' + this.campaign.rb_verb;
+  var msgTxt = '@stg:\n\n*' + this.campaign.title + '*\n';
+  msgTxt += 'We\'ve got you down for ' + this.signup.total_quantity_submitted;
+  msgTxt += ' ' + action + '.\n\n---\n';
+  msgTxt += 'To add more ' + action + ', text ' + CMD_REPORTBACK.toUpperCase();
   this.sendMessage(msgTxt);
 }
 
