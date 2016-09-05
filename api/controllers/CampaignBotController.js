@@ -96,20 +96,28 @@ CampaignBotController.prototype.chatbot = function(request, response) {
       self.signup = signupDoc;
       logger.debug('self.signup:%s', self.signup._id.toString());
 
+      // Within check for supports MMS, we call startReportbackSubmission if yes
       if (!self.supportsMMS()) {
         return;
       }
 
-      // User is in the middle of reporting back or hasn't ever submitted
-      if (self.signup.draft_reportback_submission || !self.signup.total_quantity_submitted) {
-        logger.debug('draft_reportback_submission:%s', self.signup.draft_reportback_submission);
-        self.chatReportback();
+      // @todo: Check if Campaign start keyword was sent, send new Continue Menu
+      // instead of ask next RB question immediately without informing user of
+      // current reportbackSubmission status and what we have collected so far
+
+      if (self.signup.draft_reportback_submission) {
+        self.continueReportbackSubmission();
         return;
       }
 
-      // User wants to submit another ReportbackSubmission
+      if (!self.signup.total_quantity_submitted) {
+        self.continueReportbackSubmission();
+        return;        
+      }
+
+      // When User has completed and wants to submit another RB Submission
       if (self.incomingMsg === CMD_REPORTBACK) {
-        self.chatReportback(true);
+        self.startReportbackSubmission();
         return;
       }
 
@@ -122,17 +130,10 @@ CampaignBotController.prototype.chatbot = function(request, response) {
 }
 
 /**
- * Handles reportback conversations.
- * @param {boolean} newSubmission - Only gets passed from supportsMMS, when
- *    member hsa already submitted the CMD_REPORTBACK to begin
+ * Conversation to continue gathering data for our draft Reportback Submission.
  */
-CampaignBotController.prototype.chatReportback = function(newSubmission) {
+CampaignBotController.prototype.continueReportbackSubmission = function() {
   var self = this;
-
-  if (newSubmission) {
-    self.startReportbackSubmission();
-    return;
-  }
 
   // Check if our User is in the middle of a draft Reportback Submission.
   reportbackSubmissions.findOne(
@@ -320,7 +321,7 @@ CampaignBotController.prototype.supportsMMS = function() {
       // @todo
       // return handleError(err);
     }
-    self.chatReportback(true);
+    self.startReportbackSubmission();
     return true;
   });
 
