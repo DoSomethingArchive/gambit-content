@@ -78,55 +78,67 @@ CampaignBotController.prototype.chatbot = function(request, response) {
       return;
     }
 
-    // Load and store our User's Signup for this Campaign.
-    signups.findOne({ '_id': signupId }, function (err, signupDoc) {
-
-      if (err) {
-        logger.error(err);
-      }
-
-      if (!signupDoc) {
-        // Edge case where our cached Signup ID in user.campaigns not found
-        // Could potentially lookup campaign/user in Signups to check for any
-        // Signup document to use, but for now let's log and assume wont happen.
-        logger.error('no signupDoc found for _id:%s', signupId);
-        return;
-      }
-
-      self.signup = signupDoc;
-      logger.debug('self.signup:%s', self.signup._id.toString());
-
-      // Within check for supports MMS, we call startReportbackSubmission if yes
-      if (!self.supportsMMS()) {
-        return;
-      }
-
-      // @todo: Check if Campaign start keyword was sent, send new Continue Menu
-      // instead of ask next RB question immediately without informing user of
-      // current reportbackSubmission status and what we have collected so far
-
-      if (self.signup.draft_reportback_submission) {
-        self.continueReportbackSubmission();
-        return;
-      }
-
-      if (!self.signup.total_quantity_submitted) {
-        self.continueReportbackSubmission();
-        return;        
-      }
-
-      // When User has completed and wants to submit another RB Submission
-      if (self.incomingMsg === CMD_REPORTBACK) {
-        self.startReportbackSubmission();
-        return;
-      }
-
-      self.sendCompletedMenuMsg();
-
-    });
+    self.loadSignup(signupId);
 
   });
   
+}
+
+/**
+ * Loads and sets a controller.signup property for given Signup Id
+ * Sends chatbot response per current user's sent message and campaign progress.
+ * @param {string} signupId
+ */
+CampaignBotController.prototype.loadSignup = function(signupId) {
+  var self = this;
+
+  // Load and store our User's Signup for this Campaign.
+  signups.findOne({ '_id': signupId }, function (err, signupDoc) {
+
+    if (err) {
+      logger.error(err);
+      res.sendStatus(500);
+    }
+
+    if (!signupDoc) {
+      // Edge case where our cached Signup ID in user.campaigns not found
+      // Could potentially lookup campaign/user in Signups to check for any
+      // Signup document to use, but for now let's log and assume wont happen.
+      logger.error('no signupDoc found for _id:%s', signupId);
+      return;
+    }
+
+    self.signup = signupDoc;
+    logger.debug('self.signup:%s', self.signup._id.toString());
+
+    // Within check for supports MMS, we call startReportbackSubmission if yes
+    if (!self.supportsMMS()) {
+      return;
+    }
+
+    // @todo: Check if Campaign start keyword was sent, send new Continue Menu
+    // instead of ask next RB question immediately without informing user of
+    // current reportbackSubmission status and what we have collected so far
+
+    if (self.signup.draft_reportback_submission) {
+      self.continueReportbackSubmission();
+      return;
+    }
+
+    if (!self.signup.total_quantity_submitted) {
+      self.continueReportbackSubmission();
+      return;        
+    }
+
+    // When User has completed and wants to submit another RB Submission
+    if (self.incomingMsg === CMD_REPORTBACK) {
+      self.startReportbackSubmission();
+      return;
+    }
+
+    self.sendCompletedMenuMsg();
+
+  });
 }
 
 /**
