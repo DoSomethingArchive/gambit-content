@@ -10,7 +10,7 @@ var reportbackSubmissions = require('../models/campaign/ReportbackSubmission')(c
 var signups = require('../models/campaign/Signup')(connOps);
 var users = require('../models/User')(connOps);
 
-var CMD_REPORTBACK = 'next';
+var CMD_REPORTBACK = (process.env.GAMBIT_CMD_REPORTBACK || 'p');
 
 /**
  * CampaignBotController
