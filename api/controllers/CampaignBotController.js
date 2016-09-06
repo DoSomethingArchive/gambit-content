@@ -33,39 +33,23 @@ CampaignBotController.prototype.chatbot = function(request, response) {
     response.sendStatus(500);
     return;
   }
+
+  // @todo: Move into the completion handlers by passing into functions.
   response.send();
 
-  // Load our current user document (creates first if document not found).
-  users.findOne({ '_id': request.user_id }, function (err, user) {
+  users.findOne({ '_id': request.user_id }, function (err, userDoc) {
 
     if (err) {
       logger.error(err);
       return;
     }
 
-    if (!user) {
-
-      users.create({
-
-        _id: request.user_id,
-        mobile: request.user_id,
-        campaigns: {}
-
-      }).then(function(newUser) {
-
-        self.user = newUser;
-        logger.debug('campaignBot created user._id:%', newUser['_id']);
-
-        // Assuming our user hasn't signed up on web first for now.
-        // @todo: Eventually need to safetycheck by querying for DS Signups API
-        self.postSignup();
-
-      });
-
+    if (!userDoc) {
+      self.createUserAndPostSignup(request, response);
       return;
     }
 
-    self.user = user;
+    self.user = userDoc;
     logger.debug('campaignBot found user:%s', self.user._id);
 
     if (request.incoming_message) {
@@ -84,6 +68,30 @@ CampaignBotController.prototype.chatbot = function(request, response) {
   
 }
 
+/** 
+ * Creates user and posts Signup to the Campaign.
+ * @param {object} req - Express request
+ * @param {object} res - Express response
+ */
+CampaignBotController.prototype.createUserAndPostSignup = function(req, res) {
+  var self = this;
+
+  users.create({
+
+    _id: req.user_id,
+    mobile: req.user_id,
+    campaigns: {}
+
+  }).then(function(newUser) {
+
+    self.user = newUser;
+    logger.debug('campaignBot created user._id:%', newUser['_id']);
+
+    self.postSignup();
+
+  });
+}
+
 /**
  * Loads and sets a controller.signup property for given Signup Id
  * Sends chatbot response per current user's sent message and campaign progress.
@@ -91,6 +99,11 @@ CampaignBotController.prototype.chatbot = function(request, response) {
  */
 CampaignBotController.prototype.loadSignup = function(signupId) {
   var self = this;
+
+  // @todo: To handle Campaign Runs, we'll need to inspect our Signup date
+  // and compare to it to the Campaign's current start date. If our Signup date
+  // is older than the start date, we'll need to postSignup to store the new
+  // Signup ID to our user's current Signups in user.campaigns
 
   signups.findOne({ '_id': signupId }, function (err, signupDoc) {
 
@@ -345,7 +358,7 @@ CampaignBotController.prototype.postSignup = function() {
 
   }).then(function(signupDoc) {
 
-    // Store signup ID in our user's campaigns for easy lookup.
+    // Store as the User's current Signup for this Campaign.
     self.user.campaigns[campaignId] = signupDoc._id;
     self.user.markModified('campaigns');
 
