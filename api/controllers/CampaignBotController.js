@@ -10,7 +10,7 @@ var dbReportbackSubmissions = require('../models/campaign/ReportbackSubmission')
 var dbSignups = require('../models/campaign/Signup')(connOps);
 var dbUsers = require('../models/User')(connOps);
 
-var CMD_REPORTBACK = (process.env.GAMBIT_CMD_REPORTBACK || 'p');
+var CMD_REPORTBACK = (process.env.GAMBIT_CMD_REPORTBACK || 'P');
 
 /**
  * CampaignBotController
@@ -23,21 +23,21 @@ function CampaignBotController(campaignId) {
 
 /**
  * Chatbot endpoint for DS Campaign Signup and Reportback.
- * @param {object} request - Express request
- * @param {object} response - Express response
+ * @param {object} req - Express request
+ * @param {object} res - Express response
  */
-CampaignBotController.prototype.chatbot = function(request, response) {
+CampaignBotController.prototype.chatbot = function(req, res) {
   var self = this;
 
   if (!self.campaign) {
-    response.sendStatus(500);
+    res.sendStatus(500);
     return;
   }
 
   // @todo: Move into the completion handlers by passing into functions.
-  response.send();
+  res.send();
 
-  dbUsers.findOne({ '_id': request.user_id }, function (err, userDoc) {
+  dbUsers.findOne({ '_id': req.user_id }, function (err, userDoc) {
 
     if (err) {
       logger.error(err);
@@ -45,15 +45,16 @@ CampaignBotController.prototype.chatbot = function(request, response) {
     }
 
     if (!userDoc) {
-      self.createUserAndPostSignup(request, response);
+      self.createUserAndPostSignup(req, res);
       return;
     }
 
     self.user = userDoc;
     logger.debug('campaignBot found user:%s', self.user._id);
 
-    if (request.incoming_message) {
-      self.incomingMsg = request.incoming_message.toLowerCase();
+    // @todo: Move this check and inspect req.incoming_message in each function
+    if (req.incoming_message) {
+      self.incomingMsg = req.incoming_message;
     }
 
     var signupId = self.user.campaigns[self.campaign._id];
@@ -62,7 +63,7 @@ CampaignBotController.prototype.chatbot = function(request, response) {
       return;
     }
 
-    self.loadSignup(signupId);
+    self.loadSignup(req, res, signupId);
 
   });
   
@@ -82,10 +83,10 @@ CampaignBotController.prototype.createUserAndPostSignup = function(req, res) {
     mobile: req.user_id,
     campaigns: {}
 
-  }).then(function(newUser) {
+  }).then(function(newUserDoc) {
 
-    self.user = newUser;
-    logger.debug('campaignBot created user._id:%', newUser['_id']);
+    self.user = newUserDoc;
+    logger.debug('campaignBot created user._id:%', newUserDoc['_id']);
 
     self.postSignup();
 
@@ -97,7 +98,7 @@ CampaignBotController.prototype.createUserAndPostSignup = function(req, res) {
  * Sends chatbot response per current user's sent message and campaign progress.
  * @param {string} signupId
  */
-CampaignBotController.prototype.loadSignup = function(signupId) {
+CampaignBotController.prototype.loadSignup = function(req, res, signupId) {
   var self = this;
 
   // @todo: To handle Campaign Runs, we'll need to inspect our Signup date
@@ -127,11 +128,12 @@ CampaignBotController.prototype.loadSignup = function(signupId) {
     }
 
     if (self.signup.draft_reportback_submission) {
-      self.continueReportbackSubmission();
+      self.continueReportbackSubmission(req, res);
       return;
     }
 
-    if (self.incomingMsg === CMD_REPORTBACK) {
+    var incomingCommand = helpers.getFirstWord(self.incomingMsg);
+    if (incomingCommand && incomingCommand.toUpperCase() === CMD_REPORTBACK) {
       self.startReportbackSubmission();
       return;
     }
@@ -144,8 +146,11 @@ CampaignBotController.prototype.loadSignup = function(signupId) {
 /**
  * Conversation to continue gathering data for our draft Reportback Submission.
  */
-CampaignBotController.prototype.continueReportbackSubmission = function() {
+CampaignBotController.prototype.continueReportbackSubmission = function(req, res) {
   var self = this;
+
+  logger.debug('continueReportbackSubmission user:%s sent:%s', req.user_id,
+    req.incoming_message);
 
   dbReportbackSubmissions.findOne(
     { '_id': self.signup.draft_reportback_submission },
@@ -162,8 +167,14 @@ CampaignBotController.prototype.continueReportbackSubmission = function() {
     // Store reference to our draft document to save data in collect functions.
     self.reportbackSubmission = reportbackSubmissionDoc;
 
+
     if (!self.reportbackSubmission.quantity) {
       self.collectQuantity();
+      return;
+    }
+
+    if (!self.reportbackSubmission.caption) {
+      self.collectCaption();
       return;
     }
 
@@ -247,10 +258,42 @@ CampaignBotController.prototype.collectQuantity = function(promptUser) {
       return logger.error('collectQuantity error:%s', e);
     }
 
-    self.collectWhyParticipated(true);
+    self.collectCaption(true);
 
   });
 
+}
+
+/**
+ * Handles conversation for saving caption to our current reportbackSubmission.
+ * @param {boolean} promptUser
+ */
+CampaignBotController.prototype.collectCaption = function(promptUser) {
+  var self = this;
+
+  if (promptUser) {
+    self.sendAskCaptionMessage();
+    return;
+  }
+
+  self.reportbackSubmission.caption = self.incomingMsg;
+  self.reportbackSubmission.save(function(e) {
+
+    if (e) {
+      return logger.error('collectCaption error:%s', e);
+    }
+
+    // If this is our current user's first Reportback Submission:
+    if (!self.signup.total_quantity_submitted) {
+
+      self.collectWhyParticipated(true);
+      return;
+
+    }
+
+    self.postReportback();
+    
+  });
 }
 
 /**
@@ -318,8 +361,10 @@ CampaignBotController.prototype.supportsMMS = function() {
   if (self.user.supports_mms === true) {
     return true;
   }
-
-  if (self.incomingMsg === CMD_REPORTBACK || !self.incomingMsg) {
+  // @todo DRY
+  // @see loadSignup()
+  var incomingCommand = helpers.getFirstWord(self.incomingMsg);
+  if (incomingCommand && incomingCommand.toUpperCase() === CMD_REPORTBACK) {
     self.sendMessage('@stg: Can you send photos from your phone?');
     return false;
   }
@@ -383,6 +428,11 @@ CampaignBotController.prototype.sendAskQuantityMessage = function() {
   var msgTxt = '@stg: What`s the total number of ' + this.campaign.rb_noun;
   msgTxt += ' you ' + this.campaign.rb_verb + '?';
   msgTxt += '\n\nPlease text the exact number back.';
+  this.sendMessage(msgTxt);
+}
+
+CampaignBotController.prototype.sendAskCaptionMessage = function() {
+  var msgTxt = '@stg: Got it! Text back a caption to use.';
   this.sendMessage(msgTxt);
 }
 

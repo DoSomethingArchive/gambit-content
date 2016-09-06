@@ -11,6 +11,10 @@ var schema = new mongoose.Schema({
 
   created_at: {type: Date, default: Date.now},
 
+  caption: String,
+
+  image_url: String,
+
   quantity: Number,
 
   why_participated: String,
