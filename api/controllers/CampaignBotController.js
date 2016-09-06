@@ -92,12 +92,10 @@ CampaignBotController.prototype.chatbot = function(request, response) {
 CampaignBotController.prototype.loadSignup = function(signupId) {
   var self = this;
 
-  // Load and store our User's Signup for this Campaign.
   signups.findOne({ '_id': signupId }, function (err, signupDoc) {
 
     if (err) {
       logger.error(err);
-      res.sendStatus(500);
     }
 
     if (!signupDoc) {
@@ -111,26 +109,15 @@ CampaignBotController.prototype.loadSignup = function(signupId) {
     self.signup = signupDoc;
     logger.debug('self.signup:%s', self.signup._id.toString());
 
-    // Within check for supports MMS, we call startReportbackSubmission if yes
     if (!self.supportsMMS()) {
       return;
     }
-
-    // @todo: Check if Campaign start keyword was sent, send new Continue Menu
-    // instead of ask next RB question immediately without informing user of
-    // current reportbackSubmission status and what we have collected so far
 
     if (self.signup.draft_reportback_submission) {
       self.continueReportbackSubmission();
       return;
     }
 
-    if (!self.signup.total_quantity_submitted) {
-      self.continueReportbackSubmission();
-      return;        
-    }
-
-    // When User has completed and wants to submit another RB Submission
     if (self.incomingMsg === CMD_REPORTBACK) {
       self.startReportbackSubmission();
       return;
@@ -147,7 +134,6 @@ CampaignBotController.prototype.loadSignup = function(signupId) {
 CampaignBotController.prototype.continueReportbackSubmission = function() {
   var self = this;
 
-  // Check if our User is in the middle of a draft Reportback Submission.
   reportbackSubmissions.findOne(
     { '_id': self.signup.draft_reportback_submission },
     function (err, reportbackSubmissionDoc) {
@@ -156,6 +142,9 @@ CampaignBotController.prototype.continueReportbackSubmission = function() {
       logger.error(err);
       return;
     }
+
+    // @todo: Inspect our incoming message to determine if User is attemping
+    // continue Campaign conversation by texting in the Campaign Signup keyword
 
     // Store reference to our draft document to save data in collect functions.
     self.reportbackSubmission = reportbackSubmissionDoc;
