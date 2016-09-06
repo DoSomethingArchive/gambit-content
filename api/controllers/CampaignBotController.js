@@ -161,25 +161,28 @@ CampaignBotController.prototype.continueReportbackSubmission = function(req, res
       return;
     }
 
-    // @todo: Inspect our incoming message to determine if User is attemping
-    // continue Campaign conversation by texting in the Campaign Signup keyword
-
     // Store reference to our draft document to save data in collect functions.
     self.reportbackSubmission = reportbackSubmissionDoc;
 
+    var promptUser = (req.query.start || false);
+
+    if (promptUser) {
+      var msg = '@stg: Picking up where we left off on ' + self.campaign.title;
+      self.sendMessage(msg + '...');
+    }
 
     if (!self.reportbackSubmission.quantity) {
-      self.collectQuantity();
+      self.collectQuantity(promptUser);
       return;
     }
 
     if (!self.reportbackSubmission.caption) {
-      self.collectCaption();
+      self.collectCaption(promptUser);
       return;
     }
 
     if (!self.reportbackSubmission.why_participated) {
-      self.collectWhyParticipated();
+      self.collectWhyParticipated(promptUser);
       return;
     }
 
@@ -432,7 +435,7 @@ CampaignBotController.prototype.sendAskQuantityMessage = function() {
 }
 
 CampaignBotController.prototype.sendAskCaptionMessage = function() {
-  var msgTxt = '@stg: Got it! Text back a caption to use.';
+  var msgTxt = '@stg: Text back a caption to use for your photo.';
   this.sendMessage(msgTxt);
 }
 
