@@ -96,6 +96,8 @@ CampaignBotController.prototype.createUserAndPostSignup = function(req, res) {
 /**
  * Loads and sets a controller.signup property for given Signup Id
  * Sends chatbot response per current user's sent message and campaign progress.
+ * @param {object} req - Express request
+ * @param {object} res - Express response
  * @param {string} signupId
  */
 CampaignBotController.prototype.loadSignup = function(req, res, signupId) {
@@ -123,7 +125,7 @@ CampaignBotController.prototype.loadSignup = function(req, res, signupId) {
     self.signup = signupDoc;
     logger.debug('self.signup:%s', self.signup._id.toString());
 
-    if (!self.supportsMMS()) {
+    if (!self.supportsMMS(req, res)) {
       return;
     }
 
@@ -134,7 +136,7 @@ CampaignBotController.prototype.loadSignup = function(req, res, signupId) {
 
     var incomingCommand = helpers.getFirstWord(self.incomingMsg);
     if (incomingCommand && incomingCommand.toUpperCase() === CMD_REPORTBACK) {
-      self.startReportbackSubmission();
+      self.startReportbackSubmission(req, res);
       return;
     }
 
@@ -145,6 +147,8 @@ CampaignBotController.prototype.loadSignup = function(req, res, signupId) {
 
 /**
  * Conversation to continue gathering data for our draft Reportback Submission.
+ * @param {object} req - Express request
+ * @param {object} res - Express response
  */
 CampaignBotController.prototype.continueReportbackSubmission = function(req, res) {
   var self = this;
@@ -172,7 +176,12 @@ CampaignBotController.prototype.continueReportbackSubmission = function(req, res
     }
 
     if (!self.reportbackSubmission.quantity) {
-      self.collectQuantity(promptUser);
+      self.collectQuantity(req, res, promptUser);
+      return;
+    }
+
+    if (!self.reportbackSubmission.image_url) {
+      self.collectPhoto(req, res, promptUser);
       return;
     }
 
@@ -196,7 +205,7 @@ CampaignBotController.prototype.continueReportbackSubmission = function(req, res
 /**
  * Creates new ReportbackSubmission, saves to Signup.draft_reportback_submission
  */
-CampaignBotController.prototype.startReportbackSubmission = function() {
+CampaignBotController.prototype.startReportbackSubmission = function(req, res) {
   var self = this;
 
   dbReportbackSubmissions.create({
@@ -227,7 +236,7 @@ CampaignBotController.prototype.startReportbackSubmission = function() {
 
       self.reportbackSubmission = reportbackSubmission;
 
-      self.collectQuantity(true);
+      self.collectQuantity(req, res, true);
 
     });
 
@@ -240,7 +249,7 @@ CampaignBotController.prototype.startReportbackSubmission = function() {
  * Creates new reportbackSubmission document if none exists.
  * @param {boolean} promptUser - Whether to lead off conversation with user.
  */
-CampaignBotController.prototype.collectQuantity = function(promptUser) {
+CampaignBotController.prototype.collectQuantity = function(req, res, promptUser) {
   var self = this;
 
   if (promptUser) {
@@ -261,10 +270,42 @@ CampaignBotController.prototype.collectQuantity = function(promptUser) {
       return logger.error('collectQuantity error:%s', e);
     }
 
-    self.collectCaption(true);
+    self.collectPhoto(req, res, true);
 
   });
 
+}
+
+/**
+ * Handles conversation for saving photo to our current reportbackSubmission.
+ * @param {object} req - Express request
+ * @param {object} res - Express response
+ * @param {boolean} promptUser
+ */
+CampaignBotController.prototype.collectPhoto = function(req, res, promptUser) {
+  var self = this;
+
+  if (promptUser) {
+    self.sendAskPhotoMessage();
+    return;
+  }
+
+  if (!req.incoming_image_url) {
+    // @todo: Add validation error param?
+    self.sendAskPhotoMessage();
+    return;
+  }
+
+  self.reportbackSubmission.image_url = req.incoming_image_url;
+  self.reportbackSubmission.save(function(e) {
+
+    if (e) {
+      return logger.error('collectCaption error:%s', e);
+    }
+
+    self.collectCaption(true);
+    
+  });
 }
 
 /**
@@ -358,7 +399,7 @@ CampaignBotController.prototype.postReportback = function() {
 /**
  * Handles conversation to save our current User's supportsMMS property.
  */
-CampaignBotController.prototype.supportsMMS = function() {
+CampaignBotController.prototype.supportsMMS = function(req, res) {
   var self = this;
 
   if (self.user.supports_mms === true) {
@@ -383,7 +424,7 @@ CampaignBotController.prototype.supportsMMS = function() {
       // @todo
       // return handleError(err);
     }
-    self.startReportbackSubmission();
+    self.startReportbackSubmission(req, res);
     return true;
   });
 
@@ -431,6 +472,13 @@ CampaignBotController.prototype.sendAskQuantityMessage = function() {
   var msgTxt = '@stg: What`s the total number of ' + this.campaign.rb_noun;
   msgTxt += ' you ' + this.campaign.rb_verb + '?';
   msgTxt += '\n\nPlease text the exact number back.';
+  this.sendMessage(msgTxt);
+}
+
+CampaignBotController.prototype.sendAskPhotoMessage = function() {
+  var action = this.campaign.rb_noun + ' ' + this.campaign.rb_verb;
+  var msgTxt = '@stg: Send your best photo of you and all ';
+  msgTxt += this.reportbackSubmission.quantity + ' ' + action + '.';
   this.sendMessage(msgTxt);
 }
 
