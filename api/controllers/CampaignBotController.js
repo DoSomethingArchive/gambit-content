@@ -6,9 +6,9 @@ var phoenix = rootRequire('lib/phoenix')();
 var helpers = rootRequire('lib/helpers');
 
 var connOps = rootRequire('config/connectionOperations');
-var reportbackSubmissions = require('../models/campaign/ReportbackSubmission')(connOps);
-var signups = require('../models/campaign/Signup')(connOps);
-var users = require('../models/User')(connOps);
+var dbReportbackSubmissions = require('../models/campaign/ReportbackSubmission')(connOps);
+var dbSignups = require('../models/campaign/Signup')(connOps);
+var dbUsers = require('../models/User')(connOps);
 
 var CMD_REPORTBACK = (process.env.GAMBIT_CMD_REPORTBACK || 'p');
 
@@ -37,7 +37,7 @@ CampaignBotController.prototype.chatbot = function(request, response) {
   // @todo: Move into the completion handlers by passing into functions.
   response.send();
 
-  users.findOne({ '_id': request.user_id }, function (err, userDoc) {
+  dbUsers.findOne({ '_id': request.user_id }, function (err, userDoc) {
 
     if (err) {
       logger.error(err);
@@ -76,7 +76,7 @@ CampaignBotController.prototype.chatbot = function(request, response) {
 CampaignBotController.prototype.createUserAndPostSignup = function(req, res) {
   var self = this;
 
-  users.create({
+  dbUsers.create({
 
     _id: req.user_id,
     mobile: req.user_id,
@@ -103,9 +103,9 @@ CampaignBotController.prototype.loadSignup = function(signupId) {
   // @todo: To handle Campaign Runs, we'll need to inspect our Signup date
   // and compare to it to the Campaign's current start date. If our Signup date
   // is older than the start date, we'll need to postSignup to store the new
-  // Signup ID to our user's current Signups in user.campaigns
+  // Signup ID to our user's current dbSignups in user.campaigns
 
-  signups.findOne({ '_id': signupId }, function (err, signupDoc) {
+  dbSignups.findOne({ '_id': signupId }, function (err, signupDoc) {
 
     if (err) {
       logger.error(err);
@@ -113,7 +113,7 @@ CampaignBotController.prototype.loadSignup = function(signupId) {
 
     if (!signupDoc) {
       // Edge case where our cached Signup ID in user.campaigns not found
-      // Could potentially lookup campaign/user in Signups to check for any
+      // Could potentially lookup campaign/user in dbSignups to check for any
       // Signup document to use, but for now let's log and assume wont happen.
       logger.error('no signupDoc found for _id:%s', signupId);
       return;
@@ -147,7 +147,7 @@ CampaignBotController.prototype.loadSignup = function(signupId) {
 CampaignBotController.prototype.continueReportbackSubmission = function() {
   var self = this;
 
-  reportbackSubmissions.findOne(
+  dbReportbackSubmissions.findOne(
     { '_id': self.signup.draft_reportback_submission },
     function (err, reportbackSubmissionDoc) {
 
@@ -185,7 +185,7 @@ CampaignBotController.prototype.continueReportbackSubmission = function() {
 CampaignBotController.prototype.startReportbackSubmission = function() {
   var self = this;
 
-  reportbackSubmissions.create({
+  dbReportbackSubmissions.create({
 
     campaign: self.campaign._id,
     user: self.user._id,
@@ -351,7 +351,7 @@ CampaignBotController.prototype.postSignup = function() {
   var campaignId = self.campaign._id;
 
   // @todo Query DS API to check if Signup exists, post to API to get _id if not
-  signups.create({
+  dbSignups.create({
 
     campaign: campaignId,
     user: self.user._id
