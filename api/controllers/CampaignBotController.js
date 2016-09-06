@@ -10,7 +10,7 @@ var dbReportbackSubmissions = require('../models/campaign/ReportbackSubmission')
 var dbSignups = require('../models/campaign/Signup')(connOps);
 var dbUsers = require('../models/User')(connOps);
 
-var CMD_REPORTBACK = (process.env.GAMBIT_CMD_REPORTBACK || 'p');
+var CMD_REPORTBACK = (process.env.GAMBIT_CMD_REPORTBACK || 'P');
 
 /**
  * CampaignBotController
@@ -54,7 +54,7 @@ CampaignBotController.prototype.chatbot = function(req, res) {
 
     // @todo: Move this check and inspect req.incoming_message in each function
     if (req.incoming_message) {
-      self.incomingMsg = req.incoming_message.toLowerCase();
+      self.incomingMsg = req.incoming_message;
     }
 
     var signupId = self.user.campaigns[self.campaign._id];
@@ -132,7 +132,8 @@ CampaignBotController.prototype.loadSignup = function(req, res, signupId) {
       return;
     }
 
-    if (self.incomingMsg === CMD_REPORTBACK) {
+    var incomingCommand = helpers.getFirstWord(self.incomingMsg);
+    if (incomingCommand && incomingCommand.toUpperCase() === CMD_REPORTBACK) {
       self.startReportbackSubmission();
       return;
     }
@@ -360,8 +361,10 @@ CampaignBotController.prototype.supportsMMS = function() {
   if (self.user.supports_mms === true) {
     return true;
   }
-
-  if (self.incomingMsg === CMD_REPORTBACK || !self.incomingMsg) {
+  // @todo DRY
+  // @see loadSignup()
+  var incomingCommand = helpers.getFirstWord(self.incomingMsg);
+  if (incomingCommand && incomingCommand.toUpperCase() === CMD_REPORTBACK) {
     self.sendMessage('@stg: Can you send photos from your phone?');
     return false;
   }
