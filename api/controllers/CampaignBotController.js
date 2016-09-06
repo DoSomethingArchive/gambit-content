@@ -78,63 +78,62 @@ CampaignBotController.prototype.chatbot = function(request, response) {
       return;
     }
 
-    // Load and store our User's Signup for this Campaign.
-    signups.findOne({ '_id': signupId }, function (err, signupDoc) {
-
-      if (err) {
-        logger.error(err);
-      }
-
-      if (!signupDoc) {
-        // Edge case where our cached Signup ID in user.campaigns not found
-        // Could potentially lookup campaign/user in Signups to check for any
-        // Signup document to use, but for now let's log and assume wont happen.
-        logger.error('no signupDoc found for _id:%s', signupId);
-        return;
-      }
-
-      self.signup = signupDoc;
-      logger.debug('self.signup:%s', self.signup._id.toString());
-
-      if (!self.supportsMMS()) {
-        return;
-      }
-
-      // User is in the middle of reporting back or hasn't ever submitted
-      if (self.signup.draft_reportback_submission || !self.signup.total_quantity_submitted) {
-        logger.debug('draft_reportback_submission:%s', self.signup.draft_reportback_submission);
-        self.chatReportback();
-        return;
-      }
-
-      // User wants to submit another ReportbackSubmission
-      if (self.incomingMsg === CMD_REPORTBACK) {
-        self.chatReportback(true);
-        return;
-      }
-
-      self.sendCompletedMenuMsg();
-
-    });
+    self.loadSignup(signupId);
 
   });
   
 }
 
 /**
- * Handles reportback conversations.
- * @param {boolean} newSubmission - Only gets passed from supportsMMS, when
- *    member hsa already submitted the CMD_REPORTBACK to begin
+ * Loads and sets a controller.signup property for given Signup Id
+ * Sends chatbot response per current user's sent message and campaign progress.
+ * @param {string} signupId
  */
-CampaignBotController.prototype.chatReportback = function(newSubmission) {
+CampaignBotController.prototype.loadSignup = function(signupId) {
   var self = this;
 
-  if (newSubmission) {
-    self.startReportbackSubmission();
-    return;
-  }
+  signups.findOne({ '_id': signupId }, function (err, signupDoc) {
 
-  // Check if our User is in the middle of a draft Reportback Submission.
+    if (err) {
+      logger.error(err);
+    }
+
+    if (!signupDoc) {
+      // Edge case where our cached Signup ID in user.campaigns not found
+      // Could potentially lookup campaign/user in Signups to check for any
+      // Signup document to use, but for now let's log and assume wont happen.
+      logger.error('no signupDoc found for _id:%s', signupId);
+      return;
+    }
+
+    self.signup = signupDoc;
+    logger.debug('self.signup:%s', self.signup._id.toString());
+
+    if (!self.supportsMMS()) {
+      return;
+    }
+
+    if (self.signup.draft_reportback_submission) {
+      self.continueReportbackSubmission();
+      return;
+    }
+
+    if (self.incomingMsg === CMD_REPORTBACK) {
+      self.startReportbackSubmission();
+      return;
+    }
+
+    self.sendCompletedMenuMsg();
+
+  });
+}
+
+/**
+ * Conversation to continue gathering data for our draft Reportback Submission.
+ */
+CampaignBotController.prototype.continueReportbackSubmission = function() {
+  var self = this;
+
   reportbackSubmissions.findOne(
     { '_id': self.signup.draft_reportback_submission },
     function (err, reportbackSubmissionDoc) {
@@ -143,6 +142,9 @@ CampaignBotController.prototype.chatReportback = function(newSubmission) {
       logger.error(err);
       return;
     }
+
+    // @todo: Inspect our incoming message to determine if User is attemping
+    // continue Campaign conversation by texting in the Campaign Signup keyword
 
     // Store reference to our draft document to save data in collect functions.
     self.reportbackSubmission = reportbackSubmissionDoc;
@@ -320,7 +322,7 @@ CampaignBotController.prototype.supportsMMS = function() {
       // @todo
       // return handleError(err);
     }
-    self.chatReportback(true);
+    self.startReportbackSubmission();
     return true;
   });
 
