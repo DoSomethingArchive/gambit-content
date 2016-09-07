@@ -16,7 +16,10 @@ var schema = new mongoose.Schema({
   // We're using Mobile Commons campaigns like Phoenix Campaign Runs.
   // We create a new Mobile Commons campaign when the DS Campaign's 
   // Signup and Quantity totals need start at 0 again for this year/month's run.
-  current_mobilecommons_campaign: Number
+  current_mobilecommons_campaign: Number,
+
+  // Internal Mobile Commons campaign to use for Gambit staging / development.
+  staging_mobilecommons_campaign: Number
 
 })
 

@@ -18,10 +18,18 @@ var CMD_REPORTBACK = (process.env.GAMBIT_CMD_REPORTBACK || 'P');
  * @param {integer} campaignId - our DS Campaign ID
  */
 function CampaignBotController(campaignId) {
+
   this.campaign = app.getConfig(app.ConfigName.CAMPAIGNS, campaignId);
-  var mocoId = this.campaign.current_mobilecommons_campaign;
-  var mobileCommonsConfigName = app.ConfigName.CHATBOT_MOBILECOMMONS_CAMPAIGNS;
-  this.mobileCommonsConfig = app.getConfig(mobileCommonsConfigName, mocoId);
+
+  var mobileCommonsCampaign = this.campaign.staging_mobilecommons_campaign;
+
+  if (process.env.NODE_ENV === 'production') {
+    mobileCommonsCampaign = this.campaign.current_mobilecommons_campaign;
+  }
+
+  var configName = app.ConfigName.CHATBOT_MOBILECOMMONS_CAMPAIGNS;
+  this.mobileCommonsConfig = app.getConfig(configName, mobileCommonsCampaign);
+
 };
 
 /**
