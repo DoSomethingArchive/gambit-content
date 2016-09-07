@@ -199,6 +199,8 @@ CampaignBotController.prototype.continueReportbackSubmission = function(req, res
 
 /**
  * Creates new ReportbackSubmission, saves to Signup.draft_reportback_submission
+ * @param {object} req - Express request
+ * @param {object} res - Express response
  */
 CampaignBotController.prototype.startReportbackSubmission = function(req, res) {
   var self = this;
@@ -242,6 +244,8 @@ CampaignBotController.prototype.startReportbackSubmission = function(req, res) {
 /**
  * Handles conversation for saving quantity to our current reportbackSubmission.
  * Creates new reportbackSubmission document if none exists.
+ * @param {object} req - Express request
+ * @param {object} res - Express response
  * @param {boolean} promptUser - Whether to lead off conversation with user.
  */
 CampaignBotController.prototype.collectQuantity = function(req, res, promptUser) {
@@ -305,6 +309,8 @@ CampaignBotController.prototype.collectPhoto = function(req, res, promptUser) {
 
 /**
  * Handles conversation for saving caption to our current reportbackSubmission.
+ * @param {object} req - Express request
+ * @param {object} res - Express response
  * @param {boolean} promptUser
  */
 CampaignBotController.prototype.collectCaption = function(req, res, promptUser) {
@@ -337,7 +343,9 @@ CampaignBotController.prototype.collectCaption = function(req, res, promptUser) 
 
 /**
  * Handles conversation for saving why_participated to reportbackSubmission.
- * @param {boolean} promptUser - Whether to lead off conversation with user.
+ * @param {object} req - Express request
+ * @param {object} res - Express response
+ * @param {boolean} promptUser
  */
 CampaignBotController.prototype.collectWhyParticipated = function(req, res, promptUser) {
   var self = this;
@@ -393,6 +401,8 @@ CampaignBotController.prototype.postReportback = function() {
 
 /**
  * Handles conversation to save our current User's supportsMMS property.
+ * @param {object} req - Express request
+ * @param {object} res - Express response
  */
 CampaignBotController.prototype.supportsMMS = function(req, res) {
   var self = this;
