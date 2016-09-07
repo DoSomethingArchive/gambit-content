@@ -239,13 +239,14 @@ CampaignBotController.prototype.startReportbackSubmission = function(req, res) {
 CampaignBotController.prototype.collectQuantity = function(req, res, promptUser) {
   var self = this;
 
+  var askQuantityMsg = self.getAskQuantityMessage();
   if (promptUser) {
-    return self.sendMessage(req, res, self.getAskQuantityMessage());
+    return self.sendMessage(req, res, askQuantityMsg);
   }
 
   var quantity = req.incoming_message;
   if (helpers.hasLetters(quantity) || !parseInt(quantity)) {
-    return self.sendMessage(req, res, 'Please provide a valid number.');
+    return self.sendMessage(req, res, 'Invalid valid number sent.\n\n' + askQuantityMsg);
   }
 
   self.reportbackSubmission.quantity = parseInt(quantity);
@@ -493,7 +494,7 @@ CampaignBotController.prototype.getStartMenuMsg = function() {
 
 CampaignBotController.prototype.getCompletedMenuMsg = function() {
   var action = this.campaign.rb_noun + ' ' + this.campaign.rb_verb;
-  var msgTxt = '@stg:\n\n*' + this.campaign.title + '*\n';
+  var msgTxt = '\n\n*' + this.campaign.title + '*\n';
   msgTxt += 'We\'ve got you down for ' + this.signup.total_quantity_submitted;
   msgTxt += ' ' + action + '.\n\n---\n';
   msgTxt += 'To add more ' + action + ', text ' + CMD_REPORTBACK.toUpperCase();
