@@ -520,7 +520,7 @@ CampaignBotController.prototype.getCompletedMenuMsg = function() {
  */
 CampaignBotController.prototype.sendMessage = function(req, res, msgTxt) {
 
-  if (req.query.start && this.signup.draft_reportback_submission) {
+  if (req.query.start && this.signup && this.signup.draft_reportback_submission) {
     var continueMsg = 'Picking up where you left off on ' + this.campaign.title;
     msgTxt = continueMsg + '...\n\n' + msgTxt;
   }
@@ -529,14 +529,15 @@ CampaignBotController.prototype.sendMessage = function(req, res, msgTxt) {
     msgTxt = '@stg: ' + msgTxt;
   }
 
-  var oip = this.mobileCommonsConfig.oip_chat;
+  var optInPath = this.mobileCommonsConfig.oip_chat;
 
-  if (!oip) {
-    logger.error('no oip');
+  if (!optInPath) {
+    logger.error("CampaignBot:%s no oip_chat found.", this.campaign._id);
     res.sendStatus(500);
+    return;
   }
 
-  mobilecommons.chatbot({phone: this.user.mobile}, oip, msgTxt);
+  mobilecommons.chatbot({phone: this.user.mobile}, optInPath, msgTxt);
   res.send();
 
 }
