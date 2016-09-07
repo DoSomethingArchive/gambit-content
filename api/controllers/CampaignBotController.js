@@ -586,7 +586,7 @@ CampaignBotController.prototype.handleError = function(req, res, error) {
  * @return {string}
  */
 CampaignBotController.prototype.loggerPrefix = function(req) {
-  return 'campaign:' + req.query.campaign + ' user:' + req.user_id;
+  return 'campaignBot.campaign:' + req.query.campaign + ' user:' + req.user_id;
 }
 
 module.exports = CampaignBotController;
