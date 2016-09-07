@@ -34,9 +34,6 @@ CampaignBotController.prototype.chatbot = function(req, res) {
     return;
   }
 
-  // @todo: Move into the completion handlers by passing into functions.
-  res.send();
-
   dbUsers.findOne({ '_id': req.user_id }, function (err, userDoc) {
 
     if (err) {
@@ -52,14 +49,9 @@ CampaignBotController.prototype.chatbot = function(req, res) {
     self.user = userDoc;
     logger.debug('campaignBot found user:%s', self.user._id);
 
-    // @todo: Move this check and inspect req.incoming_message in each function
-    if (req.incoming_message) {
-      self.incomingMsg = req.incoming_message;
-    }
-
     var signupId = self.user.campaigns[self.campaign._id];
     if (!signupId) {
-      self.postSignup();
+      self.postSignup(req, res);
       return;
     }
 
@@ -88,7 +80,7 @@ CampaignBotController.prototype.createUserAndPostSignup = function(req, res) {
     self.user = newUserDoc;
     logger.debug('campaignBot created user._id:%', newUserDoc['_id']);
 
-    self.postSignup();
+    self.postSignup(req, res);
 
   });
 }
@@ -134,13 +126,13 @@ CampaignBotController.prototype.loadSignup = function(req, res, signupId) {
       return;
     }
 
-    var incomingCommand = helpers.getFirstWord(self.incomingMsg);
+    var incomingCommand = helpers.getFirstWord(req.incoming_message);
     if (incomingCommand && incomingCommand.toUpperCase() === CMD_REPORTBACK) {
       self.startReportbackSubmission(req, res);
       return;
     }
 
-    self.sendCompletedMenuMsg();
+    self.sendMessage(req, res, self.getCompletedMenuMsg());
 
   });
 }
@@ -170,29 +162,20 @@ CampaignBotController.prototype.continueReportbackSubmission = function(req, res
 
     var promptUser = (req.query.start || false);
 
-    if (promptUser) {
-      var msg = '@stg: Picking up where we left off on ' + self.campaign.title;
-      self.sendMessage(msg + '...');
-    }
-
     if (!self.reportbackSubmission.quantity) {
-      self.collectQuantity(req, res, promptUser);
-      return;
+      return self.collectQuantity(req, res, promptUser);
     }
 
     if (!self.reportbackSubmission.image_url) {
-      self.collectPhoto(req, res, promptUser);
-      return;
+      return self.collectPhoto(req, res, promptUser);
     }
 
     if (!self.reportbackSubmission.caption) {
-      self.collectCaption(promptUser);
-      return;
+      return self.collectCaption(req, res, promptUser);
     }
 
     if (!self.reportbackSubmission.why_participated) {
-      self.collectWhyParticipated(promptUser);
-      return;
+      return self.collectWhyParticipated(req, res, promptUser);
     }
 
     // @todo Could be edge case where error on submit here
@@ -204,6 +187,8 @@ CampaignBotController.prototype.continueReportbackSubmission = function(req, res
 
 /**
  * Creates new ReportbackSubmission, saves to Signup.draft_reportback_submission
+ * @param {object} req - Express request
+ * @param {object} res - Express response
  */
 CampaignBotController.prototype.startReportbackSubmission = function(req, res) {
   var self = this;
@@ -247,20 +232,21 @@ CampaignBotController.prototype.startReportbackSubmission = function(req, res) {
 /**
  * Handles conversation for saving quantity to our current reportbackSubmission.
  * Creates new reportbackSubmission document if none exists.
+ * @param {object} req - Express request
+ * @param {object} res - Express response
  * @param {boolean} promptUser - Whether to lead off conversation with user.
  */
 CampaignBotController.prototype.collectQuantity = function(req, res, promptUser) {
   var self = this;
 
+  var askQuantityMsg = self.getAskQuantityMessage();
   if (promptUser) {
-    self.sendAskQuantityMessage();
-    return;
+    return self.sendMessage(req, res, askQuantityMsg);
   }
 
-  var quantity = self.incomingMsg;
+  var quantity = req.incoming_message;
   if (helpers.hasLetters(quantity) || !parseInt(quantity)) {
-    self.sendMessage('@stg: Please provide a valid number.');
-    return;
+    return self.sendMessage(req, res, 'Invalid valid number sent.\n\n' + askQuantityMsg);
   }
 
   self.reportbackSubmission.quantity = parseInt(quantity);
@@ -285,14 +271,13 @@ CampaignBotController.prototype.collectQuantity = function(req, res, promptUser)
 CampaignBotController.prototype.collectPhoto = function(req, res, promptUser) {
   var self = this;
 
+  var askPhotoMsg = self.getAskPhotoMessage();
   if (promptUser) {
-    self.sendAskPhotoMessage();
-    return;
+    return self.sendMessage(req, res, askPhotoMsg);
   }
 
   if (!req.incoming_image_url) {
-    // @todo: Add validation error param?
-    self.sendAskPhotoMessage();
+    self.sendMessage(req, res, 'No photo sent.\n\n' + askPhotoMsg);
     return;
   }
 
@@ -303,24 +288,25 @@ CampaignBotController.prototype.collectPhoto = function(req, res, promptUser) {
       return logger.error('collectCaption error:%s', e);
     }
 
-    self.collectCaption(true);
+    self.collectCaption(req, res, true);
     
   });
 }
 
 /**
  * Handles conversation for saving caption to our current reportbackSubmission.
+ * @param {object} req - Express request
+ * @param {object} res - Express response
  * @param {boolean} promptUser
  */
-CampaignBotController.prototype.collectCaption = function(promptUser) {
+CampaignBotController.prototype.collectCaption = function(req, res, promptUser) {
   var self = this;
 
   if (promptUser) {
-    self.sendAskCaptionMessage();
-    return;
+    return self.sendMessage(req, res, self.getAskCaptionMessage());
   }
 
-  self.reportbackSubmission.caption = self.incomingMsg;
+  self.reportbackSubmission.caption = req.incoming_message;
   self.reportbackSubmission.save(function(e) {
 
     if (e) {
@@ -330,36 +316,37 @@ CampaignBotController.prototype.collectCaption = function(promptUser) {
     // If this is our current user's first Reportback Submission:
     if (!self.signup.total_quantity_submitted) {
 
-      self.collectWhyParticipated(true);
+      self.collectWhyParticipated(req, res, true);
       return;
 
     }
 
-    self.postReportback();
+    self.postReportback(req, res);
     
   });
 }
 
 /**
  * Handles conversation for saving why_participated to reportbackSubmission.
- * @param {boolean} promptUser - Whether to lead off conversation with user.
+ * @param {object} req - Express request
+ * @param {object} res - Express response
+ * @param {boolean} promptUser
  */
-CampaignBotController.prototype.collectWhyParticipated = function(promptUser) {
+CampaignBotController.prototype.collectWhyParticipated = function(req, res, promptUser) {
   var self = this;
 
   if (promptUser) {
-    self.sendAskWhyParticipatedMessage();
-    return;
+    return self.sendMessage(req, res, self.getAskWhyParticipatedMessage());
   }
 
-  self.reportbackSubmission.why_participated = self.incomingMsg;
+  self.reportbackSubmission.why_participated = req.incoming_message;
   self.reportbackSubmission.save(function(e) {
 
     if (e) {
       return logger.error('collectWhyParticipated error:%s', e);
     }
 
-    self.postReportback();
+    self.postReportback(req, res);
 
   });
 
@@ -368,8 +355,10 @@ CampaignBotController.prototype.collectWhyParticipated = function(promptUser) {
 
 /**
  * Posts a completed ReportbackSubmission to API and updates our current Signup.
+ * @param {object} req - Express request
+ * @param {object} res - Express response
  */
-CampaignBotController.prototype.postReportback = function() {
+CampaignBotController.prototype.postReportback = function(req, res) {
   var self = this;
 
   var dateSubmitted = Date.now();
@@ -389,7 +378,7 @@ CampaignBotController.prototype.postReportback = function() {
 
     self.signup.save(function(signupErr) {
 
-      self.sendCompletedMenuMsg();
+      self.sendMessage(req, res, self.getCompletedMenuMsg());
 
     });
 
@@ -398,6 +387,8 @@ CampaignBotController.prototype.postReportback = function() {
 
 /**
  * Handles conversation to save our current User's supportsMMS property.
+ * @param {object} req - Express request
+ * @param {object} res - Express response
  */
 CampaignBotController.prototype.supportsMMS = function(req, res) {
   var self = this;
@@ -407,14 +398,14 @@ CampaignBotController.prototype.supportsMMS = function(req, res) {
   }
   // @todo DRY
   // @see loadSignup()
-  var incomingCommand = helpers.getFirstWord(self.incomingMsg);
+  var incomingCommand = helpers.getFirstWord(req.incoming_message);
   if (incomingCommand && incomingCommand.toUpperCase() === CMD_REPORTBACK) {
-    self.sendMessage('@stg: Can you send photos from your phone?');
+    self.sendMessage(req, res, 'Can you send photos from your phone?');
     return false;
   }
   
-  if (!helpers.isYesResponse(self.incomingMsg)) {
-    self.sendMessage('@stg: Sorry, you must submit a photo to complete.');
+  if (!helpers.isYesResponse(req.incoming_message)) {
+    self.sendMessage(req, res, 'Sorry, you must submit a photo to complete.');
     return false;
   }
 
@@ -432,8 +423,10 @@ CampaignBotController.prototype.supportsMMS = function(req, res) {
 
 /**
  * Creates a Signup for our Campaign and current User, continues conversation.
+ * @param {object} req - Express request
+ * @param {object} res - Express response
  */
-CampaignBotController.prototype.postSignup = function() {
+CampaignBotController.prototype.postSignup = function(req, res) {
   logger.debug('postSignup');
 
   var self = this;
@@ -457,7 +450,7 @@ CampaignBotController.prototype.postSignup = function() {
         logger.error(err);
       }
 
-      self.sendStartMenuMsg();
+      self.sendMessage(req, res, self.getStartMenuMsg());
 
     });
 
@@ -468,53 +461,66 @@ CampaignBotController.prototype.postSignup = function() {
  * Bot message helper functions
  * @todo Deprecate these via Gambit Jr. CampaignBot content configs.
  */
-CampaignBotController.prototype.sendAskQuantityMessage = function() {
-  var msgTxt = '@stg: What`s the total number of ' + this.campaign.rb_noun;
+CampaignBotController.prototype.getAskQuantityMessage = function() {
+  var msgTxt = 'What`s the total number of ' + this.campaign.rb_noun;
   msgTxt += ' you ' + this.campaign.rb_verb + '?';
   msgTxt += '\n\nPlease text the exact number back.';
-  this.sendMessage(msgTxt);
+  return msgTxt;
 }
 
-CampaignBotController.prototype.sendAskPhotoMessage = function() {
+CampaignBotController.prototype.getAskPhotoMessage = function() {
   var action = this.campaign.rb_noun + ' ' + this.campaign.rb_verb;
-  var msgTxt = '@stg: Send your best photo of you and all ';
+  var msgTxt = 'Send your best photo of you and all ';
   msgTxt += this.reportbackSubmission.quantity + ' ' + action + '.';
-  this.sendMessage(msgTxt);
+  return msgTxt;
 }
 
-CampaignBotController.prototype.sendAskCaptionMessage = function() {
-  var msgTxt = '@stg: Text back a caption to use for your photo.';
-  this.sendMessage(msgTxt);
+CampaignBotController.prototype.getAskCaptionMessage = function() {
+  var msgTxt = 'Text back a caption to use for your photo.';
+  return msgTxt;
 }
 
-CampaignBotController.prototype.sendAskWhyParticipatedMessage = function() {
-  var msgTxt = '@stg: Why did you participate in ' + this.campaign.title + '?';
-  this.sendMessage(msgTxt);
+CampaignBotController.prototype.getAskWhyParticipatedMessage = function() {
+  var msgTxt = 'Why did you participate in ' + this.campaign.title + '?';
+  return msgTxt;
 }
 
-// We need a start menu to first check whether member can send photos
-// (as opposed to immediately asking for quantity after Signup creation)
-CampaignBotController.prototype.sendStartMenuMsg = function() {
-  var msgTxt = '@stg: You\'re signed up for ' + this.campaign.title + '.\n\n';
+CampaignBotController.prototype.getStartMenuMsg = function() {
+  var msgTxt = 'You\'re signed up for ' + this.campaign.title + '.\n\n';
   msgTxt += 'When you have ' + this.campaign.rb_verb + ' some ';
   msgTxt += this.campaign.rb_noun + ', text back ' + CMD_REPORTBACK.toUpperCase();
-  this.sendMessage(msgTxt);
+  return msgTxt;
 }
 
-CampaignBotController.prototype.sendCompletedMenuMsg = function() {
+CampaignBotController.prototype.getCompletedMenuMsg = function() {
   var action = this.campaign.rb_noun + ' ' + this.campaign.rb_verb;
-  var msgTxt = '@stg:\n\n*' + this.campaign.title + '*\n';
+  var msgTxt = '\n\n*' + this.campaign.title + '*\n';
   msgTxt += 'We\'ve got you down for ' + this.signup.total_quantity_submitted;
   msgTxt += ' ' + action + '.\n\n---\n';
   msgTxt += 'To add more ' + action + ', text ' + CMD_REPORTBACK.toUpperCase();
-  this.sendMessage(msgTxt);
+  return msgTxt;
 }
 
-CampaignBotController.prototype.sendMessage = function(msgTxt) {
-  var mobileCommonsProfile = {
-    phone: this.user.mobile
-  };
-  mobilecommons.chatbot(mobileCommonsProfile, 213849, msgTxt);
+/**
+ * Sends mobilecommons.chatbot response with given msgTxt
+ * @param {object} req - Express request
+ * @param {object} res - Express response
+ * @param {string} msgTxt
+ */
+CampaignBotController.prototype.sendMessage = function(req, res, msgTxt) {
+
+  if (req.query.start && this.signup.draft_reportback_submission) {
+    var continueMsg = 'Picking up where you left off on ' + this.campaign.title;
+    msgTxt = continueMsg + '...\n\n' + msgTxt;
+  }
+
+  if (process.env.NODE_ENV !== 'production') {
+    msgTxt = '@stg: ' + msgTxt;
+  }
+
+  mobilecommons.chatbot({phone: this.user.mobile}, 213849, msgTxt);
+  res.send();
+
 }
 
 module.exports = CampaignBotController;
