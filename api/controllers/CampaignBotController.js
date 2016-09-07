@@ -20,6 +20,9 @@ var CMD_REPORTBACK = (process.env.GAMBIT_CMD_REPORTBACK || 'P');
 function CampaignBotController(campaignId) {
 
   this.campaign = app.getConfig(app.ConfigName.CAMPAIGNS, campaignId);
+  if (!this.campaign) {
+    return;
+  }
 
   var mobileCommonsCampaign = this.campaign.staging_mobilecommons_campaign;
 
@@ -40,16 +43,17 @@ function CampaignBotController(campaignId) {
 CampaignBotController.prototype.chatbot = function(req, res) {
   var self = this;
 
-  if (!self.campaign || !self.mobileCommonsConfig) {
-    res.sendStatus(500);
-    return;
+  if (!self.campaign) {
+    return this.handleError(req, res, 'self.campaign undefined');
+  }
+  if (!self.mobileCommonsConfig) {
+    return this.handleError(req, res, 'self.mobileCommonsConfig undefined');
   }
 
   dbUsers.findOne({ '_id': req.user_id }, function (err, userDoc) {
 
     if (err) {
-      logger.error(err);
-      return;
+      return this.handleError(req, res, err);
     }
 
     if (!userDoc) {
@@ -114,7 +118,7 @@ CampaignBotController.prototype.loadSignup = function(req, res, signupId) {
   dbSignups.findOne({ '_id': signupId }, function (err, signupDoc) {
 
     if (err) {
-      logger.error(err);
+      return this.handleError(req, res, err);
     }
 
     if (!signupDoc) {
@@ -164,8 +168,7 @@ CampaignBotController.prototype.continueReportbackSubmission = function(req, res
     function (err, reportbackSubmissionDoc) {
 
     if (err) {
-      logger.error(err);
-      return;
+      return this.handleError(req, res, err);
     }
 
     // Store reference to our draft document to save data in collect functions.
@@ -224,7 +227,7 @@ CampaignBotController.prototype.startReportbackSubmission = function(req, res) {
     self.signup.save(function(e) {
 
       if (e) {
-        return logger.error('signup.save error:%s', e);
+        return this.handleError(req, res, e);
       }
 
       logger.debug('campaignBot saved reportbackSubmission:%s to signup:%s', 
@@ -264,7 +267,7 @@ CampaignBotController.prototype.collectQuantity = function(req, res, promptUser)
   self.reportbackSubmission.save(function(e) {
 
     if (e) {
-      return logger.error('collectQuantity error:%s', e);
+      return this.handleError(req, res, e);
     }
 
     self.collectPhoto(req, res, true);
@@ -296,7 +299,7 @@ CampaignBotController.prototype.collectPhoto = function(req, res, promptUser) {
   self.reportbackSubmission.save(function(e) {
 
     if (e) {
-      return logger.error('collectCaption error:%s', e);
+      return this.handleError(req, res, e);
     }
 
     self.collectCaption(req, res, true);
@@ -321,7 +324,7 @@ CampaignBotController.prototype.collectCaption = function(req, res, promptUser) 
   self.reportbackSubmission.save(function(e) {
 
     if (e) {
-      return logger.error('collectCaption error:%s', e);
+      return this.handleError(req, res, e);
     }
 
     // If this is our current user's first Reportback Submission:
@@ -354,7 +357,7 @@ CampaignBotController.prototype.collectWhyParticipated = function(req, res, prom
   self.reportbackSubmission.save(function(e) {
 
     if (e) {
-      return logger.error('collectWhyParticipated error:%s', e);
+      return this.handleError(req, res, e);
     }
 
     self.postReportback(req, res);
@@ -378,7 +381,7 @@ CampaignBotController.prototype.postReportback = function(req, res) {
   self.reportbackSubmission.save(function(e) {
 
     if (e) {
-      return logger.error('whyParticipated error:%s', e);
+      return this.handleError(req, res, e);
     }
 
     // @todo Post to DS API
@@ -421,13 +424,16 @@ CampaignBotController.prototype.supportsMMS = function(req, res) {
   }
 
   self.user.supports_mms = true;
+
   self.user.save(function(err) {
+
     if (err) {
-      // @todo
-      // return handleError(err);
+      return this.handleError(err);
     }
+
     self.startReportbackSubmission(req, res);
     return true;
+
   });
 
 };
@@ -458,7 +464,7 @@ CampaignBotController.prototype.postSignup = function(req, res) {
     self.user.save(function(err) {
 
       if (err) {
-        logger.error(err);
+        this.handleError(err);
       }
 
       self.sendMessage(req, res, self.getStartMenuMsg());
@@ -532,14 +538,41 @@ CampaignBotController.prototype.sendMessage = function(req, res, msgTxt) {
   var optInPath = this.mobileCommonsConfig.oip_chat;
 
   if (!optInPath) {
-    logger.error("CampaignBot:%s no oip_chat found.", this.campaign._id);
-    res.sendStatus(500);
-    return;
+    return this.handleError(req, res);
   }
 
   mobilecommons.chatbot({phone: this.user.mobile}, optInPath, msgTxt);
   res.send();
 
+}
+
+/**
+ * Sends 500 error back for given error
+ * @param {object} req - Express request
+ * @param {object} res - Express response
+ * @param {object} error
+ */
+CampaignBotController.prototype.handleError = function(req, res, error) {
+
+  var campaignId = null;
+  if (this.campaign) {
+    campaignid = this.campaign._id;
+  }
+
+  if (error) {
+    logger.error('%s error:%s', this.loggerPrefix(req, res), error);
+  }
+  
+  return res.sendStatus(500);
+
+}
+
+CampaignBotController.prototype.loggerPrefix = function(req, res) {
+  var campaignId = null;
+  if (this.campaign) {
+    campaignId = this.campaign._id;
+  }
+  return 'CampaignBot:' + campaignId + ' user:' + req.user_id;
 }
 
 module.exports = CampaignBotController;
