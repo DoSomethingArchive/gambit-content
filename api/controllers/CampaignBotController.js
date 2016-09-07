@@ -248,7 +248,7 @@ CampaignBotController.prototype.collectQuantity = function(req, res, promptUser)
 
   var quantity = req.incoming_message;
   if (helpers.hasLetters(quantity) || !parseInt(quantity)) {
-    return self.sendMessage(req, res, '@stg: Please provide a valid number.');
+    return self.sendMessage(req, res, 'Please provide a valid number.');
   }
 
   self.reportbackSubmission.quantity = parseInt(quantity);
@@ -402,12 +402,12 @@ CampaignBotController.prototype.supportsMMS = function(req, res) {
   // @see loadSignup()
   var incomingCommand = helpers.getFirstWord(req.incoming_message);
   if (incomingCommand && incomingCommand.toUpperCase() === CMD_REPORTBACK) {
-    self.sendMessage(req, res, '@stg: Can you send photos from your phone?');
+    self.sendMessage(req, res, 'Can you send photos from your phone?');
     return false;
   }
   
   if (!helpers.isYesResponse(req.incoming_message)) {
-    self.sendMessage(req, res, '@stg: Sorry, you must submit a photo to complete.');
+    self.sendMessage(req, res, 'Sorry, you must submit a photo to complete.');
     return false;
   }
 
@@ -464,7 +464,7 @@ CampaignBotController.prototype.postSignup = function(req, res) {
  * @todo Deprecate these via Gambit Jr. CampaignBot content configs.
  */
 CampaignBotController.prototype.getAskQuantityMessage = function() {
-  var msgTxt = '@stg: What`s the total number of ' + this.campaign.rb_noun;
+  var msgTxt = 'What`s the total number of ' + this.campaign.rb_noun;
   msgTxt += ' you ' + this.campaign.rb_verb + '?';
   msgTxt += '\n\nPlease text the exact number back.';
   return msgTxt;
@@ -472,23 +472,23 @@ CampaignBotController.prototype.getAskQuantityMessage = function() {
 
 CampaignBotController.prototype.getAskPhotoMessage = function() {
   var action = this.campaign.rb_noun + ' ' + this.campaign.rb_verb;
-  var msgTxt = '@stg: Send your best photo of you and all ';
+  var msgTxt = 'Send your best photo of you and all ';
   msgTxt += this.reportbackSubmission.quantity + ' ' + action + '.';
   return msgTxt;
 }
 
 CampaignBotController.prototype.getAskCaptionMessage = function() {
-  var msgTxt = '@stg: Text back a caption to use for your photo.';
+  var msgTxt = 'Text back a caption to use for your photo.';
   return msgTxt;
 }
 
 CampaignBotController.prototype.getAskWhyParticipatedMessage = function() {
-  var msgTxt = '@stg: Why did you participate in ' + this.campaign.title + '?';
+  var msgTxt = 'Why did you participate in ' + this.campaign.title + '?';
   return msgTxt;
 }
 
 CampaignBotController.prototype.getStartMenuMsg = function() {
-  var msgTxt = '@stg: You\'re signed up for ' + this.campaign.title + '.\n\n';
+  var msgTxt = 'You\'re signed up for ' + this.campaign.title + '.\n\n';
   msgTxt += 'When you have ' + this.campaign.rb_verb + ' some ';
   msgTxt += this.campaign.rb_noun + ', text back ' + CMD_REPORTBACK.toUpperCase();
   return msgTxt;
@@ -513,6 +513,9 @@ CampaignBotController.prototype.sendMessage = function(req, res, msgTxt) {
   if (req.query.start && this.signup.draft_reportback_submission) {
     var continueMsg = 'Picking up where you left off on ' + this.campaign.title;
     msgTxt = continueMsg + '...\n\n' + msgTxt;
+  }
+  if (process.env.NODE_ENV !== 'production') {
+    msgTxt = '@stg: ' + msgTxt;
   }
 
   mobilecommons.chatbot({phone: this.user.mobile}, 213849, msgTxt);
