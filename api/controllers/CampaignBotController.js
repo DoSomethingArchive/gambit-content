@@ -50,6 +50,13 @@ CampaignBotController.prototype.chatbot = function(req, res) {
     return this.handleError(req, res, 'self.mobileCommonsConfig undefined');
   }
 
+  logger.debug('%s incoming_message:%s', this.loggerPrefix(req),
+    req.incoming_message);
+  if (req.incoming_image_url) {
+    logger.debug('%s incoming_image_url:%s', this.loggerPrefix(req),
+      req.incoming_image_url);
+  }
+
   dbUsers.findOne({ '_id': req.user_id }, function (err, userDoc) {
 
     if (err) {
@@ -62,7 +69,7 @@ CampaignBotController.prototype.chatbot = function(req, res) {
     }
 
     self.user = userDoc;
-    logger.debug('campaignBot found user:%s', self.user._id);
+    logger.debug('%s loaded user:%s', self.loggerPrefix(req), self.user._id);
 
     var signupId = self.user.campaigns[self.campaign._id];
     if (!signupId) {
@@ -93,7 +100,7 @@ CampaignBotController.prototype.createUserAndPostSignup = function(req, res) {
   }).then(function(newUserDoc) {
 
     self.user = newUserDoc;
-    logger.debug('campaignBot created user._id:%', newUserDoc['_id']);
+    logger.debug('%s created user:%', self.loggerPrefix(req), newUserDoc['_id']);
 
     self.postSignup(req, res);
 
@@ -130,7 +137,8 @@ CampaignBotController.prototype.loadSignup = function(req, res, signupId) {
     }
 
     self.signup = signupDoc;
-    logger.debug('self.signup:%s', self.signup._id.toString());
+    logger.debug('%s loaded signup:%s', self.loggerPrefix(req),
+      self.signup._id.toString());
 
     if (!self.supportsMMS(req, res)) {
       return;
@@ -160,8 +168,7 @@ CampaignBotController.prototype.loadSignup = function(req, res, signupId) {
 CampaignBotController.prototype.continueReportbackSubmission = function(req, res) {
   var self = this;
 
-  logger.debug('continueReportbackSubmission user:%s sent:%s', req.user_id,
-    req.incoming_message);
+  logger.debug('%s continueReportbackSubmission', self.loggerPrefix(req));
 
   dbReportbackSubmissions.findOne(
     { '_id': self.signup.draft_reportback_submission },
@@ -219,19 +226,20 @@ CampaignBotController.prototype.startReportbackSubmission = function(req, res) {
     //   return logger.error('reportbackSubmission.create error:%s', err);
     // }
 
-    logger.debug('campaignBot created reportbackSubmission._id:%s', 
-      reportbackSubmission['_id']);
-
     // Store to our signup for easy lookup in future requests.
     self.signup.draft_reportback_submission = reportbackSubmission._id.toString();
+
+    logger.debug('%s created reportbackSubmission:%s', self.loggerPrefix(req),
+       self.signup.draft_reportback_submission);
+
     self.signup.save(function(e) {
 
       if (e) {
         return this.handleError(req, res, e);
       }
 
-      logger.debug('campaignBot saved reportbackSubmission:%s to signup:%s', 
-        self.signup.draft_reportback_submission, self.signup._id);
+      logger.debug('%s updated signup:%s', self.loggerPrefix(req),
+        self.signup._id.toString());
 
       self.reportbackSubmission = reportbackSubmission;
 
@@ -259,11 +267,16 @@ CampaignBotController.prototype.collectQuantity = function(req, res, promptUser)
   }
 
   var quantity = req.incoming_message;
+
+  // @todo: Extract any numbers we can find instead of invalidating input based
+  // on whether it contains any words (could contain noun, verb, or 'around 90')
+
   if (helpers.hasLetters(quantity) || !parseInt(quantity)) {
     return self.sendMessage(req, res, 'Invalid valid number sent.\n\n' + askQuantityMsg);
   }
 
   self.reportbackSubmission.quantity = parseInt(quantity);
+
   self.reportbackSubmission.save(function(e) {
 
     if (e) {
@@ -444,9 +457,9 @@ CampaignBotController.prototype.supportsMMS = function(req, res) {
  * @param {object} res - Express response
  */
 CampaignBotController.prototype.postSignup = function(req, res) {
-  logger.debug('postSignup');
-
   var self = this;
+
+  logger.debug('%s postSignup', self.loggerPrefix(req));
   var campaignId = self.campaign._id;
 
   // @todo Query DS API to check if Signup exists, post to API to get _id if not
@@ -560,19 +573,20 @@ CampaignBotController.prototype.handleError = function(req, res, error) {
   }
 
   if (error) {
-    logger.error('%s error:%s', this.loggerPrefix(req, res), error);
+    logger.error('%s error:%s', this.loggerPrefix(req), error);
   }
   
   return res.sendStatus(500);
 
 }
 
-CampaignBotController.prototype.loggerPrefix = function(req, res) {
-  var campaignId = null;
-  if (this.campaign) {
-    campaignId = this.campaign._id;
-  }
-  return 'CampaignBot:' + campaignId + ' user:' + req.user_id;
+/**
+ * Sends CampaignBot prefix to use in logger messages
+ * @param {object} req - Express request
+ * @return {string}
+ */
+CampaignBotController.prototype.loggerPrefix = function(req) {
+  return 'campaign:' + req.query.campaign + ' user:' + req.user_id;
 }
 
 module.exports = CampaignBotController;
