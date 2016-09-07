@@ -163,31 +163,22 @@ CampaignBotController.prototype.continueReportbackSubmission = function(req, res
     // Store reference to our draft document to save data in collect functions.
     self.reportbackSubmission = reportbackSubmissionDoc;
 
-    // @todo Move this check into sendMessage(req, res, msgTxt)
     var promptUser = (req.query.start || false);
-    if (promptUser) {
-      var msg = '@stg: Picking up where we left off on ' + self.campaign.title;
-      self.sendMessage(msg + '...');
-    }
 
     if (!self.reportbackSubmission.quantity) {
-      self.collectQuantity(req, res, promptUser);
-      return;
+      return self.collectQuantity(req, res, promptUser);
     }
 
     if (!self.reportbackSubmission.image_url) {
-      self.collectPhoto(req, res, promptUser);
-      return;
+      return self.collectPhoto(req, res, promptUser);
     }
 
     if (!self.reportbackSubmission.caption) {
-      self.collectCaption(req, res, promptUser);
-      return;
+      return self.collectCaption(req, res, promptUser);
     }
 
     if (!self.reportbackSubmission.why_participated) {
-      self.collectWhyParticipated(req, res, promptUser);
-      return;
+      return self.collectWhyParticipated(req, res, promptUser);
     }
 
     // @todo Could be edge case where error on submit here
@@ -434,6 +425,8 @@ CampaignBotController.prototype.supportsMMS = function(req, res) {
 
 /**
  * Creates a Signup for our Campaign and current User, continues conversation.
+ * @param {object} req - Express request
+ * @param {object} res - Express response
  */
 CampaignBotController.prototype.postSignup = function(req, res) {
   logger.debug('postSignup');
@@ -510,12 +503,20 @@ CampaignBotController.prototype.getCompletedMenuMsg = function() {
   return msgTxt;
 }
 
-
+/**
+ * Sends mobilecommons.chatbot response with given msgTxt
+ * @param {object} req - Express request
+ * @param {object} res - Express response
+ * @param {string} msgTxt
+ */
 CampaignBotController.prototype.sendMessage = function(req, res, msgTxt) {
-  var mobileCommonsProfile = {
-    phone: this.user.mobile
-  };
-  mobilecommons.chatbot(mobileCommonsProfile, 213849, msgTxt);
+  if (req.query.start && this.signup.draft_reportback_submission) {
+    var continueMsg = 'Picking up where you left off on ' + this.campaign.title;
+    msgTxt = continueMsg + '...\n\n' + msgTxt;
+  }
+
+  mobilecommons.chatbot({phone: this.user.mobile}, 213849, msgTxt);
+
 }
 
 module.exports = CampaignBotController;
