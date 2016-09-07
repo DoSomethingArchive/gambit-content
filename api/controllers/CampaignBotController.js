@@ -34,9 +34,6 @@ CampaignBotController.prototype.chatbot = function(req, res) {
     return;
   }
 
-  // @todo: Move into the completion handlers by passing into functions.
-  res.send();
-
   dbUsers.findOne({ '_id': req.user_id }, function (err, userDoc) {
 
     if (err) {
@@ -510,15 +507,18 @@ CampaignBotController.prototype.getCompletedMenuMsg = function() {
  * @param {string} msgTxt
  */
 CampaignBotController.prototype.sendMessage = function(req, res, msgTxt) {
+
   if (req.query.start && this.signup.draft_reportback_submission) {
     var continueMsg = 'Picking up where you left off on ' + this.campaign.title;
     msgTxt = continueMsg + '...\n\n' + msgTxt;
   }
+
   if (process.env.NODE_ENV !== 'production') {
     msgTxt = '@stg: ' + msgTxt;
   }
 
   mobilecommons.chatbot({phone: this.user.mobile}, 213849, msgTxt);
+  res.send();
 
 }
 
