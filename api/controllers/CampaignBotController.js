@@ -52,11 +52,6 @@ CampaignBotController.prototype.chatbot = function(req, res) {
     self.user = userDoc;
     logger.debug('campaignBot found user:%s', self.user._id);
 
-    // @todo: Move this check and inspect req.incoming_message in each function
-    if (req.incoming_message) {
-      self.incomingMsg = req.incoming_message;
-    }
-
     var signupId = self.user.campaigns[self.campaign._id];
     if (!signupId) {
       self.postSignup();
@@ -134,7 +129,7 @@ CampaignBotController.prototype.loadSignup = function(req, res, signupId) {
       return;
     }
 
-    var incomingCommand = helpers.getFirstWord(self.incomingMsg);
+    var incomingCommand = helpers.getFirstWord(req.incoming_message);
     if (incomingCommand && incomingCommand.toUpperCase() === CMD_REPORTBACK) {
       self.startReportbackSubmission(req, res);
       return;
@@ -186,12 +181,12 @@ CampaignBotController.prototype.continueReportbackSubmission = function(req, res
     }
 
     if (!self.reportbackSubmission.caption) {
-      self.collectCaption(promptUser);
+      self.collectCaption(req, res, promptUser);
       return;
     }
 
     if (!self.reportbackSubmission.why_participated) {
-      self.collectWhyParticipated(promptUser);
+      self.collectWhyParticipated(req, res, promptUser);
       return;
     }
 
@@ -257,7 +252,7 @@ CampaignBotController.prototype.collectQuantity = function(req, res, promptUser)
     return;
   }
 
-  var quantity = self.incomingMsg;
+  var quantity = req.incoming_message;
   if (helpers.hasLetters(quantity) || !parseInt(quantity)) {
     self.sendMessage('@stg: Please provide a valid number.');
     return;
@@ -303,7 +298,7 @@ CampaignBotController.prototype.collectPhoto = function(req, res, promptUser) {
       return logger.error('collectCaption error:%s', e);
     }
 
-    self.collectCaption(true);
+    self.collectCaption(req, res, true);
     
   });
 }
@@ -312,7 +307,7 @@ CampaignBotController.prototype.collectPhoto = function(req, res, promptUser) {
  * Handles conversation for saving caption to our current reportbackSubmission.
  * @param {boolean} promptUser
  */
-CampaignBotController.prototype.collectCaption = function(promptUser) {
+CampaignBotController.prototype.collectCaption = function(req, res, promptUser) {
   var self = this;
 
   if (promptUser) {
@@ -320,7 +315,7 @@ CampaignBotController.prototype.collectCaption = function(promptUser) {
     return;
   }
 
-  self.reportbackSubmission.caption = self.incomingMsg;
+  self.reportbackSubmission.caption = req.incoming_message;
   self.reportbackSubmission.save(function(e) {
 
     if (e) {
@@ -330,7 +325,7 @@ CampaignBotController.prototype.collectCaption = function(promptUser) {
     // If this is our current user's first Reportback Submission:
     if (!self.signup.total_quantity_submitted) {
 
-      self.collectWhyParticipated(true);
+      self.collectWhyParticipated(req, res, true);
       return;
 
     }
@@ -344,7 +339,7 @@ CampaignBotController.prototype.collectCaption = function(promptUser) {
  * Handles conversation for saving why_participated to reportbackSubmission.
  * @param {boolean} promptUser - Whether to lead off conversation with user.
  */
-CampaignBotController.prototype.collectWhyParticipated = function(promptUser) {
+CampaignBotController.prototype.collectWhyParticipated = function(req, res, promptUser) {
   var self = this;
 
   if (promptUser) {
@@ -352,7 +347,7 @@ CampaignBotController.prototype.collectWhyParticipated = function(promptUser) {
     return;
   }
 
-  self.reportbackSubmission.why_participated = self.incomingMsg;
+  self.reportbackSubmission.why_participated = req.incoming_message;
   self.reportbackSubmission.save(function(e) {
 
     if (e) {
@@ -407,13 +402,13 @@ CampaignBotController.prototype.supportsMMS = function(req, res) {
   }
   // @todo DRY
   // @see loadSignup()
-  var incomingCommand = helpers.getFirstWord(self.incomingMsg);
+  var incomingCommand = helpers.getFirstWord(req.incoming_message);
   if (incomingCommand && incomingCommand.toUpperCase() === CMD_REPORTBACK) {
     self.sendMessage('@stg: Can you send photos from your phone?');
     return false;
   }
   
-  if (!helpers.isYesResponse(self.incomingMsg)) {
+  if (!helpers.isYesResponse(req.incoming_message)) {
     self.sendMessage('@stg: Sorry, you must submit a photo to complete.');
     return false;
   }
