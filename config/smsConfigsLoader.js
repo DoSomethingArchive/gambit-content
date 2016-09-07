@@ -71,7 +71,8 @@ function onRetrievedConfig() {
  *   Config document.
  */
 app.getConfig = function(modelName, documentId, key) {
-  logger.debug('smsConfigsLoader.getConfig for modelName:' + modelName + ' documentId:' + documentId + ' key:' + key);
+  logger.verbose('smsConfigsLoader.getConfig modelName:%s documentId:%s',
+    modelName, documentId);
 
   var keyMatches;
   var idMatches;
