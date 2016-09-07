@@ -279,7 +279,7 @@ CampaignBotController.prototype.collectPhoto = function(req, res, promptUser) {
   }
 
   if (!req.incoming_image_url) {
-    self.sendAskPhotoMessage(req, res, 'No photo sent.\n\n' + askPhotoMsg);
+    self.sendMessage(req, res, 'No photo sent.\n\n' + askPhotoMsg);
     return;
   }
 
