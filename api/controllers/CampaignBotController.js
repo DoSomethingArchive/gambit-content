@@ -19,6 +19,9 @@ var CMD_REPORTBACK = (process.env.GAMBIT_CMD_REPORTBACK || 'P');
  */
 function CampaignBotController(campaignId) {
   this.campaign = app.getConfig(app.ConfigName.CAMPAIGNS, campaignId);
+  var mocoId = this.campaign.current_mobilecommons_campaign;
+  var mobileCommonsConfigName = app.ConfigName.CHATBOT_MOBILECOMMONS_CAMPAIGNS;
+  this.mobileCommonsConfig = app.getConfig(mobileCommonsConfigName, mocoId);
 };
 
 /**
@@ -29,7 +32,7 @@ function CampaignBotController(campaignId) {
 CampaignBotController.prototype.chatbot = function(req, res) {
   var self = this;
 
-  if (!self.campaign) {
+  if (!self.campaign || !self.mobileCommonsConfig) {
     res.sendStatus(500);
     return;
   }
@@ -518,7 +521,14 @@ CampaignBotController.prototype.sendMessage = function(req, res, msgTxt) {
     msgTxt = '@stg: ' + msgTxt;
   }
 
-  mobilecommons.chatbot({phone: this.user.mobile}, 213849, msgTxt);
+  var oip = this.mobileCommonsConfig.oip_chat;
+
+  if (!oip) {
+    logger.error('no oip');
+    res.sendStatus(500);
+  }
+
+  mobilecommons.chatbot({phone: this.user.mobile}, oip, msgTxt);
   res.send();
 
 }
