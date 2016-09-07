@@ -94,13 +94,13 @@ CampaignBotController.prototype.createUserAndPostSignup = function(req, res) {
   dbUsers.create({
 
     _id: req.user_id,
-    mobile: req.user_id,
+    mobile: req.user_mobile,
     campaigns: {}
 
   }).then(function(newUserDoc) {
 
     self.user = newUserDoc;
-    logger.debug('%s created user:%', self.loggerPrefix(req), newUserDoc['_id']);
+    logger.debug('%s created', self.loggerPrefix(req));
 
     self.postSignup(req, res);
 
