@@ -102,7 +102,7 @@ CampaignBotController.prototype.createUserAndPostSignup = function(req, res) {
     campaigns: {}
   };
 
-  dbUsers.create(newUser, function(err, userDoc) {
+  dbUsers.create(newUser, function (err, userDoc) {
 
     if (err) {
       return self.handleError(req, res, err);
@@ -131,7 +131,7 @@ CampaignBotController.prototype.loadSignup = function(req, res, signupId) {
   // is older than the start date, we'll need to postSignup to store the new
   // Signup ID to our user's current dbSignups in user.campaigns
 
-  dbSignups.findOne({ '_id': signupId }, function(err, signupDoc) {
+  dbSignups.findOne({ '_id': signupId }, function (err, signupDoc) {
 
     if (err) {
       return self.handleError(req, res, err);
@@ -285,7 +285,7 @@ CampaignBotController.prototype.collectQuantity = function(req, res, promptUser)
 
   self.reportbackSubmission.quantity = parseInt(quantity);
 
-  self.reportbackSubmission.save(function(e) {
+  self.reportbackSubmission.save(function (e) {
 
     if (e) {
       return self.handleError(req, res, e);
@@ -321,7 +321,7 @@ CampaignBotController.prototype.collectPhoto = function(req, res, promptUser) {
 
   self.reportbackSubmission.image_url = req.incoming_image_url;
 
-  self.reportbackSubmission.save(function(e) {
+  self.reportbackSubmission.save(function (e) {
 
     if (e) {
       return self.handleError(req, res, e);
@@ -350,7 +350,7 @@ CampaignBotController.prototype.collectCaption = function(req, res, promptUser) 
 
   self.reportbackSubmission.caption = req.incoming_message;
 
-  self.reportbackSubmission.save(function(e) {
+  self.reportbackSubmission.save(function (e) {
 
     if (e) {
       return self.handleError(req, res, e);
@@ -384,7 +384,7 @@ CampaignBotController.prototype.collectWhyParticipated = function(req, res, prom
 
   self.reportbackSubmission.why_participated = req.incoming_message;
 
-  self.reportbackSubmission.save(function(e) {
+  self.reportbackSubmission.save(function (e) {
 
     if (e) {
       return self.handleError(req, res, e);
@@ -410,7 +410,7 @@ CampaignBotController.prototype.postReportback = function(req, res) {
   var dateSubmitted = Date.now();
   self.reportbackSubmission.submitted_at = dateSubmitted;
 
-  self.reportbackSubmission.save(function(e) {
+  self.reportbackSubmission.save(function (e) {
 
     if (e) {
       return self.handleError(req, res, e);
@@ -424,7 +424,7 @@ CampaignBotController.prototype.postReportback = function(req, res) {
     self.signup.updated_at = dateSubmitted;
     self.signup.draft_reportback_submission = undefined;
 
-    self.signup.save(function(signupErr) {
+    self.signup.save(function (signupErr) {
 
       if (signupErr) {
         return self.handleError(req, res, signupErr);
@@ -466,7 +466,7 @@ CampaignBotController.prototype.supportsMMS = function(req, res) {
 
   self.user.supports_mms = true;
 
-  self.user.save(function(err) {
+  self.user.save(function (err) {
 
     if (err) {
       return self.handleError(err);
@@ -496,7 +496,7 @@ CampaignBotController.prototype.postSignup = function(req, res) {
     campaign: campaignId,
     user: self.user._id
 
-  }, function(err, signupDoc) {
+  }, function (err, signupDoc) {
 
     if (err) {
       return self.handleError(req, res, err);
@@ -506,7 +506,7 @@ CampaignBotController.prototype.postSignup = function(req, res) {
     self.user.campaigns[campaignId] = signupDoc._id;
     self.user.markModified('campaigns');
 
-    self.user.save(function(e) {
+    self.user.save(function (e) {
 
       if (err) {
         self.handleError(e);
