@@ -109,7 +109,7 @@ CampaignBotController.prototype.createUserAndPostSignup = function(req, res) {
     }
 
     self.user = userDoc;
-    logger.debug('%s created', self.loggerPrefix(req));
+    logger.debug('%s created user', self.loggerPrefix(req));
 
     self.postSignup(req, res);
 
@@ -249,7 +249,7 @@ CampaignBotController.prototype.startReportbackSubmission = function(req, res) {
         return self.handleError(req, res, e);
       }
 
-      logger.debug('%s updated signup:%s', self.loggerPrefix(req),
+      logger.debug('%s saved signup:%s', self.loggerPrefix(req),
         self.signup._id.toString());
 
       self.collectQuantity(req, res, true);
@@ -290,6 +290,9 @@ CampaignBotController.prototype.collectQuantity = function(req, res, promptUser)
     if (e) {
       return self.handleError(req, res, e);
     }
+    
+    logger.debug('%s saved quantity:%s', self.loggerPrefix(req),
+        self.reportbackSubmission.quantity);
 
     self.collectPhoto(req, res, true);
 
@@ -317,11 +320,15 @@ CampaignBotController.prototype.collectPhoto = function(req, res, promptUser) {
   }
 
   self.reportbackSubmission.image_url = req.incoming_image_url;
+
   self.reportbackSubmission.save(function(e) {
 
     if (e) {
       return self.handleError(req, res, e);
     }
+
+    logger.debug('%s saved image_url:%s', self.loggerPrefix(req),
+        self.reportbackSubmission.image_url);
 
     self.collectCaption(req, res, true);
     
@@ -342,18 +349,19 @@ CampaignBotController.prototype.collectCaption = function(req, res, promptUser) 
   }
 
   self.reportbackSubmission.caption = req.incoming_message;
+
   self.reportbackSubmission.save(function(e) {
 
     if (e) {
       return self.handleError(req, res, e);
     }
 
+    logger.debug('%s saved caption:%s', self.loggerPrefix(req),
+        self.reportbackSubmission.caption);
+
     // If this is our current user's first Reportback Submission:
     if (!self.signup.total_quantity_submitted) {
-
-      self.collectWhyParticipated(req, res, true);
-      return;
-
+      return self.collectWhyParticipated(req, res, true);
     }
 
     self.postReportback(req, res);
@@ -375,17 +383,20 @@ CampaignBotController.prototype.collectWhyParticipated = function(req, res, prom
   }
 
   self.reportbackSubmission.why_participated = req.incoming_message;
+
   self.reportbackSubmission.save(function(e) {
 
     if (e) {
       return self.handleError(req, res, e);
     }
 
+    logger.debug('%s saved why_participated:%s', self.loggerPrefix(req),
+        self.reportbackSubmission.why_participated);
+
     self.postReportback(req, res);
 
   });
 
-  return;
 }
 
 /**
@@ -406,12 +417,21 @@ CampaignBotController.prototype.postReportback = function(req, res) {
     }
 
     // @todo Post to DS API
+    logger.debug('%s saved submitted_at:%s', self.loggerPrefix(req),
+      dateSubmitted);
 
     self.signup.total_quantity_submitted = self.reportbackSubmission.quantity;
     self.signup.updated_at = dateSubmitted;
     self.signup.draft_reportback_submission = undefined;
 
     self.signup.save(function(signupErr) {
+
+      if (signupErr) {
+        return self.handleError(req, res, signupErr);
+      }
+
+      logger.debug('%s saved total_quantity_submitted:%s', self.loggerPrefix(req),
+        self.signup.total_quantity_submitted);
 
       self.sendMessage(req, res, self.getCompletedMenuMsg());
 
