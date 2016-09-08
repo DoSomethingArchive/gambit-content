@@ -44,10 +44,15 @@ CampaignBotController.prototype.chatbot = function(req, res) {
   var self = this;
 
   if (!self.campaign) {
-    return this.handleError(req, res, 'self.campaign undefined');
+    return self.handleError(req, res, 'self.campaign undefined');
   }
   if (!self.mobileCommonsConfig) {
-    return this.handleError(req, res, 'self.mobileCommonsConfig undefined');
+    return self.handleError(req, res, 'self.mobileCommonsConfig undefined');
+  }
+
+  // This seems like it should move into router.js (or policies dir)
+  if (!req.user_id) {
+    return self.handleError(req, res, 'req.user_id undefined');
   }
 
   logger.debug('%s incoming_message:%s', this.loggerPrefix(req),
@@ -60,7 +65,7 @@ CampaignBotController.prototype.chatbot = function(req, res) {
   dbUsers.findOne({ '_id': req.user_id }, function (err, userDoc) {
 
     if (err) {
-      return this.handleError(req, res, err);
+      return self.handleError(req, res, err);
     }
 
     if (!userDoc) {
@@ -91,15 +96,19 @@ CampaignBotController.prototype.chatbot = function(req, res) {
 CampaignBotController.prototype.createUserAndPostSignup = function(req, res) {
   var self = this;
 
-  dbUsers.create({
-
+  var newUser = {
     _id: req.user_id,
     mobile: req.user_mobile,
     campaigns: {}
+  };
 
-  }).then(function(newUserDoc) {
+  dbUsers.create(newUser, function(err, userDoc) {
 
-    self.user = newUserDoc;
+    if (err) {
+      return self.handleError(req, res, err);
+    }
+
+    self.user = userDoc;
     logger.debug('%s created', self.loggerPrefix(req));
 
     self.postSignup(req, res);
@@ -122,18 +131,17 @@ CampaignBotController.prototype.loadSignup = function(req, res, signupId) {
   // is older than the start date, we'll need to postSignup to store the new
   // Signup ID to our user's current dbSignups in user.campaigns
 
-  dbSignups.findOne({ '_id': signupId }, function (err, signupDoc) {
+  dbSignups.findOne({ '_id': signupId }, function(err, signupDoc) {
 
     if (err) {
-      return this.handleError(req, res, err);
+      return self.handleError(req, res, err);
     }
 
     if (!signupDoc) {
       // Edge case where our cached Signup ID in user.campaigns not found
       // Could potentially lookup campaign/user in dbSignups to check for any
       // Signup document to use, but for now let's log and assume wont happen.
-      logger.error('no signupDoc found for _id:%s', signupId);
-      return;
+      return this.handleError(req, res, 'signupDoc not found _id:%s', signupId);
     }
 
     self.signup = signupDoc;
@@ -175,7 +183,7 @@ CampaignBotController.prototype.continueReportbackSubmission = function(req, res
     function (err, reportbackSubmissionDoc) {
 
     if (err) {
-      return this.handleError(req, res, err);
+      return self.handleError(req, res, err);
     }
 
     // Store reference to our draft document to save data in collect functions.
@@ -214,41 +222,41 @@ CampaignBotController.prototype.continueReportbackSubmission = function(req, res
 CampaignBotController.prototype.startReportbackSubmission = function(req, res) {
   var self = this;
 
-  dbReportbackSubmissions.create({
+  logger.debug('%s startReportbackSubmission', self.loggerPrefix(req));
 
+  self.reportbackSubmission = new dbReportbackSubmissions({
     campaign: self.campaign._id,
-    user: self.user._id,
+    user: self.user._id 
+  });
 
-  }).then(function(reportbackSubmission) {
+  self.reportbackSubmission.save(function (err) {
 
-    // @todo this is firing when not expecting it to, commented for now.
-    // if (err) {
-    //   return logger.error('reportbackSubmission.create error:%s', err);
-    // }
+    if (err) {
+      return self.handleError(err);
+    }
 
-    // Store to our signup for easy lookup in future requests.
-    self.signup.draft_reportback_submission = reportbackSubmission._id.toString();
+    var draftId = self.reportbackSubmission._id.toString()
+
+    // Store to our signup for easy lookup by ID in future requests.
+    self.signup.draft_reportback_submission = draftId;
 
     logger.debug('%s created reportbackSubmission:%s', self.loggerPrefix(req),
        self.signup.draft_reportback_submission);
 
-    self.signup.save(function(e) {
+    self.signup.save(function (e) {
 
       if (e) {
-        return this.handleError(req, res, e);
+        return self.handleError(req, res, e);
       }
 
       logger.debug('%s updated signup:%s', self.loggerPrefix(req),
         self.signup._id.toString());
-
-      self.reportbackSubmission = reportbackSubmission;
 
       self.collectQuantity(req, res, true);
 
     });
 
   });
-
 }
 
 /**
@@ -280,7 +288,7 @@ CampaignBotController.prototype.collectQuantity = function(req, res, promptUser)
   self.reportbackSubmission.save(function(e) {
 
     if (e) {
-      return this.handleError(req, res, e);
+      return self.handleError(req, res, e);
     }
 
     self.collectPhoto(req, res, true);
@@ -312,7 +320,7 @@ CampaignBotController.prototype.collectPhoto = function(req, res, promptUser) {
   self.reportbackSubmission.save(function(e) {
 
     if (e) {
-      return this.handleError(req, res, e);
+      return self.handleError(req, res, e);
     }
 
     self.collectCaption(req, res, true);
@@ -337,7 +345,7 @@ CampaignBotController.prototype.collectCaption = function(req, res, promptUser) 
   self.reportbackSubmission.save(function(e) {
 
     if (e) {
-      return this.handleError(req, res, e);
+      return self.handleError(req, res, e);
     }
 
     // If this is our current user's first Reportback Submission:
@@ -370,7 +378,7 @@ CampaignBotController.prototype.collectWhyParticipated = function(req, res, prom
   self.reportbackSubmission.save(function(e) {
 
     if (e) {
-      return this.handleError(req, res, e);
+      return self.handleError(req, res, e);
     }
 
     self.postReportback(req, res);
@@ -394,7 +402,7 @@ CampaignBotController.prototype.postReportback = function(req, res) {
   self.reportbackSubmission.save(function(e) {
 
     if (e) {
-      return this.handleError(req, res, e);
+      return self.handleError(req, res, e);
     }
 
     // @todo Post to DS API
@@ -441,7 +449,7 @@ CampaignBotController.prototype.supportsMMS = function(req, res) {
   self.user.save(function(err) {
 
     if (err) {
-      return this.handleError(err);
+      return self.handleError(err);
     }
 
     self.startReportbackSubmission(req, res);
@@ -468,16 +476,20 @@ CampaignBotController.prototype.postSignup = function(req, res) {
     campaign: campaignId,
     user: self.user._id
 
-  }).then(function(signupDoc) {
+  }, function(err, signupDoc) {
+
+    if (err) {
+      return self.handleError(req, res, err);
+    }
 
     // Store as the User's current Signup for this Campaign.
     self.user.campaigns[campaignId] = signupDoc._id;
     self.user.markModified('campaigns');
 
-    self.user.save(function(err) {
+    self.user.save(function(e) {
 
       if (err) {
-        this.handleError(err);
+        self.handleError(e);
       }
 
       self.sendMessage(req, res, self.getStartMenuMsg());
@@ -569,11 +581,11 @@ CampaignBotController.prototype.handleError = function(req, res, error) {
 
   var campaignId = null;
   if (this.campaign) {
-    campaignid = this.campaign._id;
+    campaignId = this.campaign._id;
   }
 
   if (error) {
-    logger.error('%s error:%s', this.loggerPrefix(req), error);
+    logger.error('%s handleError:' + error, this.loggerPrefix(req));
   }
   
   return res.sendStatus(500);
