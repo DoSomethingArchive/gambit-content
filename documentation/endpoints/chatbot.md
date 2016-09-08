@@ -28,6 +28,7 @@ Name | Type | Description
 `args` | `string` | An incoming message the member has sent.
 `profile_first_name` | `string` | 
 `profile_email` | `string` | 
+`profile_northstar_id` | `string` | Used by CampaignBot to load User - @todo Create Northstar User if no value exists
 `profile_postal_code` | `string` | 
 `profile_ss2016_donation_count` | `string` | Used by `donorschoose` bots to limit # of donations. This parameter name can be changed by `DONORSCHOOSE_DONATION_FIELDNAME`
 
