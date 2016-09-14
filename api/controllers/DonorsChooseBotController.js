@@ -401,56 +401,6 @@ function getDonationCount(member) {
 }
 
 /**
- * Queries Gambit Jr. API to sync donorschoose_bots config documents.
- * @param {object} req - Express request
- * @param {object} res - Express response
- */
-DonorsChooseBotController.prototype.syncBotConfigs = function(req, res) {
-  var self = this;
-
-  var url = 'http://dev-gambit-jr.pantheonsite.io/wp-json/wp/v2/donorschoose_bots/';
-  requestHttp.get(url, function(error, response, body) {
-    if (error) {
-      res.status(500);
-      return;
-    }
-    var bots = JSON.parse(body);
-    var propertyNames = [
-      'msg_ask_email',
-      'msg_ask_first_name',
-      'msg_ask_zip',
-      'msg_donation_success',
-      'msg_error_generic',
-      'msg_invalid_email',
-      'msg_invalid_first_name',
-      'msg_invalid_zip',
-      'msg_project_link',
-      'msg_max_donations_reached',
-      'msg_search_start',
-      'msg_search_no_results'
-    ];
-    var bot, configDoc, propertyName;
-    for (var i = 0; i < bots.length; i++) {
-      bot = bots[i];
-      configDoc = app.getConfig(app.ConfigName.DONORSCHOOSE_BOTS, bot.id);
-      if (!configDoc) {
-        logger.log('info', 'dc.syncBotConfigs doc not found for id:%s', bot.id);
-        continue;
-      }
-      for (var j = 0; j < propertyNames.length; j++) {
-        propertyName = propertyNames[j];
-        configDoc[propertyName] = bot[propertyName];
-      }
-      configDoc.name = bot.title;
-      configDoc.refreshed_at = Date.now();
-      configDoc.save();
-      logger.log('info', 'dc.syncBotConfigs success for id:%s', bot.id);
-    }
-    res.send();
-  });
-}
-
-/**
  * The following two functions are for handling Mongoose Promise chain errors.
  */
 function promiseErrorCallback(message, member) {
