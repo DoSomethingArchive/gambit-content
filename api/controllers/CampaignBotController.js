@@ -24,6 +24,9 @@ function CampaignBotController(campaignId) {
     return;
   }
 
+  // @todo Config variable for default CampaignBot ID
+  // @todo Store campaignbot property on our config.campaigns to override bot
+  // on a per DS Campaign basis.
   this.bot = app.getConfig(app.ConfigName.CAMPAIGNBOTS, 41);
 
   var mobileCommonsCampaign = this.campaign.staging_mobilecommons_campaign;
@@ -45,6 +48,9 @@ function CampaignBotController(campaignId) {
 CampaignBotController.prototype.chatbot = function(req, res) {
   var self = this;
 
+  if (!self.bot) {
+    return self.handleError(req, res, 'self.bot undefined');
+  }
   if (!self.campaign) {
     return self.handleError(req, res, 'self.campaign undefined');
   }
@@ -315,7 +321,7 @@ CampaignBotController.prototype.collectPhoto = function(req, res, promptUser) {
   }
 
   if (!req.incoming_image_url) {
-    self.sendMessage(req, res, self.bot.invalid_photo);
+    self.sendMessage(req, res, self.bot.msg_no_photo_sent);
     return;
   }
 
@@ -451,16 +457,16 @@ CampaignBotController.prototype.supportsMMS = function(req, res) {
   if (self.user.supports_mms === true) {
     return true;
   }
-  // @todo DRY
+  // @todo DRY this logic.
   // @see loadSignup()
   var incomingCommand = helpers.getFirstWord(req.incoming_message);
   if (incomingCommand && incomingCommand.toUpperCase() === CMD_REPORTBACK) {
-    self.sendMessage(req, res, 'Can you send photos from your phone?');
+    self.sendMessage(req, res, self.bot.msg_ask_supports_mms);
     return false;
   }
   
   if (!helpers.isYesResponse(req.incoming_message)) {
-    self.sendMessage(req, res, 'Sorry, you must submit a photo to complete.');
+    self.sendMessage(req, res, self.bot.msg_no_supports_mms);
     return false;
   }
 
@@ -526,11 +532,24 @@ CampaignBotController.prototype.postSignup = function(req, res) {
  * @param {string} msgTxt
  */
 CampaignBotController.prototype.sendMessage = function(req, res, msgTxt) {
+  if (!msgTxt) {
+    return this.handleError(req, res, 'sendMessage no msgTxt');
+  }
+
   msgTxt = msgTxt.replace(/<br>/gi, '\n');
   msgTxt = msgTxt.replace(/{{title}}/gi, this.campaign.title);
-  msgTxt = msgTxt.replace(/{{quantity}}/gi, this.signup.total_quantity_submitted);
   msgTxt = msgTxt.replace(/{{rb_noun}}/gi, this.campaign.rb_noun);
   msgTxt = msgTxt.replace(/{{rb_verb}}/gi, this.campaign.rb_verb);
+
+  if (this.signup) {
+    var quantity = this.signup.total_quantity_submitted
+    // If a draft exists, use the reported draft from draft, as we're continuing
+    // the ReportbackSubmission.
+    if (this.reportbackSubmission) {
+      quantity = this.reportbackSubmission.quantity;
+    }
+    msgTxt = msgTxt.replace(/{{quantity}}/gi, quantity);
+  }
 
   if (req.query.start && this.signup && this.signup.draft_reportback_submission) {
     // @todo New bot property for continue draft message
