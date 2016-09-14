@@ -570,6 +570,11 @@ CampaignBotController.prototype.getCompletedMenuMsg = function() {
  * @param {string} msgTxt
  */
 CampaignBotController.prototype.sendMessage = function(req, res, msgTxt) {
+  msgTxt = msgTxt.replace(/<br>/gi, '\n');
+  msgTxt = msgTxt.replace(/{{title}}/gi, this.campaign.title);
+  msgTxt = msgTxt.replace(/{{quantity}}/gi, this.signup.total_quantity_submitted);
+  msgTxt = msgTxt.replace(/{{rb_noun}}/gi, this.campaign.rb_noun);
+  msgTxt = msgTxt.replace(/{{rb_verb}}/gi, this.campaign.rb_verb);
 
   if (req.query.start && this.signup && this.signup.draft_reportback_submission) {
     var continueMsg = 'Picking up where you left off on ' + this.campaign.title;
