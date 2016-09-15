@@ -6,7 +6,7 @@ app.ConfigName = {
   CAMPAIGNBOTS: 'campaignbots',
   CAMPAIGNS: 'campaigns',
   CHATBOT_MOBILECOMMONS_CAMPAIGNS: 'chatbot_mobilecommons_campaigns',
-  DONORSCHOOSE_BOTS: 'donorschoose_bots',
+  DONORSCHOOSEBOTS: 'donorschoosebots',
   REPORTBACK: 'reportback',
   YES_NO_PATHS: 'yes_no_path'
 };

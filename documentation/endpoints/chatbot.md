@@ -18,7 +18,8 @@ Name | Type | Description
 
 Name | Type | Description
 --- | --- | ---
-`bot_type` | `string` | Type of bot to chat with, `campaign`, `donorschoose` or `slothbot`. Default: `slothbot`
+`bot_type` | `string` | Type of bot to chat with, expected values: `campaignbot`, 
+`donorschoosebot` or `slothbot`. Defaults to `slothbot`
 `campaign` | `integer` | Required when `bot_type=campaign`, used to load Campaign from Phoenix API
 `start` | `boolean` | If set, the bot will begin a new conversation. Default: `false`
 
@@ -54,4 +55,5 @@ Name | Type | Description
 
 Name | Type | Description
 --- | --- | ---
-`bot_type` | `string` | Type of bot to sync: `campaignbot` , `donorschoosebot` 
+`bot_type` | `string` | Type of bot to sync, expected values: `campaignbot` or 
+`donorschoosebot` 

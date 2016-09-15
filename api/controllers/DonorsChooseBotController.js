@@ -10,7 +10,7 @@ var donorsChooseApiPassword = process.env.DONORSCHOOSE_API_PASSWORD;
 
 var DONATION_AMOUNT = (process.env.DONORSCHOOSE_DONATION_AMOUNT || 10);
 var DONATION_COUNT_FIELDNAME = 'ss2016_donation_count';
-var DONORSCHOOSE_BOT_ID = process.env.DONORSCHOOSE_BOT_ID;
+var DONORSCHOOSEBOT_ID = process.env.DONORSCHOOSEBOT_ID;
 var MAX_DONATIONS_ALLOWED = (process.env.DONORSCHOOSE_MAX_DONATIONS_ALLOWED || 5);
 var MOCO_CAMPAIGN_ID = process.env.DONORSCHOOSE_MOCO_CAMPAIGN_ID;
 
@@ -30,7 +30,7 @@ var donationModel = require('../models/donation/DonorsChooseDonation')(connOps);
  */
 function DonorsChooseBotController() {
   this.mocoCampaign = app.getConfig(app.ConfigName.CHATBOT_MOBILECOMMONS_CAMPAIGNS, MOCO_CAMPAIGN_ID);
-  this.bot = app.getConfig(app.ConfigName.DONORSCHOOSE_BOTS, DONORSCHOOSE_BOT_ID);
+  this.bot = app.getConfig(app.ConfigName.DONORSCHOOSEBOTS, DONORSCHOOSEBOT_ID);
 };
 
 /**
@@ -337,7 +337,7 @@ DonorsChooseBotController.prototype.postDonation = function(member, project) {
         profile_first_name: member.profile_first_name,
         profile_postal_code: member.profile_postal_code,
         mobilecommons_campaign_id: MOCO_CAMPAIGN_ID,
-        donorschoose_bot_id: DONORSCHOOSE_BOT_ID,
+        donorschoosebot_id: DONORSCHOOSEBOT_ID,
         donation_id: donation.donationId,
         donation_amount: DONATION_AMOUNT,
         proposal_id: project.id,
