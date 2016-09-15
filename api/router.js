@@ -7,6 +7,7 @@ var reportbackRouter = require('./legacy/reportback');
 var CampaignBot = require('./controllers/CampaignBotController');
 var DonorsChooseBot = require('./controllers/DonorsChooseBotController');
 var Slothbot = require('./controllers/SlothBotController');
+var gambitJunior = rootRequire('lib/gambit-junior');
 
 app.use('/', router);
 
@@ -39,10 +40,15 @@ router.post('/v1/chatbot', function(request, response) {
   var controller;
 
   switch (request.query.bot_type) {
-    case 'campaign':
+    case 'campaignbot':
       controller = new CampaignBot(request.query.campaign);
       break;
+    // @todo Remove this safety check, deprecating donorschoose bot_type value.
+    // Using donorschoosebot instead.
     case 'donorschoose':
+      controller = new DonorsChooseBot();
+      break;
+    case 'donorschoosebot':
       controller = new DonorsChooseBot();
       break;
     default:
@@ -55,7 +61,6 @@ router.post('/v1/chatbot', function(request, response) {
 
 router.post('/v1/chatbot/sync', function(request, response) {
 
-  var controller = new DonorsChooseBot();
-  controller.syncBotConfigs(request, response);
+  gambitJunior.syncBotConfigs(request, response, request.query.bot_type);
 
 });

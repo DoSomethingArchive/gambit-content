@@ -10,7 +10,7 @@ var donorsChooseApiPassword = process.env.DONORSCHOOSE_API_PASSWORD;
 
 var DONATION_AMOUNT = (process.env.DONORSCHOOSE_DONATION_AMOUNT || 10);
 var DONATION_COUNT_FIELDNAME = 'ss2016_donation_count';
-var DONORSCHOOSE_BOT_ID = process.env.DONORSCHOOSE_BOT_ID;
+var DONORSCHOOSEBOT_ID = process.env.DONORSCHOOSEBOT_ID;
 var MAX_DONATIONS_ALLOWED = (process.env.DONORSCHOOSE_MAX_DONATIONS_ALLOWED || 5);
 var MOCO_CAMPAIGN_ID = process.env.DONORSCHOOSE_MOCO_CAMPAIGN_ID;
 
@@ -30,7 +30,7 @@ var donationModel = require('../models/donation/DonorsChooseDonation')(connOps);
  */
 function DonorsChooseBotController() {
   this.mocoCampaign = app.getConfig(app.ConfigName.CHATBOT_MOBILECOMMONS_CAMPAIGNS, MOCO_CAMPAIGN_ID);
-  this.bot = app.getConfig(app.ConfigName.DONORSCHOOSE_BOTS, DONORSCHOOSE_BOT_ID);
+  this.bot = app.getConfig(app.ConfigName.DONORSCHOOSEBOTS, DONORSCHOOSEBOT_ID);
 };
 
 /**
@@ -337,7 +337,7 @@ DonorsChooseBotController.prototype.postDonation = function(member, project) {
         profile_first_name: member.profile_first_name,
         profile_postal_code: member.profile_postal_code,
         mobilecommons_campaign_id: MOCO_CAMPAIGN_ID,
-        donorschoose_bot_id: DONORSCHOOSE_BOT_ID,
+        donorschoosebot_id: DONORSCHOOSEBOT_ID,
         donation_id: donation.donationId,
         donation_amount: DONATION_AMOUNT,
         proposal_id: project.id,
@@ -398,56 +398,6 @@ function getDonationCount(member) {
     return 0;
   }
   return count;
-}
-
-/**
- * Queries Gambit Jr. API to sync donorschoose_bots config documents.
- * @param {object} req - Express request
- * @param {object} res - Express response
- */
-DonorsChooseBotController.prototype.syncBotConfigs = function(req, res) {
-  var self = this;
-
-  var url = 'http://dev-gambit-jr.pantheonsite.io/wp-json/wp/v2/donorschoose_bots/';
-  requestHttp.get(url, function(error, response, body) {
-    if (error) {
-      res.status(500);
-      return;
-    }
-    var bots = JSON.parse(body);
-    var propertyNames = [
-      'msg_ask_email',
-      'msg_ask_first_name',
-      'msg_ask_zip',
-      'msg_donation_success',
-      'msg_error_generic',
-      'msg_invalid_email',
-      'msg_invalid_first_name',
-      'msg_invalid_zip',
-      'msg_project_link',
-      'msg_max_donations_reached',
-      'msg_search_start',
-      'msg_search_no_results'
-    ];
-    var bot, configDoc, propertyName;
-    for (var i = 0; i < bots.length; i++) {
-      bot = bots[i];
-      configDoc = app.getConfig(app.ConfigName.DONORSCHOOSE_BOTS, bot.id);
-      if (!configDoc) {
-        logger.log('info', 'dc.syncBotConfigs doc not found for id:%s', bot.id);
-        continue;
-      }
-      for (var j = 0; j < propertyNames.length; j++) {
-        propertyName = propertyNames[j];
-        configDoc[propertyName] = bot[propertyName];
-      }
-      configDoc.name = bot.title;
-      configDoc.refreshed_at = Date.now();
-      configDoc.save();
-      logger.log('info', 'dc.syncBotConfigs success for id:%s', bot.id);
-    }
-    res.send();
-  });
 }
 
 /**

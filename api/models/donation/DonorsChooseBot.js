@@ -1,10 +1,7 @@
 /**
- * Model for Gambit Jr. API donorschoose_bot. 
- * Each document contains content to use for each message sent in
- * DonorsChoose donation endgame flow.
- *
- * We keep a cache of each donorschoose_bot to avoid making
- * more network connections to the Gambir Jr. API
+ * Model for Gambit Jr. API DonorsChooseBot. 
+ * Each document contains copy to use for each message sent in DonorsChooseBot
+ * Chatbot conversations.
  */
 var mongoose = require('mongoose');
 
@@ -28,5 +25,5 @@ var schema = new mongoose.Schema({
 });
 
 module.exports = function(connection) {
-  return connection.model(app.ConfigName.DONORSCHOOSE_BOTS, schema, 'donorschoose_bots');
+  return connection.model(app.ConfigName.DONORSCHOOSEBOTS, schema, 'donorschoosebots');
 };

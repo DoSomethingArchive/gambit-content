@@ -24,6 +24,11 @@ function CampaignBotController(campaignId) {
     return;
   }
 
+  // @todo Config variable for default CampaignBot ID
+  // @todo Store campaignbot property on our config.campaigns to override bot
+  // on a per DS Campaign basis.
+  this.bot = app.getConfig(app.ConfigName.CAMPAIGNBOTS, 41);
+
   var mobileCommonsCampaign = this.campaign.staging_mobilecommons_campaign;
 
   if (process.env.NODE_ENV === 'production') {
@@ -43,6 +48,9 @@ function CampaignBotController(campaignId) {
 CampaignBotController.prototype.chatbot = function(req, res) {
   var self = this;
 
+  if (!self.bot) {
+    return self.handleError(req, res, 'self.bot undefined');
+  }
   if (!self.campaign) {
     return self.handleError(req, res, 'self.campaign undefined');
   }
@@ -163,7 +171,7 @@ CampaignBotController.prototype.loadSignup = function(req, res, signupId) {
       return;
     }
 
-    self.sendMessage(req, res, self.getCompletedMenuMsg());
+    self.sendMessage(req, res, self.bot.msg_menu_completed);
 
   });
 }
@@ -269,9 +277,8 @@ CampaignBotController.prototype.startReportbackSubmission = function(req, res) {
 CampaignBotController.prototype.collectQuantity = function(req, res, promptUser) {
   var self = this;
 
-  var askQuantityMsg = self.getAskQuantityMessage();
   if (promptUser) {
-    return self.sendMessage(req, res, askQuantityMsg);
+    return self.sendMessage(req, res, self.bot.msg_ask_quantity);
   }
 
   var quantity = req.incoming_message;
@@ -280,7 +287,7 @@ CampaignBotController.prototype.collectQuantity = function(req, res, promptUser)
   // on whether it contains any words (could contain noun, verb, or 'around 90')
 
   if (helpers.hasLetters(quantity) || !parseInt(quantity)) {
-    return self.sendMessage(req, res, 'Invalid valid number sent.\n\n' + askQuantityMsg);
+    return self.sendMessage(req, res, self.bot.msg_invalid_quantity);
   }
 
   self.reportbackSubmission.quantity = parseInt(quantity);
@@ -309,13 +316,12 @@ CampaignBotController.prototype.collectQuantity = function(req, res, promptUser)
 CampaignBotController.prototype.collectPhoto = function(req, res, promptUser) {
   var self = this;
 
-  var askPhotoMsg = self.getAskPhotoMessage();
   if (promptUser) {
-    return self.sendMessage(req, res, askPhotoMsg);
+    return self.sendMessage(req, res, self.bot.msg_ask_photo);
   }
 
   if (!req.incoming_image_url) {
-    self.sendMessage(req, res, 'No photo sent.\n\n' + askPhotoMsg);
+    self.sendMessage(req, res, self.bot.msg_no_photo_sent);
     return;
   }
 
@@ -345,7 +351,7 @@ CampaignBotController.prototype.collectCaption = function(req, res, promptUser) 
   var self = this;
 
   if (promptUser) {
-    return self.sendMessage(req, res, self.getAskCaptionMessage());
+    return self.sendMessage(req, res, self.bot.msg_ask_caption);
   }
 
   self.reportbackSubmission.caption = req.incoming_message;
@@ -379,7 +385,7 @@ CampaignBotController.prototype.collectWhyParticipated = function(req, res, prom
   var self = this;
 
   if (promptUser) {
-    return self.sendMessage(req, res, self.getAskWhyParticipatedMessage());
+    return self.sendMessage(req, res, self.bot.msg_get_why_participated);
   }
 
   self.reportbackSubmission.why_participated = req.incoming_message;
@@ -433,7 +439,7 @@ CampaignBotController.prototype.postReportback = function(req, res) {
       logger.debug('%s saved total_quantity_submitted:%s', self.loggerPrefix(req),
         self.signup.total_quantity_submitted);
 
-      self.sendMessage(req, res, self.getCompletedMenuMsg());
+      self.sendMessage(req, res, self.bot.msg_menu_completed);
 
     });
 
@@ -451,16 +457,16 @@ CampaignBotController.prototype.supportsMMS = function(req, res) {
   if (self.user.supports_mms === true) {
     return true;
   }
-  // @todo DRY
+  // @todo DRY this logic.
   // @see loadSignup()
   var incomingCommand = helpers.getFirstWord(req.incoming_message);
   if (incomingCommand && incomingCommand.toUpperCase() === CMD_REPORTBACK) {
-    self.sendMessage(req, res, 'Can you send photos from your phone?');
+    self.sendMessage(req, res, self.bot.msg_ask_supports_mms);
     return false;
   }
   
   if (!helpers.isYesResponse(req.incoming_message)) {
-    self.sendMessage(req, res, 'Sorry, you must submit a photo to complete.');
+    self.sendMessage(req, res, self.bot.msg_no_supports_mms);
     return false;
   }
 
@@ -512,55 +518,11 @@ CampaignBotController.prototype.postSignup = function(req, res) {
         self.handleError(e);
       }
 
-      self.sendMessage(req, res, self.getStartMenuMsg());
+      self.sendMessage(req, res, self.bot.msg_menu_signedup);
 
     });
 
   });
-}
-
-/**
- * Bot message helper functions
- * @todo Deprecate these via Gambit Jr. CampaignBot content configs.
- */
-CampaignBotController.prototype.getAskQuantityMessage = function() {
-  var msgTxt = 'What`s the total number of ' + this.campaign.rb_noun;
-  msgTxt += ' you ' + this.campaign.rb_verb + '?';
-  msgTxt += '\n\nPlease text the exact number back.';
-  return msgTxt;
-}
-
-CampaignBotController.prototype.getAskPhotoMessage = function() {
-  var action = this.campaign.rb_noun + ' ' + this.campaign.rb_verb;
-  var msgTxt = 'Send your best photo of you and all ';
-  msgTxt += this.reportbackSubmission.quantity + ' ' + action + '.';
-  return msgTxt;
-}
-
-CampaignBotController.prototype.getAskCaptionMessage = function() {
-  var msgTxt = 'Text back a caption to use for your photo.';
-  return msgTxt;
-}
-
-CampaignBotController.prototype.getAskWhyParticipatedMessage = function() {
-  var msgTxt = 'Why did you participate in ' + this.campaign.title + '?';
-  return msgTxt;
-}
-
-CampaignBotController.prototype.getStartMenuMsg = function() {
-  var msgTxt = 'You\'re signed up for ' + this.campaign.title + '.\n\n';
-  msgTxt += 'When you have ' + this.campaign.rb_verb + ' some ';
-  msgTxt += this.campaign.rb_noun + ', text back ' + CMD_REPORTBACK.toUpperCase();
-  return msgTxt;
-}
-
-CampaignBotController.prototype.getCompletedMenuMsg = function() {
-  var action = this.campaign.rb_noun + ' ' + this.campaign.rb_verb;
-  var msgTxt = '\n\n*' + this.campaign.title + '*\n';
-  msgTxt += 'We\'ve got you down for ' + this.signup.total_quantity_submitted;
-  msgTxt += ' ' + action + '.\n\n---\n';
-  msgTxt += 'To add more ' + action + ', text ' + CMD_REPORTBACK.toUpperCase();
-  return msgTxt;
 }
 
 /**
@@ -570,8 +532,27 @@ CampaignBotController.prototype.getCompletedMenuMsg = function() {
  * @param {string} msgTxt
  */
 CampaignBotController.prototype.sendMessage = function(req, res, msgTxt) {
+  if (!msgTxt) {
+    return this.handleError(req, res, 'sendMessage no msgTxt');
+  }
+
+  msgTxt = msgTxt.replace(/<br>/gi, '\n');
+  msgTxt = msgTxt.replace(/{{title}}/gi, this.campaign.title);
+  msgTxt = msgTxt.replace(/{{rb_noun}}/gi, this.campaign.rb_noun);
+  msgTxt = msgTxt.replace(/{{rb_verb}}/gi, this.campaign.rb_verb);
+
+  if (this.signup) {
+    var quantity = this.signup.total_quantity_submitted
+    // If a draft exists, use the reported draft from draft, as we're continuing
+    // the ReportbackSubmission.
+    if (this.reportbackSubmission) {
+      quantity = this.reportbackSubmission.quantity;
+    }
+    msgTxt = msgTxt.replace(/{{quantity}}/gi, quantity);
+  }
 
   if (req.query.start && this.signup && this.signup.draft_reportback_submission) {
+    // @todo New bot property for continue draft message
     var continueMsg = 'Picking up where you left off on ' + this.campaign.title;
     msgTxt = continueMsg + '...\n\n' + msgTxt;
   }

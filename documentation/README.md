@@ -8,7 +8,7 @@ This is __Gambit__, a DoSomething.org chatbot API for use with Mobile Commons.
 #### Chatbot
 Endpoint                                       | Functionality                                           
 ---------------------------------------------- | --------------------------------------------------------
-`POST /v1/chatbot` | [Chat](endpoints/chatbot.md)
+`POST /v1/chatbot` | [Chat](endpoints/chatbot.md#chat)
 `POST /v1/chatbot/sync` | [Sync chatbot content](endpoints/chatbot.md#sync)
 
 
