@@ -174,7 +174,9 @@ DonorsChooseBotController.prototype.findProjectAndRespond = function(member, ema
 
   var phone = member.phone;
   var zip = member.profile_postal_code;
-  var apiUrl = donorschoose.getProposalsQueryUrl(zip, DONATION_AMOUNT);
+  var olderThan = process.env.DONORSCHOOSE_PROPOSALS_OLDERTHAN;
+
+  var apiUrl = donorschoose.getProposalsQueryUrl(zip, DONATION_AMOUNT, olderThan);
   logger.log('debug', 'dc.findProject user:%s request:%s', phone, apiUrl);
   apiUrl += '&APIKey=' + donorsChooseApiKey;
 
