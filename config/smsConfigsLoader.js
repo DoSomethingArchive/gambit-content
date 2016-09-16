@@ -3,8 +3,10 @@
  */
 app.ConfigName = {
   CAMPAIGN_TRANSITIONS: 'start_campaign_transition',
+  CAMPAIGNBOTS: 'campaignbots',
+  CAMPAIGNS: 'campaigns',
   CHATBOT_MOBILECOMMONS_CAMPAIGNS: 'chatbot_mobilecommons_campaigns',
-  DONORSCHOOSE_BOTS: 'donorschoose_bots',
+  DONORSCHOOSEBOTS: 'donorschoosebots',
   REPORTBACK: 'reportback',
   YES_NO_PATHS: 'yes_no_path'
 };
@@ -12,7 +14,9 @@ app.ConfigName = {
 var conn = require('./connectionConfig');
 var configModelArray = [
   rootRequire('api/models/ChatbotMobileCommonsCampaign')(conn),
-  rootRequire('api/models/DonorsChooseBot')(conn),
+  rootRequire('api/models/campaign/Campaign')(conn),
+  rootRequire('api/models/campaign/CampaignBot')(conn),
+  rootRequire('api/models/donation/DonorsChooseBot')(conn),
   rootRequire('api/legacy/ds-routing/config/startCampaignTransitionsConfigModel')(conn),
   rootRequire('api/legacy/ds-routing/config/yesNoPathsConfigModel')(conn),
   rootRequire('api/legacy/reportback/reportbackConfigModel')(conn),
@@ -69,7 +73,8 @@ function onRetrievedConfig() {
  *   Config document.
  */
 app.getConfig = function(modelName, documentId, key) {
-  logger.debug('smsConfigsLoader.getConfig for modelName:' + modelName + ' documentId:' + documentId + ' key:' + key);
+  logger.verbose('smsConfigsLoader.getConfig modelName:%s documentId:%s',
+    modelName, documentId);
 
   var keyMatches;
   var idMatches;

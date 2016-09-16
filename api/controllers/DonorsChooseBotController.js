@@ -7,29 +7,22 @@
  */
 var donorsChooseApiKey = process.env.DONORSCHOOSE_API_KEY;
 var donorsChooseApiPassword = process.env.DONORSCHOOSE_API_PASSWORD;
-var donorsChooseProposalsHost = 'https://api.donorschoose.org/';
-var donorsChooseDonationsHost = 'https://apisecure.donorschoose.org/';
-
-if (process.env.NODE_ENV != 'production') {
-  donorsChooseProposalsHost = 'https://qa.donorschoose.org/';
-  donorsChooseDonationsHost = 'https://apiqasecure.donorschoose.org/';
-}
 
 var DONATION_AMOUNT = (process.env.DONORSCHOOSE_DONATION_AMOUNT || 10);
 var DONATION_COUNT_FIELDNAME = 'ss2016_donation_count';
-var DONORSCHOOSE_BOT_ID = process.env.DONORSCHOOSE_BOT_ID;
+var DONORSCHOOSEBOT_ID = process.env.DONORSCHOOSEBOT_ID;
 var MAX_DONATIONS_ALLOWED = (process.env.DONORSCHOOSE_MAX_DONATIONS_ALLOWED || 5);
 var MOCO_CAMPAIGN_ID = process.env.DONORSCHOOSE_MOCO_CAMPAIGN_ID;
 
 var Q = require('q');
 var requestHttp = require('request');
-var Entities = require('html-entities').AllHtmlEntities
 var logger = rootRequire('lib/logger');
 var mobilecommons = rootRequire('lib/mobilecommons');
-var shortenLink = rootRequire('lib/bitly');
+var bitly = rootRequire('lib/bitly');
 var helpers = rootRequire('lib/helpers');
-var connectionOperations = rootRequire('config/connectionOperations');
-var donationModel = require('../models/DonorsChooseDonation')(connectionOperations);
+var donorschoose = rootRequire('lib/donorschoose');
+var connOps = rootRequire('config/connectionOperations');
+var donationModel = require('../models/donation/DonorsChooseDonation')(connOps);
 
 /**
  * DonorsChooseBotController
@@ -37,7 +30,7 @@ var donationModel = require('../models/DonorsChooseDonation')(connectionOperatio
  */
 function DonorsChooseBotController() {
   this.mocoCampaign = app.getConfig(app.ConfigName.CHATBOT_MOBILECOMMONS_CAMPAIGNS, MOCO_CAMPAIGN_ID);
-  this.bot = app.getConfig(app.ConfigName.DONORSCHOOSE_BOTS, DONORSCHOOSE_BOT_ID);
+  this.bot = app.getConfig(app.ConfigName.DONORSCHOOSEBOTS, DONORSCHOOSEBOT_ID);
 };
 
 /**
@@ -47,7 +40,7 @@ function DonorsChooseBotController() {
  * @param {object} profileFields - key/value MoCo Custom Fields to update
  */
 DonorsChooseBotController.prototype.chat = function(member, msgText, profileFields) {
-  sendSMS(member, this.mocoCampaign.oip_chat, msgText, profileFields);
+  mobilecommons.chatbot(member, this.mocoCampaign.oip_chat, msgText, profileFields);
 }
 
 /**
@@ -57,7 +50,7 @@ DonorsChooseBotController.prototype.chat = function(member, msgText, profileFiel
  * @param {object} profileFields - key/value MoCo Custom Fields to update
  */
 DonorsChooseBotController.prototype.endChat = function(member, msgText, profileFields) {
-  sendSMS(member, this.mocoCampaign.oip_success, msgText, profileFields);
+  mobilecommons.chatbot(member, this.mocoCampaign.oip_success, msgText, profileFields);
 }
 
 /**
@@ -65,7 +58,7 @@ DonorsChooseBotController.prototype.endChat = function(member, msgText, profileF
  * @param {object} member - MoCo request.body
  */
 DonorsChooseBotController.prototype.endChatWithFail = function(member) {
-  sendSMS(member, this.mocoCampaign.oip_error, this.bot.msg_error_generic);
+  mobilecommons.chatbot(member, this.mocoCampaign.oip_error, this.bot.msg_error_generic);
 }
 
 /**
@@ -181,7 +174,9 @@ DonorsChooseBotController.prototype.findProjectAndRespond = function(member, ema
 
   var phone = member.phone;
   var zip = member.profile_postal_code;
-  var apiUrl = getDonorsChooseProposalsQueryURL(zip);
+  var olderThan = process.env.DONORSCHOOSE_PROPOSALS_OLDERTHAN;
+
+  var apiUrl = donorschoose.getProposalsQueryUrl(zip, DONATION_AMOUNT, olderThan);
   logger.log('debug', 'dc.findProject user:%s request:%s', phone, apiUrl);
   apiUrl += '&APIKey=' + donorsChooseApiKey;
 
@@ -208,7 +203,7 @@ DonorsChooseBotController.prototype.findProjectAndRespond = function(member, ema
         logger.error('dc.findProject user:%s invalid JSON.', phone);
         return;
       }
-      var project = decodeDonorsChooseProposal(dcResponse.proposals[0]);
+      var project = donorschoose.decodeProposal(dcResponse.proposals[0]);
       self.postDonation(member, project);
     }
     catch (e) {
@@ -230,8 +225,8 @@ DonorsChooseBotController.prototype.postDonation = function(member, project) {
   logger.log('debug', 'dc.submitDonation user:%s proposalId:%s', 
     donorPhone, project.id);
 
-  var apiUrl = donorsChooseDonationsHost + 'common/json_api.html?APIKey=';
-  apiUrl += donorsChooseApiKey;
+  var apiUrl = donorschoose.getDonationsPostUrl();
+  apiUrl += '?APIKey=' + donorsChooseApiKey;
   requestToken().then(postDonation,
     promiseErrorCallback('dc.submitDonation failed for user:' + donorPhone)
   );
@@ -344,7 +339,7 @@ DonorsChooseBotController.prototype.postDonation = function(member, project) {
         profile_first_name: member.profile_first_name,
         profile_postal_code: member.profile_postal_code,
         mobilecommons_campaign_id: MOCO_CAMPAIGN_ID,
-        donorschoose_bot_id: DONORSCHOOSE_BOT_ID,
+        donorschoosebot_id: DONORSCHOOSEBOT_ID,
         donation_id: donation.donationId,
         donation_amount: DONATION_AMOUNT,
         proposal_id: project.id,
@@ -380,43 +375,18 @@ DonorsChooseBotController.prototype.respondWithSuccess = function(member, projec
 
   var delay = 2500;
   setTimeout(function() {
-    var secondMessage = project.teacherName + ' says: Thanks! ' + project.description;
+    var secondMessage = project.teacherName + ' says: Thanks! ' + project.fulfillmentTrailer;
     self.endChat(member, secondMessage);
   }, delay);
 
   setTimeout(function() {
-    shortenLink(project.url, function(shortenedLink) {
+    bitly(project.url, function(shortenedLink) {
       logger.log('debug', 'dc.sendSuccessMessages user:%s shortenedLink:%s', 
         member.phone, shortenedLink);
       var thirdMessage = self.bot.msg_project_link + ' ' + shortenedLink;
       self.endChat(member, thirdMessage, customFields);
     });
   }, 2 * delay);
-}
-
-/**
- * Posts MoCo profile_update to save msgTxt to member profile and send as SMS.
- * @param {object} member
- * @param {number} optInPath - Should contain {{slothbot_response}} as Liquid
- * @param {string} msgTxt - Value to save to our slothboth_response Custom Field
- * @param {object} [profileFields] - Key/values to save as MoCo Custom Fields
- */
-function sendSMS(member, optInPath, msgTxt, profileFields) {
-  if (typeof optInPath === 'undefined') {
-    logger.error('dc.sendSMS undefined optInPath user:%s msgText:%s', member, msgTxt);
-    return;
-  }
-  var mobileNumber = helpers.getNormalizedPhone(member.phone);
-  var msgTxt = msgTxt.replace('{{postal_code}}', member.profile_postal_code);
-
-  if (typeof profileFields === 'undefined') {
-    profileFields = {gambit_chatbot_response: msgTxt};
-  }
-  else {
-    profileFields.gambit_chatbot_response = msgTxt;
-  }
-
-  mobilecommons.profile_update(mobileNumber, optInPath, profileFields);
 }
 
 /**
@@ -430,90 +400,6 @@ function getDonationCount(member) {
     return 0;
   }
   return count;
-}
-
-/**
- * Returns URL string to query for DonorsChoose projects.
- * @param {string} zip 
- * @return {string}
- */
-function getDonorsChooseProposalsQueryURL(zip) {
-  // @see https://data.donorschoose.org/docs/project-listing/json-requests/
-  var url = donorsChooseProposalsHost + 'common/json_feed.html';
-  url += '?subject4=-4'; 
-  url += '&sortBy=2'; 
-  url += '&costToCompleteRange=' + DONATION_AMOUNT + '+TO+10000'; 
-  url += '&max=1';
-  url += '&zip=' + zip;
-  return url;
-}
-
-/**
- * Decodes proposal returned from DonorsChoose API.
- * @param {object} proposal
- * @return {object}
- */
-function decodeDonorsChooseProposal(proposal) {
-  var entities = new Entities();
-  return {
-    id: proposal.id,
-    description: entities.decode(proposal.fulfillmentTrailer),
-    city: entities.decode(proposal.city),
-    state: entities.decode(proposal.state),
-    schoolName: entities.decode(proposal.schoolName),
-    teacherName: entities.decode(proposal.teacherName),
-    url: proposal.proposalURL
-  };
-}
-
-/**
- * Queries Gambit Jr. API to sync donorschoose_bots config documents.
- * @param {object} req - Express request
- * @param {object} res - Express response
- */
-DonorsChooseBotController.prototype.syncBotConfigs = function(req, res) {
-  var self = this;
-
-  var url = 'http://dev-gambit-jr.pantheonsite.io/wp-json/wp/v2/donorschoose_bots/';
-  requestHttp.get(url, function(error, response, body) {
-    if (error) {
-      res.status(500);
-      return;
-    }
-    var bots = JSON.parse(body);
-    var propertyNames = [
-      'msg_ask_email',
-      'msg_ask_first_name',
-      'msg_ask_zip',
-      'msg_donation_success',
-      'msg_error_generic',
-      'msg_invalid_email',
-      'msg_invalid_first_name',
-      'msg_invalid_zip',
-      'msg_project_link',
-      'msg_max_donations_reached',
-      'msg_search_start',
-      'msg_search_no_results'
-    ];
-    var bot, configDoc, propertyName;
-    for (var i = 0; i < bots.length; i++) {
-      bot = bots[i];
-      configDoc = app.getConfig(app.ConfigName.DONORSCHOOSE_BOTS, bot.id);
-      if (!configDoc) {
-        logger.log('info', 'dc.syncBotConfigs doc not found for id:%s', bot.id);
-        continue;
-      }
-      for (var j = 0; j < propertyNames.length; j++) {
-        propertyName = propertyNames[j];
-        configDoc[propertyName] = bot[propertyName];
-      }
-      configDoc.name = bot.title;
-      configDoc.refreshed_at = Date.now();
-      configDoc.save();
-      logger.log('info', 'dc.syncBotConfigs success for id:%s', bot.id);
-    }
-    res.send();
-  });
 }
 
 /**
