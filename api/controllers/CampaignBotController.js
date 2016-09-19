@@ -104,24 +104,27 @@ CampaignBotController.prototype.chatbot = function(req, res) {
 CampaignBotController.prototype.createUserAndPostSignup = function(req, res) {
   var self = this;
 
-  var newUser = {
-    _id: req.user_id,
-    mobile: req.user_mobile,
-    campaigns: {}
-  };
+  app.locals.northstarClient.Users.get('id', req.user_id).then(function(user) {
 
-  dbUsers.create(newUser, function (err, userDoc) {
+    dbUsers.create({
 
-    if (err) {
-      return self.handleError(req, res, err);
-    }
+      _id: req.user_id,
+      mobile: req.user_mobile,
+      first_name: user.firstName,
+      email: user.email,
+      phoenix_id: user.drupalID,
+      campaigns: {}
 
-    self.user = userDoc;
-    logger.debug('%s created user', self.loggerPrefix(req));
+    }).then(function (userDoc) {
 
-    self.postSignup(req, res);
+      self.user = userDoc;
+      logger.debug('%s created user', self.loggerPrefix(req));
+      self.postSignup(req, res);
 
-  });
+    });
+
+  }, function(err) {self.handleError(req, res, err)});
+
 }
 
 /**

@@ -11,6 +11,8 @@ var http = require('http');
 var logger = rootRequire('lib/logger');
 var phoenix = rootRequire('lib/phoenix')();
 
+const NorthstarClient = require('@dosomething/northstar-js');
+
 // Default is 5. Increasing # of concurrent sockets per host.
 http.globalAgent.maxSockets = 100;
 
@@ -38,4 +40,9 @@ smsConfigsLoader(function() {
   app.listen(port, function() {
     logger.log('info', 'Express server listening on port %d in %s mode...\n\n', port, app.settings.env);
   });
+});
+
+app.locals.northstarClient = new NorthstarClient({
+  baseURI: process.env.DS_REST_API_BASEURI,
+  apiKey: process.env.DS_REST_API_KEY,
 });
