@@ -10,6 +10,10 @@ var schema = new mongoose.Schema({
 
   mobile: {type: String, index: true},
 
+  phoenix_id: Number,
+
+  email: String,
+
   first_name: String,
 
   supports_mms: {type: Boolean, default: false},
