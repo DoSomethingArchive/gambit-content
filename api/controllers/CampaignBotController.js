@@ -1,16 +1,16 @@
 "use strict";
 
-var logger = rootRequire('lib/logger');
-var mobilecommons = rootRequire('lib/mobilecommons');
-var phoenix = rootRequire('lib/phoenix')();
-var helpers = rootRequire('lib/helpers');
+const logger = rootRequire('lib/logger');
+const mobilecommons = rootRequire('lib/mobilecommons');
+const phoenix = rootRequire('lib/phoenix')();
+const helpers = rootRequire('lib/helpers');
 
-var connOps = rootRequire('config/connectionOperations');
-var dbRbSubmissions = require('../models/campaign/ReportbackSubmission')(connOps);
-var dbSignups = require('../models/campaign/Signup')(connOps);
-var dbUsers = require('../models/User')(connOps);
+const connOps = rootRequire('config/connectionOperations');
+const dbRbSubmissions = require('../models/campaign/ReportbackSubmission')(connOps);
+const dbSignups = require('../models/campaign/Signup')(connOps);
+const dbUsers = require('../models/User')(connOps);
 
-var CMD_REPORTBACK = (process.env.GAMBIT_CMD_REPORTBACK || 'P');
+const CMD_REPORTBACK = (process.env.GAMBIT_CMD_REPORTBACK || 'P');
 
 /**
  * CampaignBotController
