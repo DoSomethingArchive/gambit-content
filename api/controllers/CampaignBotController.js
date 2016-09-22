@@ -6,7 +6,7 @@ var phoenix = rootRequire('lib/phoenix')();
 var helpers = rootRequire('lib/helpers');
 
 var connOps = rootRequire('config/connectionOperations');
-var dbReportbackSubmissions = require('../models/campaign/ReportbackSubmission')(connOps);
+var dbRbSubmissions = require('../models/campaign/ReportbackSubmission')(connOps);
 var dbSignups = require('../models/campaign/Signup')(connOps);
 var dbUsers = require('../models/User')(connOps);
 
@@ -18,7 +18,7 @@ var CMD_REPORTBACK = (process.env.GAMBIT_CMD_REPORTBACK || 'P');
  * @param {integer} campaignId - our DS Campaign ID
  */
 function CampaignBotController(campaignId) {
-
+  this.campaignId = campaignId;
   this.campaign = app.getConfig(app.ConfigName.CAMPAIGNS, campaignId);
   if (!this.campaign) {
     return;
@@ -46,54 +46,53 @@ function CampaignBotController(campaignId) {
  * @param {object} res - Express response
  */
 CampaignBotController.prototype.chatbot = function(req, res) {
-  var self = this;
-
-  if (!self.bot) {
-    return self.handleError(req, res, 'self.bot undefined');
+  if (!this.bot) {
+    return this.handleError(req, res, 'self.bot undefined');
   }
-  if (!self.campaign) {
-    return self.handleError(req, res, 'self.campaign undefined');
+  if (!this.campaign) {
+    return this.handleError(req, res, 'self.campaign undefined');
   }
-  if (!self.mobileCommonsConfig) {
-    return self.handleError(req, res, 'self.mobileCommonsConfig undefined');
+  if (!this.mobileCommonsConfig) {
+    return this.handleError(req, res, 'self.mobileCommonsConfig undefined');
   }
-
   // This seems like it should move into router.js (or policies dir)
   if (!req.user_id) {
-    return self.handleError(req, res, 'req.user_id undefined');
+    return this.handleError(req, res, 'req.user_id undefined');
   }
 
-  logger.debug('%s incoming_message:%s', this.loggerPrefix(req),
-    req.incoming_message);
+  this.debug(req, `incoming_message_url:${req.incoming_message}`);
   if (req.incoming_image_url) {
-    logger.debug('%s incoming_image_url:%s', this.loggerPrefix(req),
-      req.incoming_image_url);
+    this.debug(req, `incoming_message_url:${req.incoming_image_url}`);
   }
 
-  dbUsers.findOne({ '_id': req.user_id }, function (err, userDoc) {
+  return this.loadUserAndSignup(req, res);
+}
 
-    if (err) {
-      return self.handleError(req, res, err);
-    }
-
-    if (!userDoc) {
-      self.createUserAndPostSignup(req, res);
-      return;
-    }
-
-    self.user = userDoc;
-    logger.debug('%s loaded user:%s', self.loggerPrefix(req), self.user._id);
-
-    var signupId = self.user.campaigns[self.campaign._id];
-    if (!signupId) {
-      self.postSignup(req, res);
-      return;
-    }
-
-    self.loadSignup(req, res, signupId);
-
-  });
+/** 
+ * Creates user and posts Signup to the Campaign.
+ * @param {object} req - Express request
+ * @param {object} res - Express response
+ */
+CampaignBotController.prototype.loadUserAndSignup = function(req, res) {
+  this.debug(req, 'loadUserAndSignup');
   
+  dbUsers
+    .findOne({ '_id': req.user_id })
+    .exec()
+    .then(userDoc => {
+      if (!userDoc) {
+        return this.createUserAndPostSignup(req, res);
+      }
+      this.user = userDoc;
+      this.debug(req, `loaded user:${req.user_id}`);
+
+      const signupId = this.user.campaigns[this.campaignId];
+      if (!signupId) {
+        return this.postSignup(req, res);
+      }
+      return this.loadSignup(req, res, signupId);
+    })
+    .catch(err => {this.handleError(req, res, err)});
 }
 
 /** 
@@ -102,26 +101,26 @@ CampaignBotController.prototype.chatbot = function(req, res) {
  * @param {object} res - Express response
  */
 CampaignBotController.prototype.createUserAndPostSignup = function(req, res) {
-  var self = this;
+  this.debug(req, 'createuserAndPostSignup');
 
   app.locals.northstarClient.Users.get('id', req.user_id)
-    .then(function(user) {
+    .then(user => {
       const userFields = {
         _id: req.user_id,
         mobile: req.user_mobile,
         first_name: user.firstName,
         email: user.email,
         phoenix_id: user.drupalID,
-        campaigns: {} ,   
+        campaigns: {},   
       };
       return dbUsers.create(userFields);
     })
-    .then(function (userDoc) {
-      self.user = userDoc;
-      logger.debug('%s created user', self.loggerPrefix(req));
-      self.postSignup(req, res);
+    .then(userDoc => {
+      this.user = userDoc;
+      this.debug(req, 'created userDoc');
+      return this.postSignup(req, res);
     })
-    .catch(function(err) {self.handleError(req, res, err)});
+    .catch((err) => {self.handleError(req, res, err)});
 }
 
 /**
@@ -132,48 +131,43 @@ CampaignBotController.prototype.createUserAndPostSignup = function(req, res) {
  * @param {string} signupId
  */
 CampaignBotController.prototype.loadSignup = function(req, res, signupId) {
-  var self = this;
+  this.debug(req, 'loadSignup');
 
   // @todo: To handle Campaign Runs, we'll need to inspect our Signup date
   // and compare to it to the Campaign's current start date. If our Signup date
   // is older than the start date, we'll need to postSignup to store the new
   // Signup ID to our user's current dbSignups in user.campaigns
 
-  dbSignups.findOne({ '_id': signupId }, function (err, signupDoc) {
+  dbSignups
+    .findOne({ '_id': signupId })
+    .exec()
+    .then(signupDoc => {
+      if (!signupDoc) {
+        // Edge case where our cached Signup ID in user.campaigns not found
+        // Could potentially lookup campaign/user in dbSignups to check for any
+        // Signup document to use, but for now let's log and assume wont happen.
+        return this.handleError(req, res, 'signupDoc not found _id:%s', signupId);
+      }
+      this.signup = signupDoc;
+      this.debug(req, `loaded signup:${signupDoc.id}`);
 
-    if (err) {
-      return self.handleError(req, res, err);
-    }
+      if (!this.supportsMMS(req, res)) {
+        return;
+      }
 
-    if (!signupDoc) {
-      // Edge case where our cached Signup ID in user.campaigns not found
-      // Could potentially lookup campaign/user in dbSignups to check for any
-      // Signup document to use, but for now let's log and assume wont happen.
-      return this.handleError(req, res, 'signupDoc not found _id:%s', signupId);
-    }
+      if (this.signup.draft_reportback_submission) {
+        return this.loadReportbackSubmission(req, res);
+      }
 
-    self.signup = signupDoc;
-    logger.debug('%s loaded signup:%s', self.loggerPrefix(req),
-      self.signup._id.toString());
+      const incomingCommand = helpers.getFirstWord(req.incoming_message);
+      if (incomingCommand && incomingCommand.toUpperCase() === CMD_REPORTBACK) {
+        return this.startReportbackSubmission(req, res);
+      }
 
-    if (!self.supportsMMS(req, res)) {
-      return;
-    }
+      return this.sendMessage(req, res, this.bot.msg_menu_completed);
 
-    if (self.signup.draft_reportback_submission) {
-      self.continueReportbackSubmission(req, res);
-      return;
-    }
-
-    var incomingCommand = helpers.getFirstWord(req.incoming_message);
-    if (incomingCommand && incomingCommand.toUpperCase() === CMD_REPORTBACK) {
-      self.startReportbackSubmission(req, res);
-      return;
-    }
-
-    self.sendMessage(req, res, self.bot.msg_menu_completed);
-
-  });
+  })
+  .catch(err => {this.handleError(req, res, err)});
 }
 
 /**
@@ -181,45 +175,34 @@ CampaignBotController.prototype.loadSignup = function(req, res, signupId) {
  * @param {object} req - Express request
  * @param {object} res - Express response
  */
-CampaignBotController.prototype.continueReportbackSubmission = function(req, res) {
-  var self = this;
+CampaignBotController.prototype.loadReportbackSubmission = function(req, res) {
+  this.debug(req, 'loadReportbackSubmission');
 
-  logger.debug('%s continueReportbackSubmission', self.loggerPrefix(req));
+  const rbSubmissionId = this.signup.draft_reportback_submission;
+  dbRbSubmissions
+    .findOne({ '_id': rbSubmissionId })
+    .exec()
+    .then(reportbackSubmissionDoc => {
+      this.reportbackSubmission = reportbackSubmissionDoc;
+      const promptUser = (req.query.start || false);
 
-  dbReportbackSubmissions.findOne(
-    { '_id': self.signup.draft_reportback_submission },
-    function (err, reportbackSubmissionDoc) {
-
-    if (err) {
-      return self.handleError(req, res, err);
-    }
-
-    // Store reference to our draft document to save data in collect functions.
-    self.reportbackSubmission = reportbackSubmissionDoc;
-
-    var promptUser = (req.query.start || false);
-
-    if (!self.reportbackSubmission.quantity) {
-      return self.collectQuantity(req, res, promptUser);
-    }
-
-    if (!self.reportbackSubmission.image_url) {
-      return self.collectPhoto(req, res, promptUser);
-    }
-
-    if (!self.reportbackSubmission.caption) {
-      return self.collectCaption(req, res, promptUser);
-    }
-
-    if (!self.reportbackSubmission.why_participated) {
-      return self.collectWhyParticipated(req, res, promptUser);
-    }
-
-    // @todo Could be edge case where error on submit here
-    logger.warn('no messages sent from chatReportback');
-
-  });
-
+      if (!this.reportbackSubmission.quantity) {
+        return this.collectQuantity(req, res, promptUser);
+      }
+      if (!this.reportbackSubmission.image_url) {
+        return this.collectPhoto(req, res, promptUser);
+      }
+      if (!this.reportbackSubmission.caption) {
+        return this.collectCaption(req, res, promptUser);
+      }
+      if (!this.reportbackSubmission.why_participated) {
+        return this.collectWhyParticipated(req, res, promptUser);
+      }
+      // Should have submitted in whyParticipated, but in case we're here:
+      logger.warn('no messages sent from chatReportback');
+      return this.postReportback(req, res);
+    })
+    .catch(err => {this.handleError(req, res, err)});
 }
 
 /**
@@ -232,7 +215,7 @@ CampaignBotController.prototype.startReportbackSubmission = function(req, res) {
 
   logger.debug('%s startReportbackSubmission', self.loggerPrefix(req));
 
-  self.reportbackSubmission = new dbReportbackSubmissions({
+  self.reportbackSubmission = new dbRbSubmissions({
     campaign: self.campaign._id,
     user: self.user._id 
   });
@@ -260,7 +243,7 @@ CampaignBotController.prototype.startReportbackSubmission = function(req, res) {
       logger.debug('%s saved signup:%s', self.loggerPrefix(req),
         self.signup._id.toString());
 
-      self.collectQuantity(req, res, true);
+      return self.collectQuantity(req, res, true);
 
     });
 
@@ -275,36 +258,28 @@ CampaignBotController.prototype.startReportbackSubmission = function(req, res) {
  * @param {boolean} promptUser - Whether to lead off conversation with user.
  */
 CampaignBotController.prototype.collectQuantity = function(req, res, promptUser) {
-  var self = this;
-
+  this.debug(req, `collectQuantity prompt:${promptUser}`);
+  
   if (promptUser) {
-    return self.sendMessage(req, res, self.bot.msg_ask_quantity);
+    return this.sendMessage(req, res, this.bot.msg_ask_quantity);
   }
 
-  var quantity = req.incoming_message;
+  const quantity = req.incoming_message;
 
   // @todo: Extract any numbers we can find instead of invalidating input based
   // on whether it contains any words (could contain noun, verb, or 'around 90')
 
   if (helpers.hasLetters(quantity) || !parseInt(quantity)) {
-    return self.sendMessage(req, res, self.bot.msg_invalid_quantity);
+    return this.sendMessage(req, res, this.bot.msg_invalid_quantity);
   }
 
-  self.reportbackSubmission.quantity = parseInt(quantity);
-
-  self.reportbackSubmission.save(function (e) {
-
-    if (e) {
-      return self.handleError(req, res, e);
-    }
-    
-    logger.debug('%s saved quantity:%s', self.loggerPrefix(req),
-        self.reportbackSubmission.quantity);
-
-    self.collectPhoto(req, res, true);
-
-  });
-
+  this.reportbackSubmission.quantity = parseInt(quantity);
+  return this.reportbackSubmission
+    .save()
+    .then(() => {
+      this.debug(req, `saved quantity:${this.reportbackSubmission.quantity}`);
+      return this.collectPhoto(req, res, true);
+    });
 }
 
 /**
@@ -314,31 +289,23 @@ CampaignBotController.prototype.collectQuantity = function(req, res, promptUser)
  * @param {boolean} promptUser
  */
 CampaignBotController.prototype.collectPhoto = function(req, res, promptUser) {
-  var self = this;
+  this.debug(req, `collectPhoto prompt:${promptUser}`);
 
   if (promptUser) {
-    return self.sendMessage(req, res, self.bot.msg_ask_photo);
+    return this.sendMessage(req, res, this.bot.msg_ask_photo);
   }
 
   if (!req.incoming_image_url) {
-    self.sendMessage(req, res, self.bot.msg_no_photo_sent);
-    return;
+    return this.sendMessage(req, res, this.bot.msg_no_photo_sent);
   }
 
-  self.reportbackSubmission.image_url = req.incoming_image_url;
-
-  self.reportbackSubmission.save(function (e) {
-
-    if (e) {
-      return self.handleError(req, res, e);
-    }
-
-    logger.debug('%s saved image_url:%s', self.loggerPrefix(req),
-        self.reportbackSubmission.image_url);
-
-    self.collectCaption(req, res, true);
-    
-  });
+  this.reportbackSubmission.image_url = req.incoming_image_url;
+  return this.reportbackSubmission
+    .save()
+    .then(() => {
+      this.debug(req, `saved image_url:${this.reportbackSubmission.image_url}`);
+      return this.collectCaption(req, res, true);
+    });
 }
 
 /**
@@ -348,30 +315,22 @@ CampaignBotController.prototype.collectPhoto = function(req, res, promptUser) {
  * @param {boolean} promptUser
  */
 CampaignBotController.prototype.collectCaption = function(req, res, promptUser) {
-  var self = this;
+  this.debug(req, `collectCaption prompt:${promptUser}`);
 
   if (promptUser) {
-    return self.sendMessage(req, res, self.bot.msg_ask_caption);
+    return this.sendMessage(req, res, this.bot.msg_ask_caption);
   }
 
-  self.reportbackSubmission.caption = req.incoming_message;
-
-  self.reportbackSubmission.save(function (e) {
-
-    if (e) {
-      return self.handleError(req, res, e);
-    }
-
-    logger.debug('%s saved caption:%s', self.loggerPrefix(req),
-        self.reportbackSubmission.caption);
-
-    // If this is our current user's first Reportback Submission:
-    if (!self.signup.total_quantity_submitted) {
-      return self.collectWhyParticipated(req, res, true);
-    }
-
-    self.postReportback(req, res);
-    
+  this.reportbackSubmission.caption = req.incoming_message;
+  return this.reportbackSubmission
+    .save()
+    .then(() => {
+      this.debug(req, `saved caption:${this.reportbackSubmission.caption}`);
+      // If this is our current user's first Reportback Submission:
+      if (!this.signup.total_quantity_submitted) {
+        return this.collectWhyParticipated(req, res, true);
+      }
+      return this.postReportback(req, res);    
   });
 }
 
@@ -382,27 +341,19 @@ CampaignBotController.prototype.collectCaption = function(req, res, promptUser) 
  * @param {boolean} promptUser
  */
 CampaignBotController.prototype.collectWhyParticipated = function(req, res, promptUser) {
-  var self = this;
+  this.debug(req, `collectWhyParticipated prompt:${promptUser}`);
 
   if (promptUser) {
-    return self.sendMessage(req, res, self.bot.msg_get_why_participated);
+    return this.sendMessage(req, res, this.bot.msg_ask_why_participated);
   }
 
-  self.reportbackSubmission.why_participated = req.incoming_message;
-
-  self.reportbackSubmission.save(function (e) {
-
-    if (e) {
-      return self.handleError(req, res, e);
-    }
-
-    logger.debug('%s saved why_participated:%s', self.loggerPrefix(req),
-        self.reportbackSubmission.why_participated);
-
-    self.postReportback(req, res);
-
+  this.reportbackSubmission.why_participated = req.incoming_message;
+  return this.reportbackSubmission
+    .save()
+    .then(() => {
+      this.debug(req, `saved why_participated:${req.incoming_message}`);
+      return this.postReportback(req, res);
   });
-
 }
 
 /**
@@ -411,39 +362,26 @@ CampaignBotController.prototype.collectWhyParticipated = function(req, res, prom
  * @param {object} res - Express response
  */
 CampaignBotController.prototype.postReportback = function(req, res) {
-  var self = this;
+  this.debug(req, 'postReportback');
 
-  var dateSubmitted = Date.now();
-  self.reportbackSubmission.submitted_at = dateSubmitted;
+  const dateSubmitted = Date.now();
+  // @todo Post Reportback to DS API
 
-  self.reportbackSubmission.save(function (e) {
-
-    if (e) {
-      return self.handleError(req, res, e);
-    }
-
-    // @todo Post to DS API
-    logger.debug('%s saved submitted_at:%s', self.loggerPrefix(req),
-      dateSubmitted);
-
-    self.signup.total_quantity_submitted = self.reportbackSubmission.quantity;
-    self.signup.updated_at = dateSubmitted;
-    self.signup.draft_reportback_submission = undefined;
-
-    self.signup.save(function (signupErr) {
-
-      if (signupErr) {
-        return self.handleError(req, res, signupErr);
-      }
-
-      logger.debug('%s saved total_quantity_submitted:%s', self.loggerPrefix(req),
-        self.signup.total_quantity_submitted);
-
-      self.sendMessage(req, res, self.bot.msg_menu_completed);
-
+  this.reportbackSubmission.submitted_at = dateSubmitted;
+  return this.reportbackSubmission
+    .save()
+    .then(() => {
+      this.debug(req, `saved submitted_at:${dateSubmitted}`);
+      this.signup.total_quantity_submitted = this.reportbackSubmission.quantity;
+      this.signup.updated_at = dateSubmitted;
+      this.signup.draft_reportback_submission = undefined;
+      return this.signup
+        .save()
+        .then(() => {
+          this.debug(req, `saved total_quantity_submitted:${this.signup.total_quantity_submitted}`);
+          return this.sendMessage(req, res, this.bot.msg_menu_completed);
+        });
     });
-
-  });
 }
 
 /**
@@ -491,38 +429,30 @@ CampaignBotController.prototype.supportsMMS = function(req, res) {
  * @param {object} res - Express response
  */
 CampaignBotController.prototype.postSignup = function(req, res) {
-  var self = this;
-
-  logger.debug('%s postSignup', self.loggerPrefix(req));
-  var campaignId = self.campaign._id;
+  const self = this;
+  this.debug(req, 'postSignup');
 
   // @todo Query DS API to check if Signup exists, post to API to get _id if not
-  dbSignups.create({
 
-    campaign: campaignId,
-    user: self.user._id
-
-  }, function (err, signupDoc) {
-
-    if (err) {
-      return self.handleError(req, res, err);
-    }
-
-    // Store as the User's current Signup for this Campaign.
-    self.user.campaigns[campaignId] = signupDoc._id;
-    self.user.markModified('campaigns');
-
-    self.user.save(function (e) {
-
-      if (err) {
-        self.handleError(e);
-      }
-
-      self.sendMessage(req, res, self.bot.msg_menu_signedup);
-
-    });
-
-  });
+  dbSignups
+    .create({
+      campaign: this.campaignId,
+      user: req.user_id,
+    })
+    .then(signupDoc => {
+      const signupId = signupDoc._id;
+      this.debug(req, `created signupDoc:${signupId}`)
+      // Store as the User's current Signup for this Campaign.
+      this.user.campaigns[this.campaignId] = signupId;
+      this.user.markModified('campaigns');
+      this.user.save(err => {
+        if (err) {
+          return self.handleError(err);
+        }
+        return self.sendMessage(req, res, self.bot.msg_menu_signedup);
+      });
+    })
+    .catch((err) => {self.handleError(req, res, err)});
 }
 
 /**
@@ -579,18 +509,10 @@ CampaignBotController.prototype.sendMessage = function(req, res, msgTxt) {
  * @param {object} error
  */
 CampaignBotController.prototype.handleError = function(req, res, error) {
-
-  var campaignId = null;
-  if (this.campaign) {
-    campaignId = this.campaign._id;
-  }
-
   if (error) {
     logger.error('%s handleError:' + error, this.loggerPrefix(req));
   }
-  
   return res.sendStatus(500);
-
 }
 
 /**
@@ -599,7 +521,16 @@ CampaignBotController.prototype.handleError = function(req, res, error) {
  * @return {string}
  */
 CampaignBotController.prototype.loggerPrefix = function(req) {
-  return 'campaignBot.campaign:' + req.query.campaign + ' user:' + req.user_id;
+  return 'campaignBot.campaign:' + this.campaignId + ' user:' + req.user_id;
+}
+
+/**
+ * Calls logger with CampaignBot prefix
+ * @param {object} req - Express request
+ * @return {string}
+ */
+CampaignBotController.prototype.debug = function(req, debugMsg) {
+  logger.debug(`${this.loggerPrefix(req)} ${debugMsg}`);
 }
 
 module.exports = CampaignBotController;
