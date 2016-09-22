@@ -161,7 +161,7 @@ CampaignBotController.prototype.loadSignup = function(req, res, signupId) {
 
       const incomingCommand = helpers.getFirstWord(req.incoming_message);
       if (incomingCommand && incomingCommand.toUpperCase() === CMD_REPORTBACK) {
-        return this.startReportbackSubmission(req, res);
+        return this.createReportbackSubmission(req, res);
       }
 
       return this.sendMessage(req, res, this.bot.msg_menu_completed);
@@ -210,44 +210,28 @@ CampaignBotController.prototype.loadReportbackSubmission = function(req, res) {
  * @param {object} req - Express request
  * @param {object} res - Express response
  */
-CampaignBotController.prototype.startReportbackSubmission = function(req, res) {
-  var self = this;
+CampaignBotController.prototype.createReportbackSubmission = function(req, res) {
+  this.debug(req, 'createReportbackSubmission');
 
-  logger.debug('%s startReportbackSubmission', self.loggerPrefix(req));
-
-  self.reportbackSubmission = new dbRbSubmissions({
-    campaign: self.campaign._id,
-    user: self.user._id 
+  this.reportbackSubmission = new dbRbSubmissions({
+    campaign: this.campaignId,
+    user: req.user_id, 
   });
 
-  self.reportbackSubmission.save(function (err) {
-
-    if (err) {
-      return self.handleError(err);
-    }
-
-    var draftId = self.reportbackSubmission._id.toString()
-
-    // Store to our signup for easy lookup by ID in future requests.
-    self.signup.draft_reportback_submission = draftId;
-
-    logger.debug('%s created reportbackSubmission:%s', self.loggerPrefix(req),
-       self.signup.draft_reportback_submission);
-
-    self.signup.save(function (e) {
-
-      if (e) {
-        return self.handleError(req, res, e);
-      }
-
-      logger.debug('%s saved signup:%s', self.loggerPrefix(req),
-        self.signup._id.toString());
-
-      return self.collectQuantity(req, res, true);
-
+  return this.reportbackSubmission
+    .save()
+    .then(rbSubmissionDoc => {
+      const draftId = rbSubmissionDoc._id.toString();
+      this.signup.draft_reportback_submission = draftId;
+      this.debug(req, `created reportbackSubmission:${draftId}`);
+      // Store to our signup for easy lookup by ID in future requests.
+      return this.signup
+        .save()
+        .then(() => {
+          this.debug(req, `saved signup:${this.signup._id.toString()}`);
+          return this.collectQuantity(req, res, true);
+        });
     });
-
-  });
 }
 
 /**
@@ -365,6 +349,7 @@ CampaignBotController.prototype.postReportback = function(req, res) {
   this.debug(req, 'postReportback');
 
   const dateSubmitted = Date.now();
+
   // @todo Post Reportback to DS API
 
   this.reportbackSubmission.submitted_at = dateSubmitted;
@@ -390,37 +375,31 @@ CampaignBotController.prototype.postReportback = function(req, res) {
  * @param {object} res - Express response
  */
 CampaignBotController.prototype.supportsMMS = function(req, res) {
-  var self = this;
+  this.debug(req, 'supportsMMS');
 
-  if (self.user.supports_mms === true) {
+  if (this.user.supports_mms === true) {
     return true;
   }
+
   // @todo DRY this logic.
   // @see loadSignup()
-  var incomingCommand = helpers.getFirstWord(req.incoming_message);
+  const incomingCommand = helpers.getFirstWord(req.incoming_message);
   if (incomingCommand && incomingCommand.toUpperCase() === CMD_REPORTBACK) {
-    self.sendMessage(req, res, self.bot.msg_ask_supports_mms);
+    this.sendMessage(req, res, this.bot.msg_ask_supports_mms);
     return false;
   }
   
   if (!helpers.isYesResponse(req.incoming_message)) {
-    self.sendMessage(req, res, self.bot.msg_no_supports_mms);
+    this.sendMessage(req, res, this.bot.msg_no_supports_mms);
     return false;
   }
 
-  self.user.supports_mms = true;
-
-  self.user.save(function (err) {
-
-    if (err) {
-      return self.handleError(err);
-    }
-
-    self.startReportbackSubmission(req, res);
-    return true;
-
-  });
-
+  this.user.supports_mms = true;
+  return this.user
+    .save()
+    .then(() => {
+      return this.createReportbackSubmission(req, res);
+    });
 };
 
 /**
@@ -429,7 +408,6 @@ CampaignBotController.prototype.supportsMMS = function(req, res) {
  * @param {object} res - Express response
  */
 CampaignBotController.prototype.postSignup = function(req, res) {
-  const self = this;
   this.debug(req, 'postSignup');
 
   // @todo Query DS API to check if Signup exists, post to API to get _id if not
@@ -445,14 +423,13 @@ CampaignBotController.prototype.postSignup = function(req, res) {
       // Store as the User's current Signup for this Campaign.
       this.user.campaigns[this.campaignId] = signupId;
       this.user.markModified('campaigns');
-      this.user.save(err => {
-        if (err) {
-          return self.handleError(err);
-        }
-        return self.sendMessage(req, res, self.bot.msg_menu_signedup);
-      });
+      return this.user
+        .save()
+        .then(() => {
+          return this.sendMessage(req, res, this.bot.msg_menu_signedup);
+        });
     })
-    .catch((err) => {self.handleError(req, res, err)});
+    .catch((err) => {this.handleError(req, res, err)});
 }
 
 /**
