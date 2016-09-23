@@ -76,7 +76,7 @@ CampaignBotController.prototype.chatbot = function(req, res) {
 CampaignBotController.prototype.loadUserAndSignup = function(req, res) {
   this.debug(req, 'loadUserAndSignup');
   
-  dbUsers
+  return dbUsers
     .findById(req.user_id)
     .exec()
     .then(userDoc => {
@@ -103,7 +103,7 @@ CampaignBotController.prototype.loadUserAndSignup = function(req, res) {
 CampaignBotController.prototype.createUserAndPostSignup = function(req, res) {
   this.debug(req, 'createuserAndPostSignup');
 
-  app.locals.northstarClient.Users.get('id', req.user_id)
+  return app.locals.northstarClient.Users.get('id', req.user_id)
     .then(user => {
       const userFields = {
         _id: req.user_id,
@@ -119,8 +119,7 @@ CampaignBotController.prototype.createUserAndPostSignup = function(req, res) {
       this.user = userDoc;
       this.debug(req, 'created userDoc');
       return this.postSignup(req, res);
-    })
-    .catch((err) => {self.handleError(req, res, err)});
+    });
 }
 
 /**
@@ -138,7 +137,7 @@ CampaignBotController.prototype.loadSignup = function(req, res, signupId) {
   // is older than the start date, we'll need to postSignup to store the new
   // Signup ID to our user's current dbSignups in user.campaigns
 
-  dbSignups
+  return dbSignups
     .findById(signupId)
     .exec()
     .then(signupDoc => {
@@ -165,9 +164,7 @@ CampaignBotController.prototype.loadSignup = function(req, res, signupId) {
       }
 
       return this.sendMessage(req, res, this.bot.msg_menu_completed);
-
-  })
-  .catch(err => {this.handleError(req, res, err)});
+    });
 }
 
 /**
@@ -179,7 +176,7 @@ CampaignBotController.prototype.loadReportbackSubmission = function(req, res) {
   this.debug(req, 'loadReportbackSubmission');
 
   const rbSubmissionId = this.signup.draft_reportback_submission;
-  dbRbSubmissions
+  return dbRbSubmissions
     .findById(rbSubmissionId)
     .exec()
     .then(reportbackSubmissionDoc => {
@@ -201,8 +198,7 @@ CampaignBotController.prototype.loadReportbackSubmission = function(req, res) {
       // Should have submitted in whyParticipated, but in case we're here:
       logger.warn('no messages sent from chatReportback');
       return this.postReportback(req, res);
-    })
-    .catch(err => {this.handleError(req, res, err)});
+    });
 }
 
 /**
@@ -225,12 +221,11 @@ CampaignBotController.prototype.createReportbackSubmission = function(req, res) 
       this.signup.draft_reportback_submission = draftId;
       this.debug(req, `created reportbackSubmission:${draftId}`);
       // Store to our signup for easy lookup by ID in future requests.
-      return this.signup
-        .save()
-        .then(() => {
-          this.debug(req, `saved signup:${this.signup._id.toString()}`);
-          return this.collectQuantity(req, res, true);
-        });
+      return this.signup.save();
+    })
+    .then(() => {
+      this.debug(req, `saved signup:${this.signup._id.toString()}`);
+      return this.collectQuantity(req, res, true);
     });
 }
 
@@ -315,7 +310,7 @@ CampaignBotController.prototype.collectCaption = function(req, res, promptUser) 
         return this.collectWhyParticipated(req, res, true);
       }
       return this.postReportback(req, res);    
-  });
+    });
 }
 
 /**
@@ -337,7 +332,7 @@ CampaignBotController.prototype.collectWhyParticipated = function(req, res, prom
     .then(() => {
       this.debug(req, `saved why_participated:${req.incoming_message}`);
       return this.postReportback(req, res);
-  });
+    });
 }
 
 /**
@@ -360,12 +355,11 @@ CampaignBotController.prototype.postReportback = function(req, res) {
       this.signup.total_quantity_submitted = this.reportbackSubmission.quantity;
       this.signup.updated_at = dateSubmitted;
       this.signup.draft_reportback_submission = undefined;
-      return this.signup
-        .save()
-        .then(() => {
-          this.debug(req, `saved total_quantity_submitted:${this.signup.total_quantity_submitted}`);
-          return this.sendMessage(req, res, this.bot.msg_menu_completed);
-        });
+      return this.signup.save();
+    })
+    .then(() => {
+      this.debug(req, `saved signup.quantity:${this.signup.total_quantity_submitted}`);
+      return this.sendMessage(req, res, this.bot.msg_menu_completed);
     });
 }
 
@@ -412,7 +406,7 @@ CampaignBotController.prototype.postSignup = function(req, res) {
 
   // @todo Query DS API to check if Signup exists, post to API to get _id if not
 
-  dbSignups
+  return dbSignups
     .create({
       campaign: this.campaignId,
       user: req.user_id,
@@ -423,13 +417,11 @@ CampaignBotController.prototype.postSignup = function(req, res) {
       // Store as the User's current Signup for this Campaign.
       this.user.campaigns[this.campaignId] = signupId;
       this.user.markModified('campaigns');
-      return this.user
-        .save()
-        .then(() => {
-          return this.sendMessage(req, res, this.bot.msg_menu_signedup);
-        });
+      return this.user.save();
     })
-    .catch((err) => {this.handleError(req, res, err)});
+    .then(() => {
+      return this.sendMessage(req, res, this.bot.msg_menu_signedup);
+    });
 }
 
 /**
@@ -475,8 +467,7 @@ CampaignBotController.prototype.sendMessage = function(req, res, msgTxt) {
   }
 
   mobilecommons.chatbot({phone: this.user.mobile}, optInPath, msgTxt);
-  res.send();
-
+  res.send({message: msgTxt});
 }
 
 /**
