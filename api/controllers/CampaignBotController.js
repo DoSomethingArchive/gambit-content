@@ -77,7 +77,7 @@ CampaignBotController.prototype.loadUserAndSignup = function(req, res) {
   this.debug(req, 'loadUserAndSignup');
   
   dbUsers
-    .findOne({ '_id': req.user_id })
+    .findById(req.user_id)
     .exec()
     .then(userDoc => {
       if (!userDoc) {
@@ -139,7 +139,7 @@ CampaignBotController.prototype.loadSignup = function(req, res, signupId) {
   // Signup ID to our user's current dbSignups in user.campaigns
 
   dbSignups
-    .findOne({ '_id': signupId })
+    .findById(signupId)
     .exec()
     .then(signupDoc => {
       if (!signupDoc) {
@@ -180,7 +180,7 @@ CampaignBotController.prototype.loadReportbackSubmission = function(req, res) {
 
   const rbSubmissionId = this.signup.draft_reportback_submission;
   dbRbSubmissions
-    .findOne({ '_id': rbSubmissionId })
+    .findById(rbSubmissionId)
     .exec()
     .then(reportbackSubmissionDoc => {
       this.reportbackSubmission = reportbackSubmissionDoc;
