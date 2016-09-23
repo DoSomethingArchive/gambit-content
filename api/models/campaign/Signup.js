@@ -13,6 +13,8 @@ var schema = new mongoose.Schema({
 
   created_at: {type: Date, default: Date.now},
 
+  reportback: Number,
+
   // If user is in the middle of a Reportback Submission, we store its ID 
   // for easy lookup.
   draft_reportback_submission: String,
