@@ -47,17 +47,17 @@ function CampaignBotController(campaignId) {
  */
 CampaignBotController.prototype.chatbot = function(req, res) {
   if (!this.bot) {
-    return this.handleError(req, res, 'chatbot.bot undefined');
+    return this.error(req, res, 'chatbot.bot undefined');
   }
   if (!this.campaign) {
-    return this.handleError(req, res, 'chatbot.campaign undefined');
+    return this.error(req, res, 'chatbot.campaign undefined');
   }
   if (!this.mobileCommonsConfig) {
-    return this.handleError(req, res, 'chatbot.mobileCommonsConfig undefined');
+    return this.error(req, res, 'chatbot.mobileCommonsConfig undefined');
   }
   // This seems like it should move into router.js (or policies dir)
   if (!req.user_id) {
-    return this.handleError(req, res, 'chatbot.req.user_id undefined');
+    return this.error(req, res, 'chatbot.req.user_id undefined');
   }
 
   this.debug(req, `incoming_message_url:${req.incoming_message}`);
@@ -92,7 +92,7 @@ CampaignBotController.prototype.loadUserAndSignup = function(req, res) {
       }
       return this.loadSignup(req, res, signupId);
     })
-    .catch(err => {this.handleError(req, res, err)});
+    .catch(err => {this.error(req, res, err)});
 }
 
 /** 
@@ -145,7 +145,7 @@ CampaignBotController.prototype.loadSignup = function(req, res, signupId) {
         // Edge case where our cached Signup ID in user.campaigns not found
         // Could potentially lookup campaign/user in dbSignups to check for any
         // Signup document to use, but for now let's log and assume wont happen.
-        return this.handleError(req, res, 'loadSignup no doc _id:%s', signupId);
+        return this.error(req, res, 'loadSignup no doc _id:%s', signupId);
       }
       this.signup = signupDoc;
       this.debug(req, `loaded signup:${signupDoc.id}`);
@@ -362,7 +362,7 @@ CampaignBotController.prototype.postReportback = function(req, res) {
     .catch(err => {
       this.reportbackSubmission.failed_at = Date.now();
       this.reportbackSubmission.save();
-      return this.handleError(req, res, `postReportback ${err}`);
+      return this.error(req, res, `postReportback ${err}`);
     });
 }
 
@@ -466,6 +466,10 @@ CampaignBotController.prototype.postSignup = function(req, res) {
 }
 
 /**
+ * Helpers
+ */
+
+/**
  * Sends mobilecommons.chatbot response with given msgTxt
  * @param {object} req - Express request
  * @param {object} res - Express response
@@ -473,7 +477,7 @@ CampaignBotController.prototype.postSignup = function(req, res) {
  */
 CampaignBotController.prototype.sendMessage = function(req, res, msgTxt) {
   if (!msgTxt) {
-    return this.handleError(req, res, 'sendMessage no msgTxt');
+    return this.error(req, res, 'sendMessage no msgTxt');
   }
 
   msgTxt = msgTxt.replace(/<br>/gi, '\n');
@@ -504,22 +508,11 @@ CampaignBotController.prototype.sendMessage = function(req, res, msgTxt) {
   var optInPath = this.mobileCommonsConfig.oip_chat;
 
   if (!optInPath) {
-    return this.handleError(req, res, 'sendMessage !optInPath');
+    return this.error(req, res, 'sendMessage !optInPath');
   }
 
   mobilecommons.chatbot({phone: this.user.mobile}, optInPath, msgTxt);
   res.send({message: msgTxt});
-}
-
-/**
- * Sends 500 error back for given error
- * @param {object} req - Express request
- * @param {object} res - Express response
- * @param {object} error
- */
-CampaignBotController.prototype.handleError = function(req, res, errorMsg) {
-  logger.error(`${this.loggerPrefix(req)} ${errorMsg}`);
-  return res.sendStatus(500);
 }
 
 /**
@@ -529,6 +522,17 @@ CampaignBotController.prototype.handleError = function(req, res, errorMsg) {
  */
 CampaignBotController.prototype.loggerPrefix = function(req) {
   return 'campaignBot.campaign:' + this.campaignId + ' user:' + req.user_id;
+}
+
+/**
+ * Sends 500 error back for given error
+ * @param {object} req - Express request
+ * @param {object} res - Express response
+ * @param {object} error
+ */
+CampaignBotController.prototype.error = function(req, res, errorMsg) {
+  logger.error(`${this.loggerPrefix(req)} ${errorMsg}`);
+  return res.sendStatus(500);
 }
 
 /**
