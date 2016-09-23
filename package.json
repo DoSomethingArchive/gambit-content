@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@dosomething/northstar-js": "git://github.com/DoSomething/northstar-js.git",
+    "@dosomething/phoenix-js": "git://github.com/DoSomething/phoenix-js.git",
     "body-parser": "^1.9.2",
     "connect-multiparty": "1.1.0",
     "count-von-count": "^1.0.0",
