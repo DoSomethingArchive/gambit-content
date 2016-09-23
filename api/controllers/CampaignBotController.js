@@ -404,18 +404,29 @@ CampaignBotController.prototype.supportsMMS = function(req, res) {
 CampaignBotController.prototype.postSignup = function(req, res) {
   this.debug(req, 'postSignup');
 
-  // @todo Query DS API to check if Signup exists, post to API to get _id if not
+  // @todo Sanity check by using Northstar getSignups for user/campaign before
+  // requesting POST signup from Phoenix
 
-  return dbSignups
-    .create({
-      campaign: this.campaignId,
-      user: req.user_id,
+  const postData = {
+    source: process.env.DS_API_POST_SOURCE,
+    uid: this.user.phoenix_id,
+  };
+
+  return app.locals.phoenixClient.Campaigns
+    .signup(this.campaignId, postData)
+    .then(signupId => {
+      this.debug(req, `created signup:${signupId}`);
+      return dbSignups.create({
+        _id: signupId,
+        campaign: this.campaignId,
+        user: req.user_id,
+      });
     })
     .then(signupDoc => {
-      const signupId = signupDoc._id;
-      this.debug(req, `created signupDoc:${signupId}`)
+      const signupDocId = signupDoc._id;
+      this.debug(req, `created signupDoc:${signupDocId}`)
       // Store as the User's current Signup for this Campaign.
-      this.user.campaigns[this.campaignId] = signupId;
+      this.user.campaigns[this.campaignId] = signupDocId;
       this.user.markModified('campaigns');
       return this.user.save();
     })

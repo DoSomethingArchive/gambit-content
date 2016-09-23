@@ -5,8 +5,7 @@ var mongoose = require('mongoose');
 
 var schema = new mongoose.Schema({
 
-// We'll want to add this back in once we start integrate Signups API
-//  _id: {type: Number, index: true},
+  _id: {type: Number, index: true},
 
   user: {type: String, index: true},
 
