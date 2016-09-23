@@ -345,11 +345,24 @@ CampaignBotController.prototype.postReportback = function(req, res) {
 
   const dateSubmitted = Date.now();
 
-  // @todo Post Reportback to DS API
+  const postData = {
+    source: process.env.DS_API_POST_SOURCE,
+    uid: this.user.phoenix_id,
+    quantity: this.reportbackSubmission.quantity,
+    caption: this.reportbackSubmission.caption,
+    file_url: this.reportbackSubmission.image_url,
+  };
+  if (this.reportbackSubmission.why_participated) {
+    postData.why_participated = this.reportbackSubmission.why_participated;
+  }
 
-  this.reportbackSubmission.submitted_at = dateSubmitted;
-  return this.reportbackSubmission
-    .save()
+  return app.locals.phoenixClient.Campaigns
+    .reportback(this.campaignId, postData)
+    .then(reportbackId => {
+      this.debug(req, `upsert reportback:${reportbackId}`);
+      this.reportbackSubmission.submitted_at = dateSubmitted;
+      return this.reportbackSubmission.save();
+    })
     .then(() => {
       this.debug(req, `saved submitted_at:${dateSubmitted}`);
       this.signup.total_quantity_submitted = this.reportbackSubmission.quantity;
