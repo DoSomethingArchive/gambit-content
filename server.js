@@ -43,6 +43,6 @@ smsConfigsLoader(function() {
 });
 
 app.locals.northstarClient = new NorthstarClient({
-  baseURI: process.env.DS_REST_API_BASEURI,
-  apiKey: process.env.DS_REST_API_KEY,
+  baseURI: process.env.NORTHSTAR_API_BASEURI,
+  apiKey: process.env.NORTHSTAR_API_KEY,
 });
