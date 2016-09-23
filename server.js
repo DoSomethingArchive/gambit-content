@@ -5,12 +5,10 @@ global.rootRequire = function(name) {
   return require(__dirname + '/' + name);
 }
 
-var express = require('express');
-var path = require('path');
-var http = require('http');
-var logger = rootRequire('lib/logger');
-var phoenix = rootRequire('lib/phoenix')();
-
+const express = require('express');
+const http = require('http');
+const logger = rootRequire('lib/logger');
+const phoenix = rootRequire('lib/phoenix')();
 const NorthstarClient = require('@dosomething/northstar-js');
 const PhoenixClient = require('@dosomething/phoenix-js');
 
@@ -31,17 +29,9 @@ phoenix.userLogin(
  */
 app = express();
 
-var appConfig = require('./config')();
-var router = require('./api/router');
-var smsConfigsLoader = require('./config/smsConfigsLoader');
-
-// Retrieves all SMS config files before starting server.
-smsConfigsLoader(function() {
-  var port = process.env.PORT || 5000;
-  app.listen(port, function() {
-    logger.log('info', 'Express server listening on port %d in %s mode...\n\n', port, app.settings.env);
-  });
-});
+const appConfig = require('./config')();
+const router = require('./api/router');
+const smsConfigsLoader = require('./config/smsConfigsLoader');
 
 app.locals.northstarClient = new NorthstarClient({
   baseURI: process.env.DS_NORTHSTAR_API_BASEURI,
@@ -53,3 +43,13 @@ app.locals.phoenixClient = new PhoenixClient({
   username: process.env.DS_PHOENIX_API_USERNAME,
   password: process.env.DS_PHOENIX_API_PASSWORD,
 });
+
+// Retrieves all SMS config files before starting server.
+smsConfigsLoader(() => {
+  const port = (process.env.PORT || 5000);
+  app.listen(port, () => {
+    logger.info(`Gambit is listening, port:${port} env:${process.env.NODE_ENV}.`);
+  });
+});
+
+
