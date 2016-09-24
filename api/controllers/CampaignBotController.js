@@ -47,17 +47,17 @@ function CampaignBotController(campaignId) {
  */
 CampaignBotController.prototype.chatbot = function(req, res) {
   if (!this.bot) {
-    return this.handleError(req, res, 'self.bot undefined');
+    return this.error(req, res, 'chatbot.bot undefined');
   }
   if (!this.campaign) {
-    return this.handleError(req, res, 'self.campaign undefined');
+    return this.error(req, res, 'chatbot.campaign undefined');
   }
   if (!this.mobileCommonsConfig) {
-    return this.handleError(req, res, 'self.mobileCommonsConfig undefined');
+    return this.error(req, res, 'chatbot.mobileCommonsConfig undefined');
   }
   // This seems like it should move into router.js (or policies dir)
   if (!req.user_id) {
-    return this.handleError(req, res, 'req.user_id undefined');
+    return this.error(req, res, 'chatbot.req.user_id undefined');
   }
 
   this.debug(req, `incoming_message_url:${req.incoming_message}`);
@@ -92,7 +92,7 @@ CampaignBotController.prototype.loadUserAndSignup = function(req, res) {
       }
       return this.loadSignup(req, res, signupId);
     })
-    .catch(err => {this.handleError(req, res, err)});
+    .catch(err => {this.error(req, res, err)});
 }
 
 /** 
@@ -145,7 +145,7 @@ CampaignBotController.prototype.loadSignup = function(req, res, signupId) {
         // Edge case where our cached Signup ID in user.campaigns not found
         // Could potentially lookup campaign/user in dbSignups to check for any
         // Signup document to use, but for now let's log and assume wont happen.
-        return this.handleError(req, res, 'signupDoc not found _id:%s', signupId);
+        return this.error(req, res, 'loadSignup no doc _id:%s', signupId);
       }
       this.signup = signupDoc;
       this.debug(req, `loaded signup:${signupDoc.id}`);
@@ -343,22 +343,52 @@ CampaignBotController.prototype.collectWhyParticipated = function(req, res, prom
 CampaignBotController.prototype.postReportback = function(req, res) {
   this.debug(req, 'postReportback');
 
+  const postData = {
+    source: process.env.DS_API_POST_SOURCE,
+    uid: this.user.phoenix_id,
+    quantity: this.reportbackSubmission.quantity,
+    caption: this.reportbackSubmission.caption,
+    file_url: this.reportbackSubmission.image_url,
+  };
+  if (this.reportbackSubmission.why_participated) {
+    postData.why_participated = this.reportbackSubmission.why_participated;
+  }
+
+  return app.locals.phoenixClient.Campaigns
+    .reportback(this.campaignId, postData)
+    .then(reportbackId => {
+      return this.onReportbackSuccess(req, res, reportbackId);
+    })
+    .catch(err => {
+      this.reportbackSubmission.failed_at = Date.now();
+      this.reportbackSubmission.save();
+      return this.error(req, res, `postReportback ${err}`);
+    });
+}
+
+/**
+ * Handles successful Reportback POST request.
+ * @param {object} req - Express request
+ * @param {object} res - Express response
+ * @param {number} rbid - Return reportback id
+ */
+CampaignBotController.prototype.onReportbackSuccess = function(req, res, rbid) {
+  this.debug(req, `onReportbackSuccess reportback:${rbid}`);
+
   const dateSubmitted = Date.now();
-
-  // @todo Post Reportback to DS API
-
   this.reportbackSubmission.submitted_at = dateSubmitted;
+  this.signup.reportback = rbid;
+  this.signup.total_quantity_submitted = this.reportbackSubmission.quantity;
+  this.signup.updated_at = dateSubmitted;
+  // Unset draft so next time user returns to this campaign, we create a new
+  // reportback submission.
+  this.signup.draft_reportback_submission = undefined;
   return this.reportbackSubmission
     .save()
     .then(() => {
-      this.debug(req, `saved submitted_at:${dateSubmitted}`);
-      this.signup.total_quantity_submitted = this.reportbackSubmission.quantity;
-      this.signup.updated_at = dateSubmitted;
-      this.signup.draft_reportback_submission = undefined;
       return this.signup.save();
     })
     .then(() => {
-      this.debug(req, `saved signup.quantity:${this.signup.total_quantity_submitted}`);
       return this.sendMessage(req, res, this.bot.msg_menu_completed);
     });
 }
@@ -436,6 +466,10 @@ CampaignBotController.prototype.postSignup = function(req, res) {
 }
 
 /**
+ * Helpers
+ */
+
+/**
  * Sends mobilecommons.chatbot response with given msgTxt
  * @param {object} req - Express request
  * @param {object} res - Express response
@@ -443,7 +477,7 @@ CampaignBotController.prototype.postSignup = function(req, res) {
  */
 CampaignBotController.prototype.sendMessage = function(req, res, msgTxt) {
   if (!msgTxt) {
-    return this.handleError(req, res, 'sendMessage no msgTxt');
+    return this.error(req, res, 'sendMessage no msgTxt');
   }
 
   msgTxt = msgTxt.replace(/<br>/gi, '\n');
@@ -474,24 +508,11 @@ CampaignBotController.prototype.sendMessage = function(req, res, msgTxt) {
   var optInPath = this.mobileCommonsConfig.oip_chat;
 
   if (!optInPath) {
-    return this.handleError(req, res);
+    return this.error(req, res, 'sendMessage !optInPath');
   }
 
   mobilecommons.chatbot({phone: this.user.mobile}, optInPath, msgTxt);
   res.send({message: msgTxt});
-}
-
-/**
- * Sends 500 error back for given error
- * @param {object} req - Express request
- * @param {object} res - Express response
- * @param {object} error
- */
-CampaignBotController.prototype.handleError = function(req, res, error) {
-  if (error) {
-    logger.error('%s handleError:' + error, this.loggerPrefix(req));
-  }
-  return res.sendStatus(500);
 }
 
 /**
@@ -504,8 +525,20 @@ CampaignBotController.prototype.loggerPrefix = function(req) {
 }
 
 /**
+ * Sends 500 error back for given error
+ * @param {object} req - Express request
+ * @param {object} res - Express response
+ * @param {object} error
+ */
+CampaignBotController.prototype.error = function(req, res, errorMsg) {
+  logger.error(`${this.loggerPrefix(req)} ${errorMsg}`);
+  return res.sendStatus(500);
+}
+
+/**
  * Calls logger with CampaignBot prefix
  * @param {object} req - Express request
+ * @param {object} message - Message to log
  * @return {string}
  */
 CampaignBotController.prototype.debug = function(req, debugMsg) {

@@ -19,7 +19,9 @@ var schema = new mongoose.Schema({
 
   why_participated: String,
 
-  submitted_at: Date
+  submitted_at: Date,
+
+  failed_at: Date
 
 })
 
