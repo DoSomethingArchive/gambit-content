@@ -41,7 +41,7 @@ router.post('/v1/chatbot', function(request, response) {
 
   switch (request.query.bot_type) {
     case 'campaignbot':
-      controller = new CampaignBot(request.query.campaign);
+      return new CampaignBot(request, response);
       break;
     // @todo Remove this safety check, deprecating donorschoose bot_type value.
     // Using donorschoosebot instead.

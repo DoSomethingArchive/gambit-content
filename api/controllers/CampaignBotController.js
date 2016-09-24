@@ -22,42 +22,39 @@ const CMD_REPORTBACK = (process.env.GAMBIT_CMD_REPORTBACK || 'P');
  */
 class CampaignBotController {
 
-  constructor(campaignId) {
-    this.campaignId = campaignId;
-    this.campaign = app.getConfig(app.ConfigName.CAMPAIGNS, campaignId);
-    if (!this.campaign) {
-      return;
+  constructor(req, res) {
+    this.debug(req, `incoming_message_url:${req.incoming_message}`);
+    if (req.incoming_image_url) {
+      this.debug(req, `incoming_message_url:${req.incoming_image_url}`);
     }
+
+    this.campaignId = req.query.campaign;
+    this.campaign = app.getConfig(app.ConfigName.CAMPAIGNS, this.campaignId);
+    if (!this.campaign) {
+      return this.error(req, res, 'campaign config not found');;
+    }
+
     // @todo Config variable for default CampaignBot ID
     // @todo Store campaignbot property on our config.campaigns to override bot
     // on a per DS Campaign basis.
     this.bot = app.getConfig(app.ConfigName.CAMPAIGNBOTS, 41);
+    if (!this.bot) {
+      return this.error(req, res, 'bot config not found');
+    }
+
     let mobileCommonsCampaign = this.campaign.staging_mobilecommons_campaign;
     if (process.env.NODE_ENV === 'production') {
       mobileCommonsCampaign = this.campaign.current_mobilecommons_campaign;
     }
     const configName = app.ConfigName.CHATBOT_MOBILECOMMONS_CAMPAIGNS;
-    this.mobileCommonsConfig = app.getConfig(configName, mobileCommonsCampaign);  
-  }
-
-  chatbot(req, res) {
-    if (!this.bot) {
-      return this.error(req, res, 'chatbot.bot undefined');
-    }
-    if (!this.campaign) {
-      return this.error(req, res, 'chatbot.campaign undefined');
-    }
+    this.mobileCommonsConfig = app.getConfig(configName, mobileCommonsCampaign);
     if (!this.mobileCommonsConfig) {
-      return this.error(req, res, 'chatbot.mobileCommonsConfig undefined');
+      return this.error(req, res, 'mobileCommonsConfig not found');
     }
+
     // This seems like it should move into router.js (or policies dir)
     if (!req.user_id) {
       return this.error(req, res, 'chatbot.req.user_id undefined');
-    }
-
-    this.debug(req, `incoming_message_url:${req.incoming_message}`);
-    if (req.incoming_image_url) {
-      this.debug(req, `incoming_message_url:${req.incoming_image_url}`);
     }
 
     return this.loadUserAndSignup(req, res);
