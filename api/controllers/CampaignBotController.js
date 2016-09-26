@@ -57,20 +57,43 @@ class CampaignBotController {
       return this.error(req, res, 'chatbot.req.user_id undefined');
     }
 
-    return this.loadUserAndSignup(req, res);
-  }
+    this.debug(req, `loadUser:${req.user_id}`);
 
-  /**
-   * Creates a document in our Signups cache for given Signup object and sets
-   * the current User's campaigns cache with Campaign and Signup id.
-   */
-  cacheCurrentSignup(signup) {
-    return dbSignups
-      .create(signup)
-      .then(signupDoc => {
-        this.user.campaigns[signup.campaign] = signupDoc._id;
-        this.user.markModified('campaigns');
-        return this.user.save();
+    return this
+      .loadUser(req.user_id)
+      .then(user => {
+        this.debug(req, `loaded user:${user._id}`);
+
+        this.user = user;
+        const signupId = user.campaigns[this.campaignId];
+        this.debug(req, `loadSignup:${signupId}`);
+
+        return this.loadSignup(signupId);
+      })
+      .then(signup => {
+        this.debug(req, `loaded signup:${signup._id}`);
+        req.signup = signup;
+        const reportbackSubmissionId = signup.draft_reportback_submission;
+        this.debug(req, `loadReportbackSubmission:${reportbackSubmissionId}`);
+        
+        return this.loadReportbackSubmission(reportbackSubmissionId);
+      })
+      .then(reportbackSubmission => {
+        let msgTxt;
+        if (!reportbackSubmission) {
+          if (req.signup.total_quantity_submitted) {
+             msgTxt = this.getMessage(req, this.bot.msg_menu_completed);
+          }
+          else {
+            msgTxt = this.getMessage(req, this.bot.msg_menu_signedup);
+          }
+        }
+        mobilecommons.chatbot(req.body, mobileCommonsCampaign, msgTxt);
+
+        return res.send({message: msgTxt});;
+      })
+      .catch(err => {
+        this.error(req, res, err);
       });
   }
 
@@ -180,165 +203,140 @@ class CampaignBotController {
       });
   }
 
-  createUserAndPostSignup(req, res) {
-    this.debug(req, 'createuserAndPostSignup');
-
-    return app.locals.northstarClient.Users.get('id', req.user_id)
-      .then(user => {
-        const userFields = {
-          _id: req.user_id,
-          mobile: req.user_mobile,
-          first_name: user.firstName,
-          email: user.email,
-          phoenix_id: user.drupalID,
-          campaigns: {},   
-        };
-
-        return dbUsers.create(userFields);
-      })
-      .then(userDoc => {
-        this.user = userDoc;
-        this.debug(req, 'created userDoc');
-
-        return this.postSignup(req, res);
-      });
-  }
-
   debug(req, debugMsg) {
     logger.debug(`${this.loggerPrefix(req)} ${debugMsg}`);
   }
 
-  error(req, res, errorMsg) {
-    logger.error(`${this.loggerPrefix(req)} ${errorMsg}`);
+  error(req, res, err) {
+    logger.error(`${this.loggerPrefix(req)} ${err}:${err.stack}`);
 
     return res.sendStatus(500);
   }
 
   /**
-   * Checks DS API to see if a Signup exists for this user/campaign. If not,
-   * calls postSignup to create Signup and cache.
+   * Queries DS API to find current signup, else creates new signup.
    */
-  getCurrentSignup(req, res) {
-    this.debug(req, 'getCurrentSignup');
-
+  getSignup() {
     return app.locals.northstarClient.Signups.index({
-        campaigns: this.campaignId,
-        user: req.user_id,
-      })
-      .then(signups => {
-        if (!signups.length) {
-          return this.postSignup(req, res);
-        }
-
-        // @todo Loop through signups to find signup where campaign_run.current.
-        // Hardcoded to first result for now.
-        const currentSignup = signups[0];
-        const data = {
-          _id: currentSignup.id,
-          user: req.user_id,
-          campaign: this.campaignId,
-          created_at: currentSignup.created_at,
-        };
-        if (currentSignup.reportback) {
-          data.reportback = parseInt(currentSignup.reportback.id);
-          data.total_quantity_submitted = currentSignup.reportback.quantity;
-        }
-
-        return this.cacheCurrentSignup(data);
-      });
+      campaigns: this.campaignId,
+      user: this.user._id,
+    })
+    .then(signups => {
+      if (!signups.length) {
+        return this.postSignup();
+      }
+      // @todo Loop through signups to find signup where campaign_run.current.
+      // Hardcoded to first result for now.
+      const currentSignup = signups[0];
+      const data = {
+        _id: currentSignup.id,
+        user: this.user._id,
+        campaign: this.campaignId,
+        created_at: currentSignup.created_at,
+      };
+      if (currentSignup.reportback) {
+        data.reportback = parseInt(currentSignup.reportback.id);
+        data.total_quantity_submitted = currentSignup.reportback.quantity;
+      }
+      return data;
+    })
+    .then(signup => {
+      return dbSignups.create(signup)
+    })
+    .then(signupDoc => {
+      this.user.campaigns[this.campaignId] = signupDoc._id;
+      this.user.markModified('campaigns');
+      return this.user.save();
+    });
   }
 
-  loadReportbackSubmission(req, res) {
-    this.debug(req, 'loadReportbackSubmission');
-
-    return dbRbSubmissions
-      .findById(this.signup.draft_reportback_submission)
-      .exec()
-      .then(reportbackSubmissionDoc => {
-        this.reportbackSubmission = reportbackSubmissionDoc;
-        const promptUser = (req.query.start || false);
-
-        if (!this.reportbackSubmission.quantity) {
-          return this.collectQuantity(req, res, promptUser);
-        }
-        if (!this.reportbackSubmission.image_url) {
-          return this.collectPhoto(req, res, promptUser);
-        }
-        if (!this.reportbackSubmission.caption) {
-          return this.collectCaption(req, res, promptUser);
-        }
-        if (!this.reportbackSubmission.why_participated) {
-          return this.collectWhyParticipated(req, res, promptUser);
-        }
-        // Should have submitted in whyParticipated, but in case of failed_at:
-        logger.warn('no messages sent from chatReportback');
-
-        return this.postReportback(req, res);
-      });
-  }
-
-  loadSignup(req, res, signupId) {
-    this.debug(req, 'loadSignup');
-
-    // @todo: To handle Campaign Runs, we'll need to inspect our Signup date
-    // and compare to it to the Campaign's current start date. If our Signup date
-    // is older than the start date, we'll need to postSignup to store the new
-    // Signup ID to our user's current dbSignups in user.campaigns
-    return dbSignups
-      .findById(signupId)
-      .exec()
-      .then(signupDoc => {
-        if (!signupDoc) {
-          // Edge case where our cached Signup ID in user.campaigns not found
-          // Could potentially lookup campaign/user in dbSignups to check for any
-          // Signup document to use, but for now let's log and assume wont happen.
-          return this.error(req, res, 'loadSignup no doc _id:%s', signupId);
-        }
-        this.signup = signupDoc;
-        this.debug(req, `loaded signup:${signupDoc.id}`);
-
-        if (!this.supportsMMS(req, res)) {
+  /**
+   * Queries DS API to find existing user, else creates new user.
+   */
+  getUser(id) {
+    return app.locals.northstarClient.Users
+      .get('id', id)
+      .then(user => {
+        if (!user) {
+          // @todo Create new User
           return;
         }
-
-        if (this.signup.draft_reportback_submission) {
-          return this.loadReportbackSubmission(req, res);
-        }
-        const incomingCommand = helpers.getFirstWord(req.incoming_message);
-        if (incomingCommand && incomingCommand.toUpperCase() === CMD_REPORTBACK) {
-          return this.createReportbackSubmission(req, res);
-        }
-
-        return this.sendMessage(req, res, this.bot.msg_menu_completed);
+        return dbUsers.create({
+          _id: id,
+          mobile: user.mobile,
+          first_name: user.firstName,
+          email: user.email,
+          phoenix_id: user.drupalID,
+          campaigns: {},   
+        });
       });
   }
 
-  loadUserAndSignup(req, res) {
-    this.debug(req, 'loadUserAndSignup');
+  /**
+   * Returns reportback submission and sends message to user.
+   */
+  loadReportbackSubmission(id) {
 
+    return dbRbSubmissions
+      .findById(id)
+      .exec();
+
+      // .then(reportbackSubmissionDoc => {
+      //   this.reportbackSubmission = reportbackSubmissionDoc;
+      //   const promptUser = (req.query.start || false);
+
+      //   if (!this.reportbackSubmission.quantity) {
+      //     return this.collectQuantity(req, res, promptUser);
+      //   }
+      //   if (!this.reportbackSubmission.image_url) {
+      //     return this.collectPhoto(req, res, promptUser);
+      //   }
+      //   if (!this.reportbackSubmission.caption) {
+      //     return this.collectCaption(req, res, promptUser);
+      //   }
+      //   if (!this.reportbackSubmission.why_participated) {
+      //     return this.collectWhyParticipated(req, res, promptUser);
+      //   }
+      //   // Should have submitted in whyParticipated, but in case of failed_at:
+      //   logger.warn('no messages sent from chatReportback');
+
+      //   return this.postReportback(req, res);
+      // });
+  }
+
+  /**
+   * Returns signup from cache if exists for id, else get/create from DS API.
+   */
+  loadSignup(id) {
+    if (!id) {
+      return this.getSignup();
+    }
+
+    return dbSignups
+      .findById(id)
+      .exec()
+      .then(signupDoc => {
+        if (signupDoc) {
+          // @todo Validate signupDoc dates against current Campaign run dates.
+          return signupDoc;
+        }
+        return this.getSignup();
+      });
+  }
+
+  /**
+   * Returns user from cache if exists for userId, else get/create from DS API.
+   */
+  loadUser(id) {
     return dbUsers
-      .findById(req.user_id)
+      .findById(id)
       .exec()
       .then(userDoc => {
-        if (!userDoc) {
-          return this.createUserAndPostSignup(req, res);
+        if (userDoc) {
+          return userDoc;
         }
-
-        this.user = userDoc;
-        this.debug(req, `loaded user:${req.user_id}`);
-
-        const signupId = this.user.campaigns[this.campaignId];
-        if (!signupId) {
-          return this
-            .getCurrentSignup(req, res)
-            .then(() => {
-              return this.sendMessage(req, res, this.bot.msg_menu_signedup);
-            });
-        }
-
-        return this.loadSignup(req, res, signupId);
+        return this.getUser(id);
       })
-      .catch(err => {this.error(req, res, err)});
   }
 
   loggerPrefix(req) {
@@ -400,30 +398,26 @@ class CampaignBotController {
   }
 
   /**
-   * Post signup to DS API for current user and campaign.
+   * Posts signup to DS API and returns cached signup.
    */
-  postSignup(req, res) {
+  postSignup() {
     this.debug(req, 'postSignup');
 
-    const postData = {
-      source: process.env.DS_API_POST_SOURCE,
-      uid: this.user.phoenix_id,
-    };
-
     return app.locals.phoenixClient.Campaigns
-      .signup(this.campaignId, postData)
+      .signup(this.campaignId, {
+        source: process.env.DS_API_POST_SOURCE,
+        uid: this.user.phoenix_id,
+      })
       .then(signupId => {
-        this.debug(req, `created signup:${signupId}`);
-
-        return this.cacheCurrentSignup({
+        return {
           _id: signupId,
           campaign: this.campaignId,
-          user: req.user_id,
-        });
+          user: this.user._id,
+        };
       });
   }
 
-  sendMessage(req, res, msgTxt) {
+  getMessage(req, msgTxt) {
     if (!msgTxt) {
       return this.error(req, res, 'sendMessage no msgTxt');
     }
@@ -433,17 +427,17 @@ class CampaignBotController {
     msgTxt = msgTxt.replace(/{{rb_noun}}/gi, this.campaign.rb_noun);
     msgTxt = msgTxt.replace(/{{rb_verb}}/gi, this.campaign.rb_verb);
 
-    if (this.signup) {
-      var quantity = this.signup.total_quantity_submitted
+    if (req.signup) {
+      var quantity = req.signup.total_quantity_submitted
       // If a draft exists, use the reported draft from draft, as we're continuing
       // the ReportbackSubmission.
-      if (this.reportbackSubmission) {
-        quantity = this.reportbackSubmission.quantity;
+      if (req.reportbackSubmission) {
+        quantity = req.reportbackSubmission.quantity;
       }
       msgTxt = msgTxt.replace(/{{quantity}}/gi, quantity);
     }
 
-    if (req.query.start && this.signup && this.signup.draft_reportback_submission) {
+    if (req.query.start && req.signup && req.draft_reportback_submission) {
       // @todo New bot property for continue draft message
       var continueMsg = 'Picking up where you left off on ' + this.campaign.title;
       msgTxt = continueMsg + '...\n\n' + msgTxt;
@@ -453,13 +447,7 @@ class CampaignBotController {
       msgTxt = '@stg: ' + msgTxt;
     }
 
-    const optInPath = this.mobileCommonsConfig.oip_chat;
-    if (!optInPath) {
-      return this.error(req, res, 'sendMessage !optInPath');
-    }
-
-    mobilecommons.chatbot({phone: this.user.mobile}, optInPath, msgTxt);
-    res.send({message: msgTxt});
+    return msgTxt;
   }
 
   supportsMMS(req, res) {
