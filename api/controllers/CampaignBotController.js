@@ -60,6 +60,20 @@ class CampaignBotController {
     return this.loadUserAndSignup(req, res);
   }
 
+  /**
+   * Creates a document in our Signups cache for given Signup object and sets
+   * the current User's campaigns cache with Campaign and Signup id.
+   */
+  cacheCurrentSignup(signup) {
+    return dbSignups
+      .create(signup)
+      .then(signupDoc => {
+        this.user.campaigns[signup.campaign] = signupDoc._id;
+        this.user.markModified('campaigns');
+        return this.user.save();
+      });
+  }
+
   collectCaption(req, res, promptUser) {
     this.debug(req, `collectCaption prompt:${promptUser}`);
 
@@ -200,6 +214,40 @@ class CampaignBotController {
     return res.sendStatus(500);
   }
 
+  /**
+   * Checks DS API to see if a Signup exists for this user/campaign. If not,
+   * calls postSignup to create Signup and cache.
+   */
+  getCurrentSignup(req, res) {
+    this.debug(req, 'getCurrentSignup');
+
+    return app.locals.northstarClient.Signups.index({
+        campaigns: this.campaignId,
+        user: req.user_id,
+      })
+      .then(signups => {
+        if (!signups.length) {
+          return this.postSignup(req, res);
+        }
+
+        // @todo Loop through signups to find signup where campaign_run.current.
+        // Hardcoded to first result for now.
+        const currentSignup = signups[0];
+        const data = {
+          _id: currentSignup.id,
+          user: req.user_id,
+          campaign: this.campaignId,
+          created_at: currentSignup.created_at,
+        };
+        if (currentSignup.reportback) {
+          data.reportback = parseInt(currentSignup.reportback.id);
+          data.total_quantity_submitted = currentSignup.reportback.quantity;
+        }
+
+        return this.cacheCurrentSignup(data);
+      });
+  }
+
   loadReportbackSubmission(req, res) {
     this.debug(req, 'loadReportbackSubmission');
 
@@ -281,7 +329,11 @@ class CampaignBotController {
 
         const signupId = this.user.campaigns[this.campaignId];
         if (!signupId) {
-          return this.postSignup(req, res);
+          return this
+            .getCurrentSignup(req, res)
+            .then(() => {
+              return this.sendMessage(req, res, this.bot.msg_menu_signedup);
+            });
         }
 
         return this.loadSignup(req, res, signupId);
@@ -347,11 +399,11 @@ class CampaignBotController {
       });
   }
 
+  /**
+   * Post signup to DS API for current user and campaign.
+   */
   postSignup(req, res) {
     this.debug(req, 'postSignup');
-
-    // @todo Sanity check by using Northstar getSignups for user/campaign before
-    // requesting POST signup from Phoenix
 
     const postData = {
       source: process.env.DS_API_POST_SOURCE,
@@ -363,23 +415,11 @@ class CampaignBotController {
       .then(signupId => {
         this.debug(req, `created signup:${signupId}`);
 
-        return dbSignups.create({
+        return this.cacheCurrentSignup({
           _id: signupId,
           campaign: this.campaignId,
           user: req.user_id,
         });
-      })
-      .then(signupDoc => {
-        const signupDocId = signupDoc._id;
-        this.debug(req, `created signupDoc:${signupDocId}`)
-        // Store as the User's current Signup for this Campaign.
-        this.user.campaigns[this.campaignId] = signupDocId;
-        this.user.markModified('campaigns');
-
-        return this.user.save();
-      })
-      .then(() => {
-        return this.sendMessage(req, res, this.bot.msg_menu_signedup);
       });
   }
 
@@ -449,6 +489,7 @@ class CampaignBotController {
         return this.createReportbackSubmission(req, res);
       });
   };
+
 };
 
 module.exports = CampaignBotController;
