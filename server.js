@@ -29,8 +29,7 @@ phoenix.userLogin(
  */
 app = express();
 
-const appConfig = require('./config')();
-const router = require('./api/router');
+const appConfig = require('./config')(); 
 const smsConfigsLoader = require('./config/smsConfigsLoader');
 
 app.locals.northstarClient = new NorthstarClient({
@@ -44,9 +43,15 @@ app.locals.phoenixClient = new PhoenixClient({
   password: process.env.DS_PHOENIX_API_PASSWORD,
 });
 
+const router = require('./api/router');
+
+const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
+
 // Retrieves all SMS config files before starting server.
 smsConfigsLoader(() => {
   const port = (process.env.PORT || 5000);
+  // @todo We'll need to loop through all campaignBots and store as array.
+  app.locals.campaignBotController = new CampaignBotController(41);
   app.listen(port, () => {
     logger.info(`Gambit is listening, port:${port} env:${process.env.NODE_ENV}.`);
   });

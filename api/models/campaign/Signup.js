@@ -1,7 +1,11 @@
 /**
  * Models a DS Signup.
  */
-var mongoose = require('mongoose');
+
+ /**
+  * Imports.
+  */
+const mongoose = require('mongoose');
 
 var schema = new mongoose.Schema({
 
@@ -15,7 +19,10 @@ var schema = new mongoose.Schema({
 
   // If user is in the middle of a Reportback Submission, we store its ID 
   // for easy lookup.
-  draft_reportback_submission: {type: String, ref: 'ReportbackSubmission'},
+  draft_reportback_submission: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'reportback_submissions'
+  },
 
   reportback: Number,
 
@@ -31,5 +38,5 @@ var schema = new mongoose.Schema({
 })
 
 module.exports = function(connection) {
-  return connection.model('signups', schema);
+  return connection.model('Signups', schema);
 };

@@ -6,7 +6,7 @@ const mobilecommons = rootRequire('lib/mobilecommons');
 
 var campaignRouter = require('./legacy/ds-routing');
 var reportbackRouter = require('./legacy/reportback');
-var CampaignBot = require('./controllers/CampaignBotController');
+
 var DonorsChooseBot = require('./controllers/DonorsChooseBotController');
 var Slothbot = require('./controllers/SlothBotController');
 var gambitJunior = rootRequire('lib/gambit-junior');
@@ -73,7 +73,7 @@ router.post('/v1/chatbot/sync', function(request, response) {
  */
 function campaignBot(req, res) {
   req.campaign_id = req.query.campaign;
-  const controller = new CampaignBot(req, res);
+  const controller = app.locals.campaignBotController;
 
   req.campaign = app.getConfig(
     app.ConfigName.CAMPAIGNS,
@@ -126,5 +126,6 @@ function campaignBot(req, res) {
     })
     .catch(err => {
       controller.error(req, res, err);
+      return res.sendStatus(500);
     });
 }

@@ -32,14 +32,6 @@ module.exports = function() {
   // Set the database URI this app will use to retrieve SMS config files.
   app.set('config-database-uri', process.env.CONFIG_DB_URI || 'mongodb://localhost/config')
 
-  // @TODO: Find a better way of passing the host URL to SGSoloController.createSoloGame()
-  // Specify app host URL. 
-  if (process.env.NODE_ENV == 'production') {
-    app.hostName = 'ds-mdata-responder.herokuapp.com';
-  } else {
-    app.hostName = 'localhost:' + app.get('port');
-  }
-
   /**
    * Global stathat reporting wrapper function
    *
@@ -57,5 +49,12 @@ module.exports = function() {
       count,
       function(status, json) {}
     );
+  };
+
+  const conn = rootRequire('config/connectionOperations');
+  app.locals.db = {
+    reportbackSubmissions: rootRequire('api/models/campaign/ReportbackSubmission')(conn),
+    signups: rootRequire('api/models/campaign/Signup')(conn),
+    users: rootRequire('api/models/User')(conn),
   };
 }
