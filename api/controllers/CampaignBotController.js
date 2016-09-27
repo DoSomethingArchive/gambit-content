@@ -142,7 +142,7 @@ class CampaignBotController {
       .then(() => {
         this.debug(req, `saved signup:${this.signup._id.toString()}`);
 
-        return this.collectQuantity(req, res, true);
+        return req.reportbackSubmission;
       });
   }
 
@@ -195,10 +195,7 @@ class CampaignBotController {
   /**
    * Get the message to send back to user based on req and ReportbackSubmission.
    */
-  getMessageForReportbackSubmission(req, isNew) {
-    if (isNew) {
-
-    }
+  continueReportbackSubmission(req) {
     const ask = (req.query.start || false);
     const properties = [
       'quantity',
@@ -289,15 +286,6 @@ class CampaignBotController {
   }
 
   /**
-   * Returns reportback submission and sends message to user.
-   */
-  loadReportbackSubmission(id) {
-    return dbRbSubmissions
-      .findById(id)
-      .exec();
-  }
-
-  /**
    * Returns signup from cache if exists for id, else get/create from DS API.
    */
   loadSignup(id) {
@@ -311,10 +299,7 @@ class CampaignBotController {
           return this.getSignup();
         }
 
-        // @todo Load ReportbackSubmission and attach to signup? 
-        // There's prob a mongoose function to load draft_reportback_submission.
-
-          // @todo Validate signupDoc dates against current Campaign run dates.
+        // @todo Validate signupDoc dates against current Campaign run dates.
         return signup;        
       });
   }

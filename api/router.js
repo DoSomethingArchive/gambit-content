@@ -98,29 +98,26 @@ function campaignBot(req, res) {
       if (currentSignup) {
         return controller.loadSignup(currentSignup);
       }
+
       return controller.getCurrentSignup(user, req.campaign_id);
     })
     .then(signup => {
       controller.debug(req, `loaded signup:${signup._id}`);
-
       req.signup = signup;
-      const draftId = signup.draft_reportback_submission;
-      // if (!draftId && isCommandReportback(req.incoming_message)) {
-      //   return controller.createReportbackSubmission(req);
-      // });
 
-      controller.debug(req, `loadReportbackSubmission:${draftId}`);
-      return controller.loadReportbackSubmission(draftId);
-    })
-    .then(reportbackSubmission => {
-      if (!reportbackSubmission) {
-        if (req.signup.total_quantity_submitted) {
-           return controller.getMessage(req, controller.bot.msg_menu_completed);
-        }
-        return controller.getMessage(req, controller.bot.msg_menu_signedup);
+      if (signup.draft_reportback_submission) {
+        return controller.continueReportbackSubmission(req);
       }
-      req.reportbackSubmission = reportbackSubmission;
-      return controller.getMessageForReportbackSubmission(req);
+
+      if (controller.isCommandReportback(req.incoming_message)) {
+        return controller.createReportbackSubmission(req);
+      }
+
+      if (signup.total_quantity_submitted) {
+        return controller.getMessage(req, controller.bot.msg_menu_completed);
+      }
+
+      return controller.getMessage(req, controller.bot.msg_menu_signedup);
     })
     .then(msg => {
       mobilecommons.chatbot(req.body, req.mobilecommons_config.oip_chat, msg);
