@@ -17,17 +17,24 @@ const CMD_REPORTBACK = (process.env.GAMBIT_CMD_REPORTBACK || 'P');
  */
 class CampaignBotController {
 
-  constructor(botId) {
-    this.bot = app.getConfig(app.ConfigName.CAMPAIGNBOTS, botId);
-    logger.info(`CampaignBotController loaded campaignBot:${botId}`);
+  /**
+   * Controls chatbot conversations to Signup and Reportback to DS Campaigns.
+   * @constructor
+   * @param {number} campaignBotId - Campaignbot to use for response content.
+   */
+  constructor(campaignBotId) {
+    this.bot = app.getConfig(app.ConfigName.CAMPAIGNBOTS, campaignBotId);
+    logger.info(`CampaignBotController loaded campaignBot:${campaignBotId}`);
 
     if (!this.bot) {
-      return this.error(req, `CampaignBot not found for id:${botId}`);
+      return this.error(req, `CampaignBot not found for id:${campaignBotId}`);
     }
   }
 
   /**
-   * Creates new reportbackSubmission document and updates our current signup.
+   * Creates new ReportbackSubmission model and updates Signup model's draft.
+   * @param {object} req
+   * @return {string} - Message to send and begin collecting Reportback data.
    */
   createReportbackSubmission(req) {
     this.debug(req, 'createReportbackSubmission');
@@ -46,7 +53,7 @@ class CampaignBotController {
       .then(() => {
         this.debug(req, `updated signup:${req.signup._id.toString()}`)
 
-        return this.getMessageForReportbackProperty(req, 'quantity', true);
+        return this.collectReportbackProperty(req, 'quantity', true);
       });
   }
 
@@ -65,10 +72,15 @@ class CampaignBotController {
   }
 
   /**
-   * Get the message to send back for req and ReportbackSubmission property.
+   * Handles asking for and saving the given property to our draft submission.
+   * Posts completed submissions to DS API
+   * @param {object} req
+   * @param {property} string - The ReportbackSubmission property to get/save
+   * @param {bool} ask - If true, returns the ask message to send, else
+   *     validate, save, and send message to ask for next property.
    */
-  getMessageForReportbackProperty(req, property, ask) {
-    this.debug(req, `getMessageForReportbackProperty:${property}`);
+  collectReportbackProperty(req, property, ask) {
+    this.debug(req, `collectReportbackProperty:${property}`);
 
     if (req.query.start || ask) {
       return this.getMessage(req, this.bot[`msg_ask_${property}`]);
@@ -110,7 +122,8 @@ class CampaignBotController {
   }
 
   /**
-   * Get the message to send back to user based on req and ReportbackSubmission.
+   * Handles conversation for collecting ReportbackSubmission data or posting.
+   * @param {object} req
    */
   continueReportbackSubmission(req) {
     this.debug(req, 'continueReportbackSubmission');
@@ -119,27 +132,29 @@ class CampaignBotController {
     const ask = ( req.query.start || false );
 
     if (!submission.quantity) {
-      return this.getMessageForReportbackProperty(req, 'quantity', ask);
+      return this.collectReportbackProperty(req, 'quantity', ask);
     }
     if (!submission.photo) {
-      return this.getMessageForReportbackProperty(req, 'photo', ask);
+      return this.collectReportbackProperty(req, 'photo', ask);
     } 
     if (!submission.caption) {
-      return this.getMessageForReportbackProperty(req, 'caption', ask);
+      return this.collectReportbackProperty(req, 'caption', ask);
     }
     if (!submission.why_participated) {
-      return this.getMessageForReportbackProperty(req, 'why_participated', ask);
+      return this.collectReportbackProperty(req, 'why_participated', ask);
     }
 
     // If we're here, we have a completed submission but the POST request
     // likely failed.
-    // @todo Check failed_at before sending?
+    // TODO: Check failed_at before sending? Message about whoops trying again?
     logger.warn('no messages sent from continueReportbackSubmission');
     return this.postReportback(req);
   }
 
   /**
-   * Queries DS API to find current signup, else creates new signup.
+   * Gets Signup from DS API if exists for given user, else creates new Signup.
+   * @param {object} req - Expects loaded req.user
+   * @return {object} - Signup model
    */
   getCurrentSignup(req) {
     this.debug(req, 'getCurrentSignup');
@@ -187,14 +202,16 @@ class CampaignBotController {
   }
 
   /**
-   * Queries DS API to find existing user, else creates new user.
+   * Gets User from DS API if exists for given id, else creates new User.
+   * @param {string} id - DS User ID
+   * @return {object} - User model
    */
   getUser(id) {
     return app.locals.clients.northstar.Users
       .get('id', id)
       .then(user => {
         if (!user) {
-          // @todo Create new User
+          // TODO: Create new User
           return;
         }
         return app.locals.db.users.create({
@@ -209,7 +226,9 @@ class CampaignBotController {
   }
 
   /**
-   * Returns whether incomingMessage should begin Reportback conversation.
+   * Returns whether incomingMessage should begin a Reportback conversation.
+   * @param {string} incomingMessage
+   * @return {bool}
    */
   isCommandReportback(incomingMessage) {
     const firstWord = helpers.getFirstWord(incomingMessage);
@@ -217,7 +236,9 @@ class CampaignBotController {
   }
 
   /**
-   * Returns signup from cache if exists for id, else get/create from DS API.
+   * Loads Signup model if exists for given id, else get/create from API.
+   * @param {number} id - DS Signup ID
+   * @return {object}
    */
   loadSignup(id) {
     return app.locals.db.signups
@@ -237,7 +258,9 @@ class CampaignBotController {
   }
 
   /**
-   * Loads req.user from cache if exists for userId, else get/create from API.
+   * Loads User model if exists for given id, else get/create from API.
+   * @param {string} id - DS User ID (Northstar)
+   * @return {object}
    */
   loadUser(id) {
     return app.locals.db.users
@@ -251,12 +274,19 @@ class CampaignBotController {
       })
   }
 
+  /**
+   * Helper function for this.debug and this.error functions.
+   * @param {object} req - Expects req.user_id, req.campaign_id set
+   * @return {string}
+   */
   loggerPrefix(req) {
     return 'campaignBot.campaign:' + req.campaign_id + ' user:' + req.user_id;
   }
 
   /**
-   * Posts ReportbackSubmission to DS API.
+   * Posts ReportbackSubmission to DS API for incoming Express req
+   * @param {object} req - Expects loaded req.user, req.signup
+   * @return {Promise}
    */
   postReportback(req) {
     this.debug(req, 'postReportback');
@@ -289,10 +319,10 @@ class CampaignBotController {
   /**
    * Handles successful Reportback POST request.
    * @param {object} req - Express request
-   * @param {object} res - Express response
-   * @param {number} rbid - Returned reportback id
+   * @param {number} rbid - Reportback id returned from our post to DS API.
+   * @return {string}
    */
-  postReportbackSuccess(req, res, rbid) {
+  postReportbackSuccess(req, rbid) {
     this.debug(req, `postReportbackSuccess reportback:${rbid}`);
 
     const dateSubmitted = Date.now();
@@ -305,15 +335,19 @@ class CampaignBotController {
         req.signup.reportback = rbid;
         req.signup.total_quantity_submitted = submission.quantity;
         req.signup.updated_at = dateSubmitted;
-        // Unset draft so next time user returns to this campaign, we create new
-        // reportback submission.
         req.signup.draft_reportback_submission = undefined;
+        req.signup.save();
+      })
+      .then(() => {
         return this.getMessage(req, this.bot.msg_menu_completed);
       });
   }
 
   /**
    * Posts signup to DS API and returns cached signup.
+   * @param {number} user - A User model (we need to pass its phoenix_id)
+   * @param {number} campaignId - Our DS Campaign ID
+   * @return {object} - Returned Signup model
    */
   postSignup(user, campaignId) {
     this.debug(req, 'postSignup');
@@ -332,9 +366,15 @@ class CampaignBotController {
       });
   }
 
+  /**
+   * Replaces placeholder variables in given msgTxt with data from incoming req
+   * @param {object} req - Expects loaded req.campaign, req.signup
+   * @param {string} msgTxt - Message to send
+   * @return {string} - Message to send, with variables replaced
+   */
   getMessage(req, msgTxt) {
     if (!msgTxt) {
-      return this.error(req, 'sendMessage no msgTxt');
+      return this.error(req, 'getMessage no msgTxt');
     }
 
     msgTxt = msgTxt.replace(/<br>/gi, '\n');
@@ -343,11 +383,9 @@ class CampaignBotController {
     msgTxt = msgTxt.replace(/{{rb_verb}}/gi, req.campaign.rb_verb);
 
     if (req.signup) {
-      var quantity = req.signup.total_quantity_submitted
-      // If a draft exists, use the reported draft from draft, as we're continuing
-      // the ReportbackSubmission.
-      if (req.reportbackSubmission) {
-        quantity = req.reportbackSubmission.quantity;
+      let quantity = req.signup.total_quantity_submitted
+      if (req.signup.draft_reportback_submission) {
+        quantity = req.signup.draft_reportback_submission.quantity;
       }
       msgTxt = msgTxt.replace(/{{quantity}}/gi, quantity);
     }
