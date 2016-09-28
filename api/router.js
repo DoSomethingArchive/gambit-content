@@ -1,15 +1,18 @@
-var express = require('express')
-var router = express.Router();
+"use strict";
 
-var logger = rootRequire('lib/logger');
+const express = require('express')
+const router = express.Router();
+
+const logger = rootRequire('lib/logger');
 const mobilecommons = rootRequire('lib/mobilecommons');
+const gambitJunior = rootRequire('lib/gambit-junior');
 
-var campaignRouter = require('./legacy/ds-routing');
-var reportbackRouter = require('./legacy/reportback');
+const campaignRouter = require('./legacy/ds-routing');
+const reportbackRouter = require('./legacy/reportback');
 
-var DonorsChooseBot = require('./controllers/DonorsChooseBotController');
-var Slothbot = require('./controllers/SlothBotController');
-var gambitJunior = rootRequire('lib/gambit-junior');
+const DonorsChooseBot = require('./controllers/DonorsChooseBotController');
+const Slothbot = require('./controllers/SlothBotController');
+
 
 app.use('/', router);
 
@@ -88,6 +91,8 @@ function campaignBot(req, res) {
     req.mobilecommons_campaign
   );
 
+  let msgTxt;
+
   return controller
     .loadUser(req.user_id)
     .then(user => {
@@ -116,10 +121,14 @@ function campaignBot(req, res) {
       }
 
       if (signup.total_quantity_submitted) {
-        return controller.getMessage(req, controller.bot.msg_menu_completed);
+        msgTxt = controller.bot.msg_menu_completed;
+
+        return controller.renderResponseMessage(req, msgTxt);
       }
 
-      return controller.getMessage(req, controller.bot.msg_menu_signedup);
+      msgTxt = controller.bot.msg_menu_signedup;
+
+      return controller.renderResponseMessage(req, msgTxt);
     })
     .then(msg => {
       controller.debug(req, `sendMessage:${msg}`);

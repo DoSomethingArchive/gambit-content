@@ -32,6 +32,86 @@ class CampaignBotController {
   }
 
   /**
+   * Handles asking for and saving the given property to our draft submission.
+   * Posts completed submissions to DS API
+   * @param {object} req
+   * @param {property} string - The ReportbackSubmission property to get/save
+   * @param {bool} ask - If true, returns the ask message to send, else
+   *     validate, save, and send message to ask for next property.
+   */
+  collectReportbackProperty(req, property, ask) {
+    this.debug(req, `collectReportbackProperty:${property}`);
+
+    if (req.query.start || ask) {
+      return this.renderResponseMessage(req, this.bot[`msg_ask_${property}`]);
+    }
+    
+    let input = req.incoming_message;
+
+    if (property === 'quantity') {
+      if (helpers.hasLetters(input) || !parseInt(input)) {
+        return this.renderResponseMessage(req, this.bot.msg_invalid_quantity);
+      }
+      input = parseInt(input);
+    }
+    else if (property === 'photo') {
+      input = req.incoming_image_url;
+      if (!input) {
+        return this.renderResponseMessage(req, this.bot.msg_no_photo_sent);
+      }
+    }
+
+    req.signup.draft_reportback_submission[property] = input;
+
+    return req.signup.draft_reportback_submission
+      .save()
+      .then(() => {
+        this.debug(req, `saved ${property}:${input}`);
+        switch(property) {
+          case 'quantity':
+            return this.renderResponseMessage(req, this.bot.msg_ask_photo);
+          case 'photo':
+            return this.renderResponseMessage(req, this.bot.msg_ask_caption);
+          case 'caption':
+            // @todo Only ask for why when first reportback.
+            return this.renderResponseMessage(req, this.bot.msg_ask_why_participated);
+          default:
+            return this.postReportback(req);
+        }
+      });
+  }
+
+  /**
+   * Handles conversation for collecting ReportbackSubmission data or posting.
+   * @param {object} req
+   */
+  continueReportbackSubmission(req) {
+    this.debug(req, 'continueReportbackSubmission');
+
+    const submission = req.signup.draft_reportback_submission;
+    const ask = ( req.query.start || false );
+
+    if (!submission.quantity) {
+      return this.collectReportbackProperty(req, 'quantity', ask);
+    }
+    if (!submission.photo) {
+      return this.collectReportbackProperty(req, 'photo', ask);
+    } 
+    if (!submission.caption) {
+      return this.collectReportbackProperty(req, 'caption', ask);
+    }
+    if (!submission.why_participated) {
+      return this.collectReportbackProperty(req, 'why_participated', ask);
+    }
+
+    // If we're here, we have a completed submission but the POST request
+    // likely failed.
+    // TODO: Check failed_at before sending? Message about whoops trying again?
+    logger.warn('no messages sent from continueReportbackSubmission');
+    return this.postReportback(req);
+  }
+
+  /**
    * Creates new ReportbackSubmission model and updates Signup model's draft.
    * @param {object} req
    * @return {string} - Message to send and begin collecting Reportback data.
@@ -69,86 +149,6 @@ class CampaignBotController {
    */
   error(req, err) {
     logger.error(`${this.loggerPrefix(req)} ${err}:${err.stack}`);
-  }
-
-  /**
-   * Handles asking for and saving the given property to our draft submission.
-   * Posts completed submissions to DS API
-   * @param {object} req
-   * @param {property} string - The ReportbackSubmission property to get/save
-   * @param {bool} ask - If true, returns the ask message to send, else
-   *     validate, save, and send message to ask for next property.
-   */
-  collectReportbackProperty(req, property, ask) {
-    this.debug(req, `collectReportbackProperty:${property}`);
-
-    if (req.query.start || ask) {
-      return this.getMessage(req, this.bot[`msg_ask_${property}`]);
-    }
-    
-    let input = req.incoming_message;
-
-    if (property === 'quantity') {
-      if (helpers.hasLetters(input) || !parseInt(input)) {
-        return this.sendMessage(req, res, this.bot.msg_invalid_quantity);
-      }
-      input = parseInt(input);
-    }
-    else if (property === 'photo') {
-      input = req.incoming_image_url;
-      if (!input) {
-        return this.sendMessage(req, res, this.bot.msg_no_photo_sent);
-      }
-    }
-
-    req.signup.draft_reportback_submission[property] = input;
-
-    return req.signup.draft_reportback_submission
-      .save()
-      .then(() => {
-        this.debug(req, `saved ${property}:${input}`);
-        switch(property) {
-          case 'quantity':
-            return this.getMessage(req, this.bot.msg_ask_photo);
-          case 'photo':
-            return this.getMessage(req, this.bot.msg_ask_caption);
-          case 'caption':
-            // @todo Only ask for why when first reportback.
-            return this.getMessage(req, this.bot.msg_ask_why_participated);
-          default:
-            return this.postReportback(req);
-        }
-      });
-  }
-
-  /**
-   * Handles conversation for collecting ReportbackSubmission data or posting.
-   * @param {object} req
-   */
-  continueReportbackSubmission(req) {
-    this.debug(req, 'continueReportbackSubmission');
-
-    const submission = req.signup.draft_reportback_submission;
-    const ask = ( req.query.start || false );
-
-    if (!submission.quantity) {
-      return this.collectReportbackProperty(req, 'quantity', ask);
-    }
-    if (!submission.photo) {
-      return this.collectReportbackProperty(req, 'photo', ask);
-    } 
-    if (!submission.caption) {
-      return this.collectReportbackProperty(req, 'caption', ask);
-    }
-    if (!submission.why_participated) {
-      return this.collectReportbackProperty(req, 'why_participated', ask);
-    }
-
-    // If we're here, we have a completed submission but the POST request
-    // likely failed.
-    // TODO: Check failed_at before sending? Message about whoops trying again?
-    logger.warn('no messages sent from continueReportbackSubmission');
-    return this.postReportback(req);
   }
 
   /**
@@ -339,7 +339,7 @@ class CampaignBotController {
         req.signup.save();
       })
       .then(() => {
-        return this.getMessage(req, this.bot.msg_menu_completed);
+        return this.renderResponseMessage(req, this.bot.msg_menu_completed);
       });
   }
 
@@ -368,11 +368,11 @@ class CampaignBotController {
 
   /**
    * Replaces placeholder variables in given msgTxt with data from incoming req
-   * @param {object} req - Expects loaded req.campaign, req.signup
-   * @param {string} msgTxt - Message to send
-   * @return {string} - Message to send, with variables replaced
+   * @param {object} req - Express request, with loaded req.campaign, req.signup
+   * @param {string} msgTxt - Message to send back to Express request req
+   * @return {string} - Message to send, with variables replaced with req data
    */
-  getMessage(req, msgTxt) {
+  renderResponseMessage(req, msgTxt) {
     if (!msgTxt) {
       return this.error(req, 'getMessage no msgTxt');
     }
