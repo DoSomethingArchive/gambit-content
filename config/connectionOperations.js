@@ -1,14 +1,16 @@
-var mongoose = require('mongoose');
+const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
+const dbUri = process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder';
 
 var connectionOperations;
 
 if (!connectionOperations || !connectionOperations.readyState) {
-  module.exports = connectionOperations = mongoose.createConnection(app.get('operations-database-uri'));
-} else {
-  module.exports = connectionOperations
+  module.exports = connectionOperations = mongoose.createConnection(dbUri);
+} 
+else {
+  module.exports = connectionOperations;
 }
 
 connectionOperations.on('connected', function() {  
-  console.log('Mongoose connected to connectionOperations with status code: ' + connectionOperations.readyState);
+  console.log(`connectionOperations readyState:${connectionOperations.readyState}`);
 });

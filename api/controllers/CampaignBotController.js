@@ -216,7 +216,7 @@ class CampaignBotController {
   getCurrentSignup(req) {
     this.debug(req, 'getCurrentSignup');
 
-    return app.locals.northstarClient.Signups.index({
+    return app.locals.clients.northstar.Signups.index({
       campaigns: req.campaign_id,
       user: req.user_id,
     })
@@ -262,7 +262,7 @@ class CampaignBotController {
    * Queries DS API to find existing user, else creates new user.
    */
   getUser(id) {
-    return app.locals.northstarClient.Users
+    return app.locals.clients.northstar.Users
       .get('id', id)
       .then(user => {
         if (!user) {
@@ -345,7 +345,7 @@ class CampaignBotController {
       postData.why_participated = submission.why_participated;
     }
 
-    return app.locals.phoenixClient.Campaigns
+    return app.locals.clients.phoenix.Campaigns
       .reportback(req.campaign_id, postData)
       .then(reportbackId => {
         return this.postReportbackSuccess(req, reportbackId);
@@ -390,7 +390,7 @@ class CampaignBotController {
   postSignup(user, campaignId) {
     this.debug(req, 'postSignup');
 
-    return app.locals.phoenixClient.Campaigns
+    return app.locals.clients.phoenix.Campaigns
       .signup(campaignId, {
         source: process.env.DS_API_POST_SOURCE,
         uid: user.phoenix_id,

@@ -9,8 +9,6 @@ const express = require('express');
 const http = require('http');
 const logger = rootRequire('lib/logger');
 const phoenix = rootRequire('lib/phoenix')();
-const NorthstarClient = require('@dosomething/northstar-js');
-const PhoenixClient = require('@dosomething/phoenix-js');
 
 // Default is 5. Increasing # of concurrent sockets per host.
 http.globalAgent.maxSockets = 100;
@@ -31,17 +29,6 @@ app = express();
 
 const appConfig = require('./config')(); 
 const smsConfigsLoader = require('./config/smsConfigsLoader');
-
-app.locals.northstarClient = new NorthstarClient({
-  baseURI: process.env.DS_NORTHSTAR_API_BASEURI,
-  apiKey: process.env.DS_NORTHSTAR_API_KEY,
-});
-
-app.locals.phoenixClient = new PhoenixClient({
-  baseURI: process.env.DS_PHOENIX_API_BASEURI,
-  username: process.env.DS_PHOENIX_API_USERNAME,
-  password: process.env.DS_PHOENIX_API_PASSWORD,
-});
 
 const router = require('./api/router');
 

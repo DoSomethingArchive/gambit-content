@@ -24,5 +24,5 @@ var schema = new mongoose.Schema({
 })
 
 module.exports = function(connection) {
-  return connection.model('Users', schema);
+  return connection.model('users', schema);
 };
