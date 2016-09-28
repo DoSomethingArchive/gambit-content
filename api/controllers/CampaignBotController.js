@@ -26,87 +26,6 @@ class CampaignBotController {
     }
   }
 
-  collectCaption(req, res, promptUser) {
-    this.debug(req, `collectCaption prompt:${promptUser}`);
-
-    if (promptUser) {
-      return this.sendMessage(req, res, this.bot.msg_ask_caption);
-    }
-
-    this.reportbackSubmission.caption = req.incoming_message;
-    return this.reportbackSubmission
-      .save()
-      .then(() => {
-        this.debug(req, `saved caption:${this.reportbackSubmission.caption}`);
-        // If this is our current user's first Reportback Submission:
-        if (!this.signup.total_quantity_submitted) {
-          return this.collectWhyParticipated(req, res, true);
-        }
-        return this.postReportback(req, res);    
-      });
-  }
-
-  collectPhoto(req, res, promptUser) {
-    this.debug(req, `collectPhoto prompt:${promptUser}`);
-
-    if (promptUser) {
-      return this.sendMessage(req, res, this.bot.msg_ask_photo);
-    }
-    if (!req.incoming_image_url) {
-      return this.sendMessage(req, res, this.bot.msg_no_photo_sent);
-    }
-
-    this.reportbackSubmission.image_url = req.incoming_image_url;
-
-    return this.reportbackSubmission
-      .save()
-      .then(() => {
-        this.debug(req, `saved image_url:${this.reportbackSubmission.image_url}`);
-        return this.collectCaption(req, res, true);
-      });
-  }
-
-  collectQuantity(req, res, promptUser) {
-    this.debug(req, `collectQuantity prompt:${promptUser}`);
-    
-    if (promptUser) {
-      return this.sendMessage(req, res, this.bot.msg_ask_quantity);
-    }
-
-    const quantity = req.incoming_message;
-    // @todo: Extract any numbers we can find instead of invalidating input based
-    // on whether it contains any words (could contain noun, verb, or 'around 90')
-    if (helpers.hasLetters(quantity) || !parseInt(quantity)) {
-      return this.sendMessage(req, res, this.bot.msg_invalid_quantity);
-    }
-
-    this.reportbackSubmission.quantity = parseInt(quantity);
-
-    return this.reportbackSubmission
-      .save()
-      .then(() => {
-        this.debug(req, `saved quantity:${this.reportbackSubmission.quantity}`);
-        return this.collectPhoto(req, res, true);
-      });
-  }
-
-  collectWhyParticipated(req, res, promptUser) {
-    this.debug(req, `collectWhyParticipated prompt:${promptUser}`);
-
-    if (promptUser) {
-      return this.sendMessage(req, res, this.bot.msg_ask_why_participated);
-    }
-
-    this.reportbackSubmission.why_participated = req.incoming_message;
-
-    return this.reportbackSubmission
-      .save()
-      .then(() => {
-        this.debug(req, `saved why_participated:${req.incoming_message}`);
-        return this.postReportback(req, res);
-      });
-  }
-
   /**
    * Creates new reportbackSubmission document and updates our current signup.
    */
@@ -150,18 +69,26 @@ class CampaignBotController {
    */
   getMessageForReportbackProperty(req, property, ask) {
     this.debug(req, `getMessageForReportbackProperty:${property}`);
-    this.debug(req, req.signup);
 
     if (req.query.start || ask) {
       return this.getMessage(req, this.bot[`msg_ask_${property}`]);
     }
     
     let input = req.incoming_message;
-    if (property === 'photo') {
+
+    if (property === 'quantity') {
+      if (helpers.hasLetters(input) || !parseInt(input)) {
+        return this.sendMessage(req, res, this.bot.msg_invalid_quantity);
+      }
+      input = parseInt(input);
+    }
+    else if (property === 'photo') {
       input = req.incoming_image_url;
+      if (!input) {
+        return this.sendMessage(req, res, this.bot.msg_no_photo_sent);
+      }
     }
 
-    // @todo Validate input based on propertyName
     req.signup.draft_reportback_submission[property] = input;
 
     return req.signup.draft_reportback_submission
@@ -187,26 +114,27 @@ class CampaignBotController {
    */
   continueReportbackSubmission(req) {
     this.debug(req, 'continueReportbackSubmission');
-    this.debug(req, req.signup.draft_reportback_submission);
 
-    const ask = (req.query.start || false);
+    const submission = req.signup.draft_reportback_submission;
+    const ask = ( req.query.start || false );
 
-    if (!req.signup.draft_reportback_submission.quantity) {
+    if (!submission.quantity) {
       return this.getMessageForReportbackProperty(req, 'quantity', ask);
     }
-    if (!req.signup.draft_reportback_submission.photo) {
+    if (!submission.photo) {
       return this.getMessageForReportbackProperty(req, 'photo', ask);
     } 
-    if (!req.signup.draft_reportback_submission.caption) {
+    if (!submission.caption) {
       return this.getMessageForReportbackProperty(req, 'caption', ask);
     }
-    if (!req.signup.draft_reportback_submission.why_participated) {
+    if (!submission.why_participated) {
       return this.getMessageForReportbackProperty(req, 'why_participated', ask);
-    } 
+    }
 
-    // Should have submitted in whyParticipated, but in case of failed_at:
-    logger.warn('no messages sent from chatReportback');
-
+    // If we're here, we have a completed submission but the POST request
+    // likely failed.
+    // @todo Check failed_at before sending?
+    logger.warn('no messages sent from continueReportbackSubmission');
     return this.postReportback(req);
   }
 
