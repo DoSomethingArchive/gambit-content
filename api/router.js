@@ -95,14 +95,17 @@ function campaignBot(req, res) {
 
       req.user = user;
       const currentSignup = user.campaigns[req.campaign_id];
+      controller.debug(req, `currentSignup:${currentSignup}`);
+
       if (currentSignup) {
+        controller.debug(req, `loadSignup:${currentSignup}`);
         return controller.loadSignup(currentSignup);
       }
 
-      return controller.getCurrentSignup(user, req.campaign_id);
+      return controller.getCurrentSignup(req);
     })
     .then(signup => {
-      controller.debug(req, `loaded signup:${signup._id}`);
+      controller.debug(req, `loaded signup:${signup._id.toString()}`);
       req.signup = signup;
 
       if (signup.draft_reportback_submission) {
@@ -120,6 +123,7 @@ function campaignBot(req, res) {
       return controller.getMessage(req, controller.bot.msg_menu_signedup);
     })
     .then(msg => {
+      controller.debug(req, `sendMessage:${msg}`);
       mobilecommons.chatbot(req.body, req.mobilecommons_config.oip_chat, msg);
 
       return res.send({message: msg});  

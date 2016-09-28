@@ -157,15 +157,12 @@ class CampaignBotController {
     }
     
     let input = req.incoming_message;
-    if (property === 'image_url') {
+    if (property === 'photo') {
       input = req.incoming_image_url;
     }
 
     // @todo Validate input based on propertyName
-    this.debug(req, 'test 1');
     req.signup.draft_reportback_submission[property] = input;
-    this.debug(req, 'test 2');
-    return 'Test';
 
     return req.signup.draft_reportback_submission
       .save()
@@ -173,11 +170,12 @@ class CampaignBotController {
         this.debug(req, `saved ${property}:${input}`);
         switch(property) {
           case 'quantity':
-            return this.getMessageForReportbackProperty(req, 'image_url', true);
-          case 'image_url':
-            return this.getMessageForReportbackProperty(req, 'caption', true);
+            return this.getMessage(req, this.bot.msg_ask_photo);
+          case 'photo':
+            return this.getMessage(req, this.bot.msg_ask_caption);
           case 'caption':
-            return this.getMessageForReportbackProperty(req, 'why_participated', true);
+            // @todo Only ask for why when first reportback.
+            return this.getMessage(req, this.bot.msg_ask_why_participated);
           default:
             return this.postReportback(req);
         }
@@ -192,17 +190,19 @@ class CampaignBotController {
     this.debug(req, req.signup.draft_reportback_submission);
 
     const ask = (req.query.start || false);
-    const properties = [
-      'quantity',
-      'image_url',
-      'caption',
-      'why_participated',
-    ];
-    properties.forEach(property => {
-      if (!req.signup.draft_reportback_submission[property]) {
-        return this.getMessageForReportbackProperty(req, property, ask);
-      }
-    });
+
+    if (!req.signup.draft_reportback_submission.quantity) {
+      return this.getMessageForReportbackProperty(req, 'quantity', ask);
+    }
+    if (!req.signup.draft_reportback_submission.photo) {
+      return this.getMessageForReportbackProperty(req, 'photo', ask);
+    } 
+    if (!req.signup.draft_reportback_submission.caption) {
+      return this.getMessageForReportbackProperty(req, 'caption', ask);
+    }
+    if (!req.signup.draft_reportback_submission.why_participated) {
+      return this.getMessageForReportbackProperty(req, 'why_participated', ask);
+    } 
 
     // Should have submitted in whyParticipated, but in case of failed_at:
     logger.warn('no messages sent from chatReportback');
@@ -213,43 +213,49 @@ class CampaignBotController {
   /**
    * Queries DS API to find current signup, else creates new signup.
    */
-  getCurrentSignup(user, campaignId) {
+  getCurrentSignup(req) {
     this.debug(req, 'getCurrentSignup');
 
     return app.locals.northstarClient.Signups.index({
-      campaigns: campaignId,
-      user: user._id,
+      campaigns: req.campaign_id,
+      user: req.user_id,
     })
     .then(signups => {
+      logger.verbose(signups);
+
       if (!signups.length) {
-        return this.postSignup(user, campaignId);
+        this.debug(req, `postSignup`);
+        return this.postSignup(req);
       }
+      
       // @todo Loop through signups to find signup where campaign_run.current.
       // Hardcoded to first result for now.
       const currentSignup = signups[0];
+      this.debug(req, `currentSignup.id:${currentSignup.id}`);
       const data = {
-        _id: currentSignup.id,
-        user: user._id,
-        campaign: campaignId,
-        created_at: currentSignup.created_at,
+        _id: parseInt(currentSignup.id),
+        user: req.user_id,
+        campaign: req.campaign_id,
+        created_at: currentSignup.createdAt,
       };
       if (currentSignup.reportback) {
         data.reportback = parseInt(currentSignup.reportback.id);
         data.total_quantity_submitted = currentSignup.reportback.quantity;
       }
-      return data;
-    })
-    .then(signup => {
-      return app.locals.db.signups.create(signup)
+      this.debug(req, `data:${JSON.stringify(data)}`);
+      return app.locals.db.signups.create(data);
     })
     .then(signupDoc => {
-      user.campaigns[campaignId] = signupDoc._id;
-      user.markModified('campaigns');
-      return user.save();
+      this.debug(req, `created signupDoc:${signupDoc._id.toString()}`);
+
+      req.user.campaigns[req.campaign_id] = signupDoc._id;
+      req.user.markModified('campaigns');
+      return req.user.save();
     })
     .then(() => {
+      console.log(signupDoc);
       return signupDoc;
-    })
+    });
   }
 
   /**
@@ -333,7 +339,7 @@ class CampaignBotController {
       uid: req.user.phoenix_id,
       quantity: submission.quantity,
       caption: submission.caption,
-      file_url: submission.image_url,
+      file_url: submission.photo,
     };
     if (submission.why_participated) {
       postData.why_participated = submission.why_participated;
@@ -362,17 +368,18 @@ class CampaignBotController {
     this.debug(req, `postReportbackSuccess reportback:${rbid}`);
 
     const dateSubmitted = Date.now();
-    let submission = req.signup.draft_reportback_submission;
+    const submission = req.signup.draft_reportback_submission;
     submission.submitted_at = dateSubmitted;
-    req.signup.reportback = rbid;
-    req.signup.total_quantity_submitted = submission.quantity;
-    req.signup.updated_at = dateSubmitted;
-    // Unset draft so next time user returns to this campaign, we create a new
-    // reportback submission.
-    req.signup.draft_reportback_submission = undefined;
-    return req.signup
+
+    return submission
       .save()
       .then(() => {
+        req.signup.reportback = rbid;
+        req.signup.total_quantity_submitted = submission.quantity;
+        req.signup.updated_at = dateSubmitted;
+        // Unset draft so next time user returns to this campaign, we create new
+        // reportback submission.
+        req.signup.draft_reportback_submission = undefined;
         return this.getMessage(req, this.bot.msg_menu_completed);
       });
   }
