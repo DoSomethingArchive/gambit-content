@@ -215,6 +215,7 @@ class CampaignBotController {
    */
   getCurrentSignup(req) {
     this.debug(req, 'getCurrentSignup');
+    let signup;
 
     return app.locals.clients.northstar.Signups.index({
       campaigns: req.campaign_id,
@@ -242,19 +243,18 @@ class CampaignBotController {
         data.reportback = parseInt(currentSignup.reportback.id);
         data.total_quantity_submitted = currentSignup.reportback.quantity;
       }
-      this.debug(req, `data:${JSON.stringify(data)}`);
+
       return app.locals.db.signups.create(data);
     })
     .then(signupDoc => {
       this.debug(req, `created signupDoc:${signupDoc._id.toString()}`);
-
+      signup = signupDoc;
       req.user.campaigns[req.campaign_id] = signupDoc._id;
       req.user.markModified('campaigns');
       return req.user.save();
     })
     .then(() => {
-      console.log(signupDoc);
-      return signupDoc;
+      return signup;
     });
   }
 

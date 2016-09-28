@@ -95,7 +95,6 @@ function campaignBot(req, res) {
 
       req.user = user;
       const currentSignup = user.campaigns[req.campaign_id];
-      controller.debug(req, `currentSignup:${currentSignup}`);
 
       if (currentSignup) {
         controller.debug(req, `loadSignup:${currentSignup}`);
