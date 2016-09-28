@@ -9,8 +9,6 @@ const express = require('express');
 const http = require('http');
 const logger = rootRequire('lib/logger');
 const phoenix = rootRequire('lib/phoenix')();
-const NorthstarClient = require('@dosomething/northstar-js');
-const PhoenixClient = require('@dosomething/phoenix-js');
 
 // Default is 5. Increasing # of concurrent sockets per host.
 http.globalAgent.maxSockets = 100;
@@ -29,24 +27,18 @@ phoenix.userLogin(
  */
 app = express();
 
-const appConfig = require('./config')();
-const router = require('./api/router');
+const appConfig = require('./config')(); 
 const smsConfigsLoader = require('./config/smsConfigsLoader');
 
-app.locals.northstarClient = new NorthstarClient({
-  baseURI: process.env.DS_NORTHSTAR_API_BASEURI,
-  apiKey: process.env.DS_NORTHSTAR_API_KEY,
-});
+const router = require('./api/router');
 
-app.locals.phoenixClient = new PhoenixClient({
-  baseURI: process.env.DS_PHOENIX_API_BASEURI,
-  username: process.env.DS_PHOENIX_API_USERNAME,
-  password: process.env.DS_PHOENIX_API_PASSWORD,
-});
+const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
 
 // Retrieves all SMS config files before starting server.
 smsConfigsLoader(() => {
   const port = (process.env.PORT || 5000);
+  // @todo We'll need to loop through all campaignBots and store as array.
+  app.locals.campaignBotController = new CampaignBotController(41);
   app.listen(port, () => {
     logger.info(`Gambit is listening, port:${port} env:${process.env.NODE_ENV}.`);
   });

@@ -1,17 +1,16 @@
-var path = require('path')
-  , express = require('express')
-  , fs = require('fs')
-  , root_dirname = path.dirname(path.dirname(__dirname))
-  , mongoose = require('mongoose')
-  , stathat = require('stathat')
-  , errorHandler = require('errorhandler')
-  , bodyParser = require('body-parser')
-  ;
+/**
+ * Imports.
+ */
+const express = require('express');
+const path = require('path');
+const root_dirname = path.dirname(path.dirname(__dirname));
+const stathat = require('stathat');
+const errorHandler = require('errorhandler');
+const bodyParser = require('body-parser');
+const NorthstarClient = require('@dosomething/northstar-js');
+const PhoenixClient = require('@dosomething/phoenix-js');
 
 module.exports = function() {
-
-  // Set port variable
-  app.set('port', process.env.PORT || 4711);
 
   // Parses request body and populates request.body
   app.use(bodyParser.json());
@@ -25,20 +24,6 @@ module.exports = function() {
 
   // Add static path
   app.use(express.static(path.join(root_dirname, 'public')));
-
-  // Set the database URI this app will use for SMS operations.
-  app.set('operations-database-uri', process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder');
-
-  // Set the database URI this app will use to retrieve SMS config files.
-  app.set('config-database-uri', process.env.CONFIG_DB_URI || 'mongodb://localhost/config')
-
-  // @TODO: Find a better way of passing the host URL to SGSoloController.createSoloGame()
-  // Specify app host URL. 
-  if (process.env.NODE_ENV == 'production') {
-    app.hostName = 'ds-mdata-responder.herokuapp.com';
-  } else {
-    app.hostName = 'localhost:' + app.get('port');
-  }
 
   /**
    * Global stathat reporting wrapper function
@@ -58,4 +43,23 @@ module.exports = function() {
       function(status, json) {}
     );
   };
+
+  const conn = rootRequire('config/connectionOperations');
+  app.locals.db = {
+    reportbackSubmissions: rootRequire('api/models/campaign/ReportbackSubmission')(conn),
+    signups: rootRequire('api/models/campaign/Signup')(conn),
+    users: rootRequire('api/models/User')(conn),
+  };
+
+  app.locals.clients = {};
+  app.locals.clients.northstar = new NorthstarClient({
+    baseURI: process.env.DS_NORTHSTAR_API_BASEURI,
+    apiKey: process.env.DS_NORTHSTAR_API_KEY,
+  });
+  app.locals.clients.phoenix = new PhoenixClient({
+    baseURI: process.env.DS_PHOENIX_API_BASEURI,
+    username: process.env.DS_PHOENIX_API_USERNAME,
+    password: process.env.DS_PHOENIX_API_PASSWORD,
+  });
+
 }

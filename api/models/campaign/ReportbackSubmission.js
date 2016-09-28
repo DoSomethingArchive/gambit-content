@@ -13,7 +13,7 @@ var schema = new mongoose.Schema({
 
   caption: String,
 
-  image_url: String,
+  photo: String,
 
   quantity: Number,
 

@@ -1,7 +1,11 @@
 /**
  * Models a DS Signup.
  */
-var mongoose = require('mongoose');
+
+ /**
+  * Imports.
+  */
+const mongoose = require('mongoose');
 
 var schema = new mongoose.Schema({
 
@@ -13,11 +17,14 @@ var schema = new mongoose.Schema({
 
   created_at: {type: Date, default: Date.now},
 
-  reportback: Number,
-
   // If user is in the middle of a Reportback Submission, we store its ID 
   // for easy lookup.
-  draft_reportback_submission: String,
+  draft_reportback_submission: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'reportback_submissions'
+  },
+
+  reportback: Number,
 
   // Last quantity submitted by the user.
   // We'll want to update this number from DS API once we're querying for

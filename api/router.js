@@ -1,13 +1,18 @@
-var express = require('express')
-var router = express.Router();
+"use strict";
 
-var logger = rootRequire('lib/logger');
-var campaignRouter = require('./legacy/ds-routing');
-var reportbackRouter = require('./legacy/reportback');
-var CampaignBot = require('./controllers/CampaignBotController');
-var DonorsChooseBot = require('./controllers/DonorsChooseBotController');
-var Slothbot = require('./controllers/SlothBotController');
-var gambitJunior = rootRequire('lib/gambit-junior');
+const express = require('express')
+const router = express.Router();
+
+const logger = rootRequire('lib/logger');
+const mobilecommons = rootRequire('lib/mobilecommons');
+const gambitJunior = rootRequire('lib/gambit-junior');
+
+const campaignRouter = require('./legacy/ds-routing');
+const reportbackRouter = require('./legacy/reportback');
+
+const DonorsChooseBot = require('./controllers/DonorsChooseBotController');
+const Slothbot = require('./controllers/SlothBotController');
+
 
 app.use('/', router);
 
@@ -41,8 +46,9 @@ router.post('/v1/chatbot', function(request, response) {
 
   switch (request.query.bot_type) {
     case 'campaignbot':
-      return new CampaignBot(request, response);
-      break;
+      request.campaign_id = request.query.campaign;
+      return campaignBot(request, response);
+
     // @todo Remove this safety check, deprecating donorschoose bot_type value.
     // Using donorschoosebot instead.
     case 'donorschoose':
@@ -64,3 +70,74 @@ router.post('/v1/chatbot/sync', function(request, response) {
   gambitJunior.syncBotConfigs(request, response, request.query.bot_type);
 
 });
+
+/**
+ * Routing for the CampaignBot.
+ */
+function campaignBot(req, res) {
+  req.campaign_id = req.query.campaign;
+  const controller = app.locals.campaignBotController;
+
+  req.campaign = app.getConfig(
+    app.ConfigName.CAMPAIGNS,
+    req.campaign_id
+  );
+  req.mobilecommons_campaign = req.campaign.staging_mobilecommons_campaign;
+  if (process.env.NODE_ENV === 'production') {
+    req.mobilecommons_campaign = req.campaign.current_mobilecommons_campaign;
+  }
+  req.mobilecommons_config = app.getConfig(
+    app.ConfigName.CHATBOT_MOBILECOMMONS_CAMPAIGNS,
+    req.mobilecommons_campaign
+  );
+
+  let msgTxt;
+
+  return controller
+    .loadUser(req.user_id)
+    .then(user => {
+      controller.debug(req, `loaded user:${user._id}`);
+
+      req.user = user;
+      const signupId = user.campaigns[req.campaign_id];
+
+      if (signupId) {
+        controller.debug(req, `loadSignup:${signupId}`);
+        return controller.loadCurrentSignup(req, signupId);
+      }
+
+      return controller.getCurrentSignup(req);
+    })
+    .then(signup => {
+      controller.debug(req, `loaded signup:${signup._id.toString()}`);
+      req.signup = signup;
+
+      if (signup.draft_reportback_submission) {
+        return controller.continueReportbackSubmission(req);
+      }
+
+      if (controller.isCommandReportback(req.incoming_message)) {
+        return controller.createReportbackSubmission(req);
+      }
+
+      if (signup.total_quantity_submitted) {
+        msgTxt = controller.bot.msg_menu_completed;
+
+        return controller.renderResponseMessage(req, msgTxt);
+      }
+
+      msgTxt = controller.bot.msg_menu_signedup;
+
+      return controller.renderResponseMessage(req, msgTxt);
+    })
+    .then(msg => {
+      controller.debug(req, `sendMessage:${msg}`);
+      mobilecommons.chatbot(req.body, req.mobilecommons_config.oip_chat, msg);
+
+      return res.send({message: msg});  
+    })
+    .catch(err => {
+      controller.error(req, res, err);
+      return res.sendStatus(500);
+    });
+}

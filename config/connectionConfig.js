@@ -1,13 +1,15 @@
-var mongoose = require('mongoose');
+const mongoose = require('mongoose');
+const dbUri = process.env.CONFIG_DB_URI || 'mongodb://localhost/config';
 
 var connectionConfig;
 
 if (!connectionConfig || !connectionConfig.readyState) {
-  module.exports = connectionConfig = mongoose.createConnection(app.get('config-database-uri'));
-} else {
-  module.exports = connectionConfig
+  module.exports = connectionConfig = mongoose.createConnection(dbUri);
+} 
+else {
+  module.exports = connectionConfig;
 }
 
 connectionConfig.on('connected', function() { 
-  console.log('Mongoose connected to connectionConfig with status code: ' + connectionConfig.readyState);
+  console.log(`connectionConfig readyState:${connectionConfig.readyState}`);
 });
