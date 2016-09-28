@@ -34,7 +34,7 @@ class CampaignBotController {
   /**
    * Handles asking for and saving the given property to our draft submission.
    * Posts completed submissions to DS API
-   * @param {object} req
+   * @param {object} req - Express request
    * @param {property} string - The ReportbackSubmission property to get/save
    * @param {bool} ask - If true, returns the ask message to send, else
    *     validate, save, and send message to ask for next property.
@@ -83,7 +83,7 @@ class CampaignBotController {
 
   /**
    * Handles conversation for collecting ReportbackSubmission data or posting.
-   * @param {object} req
+   * @param {object} req - Express request
    */
   continueReportbackSubmission(req) {
     this.debug(req, 'continueReportbackSubmission');
@@ -113,7 +113,7 @@ class CampaignBotController {
 
   /**
    * Creates new ReportbackSubmission model and updates Signup model's draft.
-   * @param {object} req
+   * @param {object} req - Express request
    * @return {string} - Message to send and begin collecting Reportback data.
    */
   createReportbackSubmission(req) {
@@ -153,7 +153,7 @@ class CampaignBotController {
 
   /**
    * Gets Signup from DS API if exists for given user, else creates new Signup.
-   * @param {object} req - Expects loaded req.user
+   * @param {object} req - Express request
    * @return {object} - Signup model
    */
   getCurrentSignup(req) {
@@ -168,11 +168,10 @@ class CampaignBotController {
       logger.verbose(signups);
 
       if (!signups.length) {
-        this.debug(req, `postSignup`);
         return this.postSignup(req);
       }
       
-      // @todo Loop through signups to find signup where campaign_run.current.
+      // TODO: Loop through signups to find signup where campaign_run.current.
       // Hardcoded to first result for now.
       const currentSignup = signups[0];
       this.debug(req, `currentSignup.id:${currentSignup.id}`);
@@ -237,22 +236,22 @@ class CampaignBotController {
 
   /**
    * Loads Signup model if exists for given id, else get/create from API.
+   * @param {object} req - Express request
    * @param {number} id - DS Signup ID
    * @return {object}
    */
-  loadSignup(id) {
+  loadCurrentSignup(req, id) {
     return app.locals.db.signups
       .findById(id)
       .populate('draft_reportback_submission')
       .exec()
       .then(signup => {
         if (!signup) {
-          // @todo Handle data loss. Changed this to getCurrentSignup to avoid
-          // storing user/campaign on this 
-          return this.getSignup();
+          this.debug(req, `signup not found for id:${id}`)
+          return this.getCurrentSignup(req);
         }
 
-        // @todo Validate signupDoc dates against current Campaign run dates.
+        // TODO Ensure cached Signup is current by checking Campaign end date.
         return signup;        
       });
   }
@@ -276,7 +275,7 @@ class CampaignBotController {
 
   /**
    * Helper function for this.debug and this.error functions.
-   * @param {object} req - Expects req.user_id, req.campaign_id set
+   * @param {object} req - Express request
    * @return {string}
    */
   loggerPrefix(req) {
@@ -285,7 +284,7 @@ class CampaignBotController {
 
   /**
    * Posts ReportbackSubmission to DS API for incoming Express req
-   * @param {object} req - Expects loaded req.user, req.signup
+   * @param {object} req - Express request
    * @return {Promise}
    */
   postReportback(req) {
@@ -344,33 +343,32 @@ class CampaignBotController {
   }
 
   /**
-   * Posts signup to DS API and returns cached signup.
-   * @param {number} user - A User model (we need to pass its phoenix_id)
-   * @param {number} campaignId - Our DS Campaign ID
+   * Posts Signup to DS API and returns cached signup.
+   * @param {object} req - Express request
    * @return {object} - Returned Signup model
    */
-  postSignup(user, campaignId) {
+  postSignup(req) {
     this.debug(req, 'postSignup');
 
     return app.locals.clients.phoenix.Campaigns
-      .signup(campaignId, {
+      .signup(req.campaign_id, {
         source: process.env.DS_API_POST_SOURCE,
-        uid: user.phoenix_id,
+        uid: req.user.phoenix_id,
       })
       .then(signupId => {
         return {
           _id: signupId,
-          campaign: campaignId,
-          user: user._id,
+          campaign: req.campaign_id,
+          user: req.user_id,
         };
       });
   }
 
   /**
    * Replaces placeholder variables in given msgTxt with data from incoming req
-   * @param {object} req - Express request, with loaded req.campaign, req.signup
+   * @param {object} req - Express request
    * @param {string} msgTxt - Message to send back to Express request req
-   * @return {string} - Message to send, with variables replaced with req data
+   * @return {string} - msgTxt with all variables replaced with req properties
    */
   renderResponseMessage(req, msgTxt) {
     if (!msgTxt) {
