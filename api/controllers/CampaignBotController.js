@@ -17,12 +17,12 @@ const CMD_REPORTBACK = (process.env.GAMBIT_CMD_REPORTBACK || 'P');
  */
 class CampaignBotController {
 
-  constructor(campaignBotId) {
-    this.bot = app.getConfig(app.ConfigName.CAMPAIGNBOTS, campaignBotId);
-    logger.info(`CampaignBotController loaded campaignBot:${campaignBotId}`);
+  constructor(botId) {
+    this.bot = app.getConfig(app.ConfigName.CAMPAIGNBOTS, botId);
+    logger.info(`CampaignBotController loaded campaignBot:${botId}`);
 
     if (!this.bot) {
-      return this.error(req, 'bot config not found');
+      return this.error(req, `CampaignBot not found for id:${botId}`);
     }
   }
 
@@ -38,7 +38,7 @@ class CampaignBotController {
         user: req.user_id, 
       })
       .then(reportbackSubmission => {
-        this.debug(req, `created submission:${reportbackSubmission._id.toString()}`)
+        this.debug(req, `created :${reportbackSubmission._id.toString()}`);
         req.signup.draft_reportback_submission = reportbackSubmission._id;
 
         return req.signup.save();
@@ -364,34 +364,6 @@ class CampaignBotController {
 
     return msgTxt;
   }
-
-  supportsMMS(req, res) {
-    this.debug(req, 'supportsMMS');
-
-    if (this.user.supports_mms === true) {
-      return true;
-    }
-
-    // @todo DRY this logic.
-    // @see loadSignup()
-    const incomingCommand = helpers.getFirstWord(req.incoming_message);
-    if (incomingCommand && incomingCommand.toUpperCase() === CMD_REPORTBACK) {
-      this.sendMessage(req, res, this.bot.msg_ask_supports_mms);
-      return false;
-    }
-    
-    if (!helpers.isYesResponse(req.incoming_message)) {
-      this.sendMessage(req, res, this.bot.msg_no_supports_mms);
-      return false;
-    }
-
-    this.user.supports_mms = true;
-    return this.user
-      .save()
-      .then(() => {
-        return this.createReportbackSubmission(req, res);
-      });
-  };
 
 };
 
