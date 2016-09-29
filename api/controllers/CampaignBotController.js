@@ -186,7 +186,9 @@ class CampaignBotController {
         data.total_quantity_submitted = currentSignup.reportback.quantity;
       }
 
-      return app.locals.db.signups.create(data);
+      return app.locals.db.signups
+        .findOneAndUpdate({ _id: data._id }, data, { upsert: true })
+        .exec();
     })
     .then(signupDoc => {
       this.debug(req, `created signupDoc:${signupDoc._id.toString()}`);
