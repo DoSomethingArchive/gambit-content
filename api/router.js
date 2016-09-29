@@ -115,7 +115,7 @@ function campaignBot(req, res) {
         return controller.continueReportbackSubmission(req);
       }
 
-      if (controller.isCommandReportback(req.incoming_message)) {
+      if (controller.isCommandReportback(req)) {
         return controller.createReportbackSubmission(req);
       }
 

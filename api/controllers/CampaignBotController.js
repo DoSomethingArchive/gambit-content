@@ -246,13 +246,15 @@ class CampaignBotController {
   }
 
   /**
-   * Returns whether incomingMessage should begin a Reportback conversation.
-   * @param {string} incomingMessage
+   * Returns whether incoming Express req begins a Reportback conversation.
+   * @param {object} req - Express request
    * @return {bool}
    */
-  isCommandReportback(incomingMessage) {
-    const firstWord = helpers.getFirstWord(incomingMessage);
-    return ( firstWord && firstWord.toUpperCase() === CMD_REPORTBACK );
+  isCommandReportback(req) {
+    const firstWord = helpers.getFirstWord(req.incoming_message);
+    if (!firstWord) return false;
+
+    return firstWord.toUpperCase() === CMD_REPORTBACK.toUpperCase();
   }
 
   /**
