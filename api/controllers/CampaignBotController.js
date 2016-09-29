@@ -254,8 +254,9 @@ class CampaignBotController {
     }
 
     const input = helpers.getFirstWord(req.incoming_message);
+    const isCommand = input && input.toUpperCase() === cmdClear.toUpperCase();
 
-    return ( input && input.toUpperCase() === cmdClear.toUpperCase() );
+    return isCommand;
   }
 
   /**
