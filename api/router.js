@@ -77,11 +77,13 @@ router.post('/v1/chatbot/sync', function(request, response) {
 function campaignBot(req, res) {
   req.campaign_id = req.query.campaign;
   const controller = app.locals.campaignBotController;
+  controller.debug(req, `msg:${req.incoming_message} img:${req.incoming_image_url}`);
 
   req.campaign = app.getConfig(
     app.ConfigName.CAMPAIGNS,
     req.campaign_id
   );
+
   req.mobilecommons_campaign = req.campaign.staging_mobilecommons_campaign;
   if (process.env.NODE_ENV === 'production') {
     req.mobilecommons_campaign = req.campaign.current_mobilecommons_campaign;
@@ -99,10 +101,17 @@ function campaignBot(req, res) {
       controller.debug(req, `loaded user:${user._id}`);
 
       req.user = user;
+
+      if (controller.isCommandClearCache(req)) {
+        req.user.campaigns = {};
+        logger.info(`${controller.loggerPrefix(req)} cleared user.campaigns`);
+
+        return controller.getCurrentSignup(req); 
+      }
+
       const signupId = user.campaigns[req.campaign_id];
 
       if (signupId) {
-        controller.debug(req, `loadSignup:${signupId}`);
         return controller.loadCurrentSignup(req, signupId);
       }
 
@@ -116,7 +125,7 @@ function campaignBot(req, res) {
         return controller.continueReportbackSubmission(req);
       }
 
-      if (controller.isCommandReportback(req.incoming_message)) {
+      if (controller.isCommandReportback(req)) {
         return controller.createReportbackSubmission(req);
       }
 
