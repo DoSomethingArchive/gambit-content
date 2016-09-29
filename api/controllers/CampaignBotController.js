@@ -37,7 +37,7 @@ class CampaignBotController {
     this.debug(req, `collectReportbackProperty:${property}`);
 
     if (req.query.start || ask) {
-      return this.renderResponseMessage(req, this.bot[`msg_ask_${property}`]);
+      return this.renderResponseMessage(req, `ask_${property}`);
     }
 
     let input = req.incoming_message;
@@ -45,13 +45,13 @@ class CampaignBotController {
     // Validate input received for our given Reportback property.
     if (property === 'quantity') {
       if (helpers.hasLetters(input) || !Number(input)) {
-        return this.renderResponseMessage(req, this.bot.msg_invalid_quantity);
+        return this.renderResponseMessage(req, 'invalid_quantity');
       }
       input = Number(input);
     } else if (property === 'photo') {
       input = req.incoming_image_url;
       if (!input) {
-        return this.renderResponseMessage(req, this.bot.msg_no_photo_sent);
+        return this.renderResponseMessage(req, 'no_photo_sent');
       }
     }
 
@@ -64,12 +64,12 @@ class CampaignBotController {
         this.debug(req, `saved ${property}:${input}`);
 
         if (property === 'quantity') {
-          return this.renderResponseMessage(req, this.bot.msg_ask_photo);
+          return this.renderResponseMessage(req, 'ask_photo');
         } else if (property === 'photo') {
-          return this.renderResponseMessage(req, this.bot.msg_ask_caption);
+          return this.renderResponseMessage(req, 'ask_caption');
         } else if (property === 'caption') {
           // TODO: Only ask for why when first reportback.
-          return this.renderResponseMessage(req, this.bot.msg_ask_why_participated);
+          return this.renderResponseMessage(req, 'ask_why_participated');
         }
 
         // If we made it this far, we're done collecting and ready to submit.
@@ -376,7 +376,7 @@ class CampaignBotController {
         currentSignup.draft_reportback_submission = null;
         currentSignup.save();
       })
-      .then(this.renderResponseMessage(req, this.bot.msg_menu_completed));
+      .then(this.renderResponseMessage(req, 'menu_completed'));
   }
 
   /**
@@ -402,15 +402,18 @@ class CampaignBotController {
   /**
    * Replaces placeholder variables in given msgTxt with data from incoming req
    * @param {object} req - Express request
-   * @param {string} msgTxt - Message to send back to Express request req
+   * @param {string} msgType - Type of bot message to send back
    * @return {string} - msgTxt with all variables replaced with req properties
    */
-  renderResponseMessage(req, msgTxt) {
-    if (!msgTxt) {
-      return this.error(req, 'getMessage no msgTxt');
+  renderResponseMessage(req, msgType) {
+    const botProperty = `msg_${msgType}`;
+    let msg = this.bot[botProperty];
+
+    if (!msg) {
+      return this.error(req, 'bot msgType not found');
     }
 
-    let msg = msgTxt.replace(/<br>/gi, '\n');
+    msg = msg.replace(/<br>/gi, '\n');
     msg = msg.replace(/{{title}}/gi, req.campaign.title);
     msg = msg.replace(/{{rb_noun}}/gi, req.campaign.rb_noun);
     msg = msg.replace(/{{rb_verb}}/gi, req.campaign.rb_verb);

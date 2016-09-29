@@ -132,14 +132,10 @@ function campaignBotRouter(req, res) {
       }
 
       if (signup.total_quantity_submitted) {
-        msgTxt = controller.bot.msg_menu_completed;
-
-        return controller.renderResponseMessage(req, msgTxt);
+        return controller.renderResponseMessage(req, 'menu_completed');
       }
 
-      msgTxt = controller.bot.msg_menu_signedup;
-
-      return controller.renderResponseMessage(req, msgTxt);
+      return controller.renderResponseMessage(req, 'menu_signedup');
     })
     .then(msg => {
       controller.debug(req, `sendMessage:${msg}`);
