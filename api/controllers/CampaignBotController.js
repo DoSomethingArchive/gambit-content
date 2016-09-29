@@ -262,6 +262,8 @@ class CampaignBotController {
    * @return {object}
    */
   loadCurrentSignup(req, id) {
+    this.debug(req, `loadCurrentSignup:${id}`);
+
     if (this.isCommandClearCache(req)) {
       this.debug(req, `isCommandClearCache`);
 

@@ -103,10 +103,7 @@ function campaignBot(req, res) {
       req.user = user;
       const signupId = user.campaigns[req.campaign_id];
 
-      if (signupId) {
-        controller.debug(req, `loadCurrentSignup:${signupId}`);
-        return controller.loadCurrentSignup(req, signupId);
-      }
+      if (signupId) return controller.loadCurrentSignup(req, signupId);
 
       return controller.getCurrentSignup(req);
     })
