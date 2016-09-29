@@ -14,6 +14,8 @@ var schema = new mongoose.Schema({
 
   email: String,
 
+  role: String,
+
   first_name: String,
 
   supports_mms: {type: Boolean, default: false},

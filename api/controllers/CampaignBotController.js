@@ -225,6 +225,27 @@ class CampaignBotController {
   }
 
   /**
+   * Returns whether incoming request is an authorized cache clear command.
+   * @param {object} req
+   * @return {bool}
+   */
+  isCommandClearCache(req) {
+    const cmdClear =  process.env.GAMBIT_CMD_CLEAR_CACHE;
+
+    if (!cmdClear) return false;
+
+    if (req.user.role !== 'staff' && req.user.role !== 'admin') {
+      logger.warn(`${this.loggerPrefix(req)} unauthorized clear cache`);
+
+      return false;
+    }
+
+    const input = helpers.getFirstWord(req.incoming_message);
+
+    return ( input && input.toUpperCase() === cmdClear.toUpperCase() );
+  }
+
+  /**
    * Returns whether incomingMessage should begin a Reportback conversation.
    * @param {string} incomingMessage
    * @return {bool}
@@ -241,6 +262,18 @@ class CampaignBotController {
    * @return {object}
    */
   loadCurrentSignup(req, id) {
+    if (this.isCommandClearCache(req)) {
+      this.debug(req, `isCommandClearCache`);
+
+      return app.locals.db.signups
+        .findByIdAndRemove(id)
+        .then(() => {
+          this.debug(req, `removed signup:${id}`)
+
+          return this.getCurrentSignup(req);
+        });
+    }
+
     return app.locals.db.signups
       .findById(id)
       .populate('draft_reportback_submission')

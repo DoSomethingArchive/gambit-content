@@ -77,11 +77,13 @@ router.post('/v1/chatbot/sync', function(request, response) {
 function campaignBot(req, res) {
   req.campaign_id = req.query.campaign;
   const controller = app.locals.campaignBotController;
+  controller.debug(req, `msg:${req.incoming_message} img:${req.incoming_image_url}`);
 
   req.campaign = app.getConfig(
     app.ConfigName.CAMPAIGNS,
     req.campaign_id
   );
+
   req.mobilecommons_campaign = req.campaign.staging_mobilecommons_campaign;
   if (process.env.NODE_ENV === 'production') {
     req.mobilecommons_campaign = req.campaign.current_mobilecommons_campaign;
@@ -102,7 +104,7 @@ function campaignBot(req, res) {
       const signupId = user.campaigns[req.campaign_id];
 
       if (signupId) {
-        controller.debug(req, `loadSignup:${signupId}`);
+        controller.debug(req, `loadCurrentSignup:${signupId}`);
         return controller.loadCurrentSignup(req, signupId);
       }
 
