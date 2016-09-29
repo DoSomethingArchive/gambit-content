@@ -101,6 +101,14 @@ function campaignBot(req, res) {
       controller.debug(req, `loaded user:${user._id}`);
 
       req.user = user;
+
+      if (controller.isCommandClearCache(req)) {
+        req.user.campaigns = {};
+        logger.info(`${controller.loggerPrefix(req)} cleared user.campaigns`);
+
+        return controller.getCurrentSignup(req); 
+      }
+
       const signupId = user.campaigns[req.campaign_id];
 
       if (signupId) return controller.loadCurrentSignup(req, signupId);

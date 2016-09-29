@@ -180,6 +180,9 @@ class CampaignBotController {
         user: req.user_id,
         campaign: req.campaign_id,
         created_at: currentSignup.createdAt,
+        // Delete existing draft submission in case we're updating existing
+        // Signup model (e.g. if we're handling a clear cache command)
+        draft_reportback_submission: null,
       };
       if (currentSignup.reportback) {
         data.reportback = parseInt(currentSignup.reportback.id);
@@ -187,7 +190,7 @@ class CampaignBotController {
       }
 
       return app.locals.db.signups
-        .findOneAndUpdate({ _id: data._id }, data, { upsert: true })
+        .findOneAndUpdate({ _id: data._id }, data, { upsert: true, new: true  })
         .exec();
     })
     .then(signupDoc => {
@@ -215,19 +218,25 @@ class CampaignBotController {
           // TODO: Create new User
           return;
         }
-        return app.locals.db.users.create({
+        const data = {
           _id: id,
           mobile: user.mobile,
           first_name: user.firstName,
           email: user.email,
           phoenix_id: user.drupalID,
-          campaigns: {},   
-        });
+          role: user.role,
+          campaigns: {},         
+        }
+        return app.locals.db.users
+          .findOneAndUpdate({ _id: data._id }, data, {
+            upsert: true,
+            new: true 
+          });
       });
   }
 
   /**
-   * Returns whether incoming request is an authorized cache clear command.
+   * Returns whether incoming request is an authorized clear cache command.
    * @param {object} req
    * @return {bool}
    */
@@ -235,6 +244,8 @@ class CampaignBotController {
     const cmdClear =  process.env.GAMBIT_CMD_CLEAR_CACHE;
 
     if (!cmdClear) return false;
+
+    if (!req.user.role) return false;
 
     if (req.user.role !== 'staff' && req.user.role !== 'admin') {
       logger.warn(`${this.loggerPrefix(req)} unauthorized clear cache`);
@@ -267,18 +278,6 @@ class CampaignBotController {
    */
   loadCurrentSignup(req, id) {
     this.debug(req, `loadCurrentSignup:${id}`);
-
-    if (this.isCommandClearCache(req)) {
-      this.debug(req, `isCommandClearCache`);
-
-      return app.locals.db.signups
-        .findByIdAndRemove(id)
-        .then(() => {
-          this.debug(req, `removed signup:${id}`)
-
-          return this.getCurrentSignup(req);
-        });
-    }
 
     return app.locals.db.signups
       .findById(id)
