@@ -1,16 +1,15 @@
-"use strict";
+'use strict';
 
 /**
  * Imports.
  */
 const logger = rootRequire('lib/logger');
-const mobilecommons = rootRequire('lib/mobilecommons');
 const helpers = rootRequire('lib/helpers');
 
 /**
  * Setup.
  */
-const CMD_REPORTBACK = (process.env.GAMBIT_CMD_REPORTBACK || 'P');
+const CMD_REPORTBACK = process.env.GAMBIT_CMD_REPORTBACK || 'P';
 
 /**
  * CampaignBotController.
@@ -24,11 +23,6 @@ class CampaignBotController {
    */
   constructor(campaignBotId) {
     this.bot = app.getConfig(app.ConfigName.CAMPAIGNBOTS, campaignBotId);
-    logger.info(`CampaignBotController loaded campaignBot:${campaignBotId}`);
-
-    if (!this.bot) {
-      return this.error(req, `CampaignBot not found for id:${campaignBotId}`);
-    }
   }
 
   /**
@@ -45,39 +39,41 @@ class CampaignBotController {
     if (req.query.start || ask) {
       return this.renderResponseMessage(req, this.bot[`msg_ask_${property}`]);
     }
-    
+
     let input = req.incoming_message;
 
+    // Validate input received for our given Reportback property.
     if (property === 'quantity') {
-      if (helpers.hasLetters(input) || !parseInt(input)) {
+      if (helpers.hasLetters(input) || !Number(input)) {
         return this.renderResponseMessage(req, this.bot.msg_invalid_quantity);
       }
-      input = parseInt(input);
-    }
-    else if (property === 'photo') {
+      input = Number(input);
+    } else if (property === 'photo') {
       input = req.incoming_image_url;
       if (!input) {
         return this.renderResponseMessage(req, this.bot.msg_no_photo_sent);
       }
     }
 
-    req.signup.draft_reportback_submission[property] = input;
+    const submission = req.signup.draft_reportback_submission;
+    submission[property] = input;
 
-    return req.signup.draft_reportback_submission
+    return submission
       .save()
       .then(() => {
         this.debug(req, `saved ${property}:${input}`);
-        switch(property) {
-          case 'quantity':
-            return this.renderResponseMessage(req, this.bot.msg_ask_photo);
-          case 'photo':
-            return this.renderResponseMessage(req, this.bot.msg_ask_caption);
-          case 'caption':
-            // @todo Only ask for why when first reportback.
-            return this.renderResponseMessage(req, this.bot.msg_ask_why_participated);
-          default:
-            return this.postReportback(req);
+
+        if (property === 'quantity') {
+          return this.renderResponseMessage(req, this.bot.msg_ask_photo);
+        } else if (property === 'photo') {
+          return this.renderResponseMessage(req, this.bot.msg_ask_caption);
+        } else if (property === 'caption') {
+          // TODO: Only ask for why when first reportback.
+          return this.renderResponseMessage(req, this.bot.msg_ask_why_participated);
         }
+
+        // If we made it this far, we're done collecting and ready to submit.
+        return this.postReportback(req);
       });
   }
 
@@ -89,14 +85,14 @@ class CampaignBotController {
     this.debug(req, 'continueReportbackSubmission');
 
     const submission = req.signup.draft_reportback_submission;
-    const ask = ( req.query.start || false );
+    const ask = req.query.start || false;
 
     if (!submission.quantity) {
       return this.collectReportbackProperty(req, 'quantity', ask);
     }
     if (!submission.photo) {
       return this.collectReportbackProperty(req, 'photo', ask);
-    } 
+    }
     if (!submission.caption) {
       return this.collectReportbackProperty(req, 'caption', ask);
     }
@@ -122,16 +118,18 @@ class CampaignBotController {
     return app.locals.db.reportbackSubmissions
       .create({
         campaign: req.campaign_id,
-        user: req.user_id, 
+        user: req.user_id,
       })
       .then(reportbackSubmission => {
         this.debug(req, `created :${reportbackSubmission._id.toString()}`);
-        req.signup.draft_reportback_submission = reportbackSubmission._id;
 
-        return req.signup.save();
+        const currentSignup = req.signup;
+        currentSignup.draft_reportback_submission = reportbackSubmission._id;
+
+        return currentSignup.save();
       })
       .then(() => {
-        this.debug(req, `updated signup:${req.signup._id.toString()}`)
+        this.debug(req, `updated signup:${req.signup._id.toString()}`);
 
         return this.collectReportbackProperty(req, 'quantity', true);
       });
@@ -170,13 +168,14 @@ class CampaignBotController {
       if (!signups.length) {
         return this.postSignup(req);
       }
-      
+
       // TODO: Loop through signups to find signup where campaign_run.current.
       // Hardcoded to first result for now.
       const currentSignup = signups[0];
       this.debug(req, `currentSignup.id:${currentSignup.id}`);
+
       const data = {
-        _id: parseInt(currentSignup.id),
+        _id: Number(currentSignup.id),
         user: req.user_id,
         campaign: req.campaign_id,
         created_at: currentSignup.createdAt,
@@ -185,24 +184,24 @@ class CampaignBotController {
         draft_reportback_submission: null,
       };
       if (currentSignup.reportback) {
-        data.reportback = parseInt(currentSignup.reportback.id);
+        data.reportback = Number(currentSignup.reportback.id);
         data.total_quantity_submitted = currentSignup.reportback.quantity;
       }
 
       return app.locals.db.signups
-        .findOneAndUpdate({ _id: data._id }, data, { upsert: true, new: true  })
+        .findOneAndUpdate({ _id: data._id }, data, { upsert: true, new: true })
         .exec();
     })
-    .then(signupDoc => {
+    .then((signupDoc) => {
       this.debug(req, `created signupDoc:${signupDoc._id.toString()}`);
+
       signup = signupDoc;
-      req.user.campaigns[req.campaign_id] = signupDoc._id;
-      req.user.markModified('campaigns');
-      return req.user.save();
+      const currentUser = req.user;
+      currentUser.campaigns[req.campaign_id] = signupDoc._id;
+      currentUser.markModified('campaigns');
+      return currentUser.save();
     })
-    .then(() => {
-      return signup;
-    });
+    .then({ signup });
   }
 
   /**
@@ -215,8 +214,8 @@ class CampaignBotController {
       .get('id', id)
       .then(user => {
         if (!user) {
-          // TODO: Create new User
-          return;
+          // TODO: Edge case where User ID saved to Mobile Commons profile
+          // is not found in DS API GET request.
         }
         const data = {
           _id: id,
@@ -225,12 +224,12 @@ class CampaignBotController {
           email: user.email,
           phoenix_id: user.drupalID,
           role: user.role,
-          campaigns: {},         
-        }
+          campaigns: {},
+        };
         return app.locals.db.users
           .findOneAndUpdate({ _id: data._id }, data, {
             upsert: true,
-            new: true 
+            new: true,
           });
       });
   }
@@ -241,7 +240,7 @@ class CampaignBotController {
    * @return {bool}
    */
   isCommandClearCache(req) {
-    const cmdClear =  process.env.GAMBIT_CMD_CLEAR_CACHE;
+    const cmdClear = process.env.GAMBIT_CMD_CLEAR_CACHE;
 
     if (!cmdClear) return false;
 
@@ -286,12 +285,13 @@ class CampaignBotController {
       .exec()
       .then(signup => {
         if (!signup) {
-          this.debug(req, `signup not found for id:${id}`)
+          this.debug(req, `signup not found for id:${id}`);
+
           return this.getCurrentSignup(req);
         }
 
-        // TODO Ensure cached Signup is current by checking Campaign end date.
-        return signup;        
+        // TODO Validate cached Signup is current by checking Campaign end date.
+        return signup;
       });
   }
 
@@ -308,8 +308,9 @@ class CampaignBotController {
         if (user) {
           return user;
         }
+
         return this.getUser(id);
-      })
+      });
   }
 
   /**
@@ -318,7 +319,7 @@ class CampaignBotController {
    * @return {string}
    */
   loggerPrefix(req) {
-    return 'campaignBot.campaign:' + req.campaign_id + ' user:' + req.user_id;
+    return `campaignBot.campaign:${req.campaign_id} user:${req.user_id}`;
   }
 
   /**
@@ -330,7 +331,7 @@ class CampaignBotController {
     this.debug(req, 'postReportback');
 
     const submission = req.signup.draft_reportback_submission;
-    const postData = {
+    const data = {
       source: process.env.DS_API_POST_SOURCE,
       uid: req.user.phoenix_id,
       quantity: submission.quantity,
@@ -338,15 +339,13 @@ class CampaignBotController {
       file_url: submission.photo,
     };
     if (submission.why_participated) {
-      postData.why_participated = submission.why_participated;
+      data.why_participated = submission.why_participated;
     }
 
     return app.locals.clients.phoenix.Campaigns
-      .reportback(req.campaign_id, postData)
-      .then(reportbackId => {
-        return this.postReportbackSuccess(req, reportbackId);
-      })
-      .catch(err => {
+      .reportback(req.campaign_id, data)
+      .then(rbId => this.postReportbackSuccess(req, rbId))
+      .catch((err) => {
         submission.failed_at = Date.now();
         req.signup.save();
 
@@ -366,25 +365,24 @@ class CampaignBotController {
     const dateSubmitted = Date.now();
     const submission = req.signup.draft_reportback_submission;
     submission.submitted_at = dateSubmitted;
+    const currentSignup = req.signup;
 
     return submission
       .save()
       .then(() => {
-        req.signup.reportback = rbid;
-        req.signup.total_quantity_submitted = submission.quantity;
-        req.signup.updated_at = dateSubmitted;
-        req.signup.draft_reportback_submission = undefined;
-        req.signup.save();
+        currentSignup.reportback = rbid;
+        currentSignup.total_quantity_submitted = submission.quantity;
+        currentSignup.updated_at = dateSubmitted;
+        currentSignup.draft_reportback_submission = null;
+        currentSignup.save();
       })
-      .then(() => {
-        return this.renderResponseMessage(req, this.bot.msg_menu_completed);
-      });
+      .then(this.renderResponseMessage(req, this.bot.msg_menu_completed));
   }
 
   /**
    * Posts Signup to DS API and returns cached signup.
    * @param {object} req - Express request
-   * @return {object} - Returned Signup model
+   * @return {object} - Constructed Signup response object from new Signup id
    */
   postSignup(req) {
     this.debug(req, 'postSignup');
@@ -394,13 +392,11 @@ class CampaignBotController {
         source: process.env.DS_API_POST_SOURCE,
         uid: req.user.phoenix_id,
       })
-      .then(signupId => {
-        return {
-          _id: signupId,
-          campaign: req.campaign_id,
-          user: req.user_id,
-        };
-      });
+      .then((signupId) => ({
+        _id: signupId,
+        campaign: req.campaign_id,
+        user: req.user_id,
+      }));
   }
 
   /**
@@ -414,32 +410,28 @@ class CampaignBotController {
       return this.error(req, 'getMessage no msgTxt');
     }
 
-    msgTxt = msgTxt.replace(/<br>/gi, '\n');
-    msgTxt = msgTxt.replace(/{{title}}/gi, req.campaign.title);
-    msgTxt = msgTxt.replace(/{{rb_noun}}/gi, req.campaign.rb_noun);
-    msgTxt = msgTxt.replace(/{{rb_verb}}/gi, req.campaign.rb_verb);
+    let msg = msgTxt.replace(/<br>/gi, '\n');
+    msg = msg.replace(/{{title}}/gi, req.campaign.title);
+    msg = msg.replace(/{{rb_noun}}/gi, req.campaign.rb_noun);
+    msg = msg.replace(/{{rb_verb}}/gi, req.campaign.rb_verb);
 
     if (req.signup) {
-      let quantity = req.signup.total_quantity_submitted
+      let quantity = req.signup.total_quantity_submitted;
       if (req.signup.draft_reportback_submission) {
         quantity = req.signup.draft_reportback_submission.quantity;
       }
-      msgTxt = msgTxt.replace(/{{quantity}}/gi, quantity);
+      msg = msg.replace(/{{quantity}}/gi, quantity);
     }
 
     if (req.query.start && req.signup && req.draft_reportback_submission) {
-      // @todo New bot property for continue draft message
-      var continueMsg = 'Picking up where you left off on ' + req.campaign.title;
-      msgTxt = continueMsg + '...\n\n' + msgTxt;
+      // TODO: New bot property for continue draft message
+      const continueMsg = 'Picking up where you left off on';
+      msg = `${continueMsg} ${req.campaign.title}...\n\n${msg}`;
     }
 
-    if (process.env.NODE_ENV !== 'production') {
-      msgTxt = '@stg: ' + msgTxt;
-    }
-
-    return msgTxt;
+    return msg;
   }
 
-};
+}
 
 module.exports = CampaignBotController;
