@@ -1,17 +1,10 @@
-"use strict";
+'use strict';
 
 const express = require('express')
 const router = express.Router();
 
 const logger = rootRequire('lib/logger');
 const mobilecommons = rootRequire('lib/mobilecommons');
-const gambitJunior = rootRequire('lib/gambit-junior');
-
-const campaignRouter = require('./legacy/ds-routing');
-const reportbackRouter = require('./legacy/reportback');
-
-const DonorsChooseBot = require('./controllers/DonorsChooseBotController');
-const Slothbot = require('./controllers/SlothBotController');
 
 
 app.use('/', router);
@@ -20,6 +13,9 @@ router.get('/', function (req, res) {
   res.send('hi');
 });
 
+/**
+ * Authentication.
+ */
 router.use(function(req, res, next) {
   var apiKey = process.env.GAMBIT_API_KEY;
   if (req.method === 'POST' && req.headers['x-gambit-api-key'] !== apiKey) {
@@ -29,54 +25,60 @@ router.use(function(req, res, next) {
   next();
 });
 
-router.use('/ds-routing', campaignRouter);
+/**
+ * Legacy routes.
+ */
+const campaignRouter = require('./legacy/ds-routing');
+const reportbackRouter = require('./legacy/reportback');
 
+router.use('/ds-routing', campaignRouter);
 router.use('/reportback', reportbackRouter);
 
-router.post('/v1/chatbot', function(request, response) {
+/**
+ * Chatbot.
+ */
+router.post('/v1/chatbot', function(req, res) {
+  // TODO: Handle when Northstar ID doesn't exist
+  req.user_id = req.body.profile_northstar_id;
+  req.user_mobile = req.body.phone;
+  req.incoming_message = req.body.args;
+  req.incoming_image_url = req.body.mms_image_url;
 
-  // Store relevant info from incoming Mobile Commons requests.
-  request.incoming_message = request.body.args;
-  request.incoming_image_url = request.body.mms_image_url;
-  // @todo Handle when Northstar ID doesn't exist
-  request.user_id = request.body.profile_northstar_id;
-  request.user_mobile = request.body.phone;
+  let botType = req.query.bot_type;
 
-  var controller;
+  if (botType === 'slothbot') {
+    // TODO: Store as a config variable.
+    const slothbotOptinPath = 210045;
+    let msgTxt = app.locals.slothBot.renderResponseMessage(req);
+    mobilecommons.chatbot(req.body, slothbotOptinPath, msgTxt);
 
-  switch (request.query.bot_type) {
-    case 'campaignbot':
-      request.campaign_id = request.query.campaign;
-      return campaignBot(request, response);
+    return res.send({message: msgTxt});  
+  }
+  if (botType === 'donorschoose' || botType === 'donorschoosebot') {
+    const DonorsChooseBot = require('./controllers/DonorsChooseBotController');
+    const donorsChooseBot = new DonorsChooseBot();
 
-    // @todo Remove this safety check, deprecating donorschoose bot_type value.
-    // Using donorschoosebot instead.
-    case 'donorschoose':
-      controller = new DonorsChooseBot();
-      break;
-    case 'donorschoosebot':
-      controller = new DonorsChooseBot();
-      break;
-    default:
-      controller = new Slothbot();
+    return donorsChooseBot.chatbot(req, res);
   }
 
-  controller.chatbot(request, response);
-
+  return campaignBotRouter(req, res);
 });
 
-router.post('/v1/chatbot/sync', function(request, response) {
+/**
+ * Sync chatbot content from Gambit Jr. API.
+ */
+router.post('/v1/chatbot/sync', function(req, res) {
+  const gambitJunior = rootRequire('lib/gambit-junior');
 
-  gambitJunior.syncBotConfigs(request, response, request.query.bot_type);
-
+  gambitJunior.syncBotConfigs(req, res, req.query.bot_type);
 });
 
 /**
  * Routing for the CampaignBot.
  */
-function campaignBot(req, res) {
+function campaignBotRouter(req, res) {
   req.campaign_id = req.query.campaign;
-  const controller = app.locals.campaignBotController;
+  const controller = app.locals.campaignBot;
   controller.debug(req, `msg:${req.incoming_message} img:${req.incoming_image_url}`);
 
   req.campaign = app.getConfig(
