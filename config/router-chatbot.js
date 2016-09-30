@@ -10,10 +10,12 @@ const mobilecommons = rootRequire('lib/mobilecommons');
  */
 router.post('/', (req, res) => {
   // TODO: Handle when Northstar ID doesn't exist.
-  req.user_id = req.body.profile_northstar_id; // eslint-disable-line no-param-reassign
-  req.user_mobile = req.body.phone; // eslint-disable-line no-param-reassign
-  req.incoming_message = req.body.args; // eslint-disable-line no-param-reassign
-  req.incoming_image_url = req.body.mms_image_url; // eslint-disable-line no-param-reassign
+  /* eslint-disable no-param-reassign */
+  req.user_id = req.body.profile_northstar_id;
+  req.user_mobile = req.body.phone;
+  req.incoming_message = req.body.args;
+  req.incoming_image_url = req.body.mms_image_url;
+  /* eslint-enable no-param-reassign */
 
   const botType = req.query.bot_type;
 

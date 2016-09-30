@@ -365,16 +365,17 @@ class CampaignBotController {
     const dateSubmitted = Date.now();
     const submission = req.signup.draft_reportback_submission;
     submission.submitted_at = dateSubmitted;
-    const currentSignup = req.signup;
 
     return submission
       .save()
       .then(() => {
-        currentSignup.reportback = rbid;
-        currentSignup.total_quantity_submitted = submission.quantity;
-        currentSignup.updated_at = dateSubmitted;
-        currentSignup.draft_reportback_submission = null;
-        currentSignup.save();
+        /* eslint-disable no-param-reassign */
+        req.signup.reportback = rbid;
+        req.signup.total_quantity_submitted = submission.quantity;
+        req.signup.updated_at = dateSubmitted;
+        req.signup.draft_reportback_submission = null;
+        /* eslint-enable no-param-reassign */
+        req.signup.save();
       })
       .then(this.renderResponseMessage(req, 'menu_completed'));
   }
