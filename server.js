@@ -30,7 +30,7 @@ app = express();
 const appConfig = require('./config')(); 
 const smsConfigsLoader = require('./config/smsConfigsLoader');
 
-const router = require('./api/router');
+const router = rootRequire('config/router');
 
 const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
 const SlothBotController = rootRequire('api/controllers/SlothBotController');
