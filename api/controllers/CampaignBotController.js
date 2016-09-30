@@ -364,20 +364,26 @@ class CampaignBotController {
 
     const dateSubmitted = Date.now();
     const submission = req.signup.draft_reportback_submission;
-    submission.submitted_at = dateSubmitted;
 
+    submission.submitted_at = dateSubmitted;
     return submission
       .save()
       .then(() => {
+        this.debug(req, `updated submission:${submission._id.toString()}`);
+
         /* eslint-disable no-param-reassign */
         req.signup.reportback = rbid;
-        req.signup.total_quantity_submitted = submission.quantity;
+        req.signup.total_quantity_submitted = req.signup.draft_reportback_submission.quantity;
         req.signup.updated_at = dateSubmitted;
-        req.signup.draft_reportback_submission = null;
+        req.signup.draft_reportback_submission = undefined;
         /* eslint-enable no-param-reassign */
         req.signup.save();
       })
-      .then(this.renderResponseMessage(req, 'menu_completed'));
+      .then(() => {
+        this.debug(req, `updated signup:${req.signup._id}`);
+
+        return this.renderResponseMessage(req, 'menu_completed');
+      });
   }
 
   /**
@@ -407,6 +413,8 @@ class CampaignBotController {
    * @return {string} - msgTxt with all variables replaced with req properties
    */
   renderResponseMessage(req, msgType) {
+    this.debug(req, `renderResponseMessage:${msgType}`);
+
     const botProperty = `msg_${msgType}`;
     let msg = this.bot[botProperty];
 
@@ -427,7 +435,7 @@ class CampaignBotController {
       msg = msg.replace(/{{quantity}}/gi, quantity);
     }
 
-    if (req.query.start && req.signup && req.draft_reportback_submission) {
+    if (req.query.start && req.signup && req.signup.draft_reportback_submission) {
       // TODO: New bot property for continue draft message
       const continueMsg = 'Picking up where you left off on';
       msg = `${continueMsg} ${req.campaign.title}...\n\n${msg}`;
