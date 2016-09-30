@@ -1,12 +1,15 @@
+'use strict';
+
 /**
- * Model for Gambit Jr. API DonorsChooseBot. 
+ * Model for a Gambit Jr. DonorsChooseBot.
  * Each document contains copy to use for each message sent in DonorsChooseBot
  * Chatbot conversations.
  */
-var mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
-var schema = new mongoose.Schema({
-  // Corresponds to the donorschoose_bot ID in Gambit Jr. API.
+const schema = new mongoose.Schema({
+
+  // Corresponds to the DonorsChooseBot ID in Gambit Jr. API.
   _id: Number,
   // Last refresh from Gambit Jr. API.
   refreshed_at: Date,
@@ -21,9 +24,10 @@ var schema = new mongoose.Schema({
   msg_project_link: String,
   msg_max_donations_reached: String,
   msg_search_start: String,
-  msg_search_no_results: String
+  msg_search_no_results: String,
+
 });
 
-module.exports = function(connection) {
+module.exports = function (connection) {
   return connection.model(app.ConfigName.DONORSCHOOSEBOTS, schema, 'donorschoosebots');
 };
