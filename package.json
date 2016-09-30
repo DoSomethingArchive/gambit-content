@@ -10,7 +10,7 @@
   "scripts": {
     "test": "npm run lint",
     "start": "node server",
-    "lint": "eslint --ext=.js api/controllers/CampaignBotController.js"
+    "lint": "eslint --ext=.js api/controllers/CampaignBotController.js api/router.js"
   },
   "eslintConfig": {
     "globals": {
