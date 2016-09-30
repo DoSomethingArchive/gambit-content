@@ -1,31 +1,29 @@
-"use strict";
-
-var mobilecommons = rootRequire('lib/mobilecommons');
-var logger = rootRequire('lib/logger');
+'use strict';
 
 /**
- * SlothBotController
- * @constructor
+ * Imports.
  */
-function SlothBotController() {};
+const logger = rootRequire('lib/logger');
 
 /**
- * Welcome to season 2!
- * @param {object} request - Express request
- * @param {object} response - Express response
+ * SlothBotController.
  */
-SlothBotController.prototype.chatbot = function(request, response) {
-  var phone = request.body.phone;
-  var incomingMsg = request.body.args;
-  logger.debug("user:" + phone + " sent @slothbot a message:" + incomingMsg);
-  response.send();
+class SlothBotController {
 
-  var reply = '@slothbot: Thank you so much for talking to me. ';
-  reply += 'I just sit on an office couch all day. ';
-  reply += 'You just told me:\n\n' + incomingMsg;
+  /**
+   * @param {object} req - Express request
+   * @return {string}
+   */
+  renderResponseMessage(req) {
+    const profile = req.body;
+    logger.debug(`${profile.phone} sent slothbot:${profile.args}`);
 
-  // @todo Move hardcoded value into environment variable.
-  mobilecommons.chatbot(request.body, 210045, reply);
+    let msgTxt = '@slothbot: Thank you so much for talking to me. ';
+    msgTxt += 'I just sit on an office couch all day. ';
+    msgTxt += `You just told me:\n\n${profile.args}`;
+
+    return msgTxt;
+  }
 }
 
 module.exports = SlothBotController;

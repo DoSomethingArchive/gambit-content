@@ -1,23 +1,24 @@
+'use strict';
+
 /**
- * Models successful DonorsChoose donation transactions. 
+ * Models a successful DonorsChoose donation transaction.
  */
-var mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
-var schema = new mongoose.Schema({
+const schema = new mongoose.Schema({
 
-  created_at: {type: Date, default: Date.now},
+  created_at: { type: Date, default: Date.now },
 
-  // Member profile information:
-  mobile: {type: String, index: true},
+  mobilecommons_campaign_id: Number,
+  donorschoosebot_id: Number,
+
+  // Member profile our donation is on behalf of.
+  mobile: { type: String, index: true },
   profile_email: String,
   profile_first_name: String,
   profile_postal_code: String,
 
-  // Keep config info for record-keeping:
-  mobilecommons_campaign_id: Number,
-  donorschoose_bot_id: Number,
-
-  // DonorsChoose information:
+  // DonorsChoose donation details:
   donation_id: Number,
   donation_amount: Number,
   proposal_id: Number,
@@ -25,10 +26,10 @@ var schema = new mongoose.Schema({
   proposal_remaining_amount: Number,
   school_name: String,
   school_city: String,
-  school_state: String
+  school_state: String,
 
-})
+});
 
-module.exports = function(connection) {
+module.exports = function (connection) {
   return connection.model('donorschoose_donation', schema);
 };

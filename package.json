@@ -7,6 +7,20 @@
     "type": "git",
     "url": "git+https://github.com/DoSomething/gambit.git"
   },
+  "scripts": {
+    "test": "npm run lint",
+    "start": "node server",
+    "lint": "eslint --ext=.js api/models api/controllers/CampaignBotController.js config/router.js config/router-chatbot.js"
+  },
+  "eslintConfig": {
+    "globals": {
+      "app": true,
+      "rootRequire": true
+    }
+  },
+  "engines": {
+    "node": ">=4.4.x"
+  },
   "dependencies": {
     "@dosomething/northstar-js": "git://github.com/DoSomething/northstar-js.git",
     "@dosomething/phoenix-js": "git://github.com/DoSomething/phoenix-js.git",
@@ -33,11 +47,9 @@
     "winston": "0.8.x",
     "winston-mongodb": "0.5.x"
   },
-  "scripts": {
-    "test": "make test",
-    "start": "node server"
-  },
-  "engines": {
-    "node": ">=4.4.x"
+  "devDependencies": {
+    "@dosomething/eslint-config": "^1.1.1",
+    "eslint": "^2.10.2",
+    "eslint-plugin-react": "^5.1.1"
   }
 }
