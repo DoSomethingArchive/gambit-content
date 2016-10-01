@@ -4,8 +4,6 @@
 
 var express = require('express')
   , router = express.Router()
-  , connectionOperations = rootRequire('config/connectionOperations')
-  , model = require('./reportbackModel')(connectionOperations)
   , mobilecommons = rootRequire('lib/mobilecommons')
   , emitter = rootRequire('lib/eventEmitter')
   , logger = rootRequire('lib/logger')
@@ -96,7 +94,9 @@ module.exports = router;
  *   Campaign endpoint identifier
  */
 function findDocument(phone, endpoint) {
-  return model.findOne({'phone': phone, 'campaign': endpoint}).exec();
+  return app.locals.db.legacyReportbacks
+    .findOne({'phone': phone, 'campaign': endpoint})
+    .exec();
 }
 
 /**
@@ -115,7 +115,8 @@ function onDocumentFound(doc, phone, campaignConfig) {
     return doc;
   }
   else {
-    var newDoc = model.create({'phone': phone, 'campaign': campaignConfig.endpoint});
+    var newDoc = app.locals.db.legacyReportbacks
+      .create({'phone': phone, 'campaign': campaignConfig.endpoint});
     logger.log('debug', 'reportback.onDocumentFound created doc:%s', JSON.stringify(doc));
     return newDoc;
   }
@@ -165,7 +166,7 @@ function receivePhoto(doc, data) {
     mobilecommons.optin({alphaPhone: data.phone, alphaOptin: data.campaignConfig.message_not_a_photo});
   }
   else {
-    model.update(
+    app.locals.db.legacyReportbacks.update(
       {phone: data.phone, campaign: doc.campaign},
       {'$set': {photo: photoUrl}},
       function(err, num, raw) {
@@ -189,7 +190,7 @@ function receivePhoto(doc, data) {
 function receiveCaption(doc, data) {
   logReportbackStep(doc, data);
   var answer = data.args;
-  model.update(
+  app.locals.db.legacyReportbacks.update(
     {phone: data.phone, campaign: doc.campaign},
     {'$set': {caption: answer}},
     function(err, num, raw) {
@@ -214,7 +215,7 @@ function receiveQuantity(doc, data) {
   var answer = data.args;
   var quantity = parseForDigits(answer);
   if (quantity) {
-    model.update(
+    app.locals.db.legacyReportbacks.update(
       {phone: data.phone, campaign: doc.campaign},
       {'$set': {quantity: quantity}},
       function(err, num, raw) {
@@ -240,7 +241,7 @@ function receiveQuantity(doc, data) {
 function receiveWhyImportant(doc, data) {
   logReportbackStep(doc, data);
   var answer = data.args;
-  model.update(
+  app.locals.db.legacyReportbacks.update(
     {phone: data.phone, campaign: doc.campaign},
     {'$set': {why_important: answer}},
     function(err, num, raw) {
@@ -437,7 +438,7 @@ function submitReportback(uid, doc, data) {
       }
 
       // Remove the reportback doc upon successful submission.
-      model.remove({phone: data.phone, campaign: data.campaignConfig.endpoint}).exec();
+      app.locals.db.legacyReportbacks.remove({phone: data.phone, campaign: data.campaignConfig.endpoint}).exec();
     })
   }
 

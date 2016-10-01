@@ -1,5 +1,8 @@
 'use strict';
 
+const mongoose = require('mongoose');
+mongoose.Promise = global.Promise;
+
 const logger = rootRequire('lib/logger');
 
 const conn = require('./connectionConfig');
@@ -14,7 +17,21 @@ const configModels = {
   legacyYesNoPaths: rootRequire('api/legacy/ds-routing/config/yesNoPathsConfigModel')(conn),
 };
 
-app.loadConfigs = function () {
+app.loadLocals = function () {
+
+  const opsDbUri = process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder';
+  const connOps = mongoose.createConnection(opsDbUri);
+  connOps.on('connected', () => {  
+    logger.info(`connOps readyState:${connOps.readyState}`);
+  });
+  app.locals.db = {
+    donorsChooseDonations: rootRequire('api/models/donation/DonorsChooseDonation')(connOps),
+    legacyReportbacks: rootRequire('api/legacy/reportback/reportbackModel')(connOps),
+    reportbackSubmissions: rootRequire('api/models/campaign/ReportbackSubmission')(connOps),
+    signups: rootRequire('api/models/campaign/Signup')(connOps),
+    users: rootRequire('api/models/User')(connOps),
+  };
+
   const promises = [];
   Object.keys(configModels).forEach(function(configName) {
     const model = configModels[configName];

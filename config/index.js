@@ -14,22 +14,12 @@ module.exports = function () {
   // Parses request body and populates request.body
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: true }));
-
   // For multi-part parsing
   app.use(require('connect-multiparty')());
-
   // Show all errors in development
   app.use(errorHandler());
-
   // Add static path
   app.use(express.static(path.join(rootDirName, 'public')));
-
-  const conn = rootRequire('config/connectionOperations');
-  app.locals.db = {
-    reportbackSubmissions: rootRequire('api/models/campaign/ReportbackSubmission')(conn),
-    signups: rootRequire('api/models/campaign/Signup')(conn),
-    users: rootRequire('api/models/User')(conn),
-  };
 
   app.locals.clients = {};
 

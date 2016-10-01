@@ -35,7 +35,7 @@ require('./config/smsConfigsLoader');
 
 require('./config/router');
 
-app.loadConfigs().then(() => {
+app.loadLocals().then(() => {
   const port = process.env.PORT || 5000;
   app.listen(port, () => {
     logger.info(`Gambit is listening, port:${port} env:${process.env.NODE_ENV}.`);
