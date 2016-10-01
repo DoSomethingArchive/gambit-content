@@ -6,7 +6,7 @@
  */
 var mongoose = require('mongoose');
 
-var startCampaignTransitionsConfigSchema = new mongoose.Schema({
+var schema = new mongoose.Schema({
 
   // Reassigning the _id value to the unique id of the mData which controls this campaign transitions flow. 
   _id : Number,
@@ -23,5 +23,5 @@ var startCampaignTransitionsConfigSchema = new mongoose.Schema({
 })
 
 module.exports = function(connection) {
-  return connection.model(app.ConfigName.CAMPAIGN_TRANSITIONS, startCampaignTransitionsConfigSchema);
+  return connection.model('start_campaign_transitions', schema);
 }

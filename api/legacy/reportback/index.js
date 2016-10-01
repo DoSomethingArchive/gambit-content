@@ -46,20 +46,13 @@ else {
  */
 router.post('/:campaign', function(request, response) {
   var campaignName = request.params.campaign;
+
   logger.log('verbose', '/reportback/%s request.body:', campaignName, JSON.stringify(request.body));
-  var campaignConfig
-    , phone
-    , requestData
-    , i
-    ;
-  
-  // Get the config either from the override or the campaign value in the URL
-  if (request.query.config_override) {
-    campaignConfig = app.getConfig(app.ConfigName.REPORTBACK, request.query.config_override, 'config_override');
-  }
-  else {
-    campaignConfig = app.getConfig(app.ConfigName.REPORTBACK, campaignName, 'endpoint');
-  }
+  var phone;
+  var requestData;
+  var i;
+
+  const campaignConfig = app.locals.configs.legacyReportbacks[campaignName];
 
   if (typeof campaignConfig !== 'undefined') {
     phone = request.body.phone;

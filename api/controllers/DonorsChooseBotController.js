@@ -28,9 +28,9 @@ var donationModel = require('../models/donation/DonorsChooseDonation')(connOps);
  * DonorsChooseBotController
  * @constructor
  */
-function DonorsChooseBotController() {
-  this.mocoCampaign = app.getConfig(app.ConfigName.CHATBOT_MOBILECOMMONS_CAMPAIGNS, MOCO_CAMPAIGN_ID);
-  this.bot = app.getConfig(app.ConfigName.DONORSCHOOSEBOTS, DONORSCHOOSEBOT_ID);
+function DonorsChooseBotController(donorsChooseBot, mobileCommonsCampaign) {
+  this.bot = donorsChooseBot;
+  this.mocoCampaign = mobileCommonsCampaign;
 };
 
 /**

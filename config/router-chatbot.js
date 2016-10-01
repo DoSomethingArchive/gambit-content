@@ -29,10 +29,8 @@ router.post('/', (req, res) => {
   }
 
   if (botType === 'donorschoose' || botType === 'donorschoosebot') {
-    const DonorsChooseBot = rootRequire('api/controllers/DonorsChooseBotController');
-    const donorsChooseBot = new DonorsChooseBot();
 
-    return donorsChooseBot.chatbot(req, res);
+    return app.locals.donorsChooseBot.chatbot(req, res);
   }
 
   req.campaign_id = req.query.campaign; // eslint-disable-line no-param-reassign

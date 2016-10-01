@@ -25,7 +25,8 @@ MCRouting.prototype.yesNoGateway = function(request, response) {
   var phone = request.body.phone;
   var incomingOptIn = parseInt(request.body.opt_in_path_id);
   logger.debug('debug', 'MCRouting.yesNoGateway request from user:%s from oip:%d', phone, incomingOptIn);
-  var path = app.getConfig(app.ConfigName.YES_NO_PATHS, incomingOptIn);
+
+  const path = app.locals.configs.legacyYesNoPaths[incomingOptIn];
 
   if (path === undefined) {
     logger.log('warn', "MCRouting.yesNoGateway 204: config doc not found for oip:%d user:%s", incomingOptIn, phone);
@@ -65,7 +66,8 @@ MCRouting.prototype.campaignTransition = function(request, response) {
 
   var mdataId = parseInt(request.body.mdata_id);
   logger.log('debug', 'MCRouting.campaignTransition mdataId:%d', mdataId); 
-  var transitionConfig = app.getConfig(app.ConfigName.CAMPAIGN_TRANSITIONS, mdataId);
+
+  const transitionConfig = app.locals.configs.legacyStartCampaignTransitions[mdataId];
 
   if (typeof(transitionConfig) !== 'undefined'
       && typeof(transitionConfig.optin) !== 'undefined'
