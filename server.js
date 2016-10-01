@@ -31,7 +31,7 @@ app = express();
 
 require('./config')();
 
-const smsConfigsLoader = require('./config/smsConfigsLoader');
+require('./config/smsConfigsLoader');
 
 require('./config/router');
 
