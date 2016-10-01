@@ -1,3 +1,7 @@
+'use strict';
+
+const logger = rootRequire('lib/logger');
+
 /**
  * Globally-accessible object of config names.
  */
@@ -8,11 +12,11 @@ app.ConfigName = {
   CHATBOT_MOBILECOMMONS_CAMPAIGNS: 'chatbot_mobilecommons_campaigns',
   DONORSCHOOSEBOTS: 'donorschoosebots',
   REPORTBACK: 'reportback',
-  YES_NO_PATHS: 'yes_no_path'
+  YES_NO_PATHS: 'yes_no_path',
 };
 
-var conn = require('./connectionConfig');
-var configModelArray = [
+const conn = require('./connectionConfig');
+const configModelArray = [
   rootRequire('api/models/ChatbotMobileCommonsCampaign')(conn),
   rootRequire('api/models/campaign/Campaign')(conn),
   rootRequire('api/models/campaign/CampaignBot')(conn),
@@ -22,40 +26,47 @@ var configModelArray = [
   rootRequire('api/legacy/reportback/reportbackConfigModel')(conn),
 ];
 
-var logger = rootRequire('lib/logger');
+const configModels = {
+  campaigns: rootRequire('api/models/campaign/Campaign')(conn),
+  campaignBots: rootRequire('api/models/campaign/CampaignBot')(conn),
+  chatbotMobilecommonsCampaigns: rootRequire('api/models/ChatbotMobileCommonsCampaign')(conn),
+  donorsChooseBots: rootRequire('api/models/donation/DonorsChooseBot')(conn),
+  // Legacy collections:
+  reportbacks: rootRequire('api/legacy/reportback/reportbackConfigModel')(conn),
+  startCampaignTransitions: rootRequire('api/legacy/ds-routing/config/startCampaignTransitionsConfigModel')(conn),
+  yesNoPaths: rootRequire('api/legacy/ds-routing/config/yesNoPathsConfigModel')(conn),
+};
+let numConfigsLoaded = 0; 
 
-var configObject = {};
-var callback;
-var numberOfModelsRemaining = configModelArray.length;
+
+const configObject = {};
+let callback;
+let numberOfModelsRemaining = configModelArray.length;
+
 
 /*
- * Imports the responder's configuration files and returns them through a callback. 
+ * Imports the responder's configuration files and returns them through a callback.
  *
- * @param _callback 
+ * @param _callback
  *   Callback function to which the populated configObject is returned.
  */
-var smsConfigsLoader = function(_callback) {
-  callback = _callback;
-  for (var i = 0; i < configModelArray.length; i++) {
-    configModelArray[i].find({}, function(err, docs) {
-      if (err) {
-        logger.error('Error retrieving responder config files. Error: ' + err);
-      }
-      else if (docs.length > 0) {
-        var modelName = docs[0].__proto__.constructor.modelName;
-        configObject[modelName] = docs;
-        onRetrievedConfig();
-      }
-    })
-  }
-}
+app.loadConfigs = function () {
+  const promises = [];
+  Object.keys(configModels).forEach(function(configName, index) {
+    const model = configModels[configName];
+    const promise = model.find({}).exec().then((configDocs) => {
+      const configMap = {};
+      configDocs.forEach((configDoc) => {
+        configMap[configDoc._id] = configDoc;
+      });
+      let configResponse = {};
+      configResponse[configName] = configMap;
+      return configResponse;
+    });
+    promises.push(promise);
+  });
 
-function onRetrievedConfig() {
-  numberOfModelsRemaining--
-  if (numberOfModelsRemaining == 0) {
-    app.configs = configObject;
-    callback();
-  }
+  return promises;
 }
 
 /*
@@ -73,12 +84,13 @@ function onRetrievedConfig() {
  *   Config document.
  */
 app.getConfig = function(modelName, documentId, key) {
-  logger.verbose('smsConfigsLoader.getConfig modelName:%s documentId:%s',
+  logger.debug('smsConfigsLoader.getConfig modelName:%s documentId:%s',
     modelName, documentId);
 
   var keyMatches;
   var idMatches;
-  var configArray = this.configs[modelName];
+  const configArray = app.locals.configs[modelName];
+  console.log(configArray);
   for (var i = 0; i < configArray.length; i++) {
     keyMatches = typeof key !== 'undefined' && configArray[i][key] == documentId;
     idMatches = configArray[i]._id == documentId;
@@ -91,4 +103,3 @@ app.getConfig = function(modelName, documentId, key) {
   logger.error('smsConfigsLoader.getConfig document not found for modelName:' + modelName + ' documentId:' + documentId + ' key:' + key);
 };
 
-module.exports = smsConfigsLoader;

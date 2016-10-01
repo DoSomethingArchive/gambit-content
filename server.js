@@ -35,19 +35,25 @@ const smsConfigsLoader = require('./config/smsConfigsLoader');
 
 require('./config/router');
 
-const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
-const SlothBotController = rootRequire('api/controllers/SlothBotController');
+Promise.all(app.loadConfigs()).then((configObjects) => {
+  console.log(configObjects);
 
-// Load all configuration db collections before starting server.
-smsConfigsLoader(() => {
-  const port = (process.env.PORT || 5000);
+  console.log('testing 123');
+
+  const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
+  const SlothBotController = rootRequire('api/controllers/SlothBotController');
 
   // TODO Create our controllers (which read from configs in smsConfigsLoader)
   // We'll need to loop through all campaignBots and store as array.
-  app.locals.campaignBot = new CampaignBotController(41);
+  app.locals.slothBot = new SlothBotController(41);
   app.locals.slothBot = new SlothBotController();
+  console.log('testing 456')
 
+  const port = (process.env.PORT || 5000);
   app.listen(port, () => {
     logger.info(`Gambit is listening, port:${port} env:${process.env.NODE_ENV}.`);
   });
+
+
+
 });
