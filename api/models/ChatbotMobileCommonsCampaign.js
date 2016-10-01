@@ -19,5 +19,5 @@ const schema = new mongoose.Schema({
 });
 
 module.exports = function (connection) {
-  return connection.model('chatbot_mobilecommons_campaign', schema);
+  return connection.model('chatbot_mobilecommons_campaigns', schema);
 };
