@@ -16,57 +16,56 @@ app.ConfigName = {
 };
 
 const conn = require('./connectionConfig');
-const configModelArray = [
-  rootRequire('api/models/ChatbotMobileCommonsCampaign')(conn),
-  rootRequire('api/models/campaign/Campaign')(conn),
-  rootRequire('api/models/campaign/CampaignBot')(conn),
-  rootRequire('api/models/donation/DonorsChooseBot')(conn),
-  rootRequire('api/legacy/ds-routing/config/startCampaignTransitionsConfigModel')(conn),
-  rootRequire('api/legacy/ds-routing/config/yesNoPathsConfigModel')(conn),
-  rootRequire('api/legacy/reportback/reportbackConfigModel')(conn),
-];
-
 const configModels = {
   campaigns: rootRequire('api/models/campaign/Campaign')(conn),
   campaignBots: rootRequire('api/models/campaign/CampaignBot')(conn),
-  chatbotMobilecommonsCampaigns: rootRequire('api/models/ChatbotMobileCommonsCampaign')(conn),
+  chatbotMobileCommonsCampaigns: rootRequire('api/models/ChatbotMobileCommonsCampaign')(conn),
   donorsChooseBots: rootRequire('api/models/donation/DonorsChooseBot')(conn),
   // Legacy collections:
-  reportbacks: rootRequire('api/legacy/reportback/reportbackConfigModel')(conn),
-  startCampaignTransitions: rootRequire('api/legacy/ds-routing/config/startCampaignTransitionsConfigModel')(conn),
-  yesNoPaths: rootRequire('api/legacy/ds-routing/config/yesNoPathsConfigModel')(conn),
+  legacyReportbacks: rootRequire('api/legacy/reportback/reportbackConfigModel')(conn),
+  legacyCampaignTransitions: rootRequire('api/legacy/ds-routing/config/startCampaignTransitionsConfigModel')(conn),
+  legacyYesNoPaths: rootRequire('api/legacy/ds-routing/config/yesNoPathsConfigModel')(conn),
 };
-let numConfigsLoaded = 0; 
 
 
-const configObject = {};
-let callback;
-let numberOfModelsRemaining = configModelArray.length;
-
-
-/*
- * Imports the responder's configuration files and returns them through a callback.
- *
- * @param _callback
- *   Callback function to which the populated configObject is returned.
- */
 app.loadConfigs = function () {
   const promises = [];
-  Object.keys(configModels).forEach(function(configName, index) {
+  Object.keys(configModels).forEach(function(configName) {
     const model = configModels[configName];
     const promise = model.find({}).exec().then((configDocs) => {
       const configMap = {};
       configDocs.forEach((configDoc) => {
         configMap[configDoc._id] = configDoc;
       });
-      let configResponse = {};
-      configResponse[configName] = configMap;
-      return configResponse;
+      return {
+        name: configName,
+        count: configDocs.length,
+        data: configMap,
+      };
     });
     promises.push(promise);
   });
 
-  return promises;
+  return Promise.all(promises).then((collections) => {
+    // Initialize our app.locals.configs map.
+    app.locals.configs = {};
+    collections.forEach(function(collection) {
+      app.locals.configs[collection.name] = collection.data;
+      logger.debug(`loaded ${collection.count} app.locals.configs.${collection.name}`);
+    }); 
+
+    const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
+    const SlothBotController = rootRequire('api/controllers/SlothBotController');
+
+    // TODO: We'll need to loop through all campaignBots and store as app.locals.campignBots map.
+    // For now we only have one default CampaignBot (id 41) to use for all DS Campaigns.
+    // TODO: Add config variable to avoid hardcoding default CampaignBot.
+    const campaignBot = app.locals.configs.campaignBots[41];
+    
+    app.locals.campaignBot = new CampaignBotController(campaignBot);
+    app.locals.slothBot = new SlothBotController();
+    return true;
+  });
 }
 
 /*
