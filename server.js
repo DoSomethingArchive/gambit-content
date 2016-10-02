@@ -31,11 +31,11 @@ app = express();
 
 require('./config')();
 
-require('./config/smsConfigsLoader');
+const locals = rootRequire('config/locals');
 
 require('./config/router');
 
-app.loadLocals().then(() => {
+locals.load().then(() => {
   const port = process.env.PORT || 5000;
   app.listen(port, () => {
     logger.info(`Gambit is listening, port:${port} env:${process.env.NODE_ENV}.`);
