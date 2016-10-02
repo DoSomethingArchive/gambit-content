@@ -29,7 +29,6 @@ router.post('/', (req, res) => {
   }
 
   if (botType === 'donorschoose' || botType === 'donorschoosebot') {
-
     return app.locals.donorsChooseBot.chatbot(req, res);
   }
 
@@ -38,7 +37,8 @@ router.post('/', (req, res) => {
   const controller = app.locals.campaignBot;
   controller.debug(req, `msg:${req.incoming_message} img:${req.incoming_image_url}`);
 
-  req.campaign = app.locals.configs.campaigns[req.campaign_id]; // eslint-disable-line no-param-reassign
+  const campaign = app.locals.configs.campaigns[req.campaign_id];
+  req.campaign = campaign; // eslint-disable-line no-param-reassign
 
   // TODO: Mobile Commons Campaign will be shared by all DS Campaigns
   // @see https://github.com/DoSomething/gambit/issues/633
