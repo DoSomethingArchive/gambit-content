@@ -32,13 +32,8 @@ router.post('/', (req, res) => {
     return app.locals.donorsChooseBot.chatbot(req, res);
   }
 
-  req.campaign_id = req.query.campaign; // eslint-disable-line no-param-reassign
-
   const controller = app.locals.campaignBot;
   controller.debug(req, `msg:${req.incoming_message} img:${req.incoming_image_url}`);
-
-  const campaign = app.locals.configs.campaigns[req.campaign_id];
-  req.campaign = campaign; // eslint-disable-line no-param-reassign
 
   return controller
     .loadUser(req.user_id)
@@ -46,6 +41,17 @@ router.post('/', (req, res) => {
       controller.debug(req, `loaded user:${user._id}`);
 
       req.user = user; // eslint-disable-line no-param-reassign
+
+      if (req.query.campaign) {
+        req.campaign_id = req.query.campaign; // eslint-disable-line no-param-reassign
+      } else {
+        req.campaign_id = user.current_campaign; // eslint-disable-line no-param-reassign
+      }
+
+      controller.debug(req, `set campaignId:${req.campaign_id}`);
+
+      const campaign = app.locals.configs.campaigns[req.campaign_id];
+      req.campaign = campaign; // eslint-disable-line no-param-reassign
 
       if (controller.isCommandClearCache(req)) {
         req.user.campaigns = {}; // eslint-disable-line no-param-reassign
@@ -82,6 +88,8 @@ router.post('/', (req, res) => {
     })
     .then(msg => {
       controller.debug(req, `sendMessage:${msg}`);
+      controller.setCurrentCampaign(req.user, req.campaign_id);
+
       mobilecommons.chatbot(req.body, process.env.CAMPAIGNBOT_MOBILECOMMONS_OIP, msg);
 
       return res.send({ message: msg });

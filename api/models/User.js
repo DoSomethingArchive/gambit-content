@@ -16,6 +16,8 @@ const schema = new mongoose.Schema({
   first_name: String,
   // Hash table to store current signups: e.g. campaigns[campaignId] = signupId;
   campaigns: { type: mongoose.Schema.Types.Mixed, default: {} },
+  // Campaign the user is currently participating in via chatbot.
+  current_campaign: Number,
 
 });
 
