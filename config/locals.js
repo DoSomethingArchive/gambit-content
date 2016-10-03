@@ -6,69 +6,6 @@ mongoose.Promise = global.Promise;
 const logger = rootRequire('lib/logger');
 
 /**
- * Loads app.locals.clients for networking requests.
- */
-function clients() {
-  app.locals.clients = {};
-
-  const NorthstarClient = require('@dosomething/northstar-js');
-  app.locals.clients.northstar = new NorthstarClient({
-    baseURI: process.env.DS_NORTHSTAR_API_BASEURI,
-    apiKey: process.env.DS_NORTHSTAR_API_KEY,
-  });
-
-  const PhoenixClient = require('@dosomething/phoenix-js');
-  app.locals.clients.phoenix = new PhoenixClient({
-    baseURI: process.env.DS_PHOENIX_API_BASEURI,
-    username: process.env.DS_PHOENIX_API_USERNAME,
-    password: process.env.DS_PHOENIX_API_PASSWORD,
-  });
-
-  const loaded = app.locals.clients.northstar && app.locals.clients.phoenix;
-
-  return loaded;
-}
-
-/**
- * Loads map of config content as app.locals.configs object instead using Mongoose find queries
- * e.g. app.locals.configs.campaign[32].title, app.locals.configs.campaignBots[41].msg_ask_why
- */
-function configs(uri) {
-  app.locals.configs = {};
-
-  const conn = mongoose.createConnection(uri);
-  conn.on('connected', () => {
-    logger.info(`apps.locals.configs readyState:${conn.readyState}`);
-  });
-
-  /* eslint-disable max-len*/
-  const models = {
-    campaigns: rootRequire('api/models/campaign/Campaign')(conn),
-    campaignBots: rootRequire('api/models/campaign/CampaignBot')(conn),
-    chatbotMobileCommonsCampaigns: rootRequire('api/models/ChatbotMobileCommonsCampaign')(conn),
-    donorsChooseBots: rootRequire('api/models/donation/DonorsChooseBot')(conn),
-    // TBDeleted.
-    legacyReportbacks: rootRequire('api/legacy/reportback/reportbackConfigModel')(conn),
-    legacyStartCampaignTransitions: rootRequire('api/legacy/ds-routing/config/startCampaignTransitionsConfigModel')(conn),
-    legacyYesNoPaths: rootRequire('api/legacy/ds-routing/config/yesNoPathsConfigModel')(conn),
-  };
-  /* eslint-enable max-len*/
-
-  const promises = [];
-  Object.keys(models).forEach((modelName) => {
-    const promise = getModelMap(modelName, models[modelName]);
-    promises.push(promise);    
-  });
-
-  return Promise.all(promises).then((modelMaps) => {
-    modelMaps.forEach((modelMap) => {
-      app.locals.configs[modelMap.name] = modelMap.data;
-      logger.debug(`app.locals.configs loaded ${modelMap.count} ${modelMap.name}`);
-    });
-  });
-}
-
-/**
  * Returns object with a data property, containing a hash map of models for modelName by model id.
  */
 function getModelMap(configName, model) {
@@ -95,9 +32,73 @@ function getModelMap(configName, model) {
 }
 
 /**
+ * Loads app.locals.clients for networking requests.
+ */
+function loadClients() {
+  app.locals.clients = {};
+
+  const NorthstarClient = require('@dosomething/northstar-js');
+  app.locals.clients.northstar = new NorthstarClient({
+    baseURI: process.env.DS_NORTHSTAR_API_BASEURI,
+    apiKey: process.env.DS_NORTHSTAR_API_KEY,
+  });
+
+  const PhoenixClient = require('@dosomething/phoenix-js');
+  app.locals.clients.phoenix = new PhoenixClient({
+    baseURI: process.env.DS_PHOENIX_API_BASEURI,
+    username: process.env.DS_PHOENIX_API_USERNAME,
+    password: process.env.DS_PHOENIX_API_PASSWORD,
+  });
+
+  const loaded = app.locals.clients.northstar && app.locals.clients.phoenix;
+
+  return loaded;
+}
+
+/**
+ * Loads map of config content as app.locals.configs object instead using Mongoose find queries
+ * e.g. app.locals.configs.campaign[32].title, app.locals.configs.campaignBots[41].msg_ask_why
+ */
+function loadConfigs(uri) {
+  app.locals.configs = {};
+
+  const conn = mongoose.createConnection(uri);
+  conn.on('connected', () => {
+    logger.info(`apps.locals.configs readyState:${conn.readyState}`);
+  });
+
+  /* eslint-disable max-len*/
+  const models = {
+    campaigns: rootRequire('api/models/campaign/Campaign')(conn),
+    campaignBots: rootRequire('api/models/campaign/CampaignBot')(conn),
+    chatbotMobileCommonsCampaigns: rootRequire('api/models/ChatbotMobileCommonsCampaign')(conn),
+    donorsChooseBots: rootRequire('api/models/donation/DonorsChooseBot')(conn),
+    // TBDeleted.
+    legacyReportbacks: rootRequire('api/legacy/reportback/reportbackConfigModel')(conn),
+    legacyStartCampaignTransitions: rootRequire('api/legacy/ds-routing/config/startCampaignTransitionsConfigModel')(conn),
+    legacyYesNoPaths: rootRequire('api/legacy/ds-routing/config/yesNoPathsConfigModel')(conn),
+  };
+  /* eslint-enable max-len*/
+
+  const promises = [];
+  Object.keys(models).forEach((modelName) => {
+    const promise = getModelMap(modelName, models[modelName]);
+    promises.push(promise);
+  });
+
+  return Promise.all(promises).then((modelMaps) => {
+    modelMaps.forEach((modelMap) => {
+      app.locals.configs[modelMap.name] = modelMap.data;
+      logger.debug(`app.locals.configs loaded ${modelMap.count} ${modelMap.name}`);
+    });
+  });
+}
+
+
+/**
  * Loads operation models as app.locals.db object.
  */
-function db(uri) {
+function loadDb(uri) {
   const conn = mongoose.createConnection(uri);
   conn.on('connected', () => {
     logger.info(`apps.locals.db readyState:${conn.readyState}`);
@@ -120,7 +121,7 @@ function db(uri) {
 module.exports.load = function () {
   const configUri = process.env.CONFIG_DB_URI || 'mongodb://localhost/config';
   const dbUri = process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder';
-  const locals = [clients(), configs(configUri), db(dbUri)];
+  const locals = [loadClients(), loadConfigs(configUri), loadDb(dbUri)];
 
   return Promise.all(locals).then(() => {
     const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
