@@ -42,7 +42,7 @@ function configs(uri) {
   });
 
   /* eslint-disable max-len*/
-  const configModels = {
+  const models = {
     campaigns: rootRequire('api/models/campaign/Campaign')(conn),
     campaignBots: rootRequire('api/models/campaign/CampaignBot')(conn),
     chatbotMobileCommonsCampaigns: rootRequire('api/models/ChatbotMobileCommonsCampaign')(conn),
@@ -55,33 +55,42 @@ function configs(uri) {
   /* eslint-enable max-len*/
 
   const promises = [];
-  Object.keys(configModels).forEach((configName) => {
-    const model = configModels[configName];
-    const promise = model.find({}).exec().then((configDocs) => {
-      const configMap = {};
-      configDocs.forEach((configDoc) => {
-        if (configName === 'legacyReportbacks') {
-          // Legacy reportback endpoint loads its config based by the endpoint property.
-          configMap[configDoc.endpoint] = configDoc;
-        } else {
-          configMap[configDoc._id] = configDoc;
-        }
-      });
-
-      return {
-        name: configName,
-        count: configDocs.length,
-        data: configMap,
-      };
-    });
-    promises.push(promise);
+  Object.keys(models).forEach((modelName) => {
+    const promise = getModelMap(modelName, models[modelName]);
+    promises.push(promise);    
   });
 
-  return Promise.all(promises).then((collections) => {
-    collections.forEach((collection) => {
-      app.locals.configs[collection.name] = collection.data;
-      logger.debug(`app.locals.configs loaded ${collection.count} ${collection.name}`);
+  return Promise.all(promises).then((modelMaps) => {
+    modelMaps.forEach((modelMap) => {
+      app.locals.configs[modelMap.name] = modelMap.data;
+      logger.debug(`app.locals.configs loaded ${modelMap.count} ${modelMap.name}`);
     });
+  });
+}
+
+/**
+ * Returns object with a data property, containing a hash map of models for modelName by model id.
+ */
+function getModelMap(configName, model) {
+  logger.verbose(`loading ${configName}`);
+
+  const modelMap = {};
+
+  return model.find({}).exec().then((docs) => {
+    docs.forEach((doc) => {
+      if (configName === 'legacyReportbacks') {
+        // Legacy reportback controller loads its config based by endpoint instead of _id.
+        modelMap[doc.endpoint] = doc;
+      } else {
+        modelMap[doc._id] = doc;
+      }
+    });
+
+    return {
+      name: configName,
+      count: docs.length,
+      data: modelMap,
+    };
   });
 }
 

@@ -95,7 +95,7 @@ module.exports = router;
  */
 function findDocument(phone, endpoint) {
   return app.locals.db.legacyReportbacks
-    .findOne({'phone': phone, 'campaign': endpoint})
+    .findOne({ 'phone': phone, 'campaign': endpoint })
     .exec();
 }
 
@@ -116,7 +116,8 @@ function onDocumentFound(doc, phone, campaignConfig) {
   }
   else {
     var newDoc = app.locals.db.legacyReportbacks
-      .create({'phone': phone, 'campaign': campaignConfig.endpoint});
+      .create({ 'phone': phone, 'campaign': campaignConfig.endpoint });
+  
     logger.log('debug', 'reportback.onDocumentFound created doc:%s', JSON.stringify(doc));
     return newDoc;
   }
@@ -167,8 +168,8 @@ function receivePhoto(doc, data) {
   }
   else {
     app.locals.db.legacyReportbacks.update(
-      {phone: data.phone, campaign: doc.campaign},
-      {'$set': {photo: photoUrl}},
+      { phone: data.phone, campaign: doc.campaign },
+      { '$set': {photo: photoUrl} },
       function(err, num, raw) {
         if (!err) {
           emitter.emit(emitter.events.reportbackModelUpdate);
@@ -191,8 +192,8 @@ function receiveCaption(doc, data) {
   logReportbackStep(doc, data);
   var answer = data.args;
   app.locals.db.legacyReportbacks.update(
-    {phone: data.phone, campaign: doc.campaign},
-    {'$set': {caption: answer}},
+    { phone: data.phone, campaign: doc.campaign },
+    { '$set': {caption: answer} },
     function(err, num, raw) {
       if (!err) {
         emitter.emit(emitter.events.reportbackModelUpdate);
@@ -216,8 +217,8 @@ function receiveQuantity(doc, data) {
   var quantity = parseForDigits(answer);
   if (quantity) {
     app.locals.db.legacyReportbacks.update(
-      {phone: data.phone, campaign: doc.campaign},
-      {'$set': {quantity: quantity}},
+      { phone: data.phone, campaign: doc.campaign },
+      { '$set': { quantity: quantity } },
       function(err, num, raw) {
         if (!err) {
           emitter.emit(emitter.events.reportbackModelUpdate);
@@ -242,8 +243,8 @@ function receiveWhyImportant(doc, data) {
   logReportbackStep(doc, data);
   var answer = data.args;
   app.locals.db.legacyReportbacks.update(
-    {phone: data.phone, campaign: doc.campaign},
-    {'$set': {why_important: answer}},
+    { phone: data.phone, campaign: doc.campaign },
+    { '$set': { why_important: answer } },
     function(err, num, raw) {
       if (!err) {
         emitter.emit(emitter.events.reportbackModelUpdate);
@@ -438,7 +439,9 @@ function submitReportback(uid, doc, data) {
       }
 
       // Remove the reportback doc upon successful submission.
-      app.locals.db.legacyReportbacks.remove({phone: data.phone, campaign: data.campaignConfig.endpoint}).exec();
+      app.locals.db.legacyReportbacks
+        .remove({ phone: data.phone, campaign: data.campaignConfig.endpoint })
+        .exec();
     })
   }
 
