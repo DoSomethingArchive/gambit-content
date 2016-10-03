@@ -125,10 +125,8 @@ module.exports.load = function () {
 
   return Promise.all(locals).then(() => {
     const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
-    // TODO: We'll need to loop through all campaignBots and store as app.locals.campignBots map.
-    // For now we only have one default CampaignBot (id 41) to use for all DS Campaigns.
-    // TODO: Add config variable to avoid hardcoding default CampaignBot.
-    const campaignBot = app.locals.configs.campaignBots[41];
+    // TODO: Support multiple campaignBots, to allow campaigns to override default message copy.
+    const campaignBot = app.locals.configs.campaignBots[process.env.CAMPAIGNBOT_ID];
     app.locals.campaignBot = new CampaignBotController(campaignBot);
 
     const DonorsChooseBotController = rootRequire('api/controllers/DonorsChooseBotController');

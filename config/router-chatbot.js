@@ -40,15 +40,6 @@ router.post('/', (req, res) => {
   const campaign = app.locals.configs.campaigns[req.campaign_id];
   req.campaign = campaign; // eslint-disable-line no-param-reassign
 
-  // TODO: Mobile Commons Campaign will be shared by all DS Campaigns
-  // @see https://github.com/DoSomething/gambit/issues/633
-  let mocoId = req.campaign.staging_mobilecommons_campaign;
-  if (process.env.NODE_ENV === 'production') {
-    mocoId = req.campaign.current_mobilecommons_campaign;
-  }
-  const mobilecommonsCampaign = app.locals.configs.chatbotMobileCommonsCampaigns[mocoId];
-  const mobilecommonsOptinPath = mobilecommonsCampaign.oip_chat;
-
   return controller
     .loadUser(req.user_id)
     .then(user => {
@@ -91,7 +82,7 @@ router.post('/', (req, res) => {
     })
     .then(msg => {
       controller.debug(req, `sendMessage:${msg}`);
-      mobilecommons.chatbot(req.body, mobilecommonsOptinPath, msg);
+      mobilecommons.chatbot(req.body, process.env.CAMPAIGNBOT_MOBILECOMMONS_OIP, msg);
 
       return res.send({ message: msg });
     })
