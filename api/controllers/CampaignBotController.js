@@ -19,10 +19,10 @@ class CampaignBotController {
   /**
    * Controls chatbot conversations to Signup and Reportback to DS Campaigns.
    * @constructor
-   * @param {number} campaignBotId - Campaignbot to use for response content.
+   * @param {object} campaignBot - CampaignBot model
    */
-  constructor(campaignBotId) {
-    this.bot = app.getConfig(app.ConfigName.CAMPAIGNBOTS, campaignBotId);
+  constructor(campaignBot) {
+    this.bot = campaignBot;
   }
 
   /**

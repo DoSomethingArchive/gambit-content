@@ -25,5 +25,5 @@ const schema = new mongoose.Schema({
 });
 
 module.exports = function (connection) {
-  return connection.model(app.ConfigName.CAMPAIGNBOTS, schema, 'campaignbots');
+  return connection.model('campaignbots', schema);
 };

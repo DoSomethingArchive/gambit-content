@@ -21,16 +21,14 @@ var mobilecommons = rootRequire('lib/mobilecommons');
 var bitly = rootRequire('lib/bitly');
 var helpers = rootRequire('lib/helpers');
 var donorschoose = rootRequire('lib/donorschoose');
-var connOps = rootRequire('config/connectionOperations');
-var donationModel = require('../models/donation/DonorsChooseDonation')(connOps);
 
 /**
  * DonorsChooseBotController
  * @constructor
  */
-function DonorsChooseBotController() {
-  this.mocoCampaign = app.getConfig(app.ConfigName.CHATBOT_MOBILECOMMONS_CAMPAIGNS, MOCO_CAMPAIGN_ID);
-  this.bot = app.getConfig(app.ConfigName.DONORSCHOOSEBOTS, DONORSCHOOSEBOT_ID);
+function DonorsChooseBotController(donorsChooseBot, mobileCommonsCampaign) {
+  this.bot = donorsChooseBot;
+  this.mocoCampaign = mobileCommonsCampaign;
 };
 
 /**
@@ -349,7 +347,7 @@ DonorsChooseBotController.prototype.postDonation = function(member, project) {
         school_city: project.city,
         school_state: project.state
       };
-      donationModel.create(donationLogData).then(function(doc) {
+      app.locals.db.donorsChooseDonations.create(donationLogData).then(function(doc) {
         logger.log('debug', 'dc.createDonationDoc success:%s', donation);
       }, promiseErrorCallback('dc.createDonationDoc user: ' + member.phone));
     };
