@@ -48,6 +48,17 @@ router.post('/', (req, res) => {
     return res.sendStatus(500);
   }
 
+  let campaignId = req.query.campaign;
+  let campaign;
+  if (campaignId) {
+    campaign = app.locals.configs.campaigns[campaignId];
+    if (!campaign) {
+      logger.error(`app.locals.configs.campaigns[${campaignId}] undefined`);
+
+      return res.sendStatus(500);
+    }
+  }
+
   return controller
     .loadUser(req.user_id)
     .then(user => {
@@ -55,15 +66,22 @@ router.post('/', (req, res) => {
 
       req.user = user; // eslint-disable-line no-param-reassign
 
-      if (req.query.campaign) {
-        req.campaign_id = req.query.campaign; // eslint-disable-line no-param-reassign
-      } else {
-        req.campaign_id = user.current_campaign; // eslint-disable-line no-param-reassign
+      if (!campaign) {
+        campaignId = user.current_campaign;
+        controller.debug(req, `set campaignId:${campaignId}`);
+
+        if (!campaignId) {
+          // TODO: Send to non-existent start menu to select a campaign.
+          logger.error(`user:${req.user_id} current_campaign undefined`);
+        }
+
+        campaign = app.locals.configs.campaigns[campaignId];
+        if (!campaign) {
+          // TODO: Same - send to start menu to select campaign if not found for campaignId.
+          logger.error(`app.locals.configs.campaigns[${campaignId}] undefined`);
+        }
       }
-
-      controller.debug(req, `set campaignId:${req.campaign_id}`);
-
-      const campaign = app.locals.configs.campaigns[req.campaign_id];
+      req.campaign_id = campaignId; // eslint-disable-line no-param-reassign
       req.campaign = campaign; // eslint-disable-line no-param-reassign
 
       if (controller.isCommandClearCache(req)) {
