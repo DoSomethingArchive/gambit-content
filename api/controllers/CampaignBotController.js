@@ -36,7 +36,7 @@ class CampaignBotController {
   collectReportbackProperty(req, property, ask) {
     this.debug(req, `collectReportbackProperty:${property}`);
 
-    if (req.query.start || ask) {
+    if (req.query.campaign || ask) {
       return this.renderResponseMessage(req, `ask_${property}`);
     }
 
@@ -85,7 +85,7 @@ class CampaignBotController {
     this.debug(req, 'continueReportbackSubmission');
 
     const submission = req.signup.draft_reportback_submission;
-    const ask = req.query.start || false;
+    const ask = req.query.campaign || false;
 
     if (!submission.quantity) {
       return this.collectReportbackProperty(req, 'quantity', ask);
@@ -435,7 +435,7 @@ class CampaignBotController {
       msg = msg.replace(/{{quantity}}/gi, quantity);
     }
 
-    if (req.query.start && req.signup && req.signup.draft_reportback_submission) {
+    if (req.query.campaign && req.signup && req.signup.draft_reportback_submission) {
       // TODO: New bot property for continue draft message
       const continueMsg = 'Picking up where you left off on';
       msg = `${continueMsg} ${req.campaign.title}...\n\n${msg}`;
