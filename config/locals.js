@@ -69,9 +69,9 @@ function loadConfigs(uri) {
 
   /* eslint-disable max-len*/
   const models = {
-    campaigns: rootRequire('api/models/campaign/Campaign')(conn),
-    campaignBots: rootRequire('api/models/campaign/CampaignBot')(conn),
-    donorsChooseBots: rootRequire('api/models/donation/DonorsChooseBot')(conn),
+    campaigns: rootRequire('api/models/config/Campaign')(conn),
+    campaignBots: rootRequire('api/models/config/CampaignBot')(conn),
+    donorsChooseBots: rootRequire('api/models/config/DonorsChooseBot')(conn),
     // TBDeleted.
     legacyReportbacks: rootRequire('api/legacy/reportback/reportbackConfigModel')(conn),
     legacyStartCampaignTransitions: rootRequire('api/legacy/ds-routing/config/startCampaignTransitionsConfigModel')(conn),
@@ -104,10 +104,10 @@ function loadDb(uri) {
   });
 
   app.locals.db = {
-    donorsChooseDonations: rootRequire('api/models/donation/DonorsChooseDonation')(conn),
+    donorsChooseDonations: rootRequire('api/models/DonorsChooseDonation')(conn),
     legacyReportbacks: rootRequire('api/legacy/reportback/reportbackModel')(conn),
-    reportbackSubmissions: rootRequire('api/models/campaign/ReportbackSubmission')(conn),
-    signups: rootRequire('api/models/campaign/Signup')(conn),
+    reportbackSubmissions: rootRequire('api/models/ReportbackSubmission')(conn),
+    signups: rootRequire('api/models/Signup')(conn),
     users: rootRequire('api/models/User')(conn),
   };
 
