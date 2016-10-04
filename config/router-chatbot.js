@@ -24,17 +24,17 @@ router.post('/', (req, res) => {
   if (botType === 'slothbot') {
     // TODO: Store as a config variable.
     const slothbotOptinPath = 210045;
-    const msgTxt = app.locals.slothBot.renderResponseMessage(req);
+    const msgTxt = app.locals.controllers.slothBot.renderResponseMessage(req);
     mobilecommons.chatbot(req.body, slothbotOptinPath, msgTxt);
 
     return res.send({ message: msgTxt });
   }
 
   if (botType === 'donorschoose' || botType === 'donorschoosebot') {
-    return app.locals.donorsChooseBot.chatbot(req, res);
+    return app.locals.controllers.donorsChooseBot.chatbot(req, res);
   }
 
-  const controller = app.locals.campaignBot;
+  const controller = app.locals.controllers.campaignBot;
   if (!controller.bot) {
     logger.error('CampaignBotController.bot undefined');
 

@@ -124,20 +124,32 @@ module.exports.load = function () {
   const locals = [loadClients(), loadConfigs(configUri), loadDb(dbUri)];
 
   return Promise.all(locals).then(() => {
+    app.locals.controllers = {};
+
     const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
     // TODO: Support multiple campaignBots, to allow campaigns to override default message copy.
     const campaignBot = app.locals.configs.campaignBots[process.env.CAMPAIGNBOT_ID];
-    app.locals.campaignBot = new CampaignBotController(campaignBot);
+    app.locals.controllers.campaignBot = new CampaignBotController(campaignBot);
+    let loaded = app.locals.controllers.campaignBot;
+    if (app.locals.controllers.campaignBot) {
+      logger.debug('app.locals.controllers loaded campaignBot');
+    }
 
     const DonorsChooseBotController = rootRequire('api/controllers/DonorsChooseBotController');
     const donorsChooseBot = app.locals.configs.donorsChooseBots[process.env.DONORSCHOOSEBOT_ID];
-    const dcMocoId = process.env.DONORSCHOOSE_MOCO_CAMPAIGN_ID;
-    const dcMocoCampaign = app.locals.configs.chatbotMobileCommonsCampaigns[dcMocoId];
-    app.locals.donorsChooseBot = new DonorsChooseBotController(donorsChooseBot, dcMocoCampaign);
+    app.locals.controllers.donorsChooseBot = new DonorsChooseBotController(donorsChooseBot);
+    loaded = loaded && app.locals.controllers.DonorsChooseBot;
+    if (app.locals.controllers.donorsChooseBot) {
+      logger.debug('app.locals.controllers loaded donorsChooseBot');
+    }
 
     const SlothBotController = rootRequire('api/controllers/SlothBotController');
-    app.locals.slothBot = new SlothBotController();
+    app.locals.controllers.slothBot = new SlothBotController();
+    loaded = loaded && app.locals.controllers.slothBot;
+    if (app.locals.controllers.slothBot) {
+      logger.debug('app.locals.controllers loaded slothBot');
+    }
 
-    return true;
+    return loaded;
   });
 };
