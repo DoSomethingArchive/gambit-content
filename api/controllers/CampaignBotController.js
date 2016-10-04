@@ -201,7 +201,11 @@ class CampaignBotController {
       currentUser.markModified('campaigns');
       return currentUser.save();
     })
-    .then({ signup });
+    .then(() => {
+      this.debug(req, `updated user.campaigns[${req.campaign_id}]:${signup._id.toString()}`);
+
+      return signup;
+    });
   }
 
   /**
