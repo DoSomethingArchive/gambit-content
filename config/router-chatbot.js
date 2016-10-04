@@ -17,6 +17,8 @@ router.post('/', (req, res) => {
   req.incoming_image_url = req.body.mms_image_url;
   /* eslint-enable no-param-reassign */
 
+  logger.debug(`user:${req.user_id} msg:${req.incoming_message} img:${req.incoming_image_url}`);
+
   const botType = req.query.bot_type;
 
   if (botType === 'slothbot') {
@@ -32,22 +34,30 @@ router.post('/', (req, res) => {
     return app.locals.donorsChooseBot.chatbot(req, res);
   }
 
-  req.campaign_id = req.query.campaign; // eslint-disable-line no-param-reassign
-
   const controller = app.locals.campaignBot;
-  controller.debug(req, `msg:${req.incoming_message} img:${req.incoming_image_url}`);
+  if (!controller.bot) {
+    logger.error('CampaignBotController.bot undefined');
 
-  const campaign = app.locals.configs.campaigns[req.campaign_id];
-  req.campaign = campaign; // eslint-disable-line no-param-reassign
-
-  // TODO: Mobile Commons Campaign will be shared by all DS Campaigns
-  // @see https://github.com/DoSomething/gambit/issues/633
-  let mocoId = req.campaign.staging_mobilecommons_campaign;
-  if (process.env.NODE_ENV === 'production') {
-    mocoId = req.campaign.current_mobilecommons_campaign;
+    return res.sendStatus(500);
   }
-  const mobilecommonsCampaign = app.locals.configs.chatbotMobileCommonsCampaigns[mocoId];
-  const mobilecommonsOptinPath = mobilecommonsCampaign.oip_chat;
+
+  const mobilecommonsOip = process.env.CAMPAIGNBOT_MOBILECOMMONS_OIP;
+  if (!mobilecommonsOip) {
+    logger.error('CAMPAIGNBOT_MOBILECOMMONS_OIP undefined');
+
+    return res.sendStatus(500);
+  }
+
+  let campaignId = req.query.campaign;
+  let campaign;
+  if (campaignId) {
+    campaign = app.locals.configs.campaigns[campaignId];
+    if (!campaign) {
+      logger.error(`app.locals.configs.campaigns[${campaignId}] undefined`);
+
+      return res.sendStatus(500);
+    }
+  }
 
   return controller
     .loadUser(req.user_id)
@@ -55,6 +65,24 @@ router.post('/', (req, res) => {
       controller.debug(req, `loaded user:${user._id}`);
 
       req.user = user; // eslint-disable-line no-param-reassign
+
+      if (!campaign) {
+        campaignId = user.current_campaign;
+        controller.debug(req, `set campaignId:${campaignId}`);
+
+        if (!campaignId) {
+          // TODO: Send to non-existent start menu to select a campaign.
+          logger.error(`user:${req.user_id} current_campaign undefined`);
+        }
+
+        campaign = app.locals.configs.campaigns[campaignId];
+        if (!campaign) {
+          // TODO: Same - send to start menu to select campaign if not found for campaignId.
+          logger.error(`app.locals.configs.campaigns[${campaignId}] undefined`);
+        }
+      }
+      req.campaign_id = campaignId; // eslint-disable-line no-param-reassign
+      req.campaign = campaign; // eslint-disable-line no-param-reassign
 
       if (controller.isCommandClearCache(req)) {
         req.user.campaigns = {}; // eslint-disable-line no-param-reassign
@@ -91,7 +119,9 @@ router.post('/', (req, res) => {
     })
     .then(msg => {
       controller.debug(req, `sendMessage:${msg}`);
-      mobilecommons.chatbot(req.body, mobilecommonsOptinPath, msg);
+      controller.setCurrentCampaign(req.user, req.campaign_id);
+
+      mobilecommons.chatbot(req.body, mobilecommonsOip, msg);
 
       return res.send({ message: msg });
     })
