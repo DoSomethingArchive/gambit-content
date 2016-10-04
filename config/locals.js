@@ -71,7 +71,6 @@ function loadConfigs(uri) {
   const models = {
     campaigns: rootRequire('api/models/campaign/Campaign')(conn),
     campaignBots: rootRequire('api/models/campaign/CampaignBot')(conn),
-    chatbotMobileCommonsCampaigns: rootRequire('api/models/ChatbotMobileCommonsCampaign')(conn),
     donorsChooseBots: rootRequire('api/models/donation/DonorsChooseBot')(conn),
     // TBDeleted.
     legacyReportbacks: rootRequire('api/legacy/reportback/reportbackConfigModel')(conn),
