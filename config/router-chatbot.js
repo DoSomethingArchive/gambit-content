@@ -103,6 +103,11 @@ router.post('/', (req, res) => {
       controller.debug(req, `loaded signup:${signup._id.toString()}`);
       req.signup = signup; // eslint-disable-line no-param-reassign
 
+      if (!signup) {
+        // TODO: Handle this edge-case.
+        logger.error('signup undefined');
+      }
+
       if (signup.draft_reportback_submission) {
         return controller.continueReportbackSubmission(req);
       }
