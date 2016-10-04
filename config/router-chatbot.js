@@ -17,6 +17,8 @@ router.post('/', (req, res) => {
   req.incoming_image_url = req.body.mms_image_url;
   /* eslint-enable no-param-reassign */
 
+  logger.debug(`user:${req.user_id} msg:${req.incoming_message} img:${req.incoming_image_url}`);
+
   const botType = req.query.bot_type;
 
   if (botType === 'slothbot') {
@@ -33,7 +35,18 @@ router.post('/', (req, res) => {
   }
 
   const controller = app.locals.campaignBot;
-  controller.debug(req, `msg:${req.incoming_message} img:${req.incoming_image_url}`);
+  if (!controller.bot) {
+    logger.error('CampaignBotController.bot undefined');
+
+    return res.sendStatus(500);
+  }
+
+  const mobilecommonsOip = process.env.CAMPAIGNBOT_MOBILECOMMONS_OIP;
+  if (!mobilecommonsOip) {
+    logger.error('CAMPAIGNBOT_MOBILECOMMONS_OIP undefined');
+
+    return res.sendStatus(500);
+  }
 
   return controller
     .loadUser(req.user_id)
@@ -90,7 +103,7 @@ router.post('/', (req, res) => {
       controller.debug(req, `sendMessage:${msg}`);
       controller.setCurrentCampaign(req.user, req.campaign_id);
 
-      mobilecommons.chatbot(req.body, process.env.CAMPAIGNBOT_MOBILECOMMONS_OIP, msg);
+      mobilecommons.chatbot(req.body, mobilecommonsOip, msg);
 
       return res.send({ message: msg });
     })
