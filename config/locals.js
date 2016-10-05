@@ -32,6 +32,23 @@ function getModelMap(configName, model) {
 }
 
 /**
+ * Loads app.locals.campaigns to use for CampaignBot conversations.
+ */
+function loadCampaigns(stringCampaignIds) {
+  logger.debug(`loadCampaigns:[${stringCampaignIds}]`);
+  app.locals.campaigns = {};
+
+  return app.locals.clients.phoenix.Campaigns
+    .index({ ids: stringCampaignIds })
+    .then((campaigns) => {
+      return campaigns.forEach((campaign) => {
+        logger.info(`loaded app.locals.campaigns[${campaign.id}] from phoenix`);
+        app.locals.campaigns[campaign.id] = campaign;
+      });
+    });
+}
+
+/**
  * Loads app.locals.clients for networking requests.
  */
 function loadClients() {
@@ -69,7 +86,6 @@ function loadConfigs(uri) {
 
   /* eslint-disable max-len*/
   const models = {
-    campaigns: rootRequire('api/models/config/Campaign')(conn),
     campaignBots: rootRequire('api/models/config/CampaignBot')(conn),
     donorsChooseBots: rootRequire('api/models/config/DonorsChooseBot')(conn),
     // TBDeleted.
@@ -118,9 +134,14 @@ function loadDb(uri) {
  * Loads operation models as app.locals.db object.
  */
 module.exports.load = function () {
+  if (!loadClients()) {
+    return false;
+  }
+
+  const campaignIds = process.env.CAMPAIGNBOT_CAMPAIGNS;
   const configUri = process.env.CONFIG_DB_URI || 'mongodb://localhost/config';
   const dbUri = process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder';
-  const locals = [loadClients(), loadConfigs(configUri), loadDb(dbUri)];
+  const locals = [loadCampaigns(campaignIds), loadConfigs(configUri), loadDb(dbUri)];
 
   return Promise.all(locals).then(() => {
     app.locals.controllers = {};

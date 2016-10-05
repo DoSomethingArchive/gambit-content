@@ -51,9 +51,9 @@ router.post('/', (req, res) => {
   let campaignId = req.query.campaign;
   let campaign;
   if (campaignId) {
-    campaign = app.locals.configs.campaigns[campaignId];
+    campaign = app.locals.campaigns[campaignId];
     if (!campaign) {
-      logger.error(`app.locals.configs.campaigns[${campaignId}] undefined`);
+      logger.error(`app.locals.campaigns[${campaignId}] undefined`);
 
       return res.sendStatus(500);
     }
@@ -75,10 +75,13 @@ router.post('/', (req, res) => {
           logger.error(`user:${req.user_id} current_campaign undefined`);
         }
 
-        campaign = app.locals.configs.campaigns[campaignId];
+        campaign = app.locals.campaigns[campaignId];
+
+        // TODO: Edge-case where the user's saved campaign has been closed since signup created
+
         if (!campaign) {
           // TODO: Same - send to start menu to select campaign if not found for campaignId.
-          logger.error(`app.locals.configs.campaigns[${campaignId}] undefined`);
+          logger.error(`app.locals.campaigns[${campaignId}] undefined`);
         }
       }
       req.campaign_id = campaignId; // eslint-disable-line no-param-reassign

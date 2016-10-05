@@ -418,6 +418,7 @@ class CampaignBotController {
    */
   renderResponseMessage(req, msgType) {
     this.debug(req, `renderResponseMessage:${msgType}`);
+    const campaign = req.campaign;
 
     const botProperty = `msg_${msgType}`;
     let msg = this.bot[botProperty];
@@ -427,9 +428,9 @@ class CampaignBotController {
     }
 
     msg = msg.replace(/<br>/gi, '\n');
-    msg = msg.replace(/{{title}}/gi, req.campaign.title);
-    msg = msg.replace(/{{rb_noun}}/gi, req.campaign.rb_noun);
-    msg = msg.replace(/{{rb_verb}}/gi, req.campaign.rb_verb);
+    msg = msg.replace(/{{title}}/gi, campaign.title);
+    msg = msg.replace(/{{rb_noun}}/gi, campaign.reportbackInfo.noun);
+    msg = msg.replace(/{{rb_verb}}/gi, campaign.reportbackInfo.verb);
 
     if (req.signup) {
       let quantity = req.signup.total_quantity_submitted;
@@ -442,7 +443,7 @@ class CampaignBotController {
     if (req.query.campaign && req.signup && req.signup.draft_reportback_submission) {
       // TODO: New bot property for continue draft message
       const continueMsg = 'Picking up where you left off on';
-      msg = `${continueMsg} ${req.campaign.title}...\n\n${msg}`;
+      msg = `${continueMsg} ${campaign.title}...\n\n${msg}`;
     }
 
     return msg;
