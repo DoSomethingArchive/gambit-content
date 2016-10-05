@@ -34,13 +34,6 @@ router.post('/', (req, res) => {
     return app.locals.controllers.donorsChooseBot.chatbot(req, res);
   }
 
-  const controller = app.locals.controllers.campaignBot;
-  if (!controller.bot) {
-    logger.error('CampaignBotController.bot undefined');
-
-    return res.sendStatus(500);
-  }
-
   const mobilecommonsOip = process.env.CAMPAIGNBOT_MOBILECOMMONS_OIP;
   if (!mobilecommonsOip) {
     logger.error('CAMPAIGNBOT_MOBILECOMMONS_OIP undefined');
@@ -57,6 +50,16 @@ router.post('/', (req, res) => {
 
       return res.sendStatus(500);
     }
+  }
+
+  // TODO: Check to see if our campaign has a custom campaignBot set.
+  // If not, use our default CAMPAIGNBOT_ID for rendering response messages.
+  const campaignBotId = process.env.CAMPAIGNBOT_ID;
+  const controller = app.locals.campaignBots[campaignBotId];
+  if (!controller) {
+    logger.error(`app.locals.campaignBots[${campaignBotId}] undefined`);
+
+    return res.sendStatus(500);
   }
 
   return controller

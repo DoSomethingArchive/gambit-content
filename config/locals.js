@@ -3,7 +3,10 @@
 const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 
+const superagent = require('superagent');
 const logger = rootRequire('lib/logger');
+
+const gambitJuniorUri = 'http://dev-gambit-jr.pantheonsite.io/wp-json/wp/v2';
 
 /**
  * Returns object with a data property, containing a hash map of models for modelName by model id.
@@ -32,17 +35,60 @@ function getModelMap(configName, model) {
 }
 
 /**
- * Loads app.locals.campaigns to use for CampaignBot conversations.
+ * Load app.locals.campaignBots from Gambit Jr API.
+ */
+function loadCampaignBots() {
+  logger.debug('loadCampaignBots');
+  app.locals.campaignBots = {};
+
+  return superagent
+    .get(`${gambitJuniorUri}/campaignbots/`)
+    .then((res) => {
+      logger.debug(`loadCampaignBots found ${res.body.length} campaignBots`);
+
+      return res.body;
+    })
+    .then((campaignBots) => {
+      const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
+
+      return campaignBots.forEach((campaignBot) => {
+        app.locals.campaignBots[campaignBot.id] = new CampaignBotController(campaignBot);
+        logger.debug(`loaded app.locals.campaignBots[${campaignBot.id}]`);
+      });
+    });
+}
+
+/**
+ * Loads app.locals.donorsChooseBot from Gambit Jr API.
+ */
+function loadDonorsChooseBot(id) {
+  logger.debug(`loadDonorsChooseBot:${id}`);
+
+  return superagent
+    .get(`${gambitJuniorUri}/donorschoosebots/${id}`)
+    .then((res) => {
+      const DonorsChooseBotController = rootRequire('api/controllers/DonorsChooseBotController');
+      app.locals.controllers.donorsChooseBot = new DonorsChooseBotController(res.body);
+      logger.debug(`loaded app.locals.donorsChooseBot (id:${id})`);
+
+      return app.locals.controllers.donorsChooseBot;
+    });
+}
+
+/**
+ * Loads app.locals.campaigns from DS API.
  */
 function loadCampaigns(stringCampaignIds) {
-  logger.debug(`loadCampaigns:[${stringCampaignIds}]`);
+  logger.debug(`loadCampaigns:${stringCampaignIds}`);
   app.locals.campaigns = {};
 
   return app.locals.clients.phoenix.Campaigns
     .index({ ids: stringCampaignIds })
     .then((campaigns) => {
+      logger.debug(`loadCampaigns found ${campaigns.length} campaigns`);
+
       return campaigns.forEach((campaign) => {
-        logger.info(`loaded app.locals.campaigns[${campaign.id}] from phoenix`);
+        logger.info(`loaded app.locals.campaigns[${campaign.id}]`);
         app.locals.campaigns[campaign.id] = campaign;
       });
     });
@@ -86,8 +132,6 @@ function loadConfigs(uri) {
 
   /* eslint-disable max-len*/
   const models = {
-    campaignBots: rootRequire('api/models/config/CampaignBot')(conn),
-    donorsChooseBots: rootRequire('api/models/config/DonorsChooseBot')(conn),
     // TBDeleted.
     legacyReportbacks: rootRequire('api/legacy/reportback/reportbackConfigModel')(conn),
     legacyStartCampaignTransitions: rootRequire('api/legacy/ds-routing/config/startCampaignTransitionsConfigModel')(conn),
@@ -138,38 +182,23 @@ module.exports.load = function () {
     return false;
   }
 
+  app.locals.controllers = {};
+
   const campaignIds = process.env.CAMPAIGNBOT_CAMPAIGNS;
   const configUri = process.env.CONFIG_DB_URI || 'mongodb://localhost/config';
   const dbUri = process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder';
-  const locals = [loadCampaigns(campaignIds), loadConfigs(configUri), loadDb(dbUri)];
 
-  return Promise.all(locals).then(() => {
-    app.locals.controllers = {};
+  const promises = [loadCampaigns(campaignIds), loadConfigs(configUri), loadDb(dbUri)];
+  promises.push(loadCampaignBots());
+  promises.push(loadDonorsChooseBot(process.env.DONORSCHOOSEBOT_ID));
 
-    const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
-    // TODO: Support multiple campaignBots, to allow campaigns to override default message copy.
-    const campaignBot = app.locals.configs.campaignBots[process.env.CAMPAIGNBOT_ID];
-    app.locals.controllers.campaignBot = new CampaignBotController(campaignBot);
-    let loaded = app.locals.controllers.campaignBot;
-    if (app.locals.controllers.campaignBot) {
-      logger.debug('app.locals.controllers loaded campaignBot');
-    }
-
-    const DonorsChooseBotController = rootRequire('api/controllers/DonorsChooseBotController');
-    const donorsChooseBot = app.locals.configs.donorsChooseBots[process.env.DONORSCHOOSEBOT_ID];
-    app.locals.controllers.donorsChooseBot = new DonorsChooseBotController(donorsChooseBot);
-    loaded = loaded && app.locals.controllers.DonorsChooseBot;
-    if (app.locals.controllers.donorsChooseBot) {
-      logger.debug('app.locals.controllers loaded donorsChooseBot');
-    }
-
+  return Promise.all(promises).then(() => {
     const SlothBotController = rootRequire('api/controllers/SlothBotController');
     app.locals.controllers.slothBot = new SlothBotController();
-    loaded = loaded && app.locals.controllers.slothBot;
     if (app.locals.controllers.slothBot) {
-      logger.debug('app.locals.controllers loaded slothBot');
+      logger.debug('loaded app.locals.controllers.slothBot');
     }
 
-    return loaded;
+    return true;
   });
 };

@@ -427,10 +427,12 @@ class CampaignBotController {
       return this.error(req, 'bot msgType not found');
     }
 
-    msg = msg.replace(/<br>/gi, '\n');
+    msg = msg.replace(/{{br}}/gi, '\n');
     msg = msg.replace(/{{title}}/gi, campaign.title);
+    msg = msg.replace(/{{tagline}}/gi, campaign.tagline);
     msg = msg.replace(/{{rb_noun}}/gi, campaign.reportbackInfo.noun);
     msg = msg.replace(/{{rb_verb}}/gi, campaign.reportbackInfo.verb);
+    msg = msg.replace(/{{rb_confirmed}}/gi, campaign.reportbackInfo.confirmationMessage);
 
     if (req.signup) {
       let quantity = req.signup.total_quantity_submitted;
