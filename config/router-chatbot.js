@@ -93,7 +93,7 @@ router.post('/', (req, res) => {
       req.campaign_id = campaignId; // eslint-disable-line no-param-reassign
       req.campaign = campaign; // eslint-disable-line no-param-reassign
 
-      if (controller.isCommandClearCache(req)) {
+      if (controller.isCommand(req, 'clear_cache')) {
         req.user.campaigns = {}; // eslint-disable-line no-param-reassign
         logger.info(`${controller.loggerPrefix(req)} cleared user.campaigns`);
 
@@ -117,7 +117,7 @@ router.post('/', (req, res) => {
         logger.error('signup undefined');
       }
 
-      if (controller.isCommandMemberSupport(req)) {
+      if (controller.isCommand(req, 'member_support')) {
         return controller.renderResponseMessage(req, 'member_support');
       }
 
@@ -125,7 +125,7 @@ router.post('/', (req, res) => {
         return controller.continueReportbackSubmission(req);
       }
 
-      if (controller.isCommandReportback(req)) {
+      if (controller.isCommand(req, 'reportback')) {
         return controller.createReportbackSubmission(req);
       }
 
@@ -139,7 +139,7 @@ router.post('/', (req, res) => {
       controller.debug(req, `sendMessage:${msg}`);
       controller.setCurrentCampaign(req.user, req.campaign_id);
 
-      if (controller.isCommandMemberSupport(req)) {
+      if (controller.isCommand(req, 'member_support')) {
         mobilecommonsOip = process.env.MOBILECOMMONS_OIP_AGENTVIEW || 217171;
       }
 

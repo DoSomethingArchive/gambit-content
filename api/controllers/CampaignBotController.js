@@ -7,12 +7,6 @@ const logger = rootRequire('lib/logger');
 const helpers = rootRequire('lib/helpers');
 
 /**
- * Setup.
- */
-const CMD_REPORTBACK = process.env.GAMBIT_CMD_REPORTBACK || 'P';
-const CMD_MEMBERSUPPORT = process.env.GAMBIT_CMD_MEMBERSUPPORT;
-
-/**
  * CampaignBotController.
  */
 class CampaignBotController {
@@ -240,53 +234,36 @@ class CampaignBotController {
   }
 
   /**
-   * Returns whether incoming request is an authorized clear cache command.
+   * Returns whether incoming request is the given command type.
    * @param {object} req
+   * @param {string} type
    * @return {bool}
    */
-  isCommandClearCache(req) {
-    const cmdClear = process.env.GAMBIT_CMD_CLEAR_CACHE;
+  isCommand(req, type) {
+    if (!type) {
+      return false;
+    }
 
-    if (!cmdClear) return false;
-
-    if (!req.user.role) return false;
-
-    if (req.user.role !== 'staff' && req.user.role !== 'admin') {
-      logger.warn(`${this.loggerPrefix(req)} unauthorized clear cache`);
+    const configName = `GAMBIT_CMD_${type.toUpperCase()}`;
+    const configValue = process.env[configName];
+    if (!configValue) {
+      logger.error(`${this.loggerPrefix(req)} process.env.${configName} is undefined`);
 
       return false;
     }
 
-    const input = helpers.getFirstWord(req.incoming_message);
-    const isCommand = input && input.toUpperCase() === cmdClear.toUpperCase();
+    const isCommand = this.parseCommand(req) === configValue.toUpperCase();
+
+    if (type === 'clear_cache') {
+      const authorized = req.user.role && (req.user.role === 'staff' || req.user.role === 'admin');
+      if (!authorized) {
+        logger.warn(`${this.loggerPrefix(req)} unauthorized command clear_cache`);
+
+        return false;
+      }
+    }
 
     return isCommand;
-  }
-
-  /**
-   * Returns whether incoming Express req begins a Member Support conversation.
-   * @param {object} req - Express request
-   * @return {bool}
-   */
-  isCommandMemberSupport(req) {
-    if (!CMD_MEMBERSUPPORT) {
-      logger.error('CMD_MEMBERSUPPORT is undefined');
-      return false;
-    }
-
-    return this.parseCommand(req) === CMD_MEMBERSUPPORT.toUpperCase();
-  }
-
-  /**
-   * Returns whether incoming Express req begins a Reportback conversation.
-   * @param {object} req - Express request
-   * @return {bool}
-   */
-  isCommandReportback(req) {
-    const firstWord = helpers.getFirstWord(req.incoming_message);
-    if (!firstWord) return false;
-
-    return firstWord.toUpperCase() === CMD_REPORTBACK.toUpperCase();
   }
 
   /**
