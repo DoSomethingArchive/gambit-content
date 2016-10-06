@@ -34,9 +34,9 @@ router.post('/', (req, res) => {
     return app.locals.controllers.donorsChooseBot.chatbot(req, res);
   }
 
-  const mobilecommonsOip = process.env.CAMPAIGNBOT_MOBILECOMMONS_OIP;
+  const mobilecommonsOip = process.env.MOBILECOMMONS_OIP_CAMPAIGNBOT;
   if (!mobilecommonsOip) {
-    logger.error('CAMPAIGNBOT_MOBILECOMMONS_OIP undefined');
+    logger.error('MOBILECOMMONS_OIP_CAMPAIGNBOT undefined');
 
     return res.sendStatus(500);
   }

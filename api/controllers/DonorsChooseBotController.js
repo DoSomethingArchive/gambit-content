@@ -3,7 +3,7 @@
 /**
  * Submits a donation to DonorsChoose.org on behalf of a Mobile Commons profile.
  * Currently only supports running one DonorsChoose Donation Campaign at a time,
- * set by the DONORSCHOOSEBOT_MOBILECOMMONS_OIP environment variables.
+ * set by the MOBILECOMMONS_OIP_DONORSCHOOSEBOT environment variables.
  */
 var donorsChooseApiKey = process.env.DONORSCHOOSE_API_KEY;
 var donorsChooseApiPassword = process.env.DONORSCHOOSE_API_PASSWORD;
@@ -27,10 +27,10 @@ var donorschoose = rootRequire('lib/donorschoose');
 function DonorsChooseBotController(donorsChooseBot) {
   this.bot = donorsChooseBot;
   // Mobile Commons OIP posts back user's response to our chatbot?bot_type=donorschoosebot.
-  this.oipChat = process.env.DONORSCHOOSEBOT_MOBILECOMMONS_OIP;
+  this.oipChat = process.env.MOBILECOMMONS_OIP_DONORSCHOOSEBOT;
   // Mobile Commons OIPs that no longer posts user responses back to chatbot.
-  this.oipSuccess = process.env.DONORSCHOOSEBOT_MOBILECOMMONS_OIP_SUCCESS;
-  this.oipError = process.env.DONORSCHOOSEBOT_MOBILECOMMONS_OIP_ERROR;
+  this.oipSuccess = process.env.MOBILECOMMONS_OIP_DONORSCHOOSEBOT_END;
+  this.oipError = process.env.MOBILECOMMONS_OIP_DONORSCHOOSEBOT_ERROR;
 };
 
 /**
