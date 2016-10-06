@@ -7,7 +7,6 @@ const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
 const logger = rootRequire('lib/logger');
 const mobilecommons = rootRequire('lib/mobilecommons');
-const helpers = rootRequire('lib/helpers');
 
 /**
  * Handle chatbot conversations.
@@ -22,16 +21,6 @@ router.post('/', (req, res) => {
   /* eslint-enable no-param-reassign */
 
   logger.debug(`user:${req.user_id} msg:${req.incoming_message} img:${req.incoming_image_url}`);
-
-
-  const commandQuestion = process.env.GAMBIT_CMD_QUESTION || 'QT';
-  if (helpers.getFirstWordUppercase(req.incoming_message) === commandQuestion) {
-    const oip = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
-    const msg = process.env.MOBILECOMMONS_OIP_AGENTVIEW_MESSAGE;
-    mobilecommons.chatbot(req.body, oip, msg);
-
-    return res.send({ message: 'Opted into AgentView' });
-  }
 
   const botType = req.query.bot_type;
 
@@ -48,7 +37,7 @@ router.post('/', (req, res) => {
     return app.locals.controllers.donorsChooseBot.chatbot(req, res);
   }
 
-  const mobilecommonsOip = process.env.MOBILECOMMONS_OIP_CAMPAIGNBOT;
+  let mobilecommonsOip = process.env.MOBILECOMMONS_OIP_CAMPAIGNBOT;
   if (!mobilecommonsOip) {
     logger.error('MOBILECOMMONS_OIP_CAMPAIGNBOT undefined');
 
@@ -128,6 +117,10 @@ router.post('/', (req, res) => {
         logger.error('signup undefined');
       }
 
+      if (controller.isCommandMemberSupport(req)) {
+        return controller.renderResponseMessage(req, 'member_support');
+      }
+
       if (signup.draft_reportback_submission) {
         return controller.continueReportbackSubmission(req);
       }
@@ -145,6 +138,10 @@ router.post('/', (req, res) => {
     .then(msg => {
       controller.debug(req, `sendMessage:${msg}`);
       controller.setCurrentCampaign(req.user, req.campaign_id);
+
+      if (controller.isCommandMemberSupport(req)) {
+        mobilecommonsOip = process.env.MOBILECOMMONS_OIP_AGENTVIEW || 217171;
+      }
 
       mobilecommons.chatbot(req.body, mobilecommonsOip, msg);
 

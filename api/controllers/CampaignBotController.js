@@ -10,6 +10,7 @@ const helpers = rootRequire('lib/helpers');
  * Setup.
  */
 const CMD_REPORTBACK = process.env.GAMBIT_CMD_REPORTBACK || 'P';
+const CMD_MEMBERSUPPORT = process.env.GAMBIT_CMD_MEMBERSUPPORT;
 
 /**
  * CampaignBotController.
@@ -263,6 +264,20 @@ class CampaignBotController {
   }
 
   /**
+   * Returns whether incoming Express req begins a Member Support conversation.
+   * @param {object} req - Express request
+   * @return {bool}
+   */
+  isCommandMemberSupport(req) {
+    if (!CMD_MEMBERSUPPORT) {
+      logger.error('CMD_MEMBERSUPPORT is undefined');
+      return false;
+    }
+
+    return this.parseCommand(req) === CMD_MEMBERSUPPORT.toUpperCase();
+  }
+
+  /**
    * Returns whether incoming Express req begins a Reportback conversation.
    * @param {object} req - Express request
    * @return {bool}
@@ -324,6 +339,13 @@ class CampaignBotController {
    */
   loggerPrefix(req) {
     return `campaignBot.campaign:${req.campaign_id} user:${req.user_id}`;
+  }
+
+  /**
+   * Parse incoming request as Gambit command.
+  */
+  parseCommand(req) {
+    return helpers.getFirstWordUppercase(req.incoming_message);
   }
 
   /**
@@ -427,12 +449,20 @@ class CampaignBotController {
       return this.error(req, 'bot msgType not found');
     }
 
+    const mobilecommonsKeyword = process.env.MOBILECOMMONS_KEYWORD_CAMPAIGNBOT;
+
     msg = msg.replace(/{{br}}/gi, '\n');
     msg = msg.replace(/{{title}}/gi, campaign.title);
     msg = msg.replace(/{{tagline}}/gi, campaign.tagline);
     msg = msg.replace(/{{rb_noun}}/gi, campaign.reportbackInfo.noun);
     msg = msg.replace(/{{rb_verb}}/gi, campaign.reportbackInfo.verb);
     msg = msg.replace(/{{rb_confirmed}}/gi, campaign.reportbackInfo.confirmationMessage);
+
+    if (!mobilecommonsKeyword) {
+      logger.error('mobilecommonsKeyword undefined');
+    } else {
+      msg = msg.replace(/{{keyword_continue}}/gi, mobilecommonsKeyword);
+    }
 
     if (req.signup) {
       let quantity = req.signup.total_quantity_submitted;
