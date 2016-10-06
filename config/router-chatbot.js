@@ -1,9 +1,13 @@
 'use strict';
 
+/**
+ * Imports.
+ */
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
 const logger = rootRequire('lib/logger');
 const mobilecommons = rootRequire('lib/mobilecommons');
+const helpers = rootRequire('lib/helpers');
 
 /**
  * Handle chatbot conversations.
@@ -18,6 +22,16 @@ router.post('/', (req, res) => {
   /* eslint-enable no-param-reassign */
 
   logger.debug(`user:${req.user_id} msg:${req.incoming_message} img:${req.incoming_image_url}`);
+
+
+  const commandQuestion = process.env.GAMBIT_CMD_QUESTION || 'QT';
+  if (helpers.getFirstWordUppercase(req.incoming_message) === commandQuestion) {
+    const oip = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
+    const msg = process.env.MOBILECOMMONS_OIP_AGENTVIEW_MESSAGE;
+    mobilecommons.chatbot(req.body, oip, msg);
+
+    return res.send({ message: 'Opted into AgentView' });
+  }
 
   const botType = req.query.bot_type;
 
