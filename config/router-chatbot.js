@@ -37,10 +37,19 @@ router.post('/', (req, res) => {
     return app.locals.controllers.donorsChooseBot.chatbot(req, res);
   }
 
-  let mobilecommonsOip = process.env.MOBILECOMMONS_OIP_CAMPAIGNBOT;
-  if (!mobilecommonsOip) {
-    logger.error('MOBILECOMMONS_OIP_CAMPAIGNBOT undefined');
+  let configured = true;
+  // Check for required config variables.
+  const settings = ['MOBILECOMMONS_OIP_CAMPAIGNBOT', 'MOBILECOMMONS_OIP_AGENTVIEW'];
+  settings.push('MOBILECOMMONS_KEYWORD_CAMPAIGNBOT');
+  settings.concat(['GAMBIT_CMD_MEMBER_SUPPORT', 'GAMBIT_CMD_REPORTBACK']);
+  settings.forEach((configVar) => {
+    if (!process.env[configVar]) {
+      logger.error(`undefined process.env.${configVar}`);
+      configured = false;
+    }
+  });
 
+  if (!configured) {
     return res.sendStatus(500);
   }
 
@@ -139,16 +148,18 @@ router.post('/', (req, res) => {
       controller.debug(req, `sendMessage:${msg}`);
       controller.setCurrentCampaign(req.user, req.campaign_id);
 
+      let oip = process.env.MOBILECOMMONS_OIP_CAMPAIGNBOT;
       if (controller.isCommand(req, 'member_support')) {
-        mobilecommonsOip = process.env.MOBILECOMMONS_OIP_AGENTVIEW || 217171;
+        oip = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
       }
 
-      mobilecommons.chatbot(req.body, mobilecommonsOip, msg);
+      mobilecommons.chatbot(req.body, oip, msg);
 
       return res.send({ message: msg });
     })
     .catch(err => {
       controller.error(req, res, err);
+
       return res.sendStatus(500);
     });
 });
