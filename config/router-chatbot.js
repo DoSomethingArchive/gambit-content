@@ -34,13 +34,6 @@ router.post('/', (req, res) => {
     return app.locals.controllers.donorsChooseBot.chatbot(req, res);
   }
 
-  const controller = app.locals.controllers.campaignBot;
-  if (!controller.bot) {
-    logger.error('CampaignBotController.bot undefined');
-
-    return res.sendStatus(500);
-  }
-
   const mobilecommonsOip = process.env.CAMPAIGNBOT_MOBILECOMMONS_OIP;
   if (!mobilecommonsOip) {
     logger.error('CAMPAIGNBOT_MOBILECOMMONS_OIP undefined');
@@ -51,12 +44,22 @@ router.post('/', (req, res) => {
   let campaignId = req.query.campaign;
   let campaign;
   if (campaignId) {
-    campaign = app.locals.configs.campaigns[campaignId];
+    campaign = app.locals.campaigns[campaignId];
     if (!campaign) {
-      logger.error(`app.locals.configs.campaigns[${campaignId}] undefined`);
+      logger.error(`app.locals.campaigns[${campaignId}] undefined`);
 
       return res.sendStatus(500);
     }
+  }
+
+  // TODO: Check to see if our campaign has a custom campaignBot set.
+  // If not, use our default CAMPAIGNBOT_ID for rendering response messages.
+  const campaignBotId = process.env.CAMPAIGNBOT_ID;
+  const controller = app.locals.controllers.campaignBots[campaignBotId];
+  if (!controller) {
+    logger.error(`app.locals.controllers.campaignBots[${campaignBotId}] undefined`);
+
+    return res.sendStatus(500);
   }
 
   return controller
@@ -75,10 +78,13 @@ router.post('/', (req, res) => {
           logger.error(`user:${req.user_id} current_campaign undefined`);
         }
 
-        campaign = app.locals.configs.campaigns[campaignId];
+        campaign = app.locals.campaigns[campaignId];
+
+        // TODO: Edge-case where the user's saved campaign has been closed since signup created
+
         if (!campaign) {
           // TODO: Same - send to start menu to select campaign if not found for campaignId.
-          logger.error(`app.locals.configs.campaigns[${campaignId}] undefined`);
+          logger.error(`app.locals.campaigns[${campaignId}] undefined`);
         }
       }
       req.campaign_id = campaignId; // eslint-disable-line no-param-reassign
@@ -136,16 +142,4 @@ router.post('/', (req, res) => {
     });
 });
 
-/**
- * Sync chatbot configs
- */
-router.post('/sync', (req, res) => {
-  const gambitJunior = rootRequire('lib/gambit-junior');
-
-  // TODO: Handle response here, not in gambitJunior.
-  gambitJunior.syncBotConfigs(req, res, req.query.bot_type);
-});
-
-
 module.exports = router;
-

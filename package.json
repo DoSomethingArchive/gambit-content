@@ -10,7 +10,7 @@
   "scripts": {
     "test": "npm run lint",
     "start": "node server",
-    "lint": "eslint --ext=.js server.js config api/models api/controllers/CampaignBotController.js"
+    "lint": "eslint --ext=.js server.js config api/models api/controllers/CampaignBotController.js lib/gambit-junior.js"
   },
   "eslintConfig": {
     "globals": {
@@ -43,6 +43,7 @@
     "q": "^1.0.1",
     "request": "2.34.x",
     "stathat": "0.0.8",
+    "superagent": "^2.3.0",
     "underscore": "^1.8.3",
     "winston": "0.8.x",
     "winston-mongodb": "0.5.x"
