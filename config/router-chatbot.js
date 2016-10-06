@@ -142,16 +142,4 @@ router.post('/', (req, res) => {
     });
 });
 
-/**
- * Sync chatbot configs
- */
-router.post('/sync', (req, res) => {
-  const gambitJunior = rootRequire('lib/gambit-junior');
-
-  // TODO: Handle response here, not in gambitJunior.
-  gambitJunior.syncBotConfigs(req, res, req.query.bot_type);
-});
-
-
 module.exports = router;
-
