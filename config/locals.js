@@ -33,41 +33,22 @@ function getModelMap(configName, model) {
 }
 
 /**
- * Loads our hashmap app.locals.campaignBots, indexing Gambit Jr campaignBots by their id.
+ * Loads our hashmap app.locals.controllers.campaignBots, storing CampaignBotControllers by bot id.
  */
-function loadCampaignBots() {
+function loadCampaignBotControllers() {
   logger.debug('loadCampaignBots');
   app.locals.controllers.campaignBots = {};
 
   return gambitJunior
     .index('campaignbots')
     .then((campaignBots) => {
-      logger.debug(`junior.index returned ${campaignBots.length} campaignBots`);
+      logger.debug(`loadCampaignBots found ${campaignBots.length} campaignBots`);
       const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
 
       return campaignBots.forEach((bot) => {
         app.locals.controllers.campaignBots[bot.id] = new CampaignBotController(bot);
         logger.info(`loaded app.locals.controllers.campaignBots[${bot.id}]`);
       });
-    });
-}
-
-/**
- * Loads app.locals.donorsChooseBot from Gambit Jr API.
- */
-function loadDonorsChooseBot(id) {
-  logger.debug(`loadDonorsChooseBot:${id}`);
-
-  return gambitJunior
-    .get('donorschoosebots', id)
-    .then((donorsChooseBot) => {
-      logger.debug(`junior.get returned donorsChooseBot:${donorsChooseBot.id}`);
-
-      const DonorsChooseBotController = rootRequire('api/controllers/DonorsChooseBotController');
-      app.locals.controllers.donorsChooseBot = new DonorsChooseBotController(donorsChooseBot);
-      logger.info(`loaded app.locals.controllers.donorsChooseBot (bot.id:${donorsChooseBot.id})`);
-
-      return app.locals.controllers.donorsChooseBot;
     });
 }
 
@@ -88,30 +69,6 @@ function loadCampaigns(stringCampaignIds) {
         app.locals.campaigns[campaign.id] = campaign;
       });
     });
-}
-
-/**
- * Loads app.locals.clients for networking requests.
- */
-function loadClients() {
-  app.locals.clients = {};
-
-  const NorthstarClient = require('@dosomething/northstar-js');
-  app.locals.clients.northstar = new NorthstarClient({
-    baseURI: process.env.DS_NORTHSTAR_API_BASEURI,
-    apiKey: process.env.DS_NORTHSTAR_API_KEY,
-  });
-
-  const PhoenixClient = require('@dosomething/phoenix-js');
-  app.locals.clients.phoenix = new PhoenixClient({
-    baseURI: process.env.DS_PHOENIX_API_BASEURI,
-    username: process.env.DS_PHOENIX_API_USERNAME,
-    password: process.env.DS_PHOENIX_API_PASSWORD,
-  });
-
-  const loaded = app.locals.clients.northstar && app.locals.clients.phoenix;
-
-  return loaded;
 }
 
 /**
@@ -149,6 +106,24 @@ function loadConfigs(uri) {
   });
 }
 
+/**
+ * Loads app.locals.controllers.donorsChooseBot from Gambit Jr API.
+ */
+function loadDonorsChooseBotController(id) {
+  logger.debug(`loadDonorsChooseBot:${id}`);
+
+  return gambitJunior
+    .get('donorschoosebots', id)
+    .then((donorsChooseBot) => {
+      logger.debug(`loadDonorsChooseBot found donorsChooseBot:${donorsChooseBot.id}`);
+
+      const DonorsChooseBotController = rootRequire('api/controllers/DonorsChooseBotController');
+      app.locals.controllers.donorsChooseBot = new DonorsChooseBotController(donorsChooseBot);
+      logger.info(`loaded app.locals.controllers.donorsChooseBot (id:${donorsChooseBot.id})`);
+
+      return app.locals.controllers.donorsChooseBot;
+    });
+}
 
 /**
  * Loads operation models as app.locals.db object.
@@ -171,30 +146,58 @@ function loadDb(uri) {
 }
 
 /**
- * Loads operation models as app.locals.db object.
+ * Loads app.locals.controllers.slothBot for Season 2.
+ */
+function loadSlothBotController() {
+  const SlothBotController = rootRequire('api/controllers/SlothBotController');
+  app.locals.controllers.slothBot = new SlothBotController();
+  logger.info('loaded app.locals.controllers.slothBot');
+
+  return app.locals.controllers.slothBot;
+}
+
+/**
+ * Loads required app.locals properties.
  */
 module.exports.load = function () {
-  if (!loadClients()) {
+  app.locals.clients = {};
+
+  const NorthstarClient = require('@dosomething/northstar-js');
+  app.locals.clients.northstar = new NorthstarClient({
+    baseURI: process.env.DS_NORTHSTAR_API_BASEURI,
+    apiKey: process.env.DS_NORTHSTAR_API_KEY,
+  });
+  if (!app.locals.clients.northstar) {
+    logger.error('app.locals.clients.northstar undefined');
+
+    return false;
+  }
+
+  const PhoenixClient = require('@dosomething/phoenix-js');
+  app.locals.clients.phoenix = new PhoenixClient({
+    baseURI: process.env.DS_PHOENIX_API_BASEURI,
+    username: process.env.DS_PHOENIX_API_USERNAME,
+    password: process.env.DS_PHOENIX_API_PASSWORD,
+  });
+  if (!app.locals.clients.phoenix) {
+    logger.error('app.locals.clients.phoenix undefined');
+
     return false;
   }
 
   app.locals.controllers = {};
+  const promises = [];
 
-  const campaignIds = process.env.CAMPAIGNBOT_CAMPAIGNS;
   const configUri = process.env.CONFIG_DB_URI || 'mongodb://localhost/config';
+  promises.push(loadConfigs(configUri));
+
   const dbUri = process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder';
+  promises.push(loadDb(dbUri));
 
-  const promises = [loadCampaigns(campaignIds), loadConfigs(configUri), loadDb(dbUri)];
-  promises.push(loadCampaignBots());
-  promises.push(loadDonorsChooseBot(process.env.DONORSCHOOSEBOT_ID));
+  promises.push(loadCampaigns(process.env.CAMPAIGNBOT_CAMPAIGNS));
+  promises.push(loadCampaignBotControllers());
+  promises.push(loadDonorsChooseBotController(process.env.DONORSCHOOSEBOT_ID));
+  promises.push(loadSlothBotController());
 
-  return Promise.all(promises).then(() => {
-    const SlothBotController = rootRequire('api/controllers/SlothBotController');
-    app.locals.controllers.slothBot = new SlothBotController();
-    if (app.locals.controllers.slothBot) {
-      logger.info('loaded app.locals.controllers.slothBot');
-    }
-
-    return true;
-  });
+  return Promise.all(promises);
 };
