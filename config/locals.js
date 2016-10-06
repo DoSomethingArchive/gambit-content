@@ -39,7 +39,7 @@ function getModelMap(configName, model) {
  */
 function loadCampaignBots() {
   logger.debug('loadCampaignBots');
-  app.locals.campaignBots = {};
+  app.locals.controllers.campaignBots = {};
 
   return superagent
     .get(`${gambitJuniorUri}/campaignbots/`)
@@ -51,9 +51,9 @@ function loadCampaignBots() {
     .then((campaignBots) => {
       const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
 
-      return campaignBots.forEach((campaignBot) => {
-        app.locals.campaignBots[campaignBot.id] = new CampaignBotController(campaignBot);
-        logger.debug(`loaded app.locals.campaignBots[${campaignBot.id}]`);
+      return campaignBots.forEach((bot) => {
+        app.locals.controllers.campaignBots[bot.id] = new CampaignBotController(bot);
+        logger.debug(`loaded app.locals.controllers.campaignBots[${bot.id}]`);
       });
     });
 }
@@ -69,7 +69,7 @@ function loadDonorsChooseBot(id) {
     .then((res) => {
       const DonorsChooseBotController = rootRequire('api/controllers/DonorsChooseBotController');
       app.locals.controllers.donorsChooseBot = new DonorsChooseBotController(res.body);
-      logger.debug(`loaded app.locals.donorsChooseBot (id:${id})`);
+      logger.debug(`loaded app.locals.controllers.donorsChooseBot (bot.id:${id})`);
 
       return app.locals.controllers.donorsChooseBot;
     });
