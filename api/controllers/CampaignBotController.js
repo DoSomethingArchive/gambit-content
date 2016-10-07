@@ -31,7 +31,7 @@ class CampaignBotController {
   collectReportbackProperty(req, property, ask) {
     this.debug(req, `collectReportbackProperty:${property}`);
 
-    if (req.query.campaign || ask) {
+    if (req.query.campaign || ask || this.isKeywordCampaignBot(req)) {
       return this.renderResponseMessage(req, `ask_${property}`);
     }
 
@@ -267,6 +267,18 @@ class CampaignBotController {
   }
 
   /**
+   * Returns whether incoming request is the CampaignBot Mobile Commons keyword.
+   * @param {object} req
+   * @return {bool}
+   */
+  isKeywordCampaignBot(req) {
+    const keyword = process.env.MOBILECOMMONS_KEYWORD_CAMPAIGNBOT;
+    const isKeyword = this.parseCommand(req) == keyword.toUpperCase();
+
+    return isKeyword;
+  }
+
+  /**
    * Loads Signup model if exists for given id, else get/create from API.
    * @param {object} req - Express request
    * @param {number} id - DS Signup ID
@@ -320,7 +332,7 @@ class CampaignBotController {
 
   /**
    * Parse incoming request as Gambit command.
-  */
+   */
   parseCommand(req) {
     return helpers.getFirstWordUppercase(req.incoming_message);
   }
@@ -444,7 +456,8 @@ class CampaignBotController {
       msg = msg.replace(/{{quantity}}/gi, quantity);
     }
 
-    if (req.query.campaign && req.signup && req.signup.draft_reportback_submission) {
+    const revisiting = req.query.campaign && req.signup && req.signup.draft_reportback_submission;
+    if (revisiting || this.isKeywordCampaignBot(req)) {
       // TODO: New bot property for continue draft message
       const continueMsg = 'Picking up where you left off on';
       msg = `${continueMsg} ${campaign.title}...\n\n${msg}`;
