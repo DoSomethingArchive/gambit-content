@@ -31,7 +31,7 @@ class CampaignBotController {
   collectReportbackProperty(req, property, ask) {
     this.debug(req, `collectReportbackProperty:${property}`);
 
-    if (req.query.campaign || ask || this.isKeywordCampaignBot(req)) {
+    if (ask || req.body.keyword) {
       return this.renderResponseMessage(req, `ask_${property}`);
     }
 
@@ -252,33 +252,28 @@ class CampaignBotController {
       return false;
     }
 
-    const isCommand = this.parseCommand(req) === configValue.toUpperCase();
+    const result = this.parseCommand(req) === configValue.toUpperCase();
 
     if (type === 'clear_cache') {
-      const authorized = req.user.role && (req.user.role === 'staff' || req.user.role === 'admin');
-      if (!authorized) {
+      if (!this.isStaff(req.user)) {
         logger.warn(`${this.loggerPrefix(req)} unauthorized command clear_cache`);
 
         return false;
       }
     }
 
-    return isCommand;
+    return result;
   }
 
   /**
-   * Returns whether incoming request is the CampaignBot Mobile Commons keyword.
-   * @param {object} req
+   * Returns whether given user is DS staff.
+   * @param {object} user
    * @return {bool}
    */
-  isKeywordCampaignBot(req) {
-    if (req.body.keyword) {
-      const keyword = process.env.MOBILECOMMONS_KEYWORD_CAMPAIGNBOT;
-      const isKeyword = req.body.keyword.toUpperCase() === keyword.toUpperCase();
-      return isKeyword;
-    }
+  isStaff(user) {
+    const result = user.role && (user.role === 'staff' || user.role === 'admin');
 
-    return false;
+    return result;
   }
 
   /**
@@ -449,7 +444,7 @@ class CampaignBotController {
     msg = msg.replace(/{{rb_confirmed}}/gi, campaign.reportbackInfo.confirmationMessage);
     msg = msg.replace(/{{cmd_reportback}}/gi, process.env.GAMBIT_CMD_REPORTBACK);
     msg = msg.replace(/{{cmd_member_support}}/gi, process.env.GAMBIT_CMD_MEMBER_SUPPORT);
-    msg = msg.replace(/{{keyword_continue}}/gi, process.env.MOBILECOMMONS_KEYWORD_CAMPAIGNBOT);
+    msg = msg.replace(/{{keyword}}/gi, campaign.keywords);
 
     if (req.signup) {
       let quantity = req.signup.total_quantity_submitted;
@@ -459,8 +454,8 @@ class CampaignBotController {
       msg = msg.replace(/{{quantity}}/gi, quantity);
     }
 
-    const revisiting = req.query.campaign && req.signup && req.signup.draft_reportback_submission;
-    if (revisiting || this.isKeywordCampaignBot(req)) {
+    const continuing = req.body.keyword && req.signup && req.signup.draft_reportback_submission;
+    if (continuing) {
       // TODO: New bot property for continue draft message
       const continueMsg = 'Picking up where you left off on';
       msg = `${continueMsg} ${campaign.title}...\n\n${msg}`;
