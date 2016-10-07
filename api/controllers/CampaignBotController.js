@@ -247,7 +247,7 @@ class CampaignBotController {
     const configName = `GAMBIT_CMD_${type.toUpperCase()}`;
     const configValue = process.env[configName];
     if (!configValue) {
-      logger.error(`${this.loggerPrefix(req)} process.env.${configName} is undefined`);
+      logger.warn(`${this.loggerPrefix(req)} process.env.${configName} is undefined`);
 
       return false;
     }
