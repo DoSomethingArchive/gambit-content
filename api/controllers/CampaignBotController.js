@@ -80,7 +80,7 @@ class CampaignBotController {
     this.debug(req, 'continueReportbackSubmission');
 
     const submission = req.signup.draft_reportback_submission;
-    const ask = req.query.campaign || false;
+    const ask = req.body.keyword;
 
     if (!submission.quantity) {
       return this.collectReportbackProperty(req, 'quantity', ask);
