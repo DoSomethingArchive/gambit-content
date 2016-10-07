@@ -20,7 +20,6 @@ Name | Type | Description
 Name | Type | Description
 --- | --- | ---
 `bot_type` | `string` | Type of bot to chat with if not CampaignBot, our default. Possible values: `donorschoosebot`, `slothbot`
-`campaign` | `integer` | If set, Gambit starts a CampaignBot conversation for given DS Campaign for the incoming request's User
 `start` | `boolean` | If set, the bot will begin a new DonorsChoose conversation if `bot_type=donorschoose`. Default: `false`
 
 **Input**
