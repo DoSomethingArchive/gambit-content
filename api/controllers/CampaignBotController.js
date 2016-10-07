@@ -272,10 +272,13 @@ class CampaignBotController {
    * @return {bool}
    */
   isKeywordCampaignBot(req) {
-    const keyword = process.env.MOBILECOMMONS_KEYWORD_CAMPAIGNBOT;
-    const isKeyword = this.parseCommand(req) == keyword.toUpperCase();
+    if (req.body.keyword) {
+      const keyword = process.env.MOBILECOMMONS_KEYWORD_CAMPAIGNBOT;
+      const isKeyword = req.body.keyword.toUpperCase() === keyword.toUpperCase();
+      return isKeyword;
+    }
 
-    return isKeyword;
+    return false;
   }
 
   /**
