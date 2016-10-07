@@ -39,9 +39,13 @@ router.post('/', (req, res) => {
 
   let configured = true;
   // Check for required config variables.
-  const settings = ['MOBILECOMMONS_OIP_CAMPAIGNBOT', 'MOBILECOMMONS_OIP_AGENTVIEW'];
-  settings.push('MOBILECOMMONS_KEYWORD_CAMPAIGNBOT');
-  settings.concat(['GAMBIT_CMD_MEMBER_SUPPORT', 'GAMBIT_CMD_REPORTBACK']);
+  const settings = [
+    'GAMBIT_CMD_MEMBER_SUPPORT',
+    'GAMBIT_CMD_REPORTBACK',
+    'MOBILECOMMONS_KEYWORD_CAMPAIGNBOT',
+    'MOBILECOMMONS_OIP_AGENTVIEW',
+    'MOBILECOMMONS_OIP_CAMPAIGNBOT',
+  ];
   settings.forEach((configVar) => {
     if (!process.env[configVar]) {
       logger.error(`undefined process.env.${configVar}`);

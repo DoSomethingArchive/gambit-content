@@ -454,8 +454,8 @@ class CampaignBotController {
       msg = msg.replace(/{{quantity}}/gi, quantity);
     }
 
-    const continuing = req.body.keyword && req.signup && req.signup.draft_reportback_submission;
-    if (continuing) {
+    const revisiting = req.body.keyword && req.signup && req.signup.draft_reportback_submission;
+    if (revisiting) {
       // TODO: New bot property for continue draft message
       const continueMsg = 'Picking up where you left off on';
       msg = `${continueMsg} ${campaign.title}...\n\n${msg}`;
