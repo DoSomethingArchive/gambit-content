@@ -254,7 +254,7 @@ class CampaignBotController {
 
     const result = this.parseCommand(req) === configValue.toUpperCase();
 
-    if (type === 'clear_cache') {
+    if (result && type === 'clear_cache') {
       if (!this.isStaff(req.user)) {
         logger.warn(`${this.loggerPrefix(req)} unauthorized command clear_cache`);
 
