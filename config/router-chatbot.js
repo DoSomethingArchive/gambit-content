@@ -1,5 +1,8 @@
 'use strict';
 
+/**
+ * Imports.
+ */
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
 const logger = rootRequire('lib/logger');
@@ -34,10 +37,23 @@ router.post('/', (req, res) => {
     return app.locals.controllers.donorsChooseBot.chatbot(req, res);
   }
 
-  const mobilecommonsOip = process.env.CAMPAIGNBOT_MOBILECOMMONS_OIP;
-  if (!mobilecommonsOip) {
-    logger.error('CAMPAIGNBOT_MOBILECOMMONS_OIP undefined');
+  let configured = true;
+  // Check for required config variables.
+  const settings = [
+    'GAMBIT_CMD_MEMBER_SUPPORT',
+    'GAMBIT_CMD_REPORTBACK',
+    'MOBILECOMMONS_KEYWORD_CAMPAIGNBOT',
+    'MOBILECOMMONS_OIP_AGENTVIEW',
+    'MOBILECOMMONS_OIP_CAMPAIGNBOT',
+  ];
+  settings.forEach((configVar) => {
+    if (!process.env[configVar]) {
+      logger.error(`undefined process.env.${configVar}`);
+      configured = false;
+    }
+  });
 
+  if (!configured) {
     return res.sendStatus(500);
   }
 
@@ -90,7 +106,7 @@ router.post('/', (req, res) => {
       req.campaign_id = campaignId; // eslint-disable-line no-param-reassign
       req.campaign = campaign; // eslint-disable-line no-param-reassign
 
-      if (controller.isCommandClearCache(req)) {
+      if (controller.isCommand(req, 'clear_cache')) {
         req.user.campaigns = {}; // eslint-disable-line no-param-reassign
         logger.info(`${controller.loggerPrefix(req)} cleared user.campaigns`);
 
@@ -114,11 +130,15 @@ router.post('/', (req, res) => {
         logger.error('signup undefined');
       }
 
+      if (controller.isCommand(req, 'member_support')) {
+        return controller.renderResponseMessage(req, 'member_support');
+      }
+
       if (signup.draft_reportback_submission) {
         return controller.continueReportbackSubmission(req);
       }
 
-      if (controller.isCommandReportback(req)) {
+      if (controller.isCommand(req, 'reportback')) {
         return controller.createReportbackSubmission(req);
       }
 
@@ -132,12 +152,18 @@ router.post('/', (req, res) => {
       controller.debug(req, `sendMessage:${msg}`);
       controller.setCurrentCampaign(req.user, req.campaign_id);
 
-      mobilecommons.chatbot(req.body, mobilecommonsOip, msg);
+      let oip = process.env.MOBILECOMMONS_OIP_CAMPAIGNBOT;
+      if (controller.isCommand(req, 'member_support')) {
+        oip = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
+      }
+
+      mobilecommons.chatbot(req.body, oip, msg);
 
       return res.send({ message: msg });
     })
     .catch(err => {
       controller.error(req, res, err);
+
       return res.sendStatus(500);
     });
 });

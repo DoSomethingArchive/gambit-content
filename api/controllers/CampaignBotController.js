@@ -7,11 +7,6 @@ const logger = rootRequire('lib/logger');
 const helpers = rootRequire('lib/helpers');
 
 /**
- * Setup.
- */
-const CMD_REPORTBACK = process.env.GAMBIT_CMD_REPORTBACK || 'P';
-
-/**
  * CampaignBotController.
  */
 class CampaignBotController {
@@ -36,7 +31,7 @@ class CampaignBotController {
   collectReportbackProperty(req, property, ask) {
     this.debug(req, `collectReportbackProperty:${property}`);
 
-    if (req.query.campaign || ask) {
+    if (ask || req.body.keyword) {
       return this.renderResponseMessage(req, `ask_${property}`);
     }
 
@@ -239,39 +234,46 @@ class CampaignBotController {
   }
 
   /**
-   * Returns whether incoming request is an authorized clear cache command.
+   * Returns whether incoming request is the given command type.
    * @param {object} req
+   * @param {string} type
    * @return {bool}
    */
-  isCommandClearCache(req) {
-    const cmdClear = process.env.GAMBIT_CMD_CLEAR_CACHE;
+  isCommand(req, type) {
+    if (!type) {
+      return false;
+    }
 
-    if (!cmdClear) return false;
-
-    if (!req.user.role) return false;
-
-    if (req.user.role !== 'staff' && req.user.role !== 'admin') {
-      logger.warn(`${this.loggerPrefix(req)} unauthorized clear cache`);
+    const configName = `GAMBIT_CMD_${type.toUpperCase()}`;
+    const configValue = process.env[configName];
+    if (!configValue) {
+      logger.warn(`${this.loggerPrefix(req)} process.env.${configName} is undefined`);
 
       return false;
     }
 
-    const input = helpers.getFirstWord(req.incoming_message);
-    const isCommand = input && input.toUpperCase() === cmdClear.toUpperCase();
+    const result = this.parseCommand(req) === configValue.toUpperCase();
 
-    return isCommand;
+    if (result && type === 'clear_cache') {
+      if (!this.isStaff(req.user)) {
+        logger.warn(`${this.loggerPrefix(req)} unauthorized command clear_cache`);
+
+        return false;
+      }
+    }
+
+    return result;
   }
 
   /**
-   * Returns whether incoming Express req begins a Reportback conversation.
-   * @param {object} req - Express request
+   * Returns whether given user is DS staff.
+   * @param {object} user
    * @return {bool}
    */
-  isCommandReportback(req) {
-    const firstWord = helpers.getFirstWord(req.incoming_message);
-    if (!firstWord) return false;
+  isStaff(user) {
+    const result = user.role && (user.role === 'staff' || user.role === 'admin');
 
-    return firstWord.toUpperCase() === CMD_REPORTBACK.toUpperCase();
+    return result;
   }
 
   /**
@@ -324,6 +326,13 @@ class CampaignBotController {
    */
   loggerPrefix(req) {
     return `campaignBot.campaign:${req.campaign_id} user:${req.user_id}`;
+  }
+
+  /**
+   * Parse incoming request as Gambit command.
+   */
+  parseCommand(req) {
+    return helpers.getFirstWordUppercase(req.incoming_message);
   }
 
   /**
@@ -429,10 +438,13 @@ class CampaignBotController {
 
     msg = msg.replace(/{{br}}/gi, '\n');
     msg = msg.replace(/{{title}}/gi, campaign.title);
-    msg = msg.replace(/{{tagline}}/gi, campaign.tagline);
+    msg = msg.replace(/{{tagline}}/i, campaign.tagline);
     msg = msg.replace(/{{rb_noun}}/gi, campaign.reportbackInfo.noun);
     msg = msg.replace(/{{rb_verb}}/gi, campaign.reportbackInfo.verb);
-    msg = msg.replace(/{{rb_confirmed}}/gi, campaign.reportbackInfo.confirmationMessage);
+    msg = msg.replace(/{{rb_confirmed}}/i, campaign.reportbackInfo.confirmationMessage);
+    msg = msg.replace(/{{cmd_reportback}}/i, process.env.GAMBIT_CMD_REPORTBACK);
+    msg = msg.replace(/{{cmd_member_support}}/i, process.env.GAMBIT_CMD_MEMBER_SUPPORT);
+    msg = msg.replace(/{{keyword}}/i, process.env.MOBILECOMMONS_KEYWORD_CAMPAIGNBOT);
 
     if (req.signup) {
       let quantity = req.signup.total_quantity_submitted;
@@ -442,7 +454,8 @@ class CampaignBotController {
       msg = msg.replace(/{{quantity}}/gi, quantity);
     }
 
-    if (req.query.campaign && req.signup && req.signup.draft_reportback_submission) {
+    const revisiting = req.body.keyword && req.signup && req.signup.draft_reportback_submission;
+    if (revisiting) {
       // TODO: New bot property for continue draft message
       const continueMsg = 'Picking up where you left off on';
       msg = `${continueMsg} ${campaign.title}...\n\n${msg}`;

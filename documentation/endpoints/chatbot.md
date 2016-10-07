@@ -29,6 +29,7 @@ Name | Type | Description
 --- | --- | ---
 `phone` | `string` | **Required.** Our member's mobile number.
 `args` | `string` | An incoming message the member has sent.
+`keyword` | `string` | If set, it's the Mobile Commons keyword that posted to this endpoint.
 `profile_first_name` | `string` | 
 `profile_email` | `string` | 
 `profile_northstar_id` | `string` | Used by CampaignBot to load User - [@todo Create Northstar User if no value exists](https://github.com/DoSomething/gambit/issues/636)
