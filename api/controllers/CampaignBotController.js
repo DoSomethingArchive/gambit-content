@@ -438,13 +438,13 @@ class CampaignBotController {
 
     msg = msg.replace(/{{br}}/gi, '\n');
     msg = msg.replace(/{{title}}/gi, campaign.title);
-    msg = msg.replace(/{{tagline}}/gi, campaign.tagline);
+    msg = msg.replace(/{{tagline}}/i, campaign.tagline);
     msg = msg.replace(/{{rb_noun}}/gi, campaign.reportbackInfo.noun);
     msg = msg.replace(/{{rb_verb}}/gi, campaign.reportbackInfo.verb);
-    msg = msg.replace(/{{rb_confirmed}}/gi, campaign.reportbackInfo.confirmationMessage);
-    msg = msg.replace(/{{cmd_reportback}}/gi, process.env.GAMBIT_CMD_REPORTBACK);
-    msg = msg.replace(/{{cmd_member_support}}/gi, process.env.GAMBIT_CMD_MEMBER_SUPPORT);
-    msg = msg.replace(/{{keyword}}/gi, campaign.keywords);
+    msg = msg.replace(/{{rb_confirmed}}/i, campaign.reportbackInfo.confirmationMessage);
+    msg = msg.replace(/{{cmd_reportback}}/i, process.env.GAMBIT_CMD_REPORTBACK);
+    msg = msg.replace(/{{cmd_member_support}}/i, process.env.GAMBIT_CMD_MEMBER_SUPPORT);
+    msg = msg.replace(/{{keyword}}/i, process.env.MOBILECOMMONS_KEYWORD_CAMPAIGNBOT);
 
     if (req.signup) {
       let quantity = req.signup.total_quantity_submitted;
