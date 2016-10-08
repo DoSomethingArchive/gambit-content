@@ -101,37 +101,6 @@ function loadCampaigns() {
 }
 
 /**
- * Loads map of config content as app.locals.configs object instead using Mongoose find queries
- * e.g. app.locals.configs.campaign[32].title, app.locals.configs.campaignBots[41].msg_ask_why
- */
-function loadLegacyConfigs() {
-  app.locals.configs = {};
-
-  const conn = app.locals.conn.config;
-  /* eslint-disable max-len*/
-  const models = {
-    // TBDeleted.
-    legacyReportbacks: rootRequire('api/legacy/reportback/reportbackConfigModel')(conn),
-    legacyStartCampaignTransitions: rootRequire('api/legacy/ds-routing/config/startCampaignTransitionsConfigModel')(conn),
-    legacyYesNoPaths: rootRequire('api/legacy/ds-routing/config/yesNoPathsConfigModel')(conn),
-  };
-  /* eslint-enable max-len*/
-
-  const promises = [];
-  Object.keys(models).forEach((modelName) => {
-    const promise = getModelMap(modelName, models[modelName]);
-    promises.push(promise);
-  });
-
-  return Promise.all(promises).then((modelMaps) => {
-    modelMaps.forEach((modelMap) => {
-      app.locals.configs[modelMap.name] = modelMap.data;
-      logger.debug(`app.locals.configs loaded ${modelMap.count} ${modelMap.name}`);
-    });
-  });
-}
-
-/**
  * Loads app.locals.controllers.donorsChooseBot from Gambit Jr API.
  */
 function loadDonorsChooseBotController() {
@@ -168,6 +137,37 @@ function loadDb() {
   app.locals.db.users = rootRequire('api/models/User')(conn);
 
   return app.locals.db;
+}
+
+/**
+ * Loads map of config content as app.locals.configs object instead using Mongoose find queries
+ * e.g. app.locals.configs.campaign[32].title, app.locals.configs.campaignBots[41].msg_ask_why
+ */
+function loadLegacyConfigs() {
+  app.locals.configs = {};
+
+  const conn = app.locals.conn.config;
+  /* eslint-disable max-len*/
+  const models = {
+    // TBDeleted.
+    legacyReportbacks: rootRequire('api/legacy/reportback/reportbackConfigModel')(conn),
+    legacyStartCampaignTransitions: rootRequire('api/legacy/ds-routing/config/startCampaignTransitionsConfigModel')(conn),
+    legacyYesNoPaths: rootRequire('api/legacy/ds-routing/config/yesNoPathsConfigModel')(conn),
+  };
+  /* eslint-enable max-len*/
+
+  const promises = [];
+  Object.keys(models).forEach((modelName) => {
+    const promise = getModelMap(modelName, models[modelName]);
+    promises.push(promise);
+  });
+
+  return Promise.all(promises).then((modelMaps) => {
+    modelMaps.forEach((modelMap) => {
+      app.locals.configs[modelMap.name] = modelMap.data;
+      logger.debug(`app.locals.configs loaded ${modelMap.count} ${modelMap.name}`);
+    });
+  });
 }
 
 /**
@@ -218,7 +218,7 @@ module.exports.load = function () {
   app.locals.db.campaigns = rootRequire('api/models/Campaign')(app.locals.conn.config);
 
   // TODO: We don't want to start listening in Express until we have mongo connection and loaded
-  // campaigns.
+  // campaigns. Same for our ops connection -- @see loadDb
   app.locals.conn.config.on('connected', () => {
     loadCampaigns();
     logger.info(`app.locals.conn.config readyState:${app.locals.conn.config.readyState}`);
