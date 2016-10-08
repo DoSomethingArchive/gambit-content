@@ -88,12 +88,9 @@ router.post('/', (req, res) => {
     }
   }
 
-  // TODO: Check to see if our campaign has a custom campaignBot set.
-  // If not, use our default CAMPAIGNBOT_ID for rendering response messages.
-  const campaignBotId = process.env.CAMPAIGNBOT_ID;
-  const controller = app.locals.controllers.campaignBots[campaignBotId];
+  const controller = app.locals.controllers.campaignBot;
   if (!controller) {
-    logger.error(`app.locals.controllers.campaignBots[${campaignBotId}] undefined`);
+    logger.error('app.locals.controllers.campaignBot undefined');
 
     return res.sendStatus(500);
   }

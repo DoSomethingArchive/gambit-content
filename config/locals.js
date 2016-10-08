@@ -33,7 +33,7 @@ function getModelMap(configName, model) {
 }
 
 /**
- * Upserts given campaign model and loads to app.locals.campaigns. 
+ * Upserts given Phoenix campaign to campaign model, saves to app.locals.campaign[campaign.id].
  */
 function loadCampaign(campaign) {
   logger.debug(`loadCampaign:${campaign.id}`);
@@ -45,7 +45,7 @@ function loadCampaign(campaign) {
     rb_confirmed: campaign.reportbackInfo.confirmationMessage,
     rb_noun: campaign.reportbackInfo.noun,
     rb_verb: campaign.reportbackInfo.verb,
-  }
+  };
 
   return app.locals.db.campaigns
     .findOneAndUpdate({ _id: campaign.id }, data, { upsert: true, new: true })
@@ -60,34 +60,34 @@ function loadCampaign(campaign) {
 }
 
 /**
- * Loads our hashmap app.locals.controllers.campaignBots, storing CampaignBotControllers by bot id.
+ * Loads app.locals.controllers.campaignBot from Gambit Jr API.
  */
 function loadCampaignBotController() {
-  logger.debug('loadCampaignBots');
-  app.locals.controllers.campaignBots = {};
+  const campaignBotId = process.env.CAMPAIGNBOT_ID;
 
   return gambitJunior
-    .index('campaignbots')
-    .then((campaignBots) => {
-      logger.debug(`loadCampaignBots found ${campaignBots.length} campaignBots`);
-      const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
+    .get('campaignbots', campaignBotId)
+    .then((campaignBot) => {
+      logger.debug(`gambitJunior found campaignBot:${campaignBotId}`);
 
-      return campaignBots.forEach((bot) => {
-        app.locals.controllers.campaignBots[bot.id] = new CampaignBotController(bot);
-        logger.info(`loaded app.locals.controllers.campaignBots[${bot.id}]`);
-      });
+      const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
+      app.locals.controllers.campaignBot = new CampaignBotController(campaignBot);
+      logger.info('loaded app.locals.controllers.campaignBot');
+
+      return app.locals.controllers.campaignBot;
     });
 }
 
 /**
  * Loads app.locals.campaigns from DS API.
  */
-function loadCampaigns(stringCampaignIds) {
-  logger.debug(`loadCampaigns:${stringCampaignIds}`);
+function loadCampaigns() {
   app.locals.campaigns = {};
+  const campaignIds = process.env.CAMPAIGNBOT_CAMPAIGNS;
+  logger.debug(`loadCampaigns:${campaignIds}`);
 
   return app.locals.clients.phoenix.Campaigns
-    .index({ ids: stringCampaignIds })
+    .index({ ids: campaignIds })
     .then((campaigns) => {
       logger.debug(`loadCampaigns found ${campaigns.length} campaigns`);
 
@@ -136,11 +136,11 @@ function loadDonorsChooseBotController() {
   return gambitJunior
     .get('donorschoosebots', donorsChooseBotId)
     .then((donorsChooseBot) => {
-      logger.debug(`loadDonorsChooseBot found donorsChooseBot:${donorsChooseBotId}`);
+      logger.debug(`gambitJunior found donorsChooseBot:${donorsChooseBotId}`);
 
       const DonorsChooseBotController = rootRequire('api/controllers/DonorsChooseBotController');
       app.locals.controllers.donorsChooseBot = new DonorsChooseBotController(donorsChooseBot);
-      logger.info(`loaded app.locals.controllers.donorsChooseBot (id:${donorsChooseBot.id})`);
+      logger.info('loaded app.locals.controllers.donorsChooseBot');
 
       return app.locals.controllers.donorsChooseBot;
     });
@@ -212,9 +212,10 @@ module.exports.load = function () {
   app.locals.conn.config = mongoose.createConnection(configUri);
   app.locals.db.campaigns = rootRequire('api/models/Campaign')(app.locals.conn.config);
 
-  // TODO: We don't want to start our Express in until we have mongo connection.
+  // TODO: We don't want to start listening in Express until we have mongo connection and loaded
+  // campaigns.
   app.locals.conn.config.on('connected', () => {
-    loadCampaigns(process.env.CAMPAIGNBOT_CAMPAIGNS)
+    loadCampaigns();
     logger.info(`app.locals.conn.config readyState:${app.locals.conn.config.readyState}`);
   });
 
