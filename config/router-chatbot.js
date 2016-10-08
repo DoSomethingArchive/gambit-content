@@ -57,29 +57,11 @@ router.post('/', (req, res) => {
     return res.sendStatus(500);
   }
 
+  let campaign;
   let campaignId;
   if (req.body.keyword) {
     const keyword = req.body.keyword.toUpperCase();
-    switch (keyword) {
-      case 'BOOKBOT':
-        campaignId = 2299;
-        break;
-      case 'BUMBLEBOT':
-        campaignId = 2070;
-        break;
-      case 'LUCKYBOT':
-        campaignId = 2900;
-        break;
-      case 'SLEEVEBOT':
-        campaignId = 2938;
-        break;
-      default:
-        campaignId = null;
-    }
-  }
-
-  let campaign;
-  if (campaignId) {
+    campaignId = app.locals.keywords[keyword];
     campaign = app.locals.campaigns[campaignId];
     if (!campaign) {
       logger.error(`app.locals.campaigns[${campaignId}] undefined`);

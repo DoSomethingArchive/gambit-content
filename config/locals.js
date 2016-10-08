@@ -53,6 +53,9 @@ function loadCampaign(campaign) {
     .then((campaignDoc) => {
       logger.debug(`saved campaign:${campaignDoc._id}`);
       app.locals.campaigns[campaign.id] = campaignDoc;
+      if (campaignDoc.keyword) {
+        app.locals.keywords[campaignDoc.keyword.toUpperCase()] = campaign.id;
+      }
 
       return campaignDoc;
     })
@@ -83,6 +86,8 @@ function loadCampaignBotController() {
  */
 function loadCampaigns() {
   app.locals.campaigns = {};
+  app.locals.keywords = {};
+
   const campaignIds = process.env.CAMPAIGNBOT_CAMPAIGNS;
   logger.debug(`loadCampaigns:${campaignIds}`);
 
