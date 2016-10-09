@@ -431,6 +431,10 @@ class CampaignBotController {
 
     const botProperty = `msg_${msgType}`;
     let msg = this.bot[botProperty];
+    // Check if campaign has an override defined.
+    if (campaign[botProperty]) {
+      msg = campaign[botProperty];
+    }
 
     if (!msg) {
       return this.error(req, 'bot msgType not found');
