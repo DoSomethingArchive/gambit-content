@@ -448,7 +448,7 @@ class CampaignBotController {
     msg = msg.replace(/{{rb_confirmed}}/i, campaign.rb_confirmed);
     msg = msg.replace(/{{cmd_reportback}}/i, process.env.GAMBIT_CMD_REPORTBACK);
     msg = msg.replace(/{{cmd_member_support}}/i, process.env.GAMBIT_CMD_MEMBER_SUPPORT);
-    msg = msg.replace(/{{keyword}}/i, process.env.MOBILECOMMONS_KEYWORD_CAMPAIGNBOT);
+    msg = msg.replace(/{{keyword}}/i, campaign.keyword);
 
     if (req.signup) {
       let quantity = req.signup.total_quantity_submitted;

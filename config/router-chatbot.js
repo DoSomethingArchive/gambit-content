@@ -42,9 +42,8 @@ router.post('/', (req, res) => {
   const settings = [
     'GAMBIT_CMD_MEMBER_SUPPORT',
     'GAMBIT_CMD_REPORTBACK',
-    'MOBILECOMMONS_KEYWORD_CAMPAIGNBOT',
     'MOBILECOMMONS_OIP_AGENTVIEW',
-    'MOBILECOMMONS_OIP_CAMPAIGNBOT',
+    'MOBILECOMMONS_OIP_CHATBOT',
   ];
   settings.forEach((configVar) => {
     if (!process.env[configVar]) {
@@ -151,7 +150,7 @@ router.post('/', (req, res) => {
       controller.debug(req, `sendMessage:${msg}`);
       controller.setCurrentCampaign(req.user, req.campaign_id);
 
-      let oip = process.env.MOBILECOMMONS_OIP_CAMPAIGNBOT;
+      let oip = process.env.MOBILECOMMONS_OIP_CHATBOT;
       if (controller.isCommand(req, 'member_support')) {
         oip = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
       }
