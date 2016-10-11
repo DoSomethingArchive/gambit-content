@@ -51,10 +51,15 @@ function loadCampaign(campaign) {
     .findOneAndUpdate({ _id: campaign.id }, data, { upsert: true, new: true })
     .exec()
     .then((campaignDoc) => {
-      logger.debug(`saved campaign:${campaignDoc._id}`);
       app.locals.campaigns[campaign.id] = campaignDoc;
+      logger.debug(`loaded app.locals.campaigns[${campaignDoc._id}]`);
+
       if (campaignDoc.keyword) {
-        app.locals.keywords[campaignDoc.keyword.toUpperCase()] = campaign.id;
+        const keyword = campaignDoc.keyword.toUpperCase();
+        app.locals.keywords[keyword] = campaign.id;
+        logger.debug(`loaded app.locals.keyword[${keyword}]:${campaign.id}`);
+      } else {
+        logger.warn(`keyword undefined for campaign:${campaign.id} `);
       }
 
       return campaignDoc;
@@ -121,15 +126,10 @@ function loadDonorsChooseBotController() {
 }
 
 /**
- * Loads operation models as app.locals.db object.
+ * Loads app.locals.db object of Mongoose models.
  */
-function loadDb() {
-  const uri = process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder';
-  const conn = mongoose.createConnection(uri);
-  conn.on('connected', () => {
-    logger.info(`apps.locals.db readyState:${conn.readyState}`);
-  });
-
+function loadDb(conn) {
+  app.locals.db.campaigns = rootRequire('api/models/Campaign')(conn);
   app.locals.db.donorsChooseDonations = rootRequire('api/models/DonorsChooseDonation')(conn);
   app.locals.db.legacyReportbacks = rootRequire('api/legacy/reportback/reportbackModel')(conn);
   app.locals.db.reportbackSubmissions = rootRequire('api/models/ReportbackSubmission')(conn);
@@ -140,16 +140,15 @@ function loadDb() {
 }
 
 /**
- * Loads map of config content as app.locals.configs object instead using Mongoose find queries
- * e.g. app.locals.configs.campaign[32].title, app.locals.configs.campaignBots[41].msg_ask_why
+ * Loads map of config content as app.locals.configs object instead using Mongoose find queries.
+ * To be deprecated upon CampaignBot launch.
  */
 function loadLegacyConfigs() {
-  app.locals.configs = {};
+  const uri = process.env.CONFIG_DB_URI || 'mongodb://localhost/config';
+  const conn = mongoose.createConnection(uri);
 
-  const conn = app.locals.conn.config;
   /* eslint-disable max-len*/
   const models = {
-    // TBDeleted.
     legacyReportbacks: rootRequire('api/legacy/reportback/reportbackConfigModel')(conn),
     legacyStartCampaignTransitions: rootRequire('api/legacy/ds-routing/config/startCampaignTransitionsConfigModel')(conn),
     legacyYesNoPaths: rootRequire('api/legacy/ds-routing/config/yesNoPathsConfigModel')(conn),
@@ -161,6 +160,8 @@ function loadLegacyConfigs() {
     const promise = getModelMap(modelName, models[modelName]);
     promises.push(promise);
   });
+
+  app.locals.configs = {};
 
   return Promise.all(promises).then((modelMaps) => {
     modelMaps.forEach((modelMap) => {
@@ -210,24 +211,21 @@ module.exports.load = function () {
     return false;
   }
 
-  app.locals.conn = {};
   app.locals.db = {};
+  const uri = process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder';
+  const connDb = mongoose.createConnection(uri);
+  loadDb(connDb);
 
-  const configUri = process.env.CONFIG_DB_URI || 'mongodb://localhost/config';
-  app.locals.conn.config = mongoose.createConnection(configUri);
-  app.locals.db.campaigns = rootRequire('api/models/Campaign')(app.locals.conn.config);
-
-  // TODO: We don't want to start listening in Express until we have mongo connection and loaded
-  // campaigns. Same for our ops connection -- @see loadDb
-  app.locals.conn.config.on('connected', () => {
+  // TODO: We don't want to start listening in Express until loadCampaigns() has finished
+  // and loaded app.locals.campaigns, app.locals.keywords.
+  connDb.on('connected', () => {
     loadCampaigns();
-    logger.info(`app.locals.conn.config readyState:${app.locals.conn.config.readyState}`);
+    logger.info(`locals.load connDb readyState:${connDb.readyState}`);
   });
 
   app.locals.controllers = {};
   const promises = [
     loadCampaignBotController(),
-    loadDb(),
     loadDonorsChooseBotController(),
     loadLegacyConfigs(),
     loadSlothBotController(),
