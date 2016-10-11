@@ -59,8 +59,8 @@ router.post('/', (req, res) => {
   let campaign;
   let campaignId;
   if (req.body.keyword) {
-    const keyword = req.body.keyword.toUpperCase();
-    campaignId = app.locals.keywords[keyword];
+    req.keyword = req.body.keyword.toLowerCase(); // eslint-disable-line no-param-reassign
+    campaignId = app.locals.keywords[req.keyword];
     campaign = app.locals.campaigns[campaignId];
     if (!campaign) {
       logger.error(`app.locals.campaigns[${campaignId}] undefined`);

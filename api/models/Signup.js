@@ -10,6 +10,7 @@ const schema = new mongoose.Schema({
   _id: { type: Number, index: true },
   user: { type: String, index: true },
   campaign: { type: Number, index: true },
+  keyword: String,
   created_at: Date,
   draft_reportback_submission: {
     type: mongoose.Schema.Types.ObjectId,

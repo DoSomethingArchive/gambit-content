@@ -173,6 +173,7 @@ class CampaignBotController {
         _id: Number(currentSignup.id),
         user: req.user_id,
         campaign: req.campaign_id,
+        keyword: req.keyword,
         created_at: currentSignup.createdAt,
         // Delete existing draft submission in case we're updating existing
         // Signup model (e.g. if we're handling a clear cache command)
@@ -406,10 +407,11 @@ class CampaignBotController {
    */
   postSignup(req) {
     this.debug(req, 'postSignup');
+    const source = `${process.env.DS_API_POST_SOURCE}-${req.keyword}`;
 
     return app.locals.clients.phoenix.Campaigns
       .signup(req.campaign_id, {
-        source: process.env.DS_API_POST_SOURCE,
+        source,
         uid: req.user.phoenix_id,
       })
       .then((signupId) => ({
@@ -448,9 +450,10 @@ class CampaignBotController {
     msg = msg.replace(/{{rb_confirmation_msg}}/i, campaign.msg_rb_confirmation);
     msg = msg.replace(/{{cmd_reportback}}/i, process.env.GAMBIT_CMD_REPORTBACK);
     msg = msg.replace(/{{cmd_member_support}}/i, process.env.GAMBIT_CMD_MEMBER_SUPPORT);
-    msg = msg.replace(/{{keyword}}/i, campaign.keyword);
 
     if (req.signup) {
+      msg = msg.replace(/{{keyword}}/i, req.signup.keyword.toUpperCase());
+
       let quantity = req.signup.total_quantity_submitted;
       if (req.signup.draft_reportback_submission) {
         quantity = req.signup.draft_reportback_submission.quantity;

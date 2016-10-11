@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
 const schema = new mongoose.Schema({
 
   _id: { type: Number, index: true },
-  keyword: String,
+  keywords: [String],
 
   // Properties cached from DS API.
   title: String,
