@@ -31,7 +31,7 @@ class CampaignBotController {
   collectReportbackProperty(req, property, ask) {
     this.debug(req, `collectReportbackProperty:${property}`);
 
-    if (ask || req.body.keyword) {
+    if (ask || req.keyword) {
       return this.renderResponseMessage(req, `ask_${property}`);
     }
 
@@ -80,7 +80,7 @@ class CampaignBotController {
     this.debug(req, 'continueReportbackSubmission');
 
     const submission = req.signup.draft_reportback_submission;
-    const ask = req.body.keyword;
+    const ask = req.keyword;
 
     if (!submission.quantity) {
       return this.collectReportbackProperty(req, 'quantity', ask);
@@ -451,9 +451,15 @@ class CampaignBotController {
     msg = msg.replace(/{{cmd_reportback}}/i, process.env.GAMBIT_CMD_REPORTBACK);
     msg = msg.replace(/{{cmd_member_support}}/i, process.env.GAMBIT_CMD_MEMBER_SUPPORT);
 
-    if (req.signup) {
-      msg = msg.replace(/{{keyword}}/i, req.signup.keyword.toUpperCase());
+    if (campaign.keywords) {
+      let keyword = campaign.keywords[0].toUpperCase();
+      if (req.signup && req.signup.keyword) {
+        keyword = req.signup.keyword.toUpperCase();
+      }
+      msg = msg.replace(/{{keyword}}/i, keyword);
+    }
 
+    if (req.signup) {
       let quantity = req.signup.total_quantity_submitted;
       if (req.signup.draft_reportback_submission) {
         quantity = req.signup.draft_reportback_submission.quantity;
@@ -461,7 +467,7 @@ class CampaignBotController {
       msg = msg.replace(/{{quantity}}/gi, quantity);
     }
 
-    const revisiting = req.body.keyword && req.signup && req.signup.draft_reportback_submission;
+    const revisiting = req.keyword && req.signup && req.signup.draft_reportback_submission;
     if (revisiting) {
       // TODO: New bot property for continue draft message
       const continueMsg = 'Picking up where you left off on';

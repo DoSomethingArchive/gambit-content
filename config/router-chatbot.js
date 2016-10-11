@@ -60,6 +60,8 @@ router.post('/', (req, res) => {
   let campaignId;
   if (req.body.keyword) {
     req.keyword = req.body.keyword.toLowerCase(); // eslint-disable-line no-param-reassign
+    logger.debug(`user:${req.user_id} keyword:${req.keyword}`);
+
     campaignId = app.locals.keywords[req.keyword];
     campaign = app.locals.campaigns[campaignId];
     if (!campaign) {
