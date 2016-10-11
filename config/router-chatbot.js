@@ -143,10 +143,18 @@ router.post('/', (req, res) => {
       }
 
       if (signup.total_quantity_submitted) {
-        return controller.renderResponseMessage(req, 'menu_completed');
+        if (req.keyword) {
+          return controller.renderResponseMessage(req, 'menu_completed');
+        }
+        // If we're this far, member didn't text back Reportback or Member Support commands.
+        return controller.renderResponseMessage(req, 'invalid_cmd_completed');
       }
 
-      return controller.renderResponseMessage(req, 'menu_signedup');
+      if (req.keyword) {
+        return controller.renderResponseMessage(req, 'menu_signedup');
+      }
+
+      return controller.renderResponseMessage(req, 'invalid_cmd_signedup');
     })
     .then(msg => {
       controller.debug(req, `sendMessage:${msg}`);
