@@ -58,12 +58,14 @@ function loadCampaign(campaign) {
       app.locals.campaigns[campaign.id] = campaignDoc;
       logger.debug(`loaded app.locals.campaigns[${campaignDoc._id}]`);
 
-      if (campaignDoc.keyword) {
-        const keyword = campaignDoc.keyword.toUpperCase();
-        app.locals.keywords[keyword] = campaign.id;
-        logger.debug(`loaded app.locals.keyword[${keyword}]:${campaign.id}`);
+      if (campaignDoc.keywords) {
+        campaignDoc.keywords.forEach((campaignKeyword) => {
+          const keyword = campaignKeyword.toLowerCase();
+          app.locals.keywords[keyword] = campaign.id;
+          logger.debug(`loaded app.locals.keyword[${keyword}]:${campaign.id}`);
+        });
       } else {
-        logger.warn(`keyword undefined for campaign:${campaign.id} `);
+        logger.warn(`keywords undefined for campaign:${campaign.id} `);
       }
 
       return campaignDoc;

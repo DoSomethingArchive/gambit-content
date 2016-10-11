@@ -31,7 +31,7 @@ class CampaignBotController {
   collectReportbackProperty(req, property, ask) {
     this.debug(req, `collectReportbackProperty:${property}`);
 
-    if (ask || req.body.keyword) {
+    if (ask || req.keyword) {
       return this.renderResponseMessage(req, `ask_${property}`);
     }
 
@@ -80,7 +80,7 @@ class CampaignBotController {
     this.debug(req, 'continueReportbackSubmission');
 
     const submission = req.signup.draft_reportback_submission;
-    const ask = req.body.keyword;
+    const ask = req.keyword;
 
     if (!submission.quantity) {
       return this.collectReportbackProperty(req, 'quantity', ask);
@@ -173,6 +173,7 @@ class CampaignBotController {
         _id: Number(currentSignup.id),
         user: req.user_id,
         campaign: req.campaign_id,
+        keyword: req.keyword,
         created_at: currentSignup.createdAt,
         // Delete existing draft submission in case we're updating existing
         // Signup model (e.g. if we're handling a clear cache command)
@@ -406,10 +407,11 @@ class CampaignBotController {
    */
   postSignup(req) {
     this.debug(req, 'postSignup');
+    const source = `${process.env.DS_API_POST_SOURCE}-${req.keyword}`;
 
     return app.locals.clients.phoenix.Campaigns
       .signup(req.campaign_id, {
-        source: process.env.DS_API_POST_SOURCE,
+        source,
         uid: req.user.phoenix_id,
       })
       .then((signupId) => ({
@@ -448,7 +450,14 @@ class CampaignBotController {
     msg = msg.replace(/{{rb_confirmation_msg}}/i, campaign.msg_rb_confirmation);
     msg = msg.replace(/{{cmd_reportback}}/i, process.env.GAMBIT_CMD_REPORTBACK);
     msg = msg.replace(/{{cmd_member_support}}/i, process.env.GAMBIT_CMD_MEMBER_SUPPORT);
-    msg = msg.replace(/{{keyword}}/i, campaign.keyword);
+
+    if (campaign.keywords) {
+      let keyword = campaign.keywords[0].toUpperCase();
+      if (req.signup && req.signup.keyword) {
+        keyword = req.signup.keyword.toUpperCase();
+      }
+      msg = msg.replace(/{{keyword}}/i, keyword);
+    }
 
     if (req.signup) {
       let quantity = req.signup.total_quantity_submitted;
@@ -458,7 +467,7 @@ class CampaignBotController {
       msg = msg.replace(/{{quantity}}/gi, quantity);
     }
 
-    const revisiting = req.body.keyword && req.signup && req.signup.draft_reportback_submission;
+    const revisiting = req.keyword && req.signup && req.signup.draft_reportback_submission;
     if (revisiting) {
       // TODO: New bot property for continue draft message
       const continueMsg = 'Picking up where you left off on';
