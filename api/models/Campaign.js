@@ -12,10 +12,10 @@ const schema = new mongoose.Schema({
 
   // Properties cached from DS API.
   title: String,
-  rb_confirmed: String,
+  msg_rb_confirmation: String,
   rb_noun: String,
   rb_verb: String,
-  status: String,
+  status: { type: String, enum: ['active', 'closed'] },
   tagline: String,
   type: String,
 

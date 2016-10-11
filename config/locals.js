@@ -42,7 +42,7 @@ function loadCampaign(campaign) {
     status: campaign.status,
     tagline: campaign.tagline,
     title: campaign.title,
-    rb_confirmed: campaign.reportbackInfo.confirmationMessage,
+    msg_rb_confirmation: campaign.reportbackInfo.confirmationMessage,
     rb_noun: campaign.reportbackInfo.noun,
     rb_verb: campaign.reportbackInfo.verb,
   };
@@ -51,6 +51,10 @@ function loadCampaign(campaign) {
     .findOneAndUpdate({ _id: campaign.id }, data, { upsert: true, new: true })
     .exec()
     .then((campaignDoc) => {
+      if (!campaignDoc) {
+        return null;
+      }
+
       app.locals.campaigns[campaign.id] = campaignDoc;
       logger.debug(`loaded app.locals.campaigns[${campaignDoc._id}]`);
 
