@@ -134,6 +134,12 @@ router.post('/', (req, res) => {
         return controller.renderResponseMessage(req, 'member_support');
       }
 
+      if (campaign.status === 'closed') {
+        controller.debug(req, 'campaign closed');
+
+        return controller.renderResponseMessage(req, 'campaign_closed');
+      }
+
       if (signup.draft_reportback_submission) {
         return controller.continueReportbackSubmission(req);
       }
