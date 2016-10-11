@@ -59,12 +59,10 @@ function loadCampaign(campaign) {
       logger.debug(`loaded app.locals.campaigns[${campaignDoc._id}]`);
 
       if (campaignDoc.keywords) {
-        campaignDoc.keywords.map((campaignKeyword) => {
+        campaignDoc.keywords.forEach((campaignKeyword) => {
           const keyword = campaignKeyword.toLowerCase();
           app.locals.keywords[keyword] = campaign.id;
           logger.debug(`loaded app.locals.keyword[${keyword}]:${campaign.id}`);
-
-          return true;
         });
       } else {
         logger.warn(`keywords undefined for campaign:${campaign.id} `);
