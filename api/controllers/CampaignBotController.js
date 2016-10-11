@@ -431,6 +431,10 @@ class CampaignBotController {
 
     const botProperty = `msg_${msgType}`;
     let msg = this.bot[botProperty];
+    // Check if campaign has an override defined.
+    if (campaign[botProperty]) {
+      msg = campaign[botProperty];
+    }
 
     if (!msg) {
       return this.error(req, 'bot msgType not found');
@@ -439,12 +443,12 @@ class CampaignBotController {
     msg = msg.replace(/{{br}}/gi, '\n');
     msg = msg.replace(/{{title}}/gi, campaign.title);
     msg = msg.replace(/{{tagline}}/i, campaign.tagline);
-    msg = msg.replace(/{{rb_noun}}/gi, campaign.reportbackInfo.noun);
-    msg = msg.replace(/{{rb_verb}}/gi, campaign.reportbackInfo.verb);
-    msg = msg.replace(/{{rb_confirmed}}/i, campaign.reportbackInfo.confirmationMessage);
+    msg = msg.replace(/{{rb_noun}}/gi, campaign.rb_noun);
+    msg = msg.replace(/{{rb_verb}}/gi, campaign.rb_verb);
+    msg = msg.replace(/{{rb_confirmation_msg}}/i, campaign.msg_rb_confirmation);
     msg = msg.replace(/{{cmd_reportback}}/i, process.env.GAMBIT_CMD_REPORTBACK);
     msg = msg.replace(/{{cmd_member_support}}/i, process.env.GAMBIT_CMD_MEMBER_SUPPORT);
-    msg = msg.replace(/{{keyword}}/i, process.env.MOBILECOMMONS_KEYWORD_CAMPAIGNBOT);
+    msg = msg.replace(/{{keyword}}/i, campaign.keyword);
 
     if (req.signup) {
       let quantity = req.signup.total_quantity_submitted;

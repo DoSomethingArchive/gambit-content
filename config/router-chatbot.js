@@ -42,9 +42,8 @@ router.post('/', (req, res) => {
   const settings = [
     'GAMBIT_CMD_MEMBER_SUPPORT',
     'GAMBIT_CMD_REPORTBACK',
-    'MOBILECOMMONS_KEYWORD_CAMPAIGNBOT',
     'MOBILECOMMONS_OIP_AGENTVIEW',
-    'MOBILECOMMONS_OIP_CAMPAIGNBOT',
+    'MOBILECOMMONS_OIP_CHATBOT',
   ];
   settings.forEach((configVar) => {
     if (!process.env[configVar]) {
@@ -57,29 +56,11 @@ router.post('/', (req, res) => {
     return res.sendStatus(500);
   }
 
+  let campaign;
   let campaignId;
   if (req.body.keyword) {
     const keyword = req.body.keyword.toUpperCase();
-    switch (keyword) {
-      case 'BOOKBOT':
-        campaignId = 2299;
-        break;
-      case 'BUMBLEBOT':
-        campaignId = 2070;
-        break;
-      case 'LUCKYBOT':
-        campaignId = 2900;
-        break;
-      case 'SLEEVEBOT':
-        campaignId = 2938;
-        break;
-      default:
-        campaignId = null;
-    }
-  }
-
-  let campaign;
-  if (campaignId) {
+    campaignId = app.locals.keywords[keyword];
     campaign = app.locals.campaigns[campaignId];
     if (!campaign) {
       logger.error(`app.locals.campaigns[${campaignId}] undefined`);
@@ -88,12 +69,9 @@ router.post('/', (req, res) => {
     }
   }
 
-  // TODO: Check to see if our campaign has a custom campaignBot set.
-  // If not, use our default CAMPAIGNBOT_ID for rendering response messages.
-  const campaignBotId = process.env.CAMPAIGNBOT_ID;
-  const controller = app.locals.controllers.campaignBots[campaignBotId];
+  const controller = app.locals.controllers.campaignBot;
   if (!controller) {
-    logger.error(`app.locals.controllers.campaignBots[${campaignBotId}] undefined`);
+    logger.error('app.locals.controllers.campaignBot undefined');
 
     return res.sendStatus(500);
   }
@@ -172,7 +150,7 @@ router.post('/', (req, res) => {
       controller.debug(req, `sendMessage:${msg}`);
       controller.setCurrentCampaign(req.user, req.campaign_id);
 
-      let oip = process.env.MOBILECOMMONS_OIP_CAMPAIGNBOT;
+      let oip = process.env.MOBILECOMMONS_OIP_CHATBOT;
       if (controller.isCommand(req, 'member_support')) {
         oip = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
       }

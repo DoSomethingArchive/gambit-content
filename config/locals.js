@@ -33,59 +33,126 @@ function getModelMap(configName, model) {
 }
 
 /**
- * Loads our hashmap app.locals.controllers.campaignBots, storing CampaignBotControllers by bot id.
+ * Upserts given Phoenix campaign to campaign model, saves to app.locals.campaign[campaign.id].
  */
-function loadCampaignBotControllers() {
-  logger.debug('loadCampaignBots');
-  app.locals.controllers.campaignBots = {};
+function loadCampaign(campaign) {
+  logger.debug(`loadCampaign:${campaign.id}`);
+
+  const data = {
+    status: campaign.status,
+    tagline: campaign.tagline,
+    title: campaign.title,
+    msg_rb_confirmation: campaign.reportbackInfo.confirmationMessage,
+    rb_noun: campaign.reportbackInfo.noun,
+    rb_verb: campaign.reportbackInfo.verb,
+  };
+
+  return app.locals.db.campaigns
+    .findOneAndUpdate({ _id: campaign.id }, data, { upsert: true, new: true })
+    .exec()
+    .then((campaignDoc) => {
+      if (!campaignDoc) {
+        return null;
+      }
+
+      app.locals.campaigns[campaign.id] = campaignDoc;
+      logger.debug(`loaded app.locals.campaigns[${campaignDoc._id}]`);
+
+      if (campaignDoc.keyword) {
+        const keyword = campaignDoc.keyword.toUpperCase();
+        app.locals.keywords[keyword] = campaign.id;
+        logger.debug(`loaded app.locals.keyword[${keyword}]:${campaign.id}`);
+      } else {
+        logger.warn(`keyword undefined for campaign:${campaign.id} `);
+      }
+
+      return campaignDoc;
+    })
+    .catch(err => logger.error(err));
+}
+
+/**
+ * Loads app.locals.controllers.campaignBot from Gambit Jr API.
+ */
+function loadCampaignBotController() {
+  const campaignBotId = process.env.CAMPAIGNBOT_ID;
 
   return gambitJunior
-    .index('campaignbots')
-    .then((campaignBots) => {
-      logger.debug(`loadCampaignBots found ${campaignBots.length} campaignBots`);
-      const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
+    .get('campaignbots', campaignBotId)
+    .then((campaignBot) => {
+      logger.debug(`gambitJunior found campaignBot:${campaignBotId}`);
 
-      return campaignBots.forEach((bot) => {
-        app.locals.controllers.campaignBots[bot.id] = new CampaignBotController(bot);
-        logger.info(`loaded app.locals.controllers.campaignBots[${bot.id}]`);
-      });
+      const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
+      app.locals.controllers.campaignBot = new CampaignBotController(campaignBot);
+      logger.info('loaded app.locals.controllers.campaignBot');
+
+      return app.locals.controllers.campaignBot;
     });
 }
 
 /**
  * Loads app.locals.campaigns from DS API.
  */
-function loadCampaigns(stringCampaignIds) {
-  logger.debug(`loadCampaigns:${stringCampaignIds}`);
+function loadCampaigns() {
   app.locals.campaigns = {};
+  app.locals.keywords = {};
+
+  const campaignIds = process.env.CAMPAIGNBOT_CAMPAIGNS;
+  logger.debug(`loadCampaigns:${campaignIds}`);
 
   return app.locals.clients.phoenix.Campaigns
-    .index({ ids: stringCampaignIds })
+    .index({ ids: campaignIds })
     .then((campaigns) => {
       logger.debug(`loadCampaigns found ${campaigns.length} campaigns`);
 
-      return campaigns.forEach((campaign) => {
-        logger.info(`loaded app.locals.campaigns[${campaign.id}]`);
-        app.locals.campaigns[campaign.id] = campaign;
-      });
+      return campaigns.map(campaign => loadCampaign(campaign));
     });
 }
 
 /**
- * Loads map of config content as app.locals.configs object instead using Mongoose find queries
- * e.g. app.locals.configs.campaign[32].title, app.locals.configs.campaignBots[41].msg_ask_why
+ * Loads app.locals.controllers.donorsChooseBot from Gambit Jr API.
  */
-function loadConfigs(uri) {
-  app.locals.configs = {};
+function loadDonorsChooseBotController() {
+  const donorsChooseBotId = process.env.DONORSCHOOSEBOT_ID;
+  logger.debug(`loadDonorsChooseBot:${donorsChooseBotId}`);
 
+  return gambitJunior
+    .get('donorschoosebots', donorsChooseBotId)
+    .then((donorsChooseBot) => {
+      logger.debug(`gambitJunior found donorsChooseBot:${donorsChooseBotId}`);
+
+      const DonorsChooseBotController = rootRequire('api/controllers/DonorsChooseBotController');
+      app.locals.controllers.donorsChooseBot = new DonorsChooseBotController(donorsChooseBot);
+      logger.info('loaded app.locals.controllers.donorsChooseBot');
+
+      return app.locals.controllers.donorsChooseBot;
+    });
+}
+
+/**
+ * Loads app.locals.db object of Mongoose models.
+ */
+function loadDb(conn) {
+  app.locals.db.campaigns = rootRequire('api/models/Campaign')(conn);
+  app.locals.db.donorsChooseDonations = rootRequire('api/models/DonorsChooseDonation')(conn);
+  app.locals.db.legacyReportbacks = rootRequire('api/legacy/reportback/reportbackModel')(conn);
+  app.locals.db.reportbackSubmissions = rootRequire('api/models/ReportbackSubmission')(conn);
+  app.locals.db.signups = rootRequire('api/models/Signup')(conn);
+  app.locals.db.users = rootRequire('api/models/User')(conn);
+
+  return app.locals.db;
+}
+
+/**
+ * Loads map of config content as app.locals.configs object instead using Mongoose find queries.
+ * To be deprecated upon CampaignBot launch.
+ */
+function loadLegacyConfigs() {
+  const uri = process.env.CONFIG_DB_URI || 'mongodb://localhost/config';
   const conn = mongoose.createConnection(uri);
-  conn.on('connected', () => {
-    logger.info(`apps.locals.configs readyState:${conn.readyState}`);
-  });
 
   /* eslint-disable max-len*/
   const models = {
-    // TBDeleted.
     legacyReportbacks: rootRequire('api/legacy/reportback/reportbackConfigModel')(conn),
     legacyStartCampaignTransitions: rootRequire('api/legacy/ds-routing/config/startCampaignTransitionsConfigModel')(conn),
     legacyYesNoPaths: rootRequire('api/legacy/ds-routing/config/yesNoPathsConfigModel')(conn),
@@ -98,51 +165,14 @@ function loadConfigs(uri) {
     promises.push(promise);
   });
 
+  app.locals.configs = {};
+
   return Promise.all(promises).then((modelMaps) => {
     modelMaps.forEach((modelMap) => {
       app.locals.configs[modelMap.name] = modelMap.data;
       logger.debug(`app.locals.configs loaded ${modelMap.count} ${modelMap.name}`);
     });
   });
-}
-
-/**
- * Loads app.locals.controllers.donorsChooseBot from Gambit Jr API.
- */
-function loadDonorsChooseBotController(id) {
-  logger.debug(`loadDonorsChooseBot:${id}`);
-
-  return gambitJunior
-    .get('donorschoosebots', id)
-    .then((donorsChooseBot) => {
-      logger.debug(`loadDonorsChooseBot found donorsChooseBot:${donorsChooseBot.id}`);
-
-      const DonorsChooseBotController = rootRequire('api/controllers/DonorsChooseBotController');
-      app.locals.controllers.donorsChooseBot = new DonorsChooseBotController(donorsChooseBot);
-      logger.info(`loaded app.locals.controllers.donorsChooseBot (id:${donorsChooseBot.id})`);
-
-      return app.locals.controllers.donorsChooseBot;
-    });
-}
-
-/**
- * Loads operation models as app.locals.db object.
- */
-function loadDb(uri) {
-  const conn = mongoose.createConnection(uri);
-  conn.on('connected', () => {
-    logger.info(`apps.locals.db readyState:${conn.readyState}`);
-  });
-
-  app.locals.db = {
-    donorsChooseDonations: rootRequire('api/models/DonorsChooseDonation')(conn),
-    legacyReportbacks: rootRequire('api/legacy/reportback/reportbackModel')(conn),
-    reportbackSubmissions: rootRequire('api/models/ReportbackSubmission')(conn),
-    signups: rootRequire('api/models/Signup')(conn),
-    users: rootRequire('api/models/User')(conn),
-  };
-
-  return app.locals.db;
 }
 
 /**
@@ -185,19 +215,25 @@ module.exports.load = function () {
     return false;
   }
 
+  app.locals.db = {};
+  const uri = process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder';
+  const connDb = mongoose.createConnection(uri);
+  loadDb(connDb);
+
+  // TODO: We don't want to start listening in Express until loadCampaigns() has finished
+  // and loaded app.locals.campaigns, app.locals.keywords.
+  connDb.on('connected', () => {
+    loadCampaigns();
+    logger.info(`locals.load connDb readyState:${connDb.readyState}`);
+  });
+
   app.locals.controllers = {};
-  const promises = [];
-
-  const configUri = process.env.CONFIG_DB_URI || 'mongodb://localhost/config';
-  promises.push(loadConfigs(configUri));
-
-  const dbUri = process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder';
-  promises.push(loadDb(dbUri));
-
-  promises.push(loadCampaigns(process.env.CAMPAIGNBOT_CAMPAIGNS));
-  promises.push(loadCampaignBotControllers());
-  promises.push(loadDonorsChooseBotController(process.env.DONORSCHOOSEBOT_ID));
-  promises.push(loadSlothBotController());
+  const promises = [
+    loadCampaignBotController(),
+    loadDonorsChooseBotController(),
+    loadLegacyConfigs(),
+    loadSlothBotController(),
+  ];
 
   return Promise.all(promises);
 };
