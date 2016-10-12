@@ -12,15 +12,12 @@ const mobilecommons = rootRequire('lib/mobilecommons');
  * Handle chatbot conversations.
  */
 router.post('/', (req, res) => {
-  // TODO: Handle when Northstar ID doesn't exist.
   /* eslint-disable no-param-reassign */
-  req.user_id = req.body.profile_northstar_id;
-  req.user_mobile = req.body.phone;
   req.incoming_message = req.body.args;
   req.incoming_image_url = req.body.mms_image_url;
   /* eslint-enable no-param-reassign */
 
-  logger.debug(`user:${req.user_id} msg:${req.incoming_message} img:${req.incoming_image_url}`);
+  logger.debug(`msg:${req.incoming_message} img:${req.incoming_image_url}`);
 
   const botType = req.query.bot_type;
 
@@ -60,7 +57,7 @@ router.post('/', (req, res) => {
   let campaignId;
   if (req.body.keyword) {
     req.keyword = req.body.keyword.toLowerCase(); // eslint-disable-line no-param-reassign
-    logger.debug(`user:${req.user_id} keyword:${req.keyword}`);
+    logger.debug(`keyword:${req.keyword}`);
 
     campaignId = app.locals.keywords[req.keyword];
     campaign = app.locals.campaigns[campaignId];
@@ -79,7 +76,7 @@ router.post('/', (req, res) => {
   }
 
   return controller
-    .loadUser(req.user_id)
+    .loadUser(req)
     .then(user => {
       controller.debug(req, `loaded user:${user._id}`);
 

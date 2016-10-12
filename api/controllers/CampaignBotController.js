@@ -208,10 +208,13 @@ class CampaignBotController {
 
   /**
    * Gets User from DS API if exists for given id, else creates new User.
+   * @param {type} id - property to search by
    * @param {string} id - DS User ID
    * @return {object} - User model
    */
-  getUser(id) {
+  getUser(type, id) {
+    logger.debug(`getUser type:${type} id:${id}`);
+
     return app.locals.clients.northstar.Users
       .get('id', id)
       .then(user => {
@@ -219,8 +222,10 @@ class CampaignBotController {
           // TODO: Edge case where User ID saved to Mobile Commons profile
           // is not found in DS API GET request.
         }
+        logger.debug(user);
+        
         const data = {
-          _id: id,
+          _id: user.id,
           mobile: user.mobile,
           first_name: user.firstName,
           email: user.email,
@@ -320,16 +325,27 @@ class CampaignBotController {
    * @param {string} id - DS User ID (Northstar)
    * @return {object}
    */
-  loadUser(id) {
+  loadUser(req) {
+    this.debug(req, 'loadUser');
+
+    req.user_id = req.body.profile_northstar_id;
+    if (!req.user_id) {
+      return this.getUser('mobile', req.body.phone);
+    }
+
     return app.locals.db.users
-      .findById(id)
+      .findById(req.user_id)
       .exec()
       .then(user => {
-        if (user) {
-          return user;
+        if (!user) {
+          this.debug(req, `no doc for user:${req.user_id}`);
+
+          return this.getUser('id', req.user_id);
         }
 
-        return this.getUser(id);
+        this.debug(req, `found doc for user:${req.user_id}`);
+
+        return user;
       });
   }
 
