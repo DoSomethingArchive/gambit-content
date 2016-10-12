@@ -63,11 +63,11 @@ class CampaignBotController {
         } else if (property === 'photo') {
           return this.renderResponseMessage(req, 'ask_caption');
         } else if (property === 'caption') {
-          // TODO: Only ask for why when first reportback.
-          return this.renderResponseMessage(req, 'ask_why_participated');
+          if (!this.hasReportedBack(req)) {
+            return this.renderResponseMessage(req, 'ask_why_participated');
+          }
         }
 
-        // If we made it this far, we're done collecting and ready to submit.
         return this.postReportback(req);
       });
   }
@@ -91,7 +91,9 @@ class CampaignBotController {
     if (!submission.caption) {
       return this.collectReportbackProperty(req, 'caption', ask);
     }
-    if (!submission.why_participated) {
+
+    const askWhy = !this.hasReportedBack(req) && !submission.why_participated;
+    if (askWhy) {
       return this.collectReportbackProperty(req, 'why_participated', ask);
     }
 
@@ -232,6 +234,17 @@ class CampaignBotController {
             new: true,
           });
       });
+  }
+
+  /**
+   * Returns whether current user has submitted a Reportback for the current campaign.
+   * @param {object} req
+   * @return {bool}
+   */
+  hasReportedBack(req) {
+    const result = req.signup && req.signup.total_quantity_submitted;
+
+    return result;
   }
 
   /**
