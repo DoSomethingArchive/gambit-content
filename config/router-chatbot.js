@@ -15,6 +15,7 @@ router.post('/', (req, res) => {
   /* eslint-disable no-param-reassign */
   req.incoming_message = req.body.args;
   req.incoming_image_url = req.body.mms_image_url;
+  req.mobilecommons_profile_update = {};
   /* eslint-enable no-param-reassign */
 
   logger.debug(`msg:${req.incoming_message} img:${req.incoming_image_url}`);
@@ -80,7 +81,12 @@ router.post('/', (req, res) => {
     .then(user => {
       controller.debug(req, `loaded user:${user._id}`);
 
-      req.user = user; // eslint-disable-line no-param-reassign
+      /* eslint-disable no-param-reassign */
+      req.user = user;
+      if (!req.body.profile_northstar_id) {
+        req.mobilecommons_profile_update.northstar_id = user.id;
+      }
+      /* eslint-enable no-param-reassign */
 
       if (!campaign) {
         campaignId = user.current_campaign;
@@ -160,17 +166,29 @@ router.post('/', (req, res) => {
       return controller.renderResponseMessage(req, 'invalid_cmd_signedup');
     })
     .then(msg => {
+      const gambitResponse = { message: msg };
       controller.debug(req, `sendMessage:${msg}`);
       controller.setCurrentCampaign(req.user, req.campaign_id);
 
-      let oip = process.env.MOBILECOMMONS_OIP_CHATBOT;
-      if (controller.isCommand(req, 'member_support')) {
-        oip = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
+      if (process.env.MOBILECOMMONS_DISABLED) {
+        logger.warn('MOBILECOMMONS_DISABLED');
+
+        return res.send(gambitResponse);
       }
 
-      mobilecommons.chatbot(req.body, oip, msg);
+      let responseOIP = process.env.MOBILECOMMONS_OIP_CHATBOT;
+      if (controller.isCommand(req, 'member_support')) {
+        responseOIP = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
+      }
 
-      return res.send({ message: msg });
+      // The responseOIP Conversation is set to display gambit_chatbot_response value via Liquid.
+      // @see https://github.com/DoSomething/gambit/wiki/Chatbot#mobile-commons
+      /* eslint-disable no-param-reassign */
+      req.mobilecommons_profile_update.gambit_chatbot_response = msg;
+      /* eslint-enable no-param-reassign */
+      mobilecommons.profile_update(req.body.phone, responseOIP, req.mobilecommons_profile_update);
+
+      return res.send(gambitResponse);
     })
     .catch(err => {
       controller.error(req, res, err);

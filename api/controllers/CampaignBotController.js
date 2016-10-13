@@ -237,20 +237,21 @@ class CampaignBotController {
    * @param {object} req
    * @return {object} - User model
    */
-  getUser(req) {
-    logger.debug(`getUser id:${req.user_id}`);
+  getUser(type, id) {
+    logger.debug(`getUser type:${type} id:${id}`);
 
     return app.locals.clients.northstar.Users
-      .get('id', req.user_id)
-      .then(user => {
-        this.debug(req, 'northstar.Users.get success');
+      .get(type, id)
+      .then((user) => {
+        logger.debug('northstar.Users.get success');
 
         return this.cacheUser(user);
       })
-      .catch(() => {
-        this.debug(req, `northstar.Users.get could not find user:${req.user_id}`);
+      .catch((err) => {
+        logger.error(err);
+        logger.debug(`could not getUser type:${type} id:${id}`);
 
-        return this.postUser(req);
+        return null;
       });
   }
 
@@ -342,6 +343,7 @@ class CampaignBotController {
     this.debug(req, 'loadUser');
 
     req.user_id = req.body.profile_northstar_id; // eslint-disable-line no-param-reassign
+    // If request already contains a User ID, load from cache.
     if (req.user_id) {
       return app.locals.db.users
         .findById(req.user_id)
@@ -350,7 +352,7 @@ class CampaignBotController {
           if (!user) {
             this.debug(req, `no doc for user:${req.user_id}`);
 
-            return this.getUser(req);
+            return this.getUser('id', req.user_id);
           }
           this.debug(req, `found doc for user:${req.user_id}`);
 
@@ -364,7 +366,16 @@ class CampaignBotController {
       return null;
     }
 
-    return this.postUser(req);
+    // Check if Northstar User exists for mobile number.
+    return this
+      .getUser('mobile', req.body.phone)
+      .then((user) => {
+        if (!user) {
+          return this.postUser(req);
+        }
+
+        return user;
+      });
   }
 
   /**
@@ -506,7 +517,9 @@ class CampaignBotController {
     return app.locals.clients.northstar.Users
       .create(data)
       .then((user) => {
-        req.user_id = user.id; // eslint-disable-line no-param-reassign
+        /* eslint-disable no-param-reassign */
+        req.user_id = user.id;
+        /* eslint-enable no-param-reassign */
         this.debug(req, `created user:${user.id}`);
 
         return this.cacheUser(user);
