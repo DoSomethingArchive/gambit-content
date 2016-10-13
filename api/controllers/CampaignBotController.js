@@ -399,6 +399,9 @@ class CampaignBotController {
     if (req.body.profile_id) {
       data.mobilecommons_id = req.body.profile_id;
     }
+    if (req.body.profile_postal_code) {
+      data.addr_zip = req.body.profile_postal_code;
+    }
 
     return data;
   }
@@ -495,8 +498,7 @@ class CampaignBotController {
 
     const data = this.parseMobilecommonsProfile(req);
     data.source = DS_API_POST_SOURCE;
-    // TODO: Encrypt me.
-    data.password = 'password';
+    data.password = helpers.generatePassword(data.mobile);
     if (!data.email) {
       data.email = `${data.mobile}@${process.env.DS_API_DEFAULT_USER_EMAIL}`;
     }
