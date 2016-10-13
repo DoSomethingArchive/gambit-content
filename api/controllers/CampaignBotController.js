@@ -6,6 +6,8 @@
 const logger = rootRequire('lib/logger');
 const helpers = rootRequire('lib/helpers');
 
+const DS_API_POST_SOURCE = process.env.DS_API_POST_SOURCE || 'sms-mobilecommons';
+
 /**
  * CampaignBotController.
  */
@@ -18,6 +20,29 @@ class CampaignBotController {
    */
   constructor(campaignBot) {
     this.bot = campaignBot;
+  }
+
+  /**
+   * Upserts model for given Northstar User.
+   */
+  cacheUser(northstarUser) {
+    logger.debug(`cacheUser id:${northstarUser.id}`);
+
+    const data = {
+      _id: northstarUser.id,
+      mobile: northstarUser.mobile,
+      first_name: northstarUser.firstName,
+      email: northstarUser.email,
+      phoenix_id: northstarUser.drupalID,
+      role: northstarUser.role,
+      campaigns: {},
+    };
+
+    return app.locals.db.users
+      .findOneAndUpdate({ _id: data._id }, data, {
+        upsert: true,
+        new: true,
+      });
   }
 
   /**
@@ -143,6 +168,7 @@ class CampaignBotController {
    * Wrapper function for logger.error(error)
    */
   error(req, err) {
+    logger.error(err);
     logger.error(`${this.loggerPrefix(req)} ${err}:${err.stack}`);
   }
 
@@ -207,37 +233,24 @@ class CampaignBotController {
   }
 
   /**
-   * Gets User from DS API if exists for given id, else creates new User.
-   * @param {type} id - property to search by
-   * @param {string} id - DS User ID
+   * Gets User from DS API if exists for given req.user_id, else creates new User.
+   * @param {object} req
    * @return {object} - User model
    */
-  getUser(type, id) {
-    logger.debug(`getUser type:${type} id:${id}`);
+  getUser(req) {
+    logger.debug(`getUser id:${req.user_id}`);
 
     return app.locals.clients.northstar.Users
-      .get('id', id)
+      .get('id', req.user_id)
       .then(user => {
-        if (!user) {
-          // TODO: Edge case where User ID saved to Mobile Commons profile
-          // is not found in DS API GET request.
-        }
-        logger.debug(user);
-        
-        const data = {
-          _id: user.id,
-          mobile: user.mobile,
-          first_name: user.firstName,
-          email: user.email,
-          phoenix_id: user.drupalID,
-          role: user.role,
-          campaigns: {},
-        };
-        return app.locals.db.users
-          .findOneAndUpdate({ _id: data._id }, data, {
-            upsert: true,
-            new: true,
-          });
+        this.debug(req, 'northstar.Users.get success');
+
+        return this.cacheUser(user);
+      })
+      .catch(() => {
+        this.debug(req, `northstar.Users.get could not find user:${req.user_id}`);
+
+        return this.postUser(req);
       });
   }
 
@@ -328,25 +341,30 @@ class CampaignBotController {
   loadUser(req) {
     this.debug(req, 'loadUser');
 
-    req.user_id = req.body.profile_northstar_id;
-    if (!req.user_id) {
-      return this.getUser('mobile', req.body.phone);
+    req.user_id = req.body.profile_northstar_id; // eslint-disable-line no-param-reassign
+    if (req.user_id) {
+      return app.locals.db.users
+        .findById(req.user_id)
+        .exec()
+        .then(user => {
+          if (!user) {
+            this.debug(req, `no doc for user:${req.user_id}`);
+
+            return this.getUser(req);
+          }
+          this.debug(req, `found doc for user:${req.user_id}`);
+
+          return user;
+        });
     }
 
-    return app.locals.db.users
-      .findById(req.user_id)
-      .exec()
-      .then(user => {
-        if (!user) {
-          this.debug(req, `no doc for user:${req.user_id}`);
+    if (!req.body.phone) {
+      logger.error('Undefined req.body.phone');
 
-          return this.getUser('id', req.user_id);
-        }
+      return null;
+    }
 
-        this.debug(req, `found doc for user:${req.user_id}`);
-
-        return user;
-      });
+    return this.postUser(req);
   }
 
   /**
@@ -366,6 +384,26 @@ class CampaignBotController {
   }
 
   /**
+   * Parse incoming request for User data to post to DS API.
+   */
+  parseMobilecommonsProfile(req) {
+    const data = {
+      mobile: req.body.phone,
+    };
+    if (req.body.profile_email) {
+      data.email = req.body.profile_email;
+    }
+    if (req.body.profile_first_name) {
+      data.first_name = req.body.profile_first_name;
+    }
+    if (req.body.profile_id) {
+      data.mobilecommons_id = req.body.profile_id;
+    }
+
+    return data;
+  }
+
+  /**
    * Posts ReportbackSubmission to DS API for incoming Express req
    * @param {object} req - Express request
    * @return {Promise}
@@ -375,7 +413,7 @@ class CampaignBotController {
 
     const submission = req.signup.draft_reportback_submission;
     const data = {
-      source: process.env.DS_API_POST_SOURCE,
+      source: DS_API_POST_SOURCE,
       uid: req.user.phoenix_id,
       quantity: submission.quantity,
       caption: submission.caption,
@@ -436,11 +474,10 @@ class CampaignBotController {
    */
   postSignup(req) {
     this.debug(req, 'postSignup');
-    const source = `${process.env.DS_API_POST_SOURCE}-${req.keyword}`;
 
     return app.locals.clients.phoenix.Campaigns
       .signup(req.campaign_id, {
-        source,
+        source: DS_API_POST_SOURCE,
         uid: req.user.phoenix_id,
       })
       .then((signupId) => ({
@@ -448,6 +485,33 @@ class CampaignBotController {
         campaign: req.campaign_id,
         user: req.user_id,
       }));
+  }
+
+  /**
+   * Posts new User to DS API.
+   */
+  postUser(req) {
+    this.debug(req, 'postUser');
+
+    const data = this.parseMobilecommonsProfile(req);
+    data.source = DS_API_POST_SOURCE;
+    // TODO: Encrypt me.
+    data.password = 'password';
+    if (!data.email) {
+      data.email = `${data.mobile}@${process.env.DS_API_DEFAULT_USER_EMAIL}`;
+    }
+
+    return app.locals.clients.northstar.Users
+      .create(data)
+      .then((user) => {
+        req.user_id = user.id; // eslint-disable-line no-param-reassign
+        this.debug(req, `created user:${user.id}`);
+
+        return this.cacheUser(user);
+      })
+      .catch((err) => {
+        logger.error(err);
+      });
   }
 
   /**
