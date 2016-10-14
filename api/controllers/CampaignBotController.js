@@ -173,15 +173,17 @@ class CampaignBotController {
 
   /**
    * Gets Signup from DS API if exists for given user, else creates new Signup.
-   * @param {object} req - Express request
+   * @param {object} req - Express request, expects loaded user and campaign.
    * @return {object} - Signup model
    */
   getCurrentSignup(req) {
     this.debug(req, 'getCurrentSignup');
     let signup;
 
+    const campaignID = Number(req.campaign._id);
+
     return app.locals.clients.northstar.Signups.index({
-      campaigns: req.campaign_id,
+      campaigns: req.campaign._id,
       user: req.user._id,
     })
     .then(signups => {
@@ -199,7 +201,7 @@ class CampaignBotController {
       const data = {
         _id: Number(currentSignup.id),
         user: req.user._id,
-        campaign: req.campaign_id,
+        campaign: campaignID,
         keyword: req.keyword,
         created_at: currentSignup.createdAt,
         // Delete existing draft submission in case we're updating existing
@@ -220,15 +222,18 @@ class CampaignBotController {
 
       signup = signupDoc;
       /* eslint-disable no-param-reassign */
-      req.user.campaigns[req.campaign_id] = signupDoc._id;
+      req.user.campaigns[req.campaign._id] = signupDoc._id;
       /* eslint-enable no-param-reassign */
       req.user.markModified('campaigns');
       return req.user.save();
     })
     .then(() => {
-      this.debug(req, `updated user.campaigns[${req.campaign_id}]:${signup._id.toString()}`);
+      this.debug(req, `updated user.campaigns[${req.campaign._id}]:${signup._id.toString()}`);
 
       return signup;
+    })
+    .catch((err) => {
+      console.log(err);
     });
   }
 
@@ -272,6 +277,8 @@ class CampaignBotController {
    * @return {bool}
    */
   isCommand(req, type) {
+    this.debug(req, `isCommand:${type}`);
+
     if (!type) {
       return false;
     }
@@ -387,7 +394,12 @@ class CampaignBotController {
     if (req.user) {
       userID = req.user._id;
     }
-    return `campaignBot.campaign:${req.campaign_id} user:${userID}`;
+    let campaignID = null;
+    if (req.campaign) {
+      campaignID = req.campaign._id;
+    }
+
+    return `campaignBot.campaign:${campaignID} user:${userID}`;
   }
 
   /**
@@ -441,7 +453,7 @@ class CampaignBotController {
     }
 
     return app.locals.clients.phoenix.Campaigns
-      .reportback(req.campaign_id, data)
+      .reportback(req.campaign._id, data)
       .then(rbId => this.postReportbackSuccess(req, rbId))
       .catch((err) => {
         submission.failed_at = Date.now();
@@ -493,7 +505,7 @@ class CampaignBotController {
     this.debug(req, 'postSignup');
 
     return app.locals.clients.phoenix.Campaigns
-      .signup(req.campaign_id, {
+      .signup(req.campaign._id, {
         source: DS_API_POST_SOURCE,
         uid: req.user.phoenix_id,
       })
@@ -506,6 +518,8 @@ class CampaignBotController {
 
   /**
    * Posts new User to DS API.
+   * @param {object} req - Express request
+   * @return {object} - User model
    */
   postUser(req) {
     this.debug(req, 'postUser');
