@@ -168,7 +168,6 @@ class CampaignBotController {
    * Wrapper function for logger.error(error)
    */
   error(req, err) {
-    logger.error(err);
     logger.error(`${this.loggerPrefix(req)} ${err}:${err.stack}`);
   }
 
@@ -247,8 +246,7 @@ class CampaignBotController {
 
         return this.cacheUser(user);
       })
-      .catch((err) => {
-        logger.error(err);
+      .catch(() => {
         logger.debug(`could not getUser type:${type} id:${id}`);
 
         return null;
@@ -522,9 +520,6 @@ class CampaignBotController {
         this.debug(req, `created user:${user.id}`);
 
         return this.cacheUser(user);
-      })
-      .catch((err) => {
-        logger.error(err);
       });
   }
 
