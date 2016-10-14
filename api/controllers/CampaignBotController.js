@@ -6,6 +6,8 @@
 const logger = rootRequire('lib/logger');
 const helpers = rootRequire('lib/helpers');
 
+const DS_API_POST_SOURCE = process.env.DS_API_POST_SOURCE || 'sms-mobilecommons';
+
 /**
  * CampaignBotController.
  */
@@ -18,6 +20,29 @@ class CampaignBotController {
    */
   constructor(campaignBot) {
     this.bot = campaignBot;
+  }
+
+  /**
+   * Upserts model for given Northstar User.
+   */
+  cacheUser(northstarUser) {
+    logger.debug(`cacheUser id:${northstarUser.id}`);
+
+    const data = {
+      _id: northstarUser.id,
+      mobile: northstarUser.mobile,
+      first_name: northstarUser.firstName,
+      email: northstarUser.email,
+      phoenix_id: northstarUser.drupalID,
+      role: northstarUser.role,
+      campaigns: {},
+    };
+
+    return app.locals.db.users
+      .findOneAndUpdate({ _id: data._id }, data, {
+        upsert: true,
+        new: true,
+      });
   }
 
   /**
@@ -115,15 +140,15 @@ class CampaignBotController {
     return app.locals.db.reportbackSubmissions
       .create({
         campaign: req.campaign_id,
-        user: req.user_id,
+        user: req.user._id,
       })
       .then(reportbackSubmission => {
-        this.debug(req, `created :${reportbackSubmission._id.toString()}`);
+        this.debug(req, `created reportbackSubmission:${reportbackSubmission._id.toString()}`);
+        /* eslint-disable no-param-reassign */
+        req.signup.draft_reportback_submission = reportbackSubmission._id;
+        /* eslint-enable no-param-reassign */
 
-        const currentSignup = req.signup;
-        currentSignup.draft_reportback_submission = reportbackSubmission._id;
-
-        return currentSignup.save();
+        return req.signup.save();
       })
       .then(() => {
         this.debug(req, `updated signup:${req.signup._id.toString()}`);
@@ -157,7 +182,7 @@ class CampaignBotController {
 
     return app.locals.clients.northstar.Signups.index({
       campaigns: req.campaign_id,
-      user: req.user_id,
+      user: req.user._id,
     })
     .then(signups => {
       logger.verbose(signups);
@@ -173,7 +198,7 @@ class CampaignBotController {
 
       const data = {
         _id: Number(currentSignup.id),
-        user: req.user_id,
+        user: req.user._id,
         campaign: req.campaign_id,
         keyword: req.keyword,
         created_at: currentSignup.createdAt,
@@ -194,10 +219,11 @@ class CampaignBotController {
       this.debug(req, `created signupDoc:${signupDoc._id.toString()}`);
 
       signup = signupDoc;
-      const currentUser = req.user;
-      currentUser.campaigns[req.campaign_id] = signupDoc._id;
-      currentUser.markModified('campaigns');
-      return currentUser.save();
+      /* eslint-disable no-param-reassign */
+      req.user.campaigns[req.campaign_id] = signupDoc._id;
+      /* eslint-enable no-param-reassign */
+      req.user.markModified('campaigns');
+      return req.user.save();
     })
     .then(() => {
       this.debug(req, `updated user.campaigns[${req.campaign_id}]:${signup._id.toString()}`);
@@ -207,32 +233,24 @@ class CampaignBotController {
   }
 
   /**
-   * Gets User from DS API if exists for given id, else creates new User.
-   * @param {string} id - DS User ID
+   * Gets User from DS API if exists for given type/id, else creates new User.
+   * @param {object} req
    * @return {object} - User model
    */
-  getUser(id) {
+  getUser(type, id) {
+    logger.debug(`getUser type:${type} id:${id}`);
+
     return app.locals.clients.northstar.Users
-      .get('id', id)
-      .then(user => {
-        if (!user) {
-          // TODO: Edge case where User ID saved to Mobile Commons profile
-          // is not found in DS API GET request.
-        }
-        const data = {
-          _id: id,
-          mobile: user.mobile,
-          first_name: user.firstName,
-          email: user.email,
-          phoenix_id: user.drupalID,
-          role: user.role,
-          campaigns: {},
-        };
-        return app.locals.db.users
-          .findOneAndUpdate({ _id: data._id }, data, {
-            upsert: true,
-            new: true,
-          });
+      .get(type, id)
+      .then((user) => {
+        logger.debug('northstar.Users.get success');
+
+        return this.cacheUser(user);
+      })
+      .catch(() => {
+        logger.debug(`could not getUser type:${type} id:${id}`);
+
+        return null;
       });
   }
 
@@ -320,16 +338,42 @@ class CampaignBotController {
    * @param {string} id - DS User ID (Northstar)
    * @return {object}
    */
-  loadUser(id) {
-    return app.locals.db.users
-      .findById(id)
-      .exec()
-      .then(user => {
-        if (user) {
+  loadUser(req) {
+    this.debug(req, 'loadUser');
+
+    const userID = req.body.profile_northstar_id;
+    // If request already contains a User ID, load from cache.
+    if (userID) {
+      return app.locals.db.users
+        .findById(userID)
+        .exec()
+        .then(user => {
+          if (!user) {
+            this.debug(req, `no doc for user:${userID}`);
+
+            return this.getUser('id', userID);
+          }
+          this.debug(req, `found doc for user:${userID}`);
+
           return user;
+        });
+    }
+
+    if (!req.body.phone) {
+      logger.error('Undefined req.body.phone');
+
+      return null;
+    }
+
+    // Check if Northstar User exists for mobile number.
+    return this
+      .getUser('mobile', req.body.phone)
+      .then((user) => {
+        if (!user) {
+          return this.postUser(req);
         }
 
-        return this.getUser(id);
+        return user;
       });
   }
 
@@ -339,7 +383,11 @@ class CampaignBotController {
    * @return {string}
    */
   loggerPrefix(req) {
-    return `campaignBot.campaign:${req.campaign_id} user:${req.user_id}`;
+    let userID = null;
+    if (req.user) {
+      userID = req.user._id;
+    }
+    return `campaignBot.campaign:${req.campaign_id} user:${userID}`;
   }
 
   /**
@@ -347,6 +395,29 @@ class CampaignBotController {
    */
   parseCommand(req) {
     return helpers.getFirstWordUppercase(req.incoming_message);
+  }
+
+  /**
+   * Parse incoming request for User data to post to DS API.
+   */
+  parseMobilecommonsProfile(req) {
+    const data = {
+      mobile: req.body.phone,
+    };
+    if (req.body.profile_email) {
+      data.email = req.body.profile_email;
+    }
+    if (req.body.profile_first_name) {
+      data.first_name = req.body.profile_first_name;
+    }
+    if (req.body.profile_id) {
+      data.mobilecommons_id = req.body.profile_id;
+    }
+    if (req.body.profile_postal_code) {
+      data.addr_zip = req.body.profile_postal_code;
+    }
+
+    return data;
   }
 
   /**
@@ -359,7 +430,7 @@ class CampaignBotController {
 
     const submission = req.signup.draft_reportback_submission;
     const data = {
-      source: process.env.DS_API_POST_SOURCE,
+      source: DS_API_POST_SOURCE,
       uid: req.user.phoenix_id,
       quantity: submission.quantity,
       caption: submission.caption,
@@ -420,18 +491,40 @@ class CampaignBotController {
    */
   postSignup(req) {
     this.debug(req, 'postSignup');
-    const source = `${process.env.DS_API_POST_SOURCE}-${req.keyword}`;
 
     return app.locals.clients.phoenix.Campaigns
       .signup(req.campaign_id, {
-        source,
+        source: DS_API_POST_SOURCE,
         uid: req.user.phoenix_id,
       })
-      .then((signupId) => ({
-        _id: signupId,
+      .then((signupID) => ({
+        _id: signupID,
         campaign: req.campaign_id,
-        user: req.user_id,
+        user: req.user._id,
       }));
+  }
+
+  /**
+   * Posts new User to DS API.
+   */
+  postUser(req) {
+    this.debug(req, 'postUser');
+
+    const data = this.parseMobilecommonsProfile(req);
+    data.source = DS_API_POST_SOURCE;
+    data.password = helpers.generatePassword(data.mobile);
+    if (!data.email) {
+      const defaultEmail = process.env.DS_API_DEFAULT_USER_EMAIL || 'mobile.import';
+      data.email = `${data.mobile}@${defaultEmail}`;
+    }
+
+    return app.locals.clients.northstar.Users
+      .create(data)
+      .then((user) => {
+        this.debug(req, `created user:${user.id}`);
+
+        return this.cacheUser(user);
+      });
   }
 
   /**
