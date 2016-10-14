@@ -233,7 +233,7 @@ class CampaignBotController {
   }
 
   /**
-   * Gets User from DS API if exists for given req.user_id, else creates new User.
+   * Gets User from DS API if exists for given type/id, else creates new User.
    * @param {object} req
    * @return {object} - User model
    */
@@ -511,7 +511,8 @@ class CampaignBotController {
     data.source = DS_API_POST_SOURCE;
     data.password = helpers.generatePassword(data.mobile);
     if (!data.email) {
-      data.email = `${data.mobile}@${process.env.DS_API_DEFAULT_USER_EMAIL}`;
+      const defaultEmail = process.env.DS_API_DEFAULT_USER_EMAIL || 'mobile.import';
+      data.email = `${data.mobile}@${defaultEmail}`;
     }
 
     return app.locals.clients.northstar.Users
