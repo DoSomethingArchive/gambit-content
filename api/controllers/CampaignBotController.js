@@ -517,9 +517,7 @@ class CampaignBotController {
     return app.locals.clients.northstar.Users
       .create(data)
       .then((user) => {
-        /* eslint-disable no-param-reassign */
-        req.user_id = user.id;
-        /* eslint-enable no-param-reassign */
+        req.user_id = user.id; // eslint-disable-line no-param-reassign
         this.debug(req, `created user:${user.id}`);
 
         return this.cacheUser(user);

@@ -9,13 +9,51 @@ const logger = rootRequire('lib/logger');
 const mobilecommons = rootRequire('lib/mobilecommons');
 
 /**
+ * Formats our Express return response.
+ * @param {string} msg - Chatbot message responding back to user
+ */
+function gambitResponse(msg) {
+  return { message: msg };
+}
+
+/**
+ * Sends SMS response back to the incoming Mobile Commons request.
+ * @param {object} req - Incoming Express request, with loaded req.user model
+ * @param {string} msg - Chatbot message responding back to user
+ */
+function sendSmsResponse(req, msg) {
+  if (process.env.MOBILECOMMONS_DISABLED) {
+    logger.warn('MOBILECOMMONS_DISABLED');
+
+    return;
+  }
+
+  let mobilecommonsOIP = process.env.MOBILECOMMONS_OIP_CHATBOT;
+  if (req.cmd_member_support) {
+    mobilecommonsOIP = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
+  }
+  // The Mobile Commons OIP we post to below needs to render our user's gambit_chatbot_response
+  // Custom Field in their Mobile Commons Profile, which we update via profile_update POST below.
+  // @see https://github.com/DoSomething/gambit/wiki/Chatbot#mobile-commons
+  const data = {
+    gambit_chatbot_response: msg,
+  };
+  // If no Northstar ID is currently saved on user's Mobile Commons profile:
+  if (!req.body.profile_northstar_id) {
+    // Save it to avoid future Northstar GET users requests in subsequent incoming Gambit requests.
+    data.northstar_id = req.user._id;
+  }
+
+  mobilecommons.profile_update(req.user.mobile, mobilecommonsOIP, data);
+}
+
+/**
  * Handle chatbot conversations.
  */
 router.post('/', (req, res) => {
   /* eslint-disable no-param-reassign */
   req.incoming_message = req.body.args;
   req.incoming_image_url = req.body.mms_image_url;
-  req.mobilecommons_profile_update = {};
   /* eslint-enable no-param-reassign */
 
   logger.debug(`msg:${req.incoming_message} img:${req.incoming_image_url}`);
@@ -28,7 +66,7 @@ router.post('/', (req, res) => {
     const msgTxt = app.locals.controllers.slothBot.renderResponseMessage(req);
     mobilecommons.chatbot(req.body, slothbotOptinPath, msgTxt);
 
-    return res.send({ message: msgTxt });
+    return res.send(gambitResponse(msgTxt));
   }
 
   if (botType === 'donorschoose' || botType === 'donorschoosebot') {
@@ -81,12 +119,7 @@ router.post('/', (req, res) => {
     .then(user => {
       controller.debug(req, `loaded user:${user._id}`);
 
-      /* eslint-disable no-param-reassign */
-      req.user = user;
-      if (!req.body.profile_northstar_id) {
-        req.mobilecommons_profile_update.northstar_id = user.id;
-      }
-      /* eslint-enable no-param-reassign */
+      req.user = user; // eslint-disable-line no-param-reassign
 
       if (!campaign) {
         campaignId = user.current_campaign;
@@ -98,16 +131,16 @@ router.post('/', (req, res) => {
         }
 
         campaign = app.locals.campaigns[campaignId];
-
-        // TODO: Edge-case where the user's saved campaign has been closed since signup created
-
         if (!campaign) {
-          // TODO: Same - send to start menu to select campaign if not found for campaignId.
+          // TODO: Send to non-existent start menu to select campaign if saved campaign not found.
           logger.error(`app.locals.campaigns[${campaignId}] undefined`);
         }
       }
-      req.campaign_id = campaignId; // eslint-disable-line no-param-reassign
-      req.campaign = campaign; // eslint-disable-line no-param-reassign
+
+      /* eslint-disable no-param-reassign */
+      req.campaign_id = campaignId;
+      req.campaign = campaign;
+      /* eslint-enable no-param-reassign */
 
       if (controller.isCommand(req, 'clear_cache')) {
         req.user.campaigns = {}; // eslint-disable-line no-param-reassign
@@ -134,6 +167,7 @@ router.post('/', (req, res) => {
       }
 
       if (controller.isCommand(req, 'member_support')) {
+        req.cmd_member_support = true; // eslint-disable-line no-param-reassign
         return controller.renderResponseMessage(req, 'member_support');
       }
 
@@ -166,29 +200,11 @@ router.post('/', (req, res) => {
       return controller.renderResponseMessage(req, 'invalid_cmd_signedup');
     })
     .then(msg => {
-      const gambitResponse = { message: msg };
       controller.debug(req, `sendMessage:${msg}`);
       controller.setCurrentCampaign(req.user, req.campaign_id);
+      sendSmsResponse(req, msg);
 
-      if (process.env.MOBILECOMMONS_DISABLED) {
-        logger.warn('MOBILECOMMONS_DISABLED');
-
-        return res.send(gambitResponse);
-      }
-
-      let responseOIP = process.env.MOBILECOMMONS_OIP_CHATBOT;
-      if (controller.isCommand(req, 'member_support')) {
-        responseOIP = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
-      }
-
-      // The responseOIP Conversation is set to display gambit_chatbot_response value via Liquid.
-      // @see https://github.com/DoSomething/gambit/wiki/Chatbot#mobile-commons
-      /* eslint-disable no-param-reassign */
-      req.mobilecommons_profile_update.gambit_chatbot_response = msg;
-      /* eslint-enable no-param-reassign */
-      mobilecommons.profile_update(req.body.phone, responseOIP, req.mobilecommons_profile_update);
-
-      return res.send(gambitResponse);
+      return res.send(gambitResponse(msg));
     })
     .catch(err => {
       controller.error(req, res, err);
