@@ -140,15 +140,15 @@ class CampaignBotController {
     return app.locals.db.reportbackSubmissions
       .create({
         campaign: req.campaign_id,
-        user: req.user_id,
+        user: req.user._id,
       })
       .then(reportbackSubmission => {
-        this.debug(req, `created :${reportbackSubmission._id.toString()}`);
+        this.debug(req, `created reportbackSubmission:${reportbackSubmission._id.toString()}`);
+        /* eslint-disable no-param-reassign */
+        req.signup.draft_reportback_submission = reportbackSubmission._id;
+        /* eslint-enable no-param-reassign */
 
-        const currentSignup = req.signup;
-        currentSignup.draft_reportback_submission = reportbackSubmission._id;
-
-        return currentSignup.save();
+        return req.signup.save();
       })
       .then(() => {
         this.debug(req, `updated signup:${req.signup._id.toString()}`);
@@ -182,7 +182,7 @@ class CampaignBotController {
 
     return app.locals.clients.northstar.Signups.index({
       campaigns: req.campaign_id,
-      user: req.user_id,
+      user: req.user._id,
     })
     .then(signups => {
       logger.verbose(signups);
@@ -198,7 +198,7 @@ class CampaignBotController {
 
       const data = {
         _id: Number(currentSignup.id),
-        user: req.user_id,
+        user: req.user._id,
         campaign: req.campaign_id,
         keyword: req.keyword,
         created_at: currentSignup.createdAt,
@@ -219,10 +219,11 @@ class CampaignBotController {
       this.debug(req, `created signupDoc:${signupDoc._id.toString()}`);
 
       signup = signupDoc;
-      const currentUser = req.user;
-      currentUser.campaigns[req.campaign_id] = signupDoc._id;
-      currentUser.markModified('campaigns');
-      return currentUser.save();
+      /* eslint-disable no-param-reassign */
+      req.user.campaigns[req.campaign_id] = signupDoc._id;
+      /* eslint-enable no-param-reassign */
+      req.user.markModified('campaigns');
+      return req.user.save();
     })
     .then(() => {
       this.debug(req, `updated user.campaigns[${req.campaign_id}]:${signup._id.toString()}`);
@@ -340,19 +341,19 @@ class CampaignBotController {
   loadUser(req) {
     this.debug(req, 'loadUser');
 
-    req.user_id = req.body.profile_northstar_id; // eslint-disable-line no-param-reassign
+    const userID = req.body.profile_northstar_id;
     // If request already contains a User ID, load from cache.
-    if (req.user_id) {
+    if (userID) {
       return app.locals.db.users
-        .findById(req.user_id)
+        .findById(userID)
         .exec()
         .then(user => {
           if (!user) {
-            this.debug(req, `no doc for user:${req.user_id}`);
+            this.debug(req, `no doc for user:${userID}`);
 
-            return this.getUser('id', req.user_id);
+            return this.getUser('id', userID);
           }
-          this.debug(req, `found doc for user:${req.user_id}`);
+          this.debug(req, `found doc for user:${userID}`);
 
           return user;
         });
@@ -382,7 +383,11 @@ class CampaignBotController {
    * @return {string}
    */
   loggerPrefix(req) {
-    return `campaignBot.campaign:${req.campaign_id} user:${req.user_id}`;
+    let userID = null;
+    if (req.user) {
+      userID = req.user._id;
+    }
+    return `campaignBot.campaign:${req.campaign_id} user:${userID}`;
   }
 
   /**
@@ -492,10 +497,10 @@ class CampaignBotController {
         source: DS_API_POST_SOURCE,
         uid: req.user.phoenix_id,
       })
-      .then((signupId) => ({
-        _id: signupId,
+      .then((signupID) => ({
+        _id: signupID,
         campaign: req.campaign_id,
-        user: req.user_id,
+        user: req.user._id,
       }));
   }
 
@@ -516,7 +521,6 @@ class CampaignBotController {
     return app.locals.clients.northstar.Users
       .create(data)
       .then((user) => {
-        req.user_id = user.id; // eslint-disable-line no-param-reassign
         this.debug(req, `created user:${user.id}`);
 
         return this.cacheUser(user);

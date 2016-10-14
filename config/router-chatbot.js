@@ -127,7 +127,7 @@ router.post('/', (req, res) => {
 
         if (!campaignId) {
           // TODO: Send to non-existent start menu to select a campaign.
-          logger.error(`user:${req.user_id} current_campaign undefined`);
+          logger.error(`user:${req.user._id} current_campaign undefined`);
         }
 
         campaign = app.locals.campaigns[campaignId];
