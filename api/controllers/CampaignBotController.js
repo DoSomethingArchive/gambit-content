@@ -168,8 +168,8 @@ class CampaignBotController {
 
     return app.locals.db.reportbackSubmissions
       .create({
-        campaign: scope.campaign._id,
-        user: scope.user._id,
+        campaign: req.campaign._id,
+        user: req.user._id,
       })
       .then(reportbackSubmission => {
         this.debug(scope, `created reportbackSubmission:${reportbackSubmission._id.toString()}`);
@@ -481,25 +481,26 @@ class CampaignBotController {
 
     const dateSubmitted = Date.now();
     const submission = req.signup.draft_reportback_submission;
-
     submission.submitted_at = dateSubmitted;
+
     return submission
       .save()
       .then(() => {
         this.debug(req, `updated submission:${submission._id.toString()}`);
 
-        /* eslint-disable no-param-reassign */
-        req.signup.reportback = rbid;
-        req.signup.total_quantity_submitted = req.signup.draft_reportback_submission.quantity;
-        req.signup.updated_at = dateSubmitted;
-        req.signup.draft_reportback_submission = undefined;
-        /* eslint-enable no-param-reassign */
-        req.signup.save();
+        const signup = req.signup;
+        signup.reportback = rbid;
+        signup.total_quantity_submitted = req.signup.draft_reportback_submission.quantity;
+        signup.updated_at = dateSubmitted;
+        signup.draft_reportback_submission = undefined;
+        return signup.save();
       })
-      .then(() => {
-        this.debug(req, `updated signup:${req.signup._id}`);
+      .then((signupDoc) => {
+        const scope = req;
+        scope.signup = signupDoc;
+        this.debug(req, `updated signup:${scope.signup._id}`);
 
-        return this.renderResponseMessage(req, 'menu_completed');
+        return this.renderResponseMessage(scope, 'menu_completed');
       });
   }
 
