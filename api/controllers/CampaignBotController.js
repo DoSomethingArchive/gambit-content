@@ -23,6 +23,34 @@ class CampaignBotController {
   }
 
   /**
+   * Upserts model for given Northstar Signup.
+   */
+  cacheSignup(northstarSignup) {
+    logger.debug(`cacheSignup id:${northstarSignup.id}`);
+
+    const data = {
+      _id: Number(northstarSignup.id),
+      user: northstarSignup.user,
+      campaign: northstarSignup.campaign,
+      // Delete existing draft submission in case we're updating existing
+      // Signup model (e.g. if we're handling a clear cache command)
+      draft_reportback_submission: null,
+    };
+    // Only set if this was called from postSignup(req).
+    if (northstarSignup.keyword) {
+      data.keyword = northstarSignup.keyword;
+    }
+    if (northstarSignup.reportback) {
+      data.reportback = Number(northstarSignup.reportback.id);
+      data.total_quantity_submitted = northstarSignup.reportback.quantity;
+    }
+
+    return app.locals.db.signups
+      .findOneAndUpdate({ _id: northstarSignup.id }, data, { upsert: true, new: true })
+      .exec();
+  }
+
+  /**
    * Upserts model for given Northstar User.
    */
   cacheUser(northstarUser) {
@@ -136,24 +164,23 @@ class CampaignBotController {
    */
   createReportbackSubmission(req) {
     this.debug(req, 'createReportbackSubmission');
+    const scope = req;
 
     return app.locals.db.reportbackSubmissions
       .create({
-        campaign: req.campaign_id,
-        user: req.user._id,
+        campaign: scope.campaign._id,
+        user: scope.user._id,
       })
       .then(reportbackSubmission => {
-        this.debug(req, `created reportbackSubmission:${reportbackSubmission._id.toString()}`);
-        /* eslint-disable no-param-reassign */
-        req.signup.draft_reportback_submission = reportbackSubmission._id;
-        /* eslint-enable no-param-reassign */
+        this.debug(scope, `created reportbackSubmission:${reportbackSubmission._id.toString()}`);
+        scope.signup.draft_reportback_submission = reportbackSubmission._id;
 
-        return req.signup.save();
+        return scope.signup.save();
       })
       .then(() => {
-        this.debug(req, `updated signup:${req.signup._id.toString()}`);
+        this.debug(scope, `updated signup:${scope.signup._id.toString()}`);
 
-        return this.collectReportbackProperty(req, 'quantity', true);
+        return this.collectReportbackProperty(scope, 'quantity', true);
       });
   }
 
@@ -180,15 +207,12 @@ class CampaignBotController {
     this.debug(req, 'getCurrentSignup');
     let signup;
 
-    const campaignID = Number(req.campaign._id);
-
     return app.locals.clients.northstar.Signups.index({
       campaigns: req.campaign._id,
       user: req.user._id,
     })
     .then(signups => {
       logger.verbose(signups);
-
       if (!signups.length) {
         return this.postSignup(req);
       }
@@ -198,42 +222,25 @@ class CampaignBotController {
       const currentSignup = signups[0];
       this.debug(req, `currentSignup.id:${currentSignup.id}`);
 
-      const data = {
-        _id: Number(currentSignup.id),
-        user: req.user._id,
-        campaign: campaignID,
-        keyword: req.keyword,
-        created_at: currentSignup.createdAt,
-        // Delete existing draft submission in case we're updating existing
-        // Signup model (e.g. if we're handling a clear cache command)
-        draft_reportback_submission: null,
-      };
-      if (currentSignup.reportback) {
-        data.reportback = Number(currentSignup.reportback.id);
-        data.total_quantity_submitted = currentSignup.reportback.quantity;
-      }
-
-      return app.locals.db.signups
-        .findOneAndUpdate({ _id: data._id }, data, { upsert: true, new: true })
-        .exec();
+      return this.cacheSignup(currentSignup);
     })
     .then((signupDoc) => {
-      this.debug(req, `created signupDoc:${signupDoc._id.toString()}`);
-
+      if (!signupDoc) {
+        logger.error('signupDoc undefined');
+      }
       signup = signupDoc;
-      /* eslint-disable no-param-reassign */
-      req.user.campaigns[req.campaign._id] = signupDoc._id;
-      /* eslint-enable no-param-reassign */
-      req.user.markModified('campaigns');
-      return req.user.save();
+      this.debug(req, `created signupDoc:${signup._id}`);
+
+      const user = req.user;
+      user.campaigns[req.campaign._id] = signupDoc._id;
+      user.markModified('campaigns');
+
+      return user.save();
     })
     .then(() => {
-      this.debug(req, `updated user.campaigns[${req.campaign._id}]:${signup._id.toString()}`);
+      this.debug(req, `updated user.campaigns[${req.campaign._id}]:${signup._id}`);
 
       return signup;
-    })
-    .catch((err) => {
-      console.log(err);
     });
   }
 
@@ -498,8 +505,8 @@ class CampaignBotController {
 
   /**
    * Posts Signup to DS API and returns cached signup.
-   * @param {object} req - Express request
-   * @return {object} - Constructed Signup response object from new Signup id
+   * @param {object} req - Express request - expects loaded user and campaign
+   * @return {object} - Signup model
    */
   postSignup(req) {
     this.debug(req, 'postSignup');
@@ -509,11 +516,17 @@ class CampaignBotController {
         source: DS_API_POST_SOURCE,
         uid: req.user.phoenix_id,
       })
-      .then((signupID) => ({
-        _id: signupID,
-        campaign: req.campaign_id,
-        user: req.user._id,
-      }));
+      .then((signupID) => {
+        // Phoenix returns just a numeric Signup ID, but our req contains user and campaign data.
+        const signupObject = {
+          id: signupID,
+          campaign: req.campaign._id,
+          user: req.user._id,
+          keyword: req.keyword,
+        };
+
+        return this.cacheSignup(signupObject);
+      });
   }
 
   /**

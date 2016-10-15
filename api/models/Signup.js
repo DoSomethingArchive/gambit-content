@@ -11,7 +11,6 @@ const schema = new mongoose.Schema({
   user: { type: String, index: true },
   campaign: { type: Number, index: true },
   keyword: String,
-  created_at: Date,
   draft_reportback_submission: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'reportback_submissions',

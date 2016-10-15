@@ -150,7 +150,6 @@ router.post('/', (req, res) => {
 
       const signupID = user.campaigns[campaignID];
       if (signupID) {
-
         return controller.loadCurrentSignup(scope, signupID);
       }
 
