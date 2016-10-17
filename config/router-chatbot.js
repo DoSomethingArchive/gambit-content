@@ -146,7 +146,7 @@ router.post('/', (req, res) => {
         return controller.getCurrentSignup(scope);
       }
 
-      // TODO: Sanity check. If we sitll haven't loaded scope.campaign here, push to the menu.
+      // TODO: Sanity check. If we still haven't loaded scope.campaign here, push to the menu.
 
       const signupID = user.campaigns[campaignID];
       if (signupID) {

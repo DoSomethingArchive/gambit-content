@@ -490,7 +490,7 @@ class CampaignBotController {
 
         const signup = req.signup;
         signup.reportback = rbid;
-        signup.total_quantity_submitted = req.signup.draft_reportback_submission.quantity;
+        signup.total_quantity_submitted = Number(req.signup.draft_reportback_submission.quantity);
         signup.updated_at = dateSubmitted;
         signup.draft_reportback_submission = undefined;
         return signup.save();
