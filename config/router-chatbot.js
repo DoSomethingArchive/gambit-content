@@ -51,12 +51,12 @@ function sendSmsResponse(req, msg) {
  * Handle chatbot conversations.
  */
 router.post('/', (req, res) => {
-  /* eslint-disable no-param-reassign */
-  req.incoming_message = req.body.args;
-  req.incoming_image_url = req.body.mms_image_url;
-  /* eslint-enable no-param-reassign */
+  const scope = req;
 
-  logger.debug(`msg:${req.incoming_message} img:${req.incoming_image_url}`);
+  scope.incoming_message = req.body.args;
+  scope.incoming_image_url = req.body.mms_image_url;
+
+  logger.debug(`msg:${scope.incoming_message} img:${scope.incoming_image_url}`);
 
   const botType = req.query.bot_type;
 
@@ -92,16 +92,16 @@ router.post('/', (req, res) => {
     return res.sendStatus(500);
   }
 
-  let campaign;
-  let campaignId;
-  if (req.body.keyword) {
-    req.keyword = req.body.keyword.toLowerCase(); // eslint-disable-line no-param-reassign
-    logger.debug(`keyword:${req.keyword}`);
+  let campaignID;
 
-    campaignId = app.locals.keywords[req.keyword];
-    campaign = app.locals.campaigns[campaignId];
-    if (!campaign) {
-      logger.error(`app.locals.campaigns[${campaignId}] undefined`);
+  if (req.body.keyword) {
+    scope.keyword = req.body.keyword.toLowerCase();
+    logger.debug(`keyword:${scope.keyword}`);
+
+    campaignID = app.locals.keywords[req.keyword];
+    scope.campaign = app.locals.campaigns[campaignID];
+    if (!scope.campaign) {
+      logger.error(`app.locals.campaigns[${campaignID}] undefined`);
 
       return res.sendStatus(500);
     }
@@ -117,97 +117,95 @@ router.post('/', (req, res) => {
   return controller
     .loadUser(req)
     .then(user => {
-      controller.debug(req, `loaded user:${user._id}`);
+      logger.debug(`loaded user:${user._id}`);
 
-      req.user = user; // eslint-disable-line no-param-reassign
+      scope.user = user;
 
-      if (!campaign) {
-        campaignId = user.current_campaign;
-        controller.debug(req, `set campaignId:${campaignId}`);
+      // If we haven't loaded a campaign from an incoming keyword yet:
+      if (!scope.campaign) {
+        // Load user's current campaign (set from our last response).
+        campaignID = user.current_campaign;
+        controller.debug(scope, `current_campaign:${campaignID}`);
 
-        if (!campaignId) {
+        if (!campaignID) {
           // TODO: Send to non-existent start menu to select a campaign.
-          logger.error(`user:${req.user._id} current_campaign undefined`);
+          logger.error(`user:${user._id} current_campaign undefined`);
         }
 
-        campaign = app.locals.campaigns[campaignId];
-        if (!campaign) {
+        scope.campaign = app.locals.campaigns[campaignID];
+        if (!scope.campaign) {
           // TODO: Send to non-existent start menu to select campaign if saved campaign not found.
-          logger.error(`app.locals.campaigns[${campaignId}] undefined`);
+          logger.error(`app.locals.campaigns[${campaignID}] undefined`);
         }
       }
-
-      /* eslint-disable no-param-reassign */
-      req.campaign_id = campaignId;
-      req.campaign = campaign;
-      /* eslint-enable no-param-reassign */
 
       if (controller.isCommand(req, 'clear_cache')) {
-        req.user.campaigns = {}; // eslint-disable-line no-param-reassign
-        logger.info(`${controller.loggerPrefix(req)} cleared user.campaigns`);
+        scope.user.campaigns = {};
+        logger.info(`${controller.loggerPrefix(scope)} cleared user.campaigns`);
 
-        return controller.getCurrentSignup(req);
+        return controller.getCurrentSignup(scope);
       }
 
-      const signupId = user.campaigns[req.campaign_id];
+      // TODO: Sanity check. If we still haven't loaded scope.campaign here, push to the menu.
 
-      if (signupId) {
-        return controller.loadCurrentSignup(req, signupId);
+      const signupID = user.campaigns[campaignID];
+      if (signupID) {
+        return controller.loadCurrentSignup(scope, signupID);
       }
 
-      return controller.getCurrentSignup(req);
+      return controller.getCurrentSignup(scope);
     })
     .then(signup => {
-      controller.debug(req, `loaded signup:${signup._id.toString()}`);
-      req.signup = signup; // eslint-disable-line no-param-reassign
+      controller.debug(scope, `loaded signup:${signup._id.toString()}`);
+      scope.signup = signup;
 
-      if (!signup) {
+      if (!scope.signup) {
         // TODO: Handle this edge-case.
         logger.error('signup undefined');
       }
 
-      if (controller.isCommand(req, 'member_support')) {
-        req.cmd_member_support = true; // eslint-disable-line no-param-reassign
-        return controller.renderResponseMessage(req, 'member_support');
+      if (controller.isCommand(scope, 'member_support')) {
+        scope.cmd_member_support = true;
+        return controller.renderResponseMessage(scope, 'member_support');
       }
 
-      if (campaign.status === 'closed') {
-        controller.debug(req, 'campaign closed');
+      if (scope.campaign.status === 'closed') {
+        controller.debug(scope, 'campaign closed');
 
-        return controller.renderResponseMessage(req, 'campaign_closed');
+        return controller.renderResponseMessage(scope, 'campaign_closed');
       }
 
-      if (signup.draft_reportback_submission) {
-        return controller.continueReportbackSubmission(req);
+      if (scope.signup.draft_reportback_submission) {
+        return controller.continueReportbackSubmission(scope);
       }
 
-      if (controller.isCommand(req, 'reportback')) {
-        return controller.createReportbackSubmission(req);
+      if (controller.isCommand(scope, 'reportback')) {
+        return controller.createReportbackSubmission(scope);
       }
 
-      if (signup.total_quantity_submitted) {
-        if (req.keyword) {
-          return controller.renderResponseMessage(req, 'menu_completed');
+      if (scope.signup.total_quantity_submitted) {
+        if (scope.keyword) {
+          return controller.renderResponseMessage(scope, 'menu_completed');
         }
         // If we're this far, member didn't text back Reportback or Member Support commands.
-        return controller.renderResponseMessage(req, 'invalid_cmd_completed');
+        return controller.renderResponseMessage(scope, 'invalid_cmd_completed');
       }
 
-      if (req.keyword) {
-        return controller.renderResponseMessage(req, 'menu_signedup');
+      if (scope.keyword) {
+        return controller.renderResponseMessage(scope, 'menu_signedup');
       }
 
-      return controller.renderResponseMessage(req, 'invalid_cmd_signedup');
+      return controller.renderResponseMessage(scope, 'invalid_cmd_signedup');
     })
     .then(msg => {
-      controller.debug(req, `sendMessage:${msg}`);
-      controller.setCurrentCampaign(req.user, req.campaign_id);
-      sendSmsResponse(req, msg);
+      controller.debug(scope, `sendMessage:${msg}`);
+      controller.setCurrentCampaign(scope.user, scope.campaign._id);
+      sendSmsResponse(scope, msg);
 
       return res.send(gambitResponse(msg));
     })
     .catch(err => {
-      controller.error(req, res, err);
+      controller.error(req, scope, err);
 
       return res.sendStatus(500);
     });
