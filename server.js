@@ -48,13 +48,24 @@ require('./config/router');
  */
 app.locals.clients = {};
 
-app.locals.clients.northstar = loader.getNorthstarClient();
+const NorthstarClient = require('@dosomething/northstar-js');
+app.locals.clients.northstar =  new NorthstarClient({
+  baseURI: process.env.DS_NORTHSTAR_API_BASEURI,
+  apiKey: process.env.DS_NORTHSTAR_API_KEY,
+});
+
 if (!app.locals.clients.northstar) {
   logger.error('app.locals.clients.northstar undefined');
   process.exit(1);
 }
 
-app.locals.clients.phoenix = loader.getPhoenixClient();
+const PhoenixClient = require('@dosomething/phoenix-js');
+app.locals.clients.phoenix = new PhoenixClient({
+  baseURI: process.env.DS_PHOENIX_API_BASEURI,
+  username: process.env.DS_PHOENIX_API_USERNAME,
+  password: process.env.DS_PHOENIX_API_PASSWORD,
+});
+
 if (!app.locals.clients.phoenix) {
   logger.error('app.locals.clients.phoenix undefined');
   process.exit(1);

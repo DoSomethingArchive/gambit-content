@@ -107,31 +107,6 @@ module.exports.getModels = function (conn) {
 };
 
 /**
- * Returns authenticated Northstar JS client.
- */
-module.exports.getNorthstarClient = function () {
-  const NorthstarClient = require('@dosomething/northstar-js');
-
-  return new NorthstarClient({
-    baseURI: process.env.DS_NORTHSTAR_API_BASEURI,
-    apiKey: process.env.DS_NORTHSTAR_API_KEY,
-  });
-};
-
-/**
- * Returns authenticated Phoenix JS client.
- */
-module.exports.getPhoenixClient = function () {
-  const PhoenixClient = require('@dosomething/phoenix-js');
-
-  return new PhoenixClient({
-    baseURI: process.env.DS_PHOENIX_API_BASEURI,
-    username: process.env.DS_PHOENIX_API_USERNAME,
-    password: process.env.DS_PHOENIX_API_PASSWORD,
-  });
-};
-
-/**
  * Gets given bot from API, or loads from cache if error.
  */
 module.exports.loadBot = function (endpoint, id) {
