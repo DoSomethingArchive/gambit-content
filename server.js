@@ -67,6 +67,23 @@ app.locals.db = loader.getModels(conn);
 conn.on('connected', () => {
   logger.info(`conn.readyState:${conn.readyState}`);
 
+  /**
+   * Load campaigns.
+   */
+  app.locals.campaigns = {};
+  app.locals.keywords = {};
+
+  const campaigns = app.locals.clients.phoenix.Campaigns
+    .index({ ids: process.env.CAMPAIGNBOT_CAMPAIGNS || [2299] })
+    .then((phoenixCampaigns) => {
+      logger.debug(`app.locals.clients.phoenix found ${phoenixCampaigns.length} campaigns`);
+
+      return phoenixCampaigns.map(phoenixCampaign => loader.loadCampaign(phoenixCampaign));
+    });
+
+  /**
+   * Load controllers.
+   */
   app.locals.controllers = {};
 
   const campaignBot = loader.loadBot('campaignbots', process.env.CAMPAIGNBOT_ID || 41)
@@ -87,14 +104,10 @@ conn.on('connected', () => {
       return app.locals.controllers.donorsChooseBot;
     });
 
-  const promises = [
-    campaignBot,
-    donorsChooseBot,
-    loader.loadCampaigns(),
-    loader.loadLegacyConfigs(),
-  ];
-
-  Promise.all(promises).then(() => {
+  /**
+   * Start server.
+   */
+  Promise.all([campaigns, campaignBot, donorsChooseBot, loader.loadLegacyConfigs()]).then(() => {
     const port = process.env.PORT || 5000;
 
     return app.listen(port, () => {

@@ -67,27 +67,6 @@ function getBot(endpoint, id) {
 }
 
 /**
- * Caches given phoenixCampaign and loads into app.locals.campaigns, adds to app.locals.keywords.
- */
-function loadCampaign(phoenixCampaign) {
-  const campaignID = phoenixCampaign.id;
-  logger.debug(`loadCampaign:${campaignID}`);
-
-  return cacheCampaign(phoenixCampaign)
-    .then((campaignDoc) => {
-      if (!campaignDoc) {
-        return null;
-      }
-
-      app.locals.campaigns[campaignID] = campaignDoc;
-      logger.debug(`loaded app.locals.campaigns[${campaignID}]`);
-
-      return loadKeywordsForCampaign(campaignDoc);
-    })
-    .catch(err => logger.error(err));
-}
-
-/**
  * Loads given campaignModel's keywords into app.locals.keywords hash map.
  */
 function loadKeywordsForCampaign(campaignModel) {
@@ -171,23 +150,25 @@ module.exports.loadBot = function (endpoint, id) {
 };
 
 /**
- * Loads app.locals.campaigns from DS API.
+ * Caches given phoenixCampaign and loads into app.locals.campaigns, adds to app.locals.keywords.
  */
-module.exports.loadCampaigns = function () {
-  app.locals.campaigns = {};
-  app.locals.keywords = {};
+module.exports.loadCampaign = function (phoenixCampaign) {
+  const campaignID = phoenixCampaign.id;
+  logger.debug(`loadCampaign:${campaignID}`);
 
-  const campaignIds = process.env.CAMPAIGNBOT_CAMPAIGNS;
-  logger.debug(`loadCampaigns:${campaignIds}`);
+  return cacheCampaign(phoenixCampaign)
+    .then((campaignDoc) => {
+      if (!campaignDoc) {
+        return null;
+      }
 
-  return app.locals.clients.phoenix.Campaigns
-    .index({ ids: campaignIds })
-    .then((campaigns) => {
-      logger.debug(`loadCampaigns found ${campaigns.length} campaigns`);
+      app.locals.campaigns[campaignID] = campaignDoc;
+      logger.debug(`loaded app.locals.campaigns[${campaignID}]`);
 
-      return campaigns.map(campaign => loadCampaign(campaign));
-    });
-};
+      return loadKeywordsForCampaign(campaignDoc);
+    })
+    .catch(err => logger.error(err));
+}
 
 /**
  * Legacy config models.
