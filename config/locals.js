@@ -7,6 +7,21 @@ const logger = rootRequire('lib/logger');
 const gambitJunior = rootRequire('lib/gambit-junior');
 
 /**
+ * Returns a bot model for given endpoint and data.
+ */
+function cacheBot(endpoint, gambitJuniorBot) {
+  logger.debug(`locals.cacheBot endpoint:${endpoint} id:${gambitJuniorBot.id}`);
+
+  const data = gambitJuniorBot;
+  data._id = Number(gambitJuniorBot.id);
+  data.id = undefined;
+
+  return app.locals.db[endpoint]
+    .findOneAndUpdate({ _id: data._id }, data, { upsert: true, new: true })
+    .exec();
+}
+
+/**
  * Find model for given bot type/id.
  */
 function findBot(endpoint, id) {
@@ -25,15 +40,7 @@ function getBot(endpoint, id) {
 
   return gambitJunior
     .get(endpoint, id)
-    .then((bot) => {
-      const data = bot;
-      data._id = bot.id;
-      data.id = undefined;
-
-      return app.locals.db[endpoint]
-        .findOneAndUpdate({ _id: id }, data, { upsert: true, new: true })
-        .exec();
-    })
+    .then(bot => cacheBot(endpoint, bot))
     .catch((err) => {
       logger.error(err);
 
