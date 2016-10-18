@@ -43,6 +43,9 @@ const loader = rootRequire('config/locals');
 
 require('./config/router');
 
+/**
+ * Load clients.
+ */
 app.locals.clients = {};
 
 app.locals.clients.northstar = loader.getNorthstarClient();
@@ -57,6 +60,9 @@ if (!app.locals.clients.phoenix) {
   process.exit(1);
 }
 
+/**
+ * Load models.
+ */
 const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 
@@ -105,9 +111,17 @@ conn.on('connected', () => {
     });
 
   /**
+   * Load legacy configs.
+   */
+  app.locals.configs = {};
+  const uriConfig = process.env.CONFIG_DB_URI || 'mongodb://localhost/config';
+  const connConfig = mongoose.createConnection(uriConfig);
+  const legacyConfigs = loader.loadLegacyConfigs(connConfig);
+
+  /**
    * Start server.
    */
-  Promise.all([campaigns, campaignBot, donorsChooseBot, loader.loadLegacyConfigs()]).then(() => {
+  Promise.all([campaigns, campaignBot, donorsChooseBot, legacyConfigs]).then(() => {
     const port = process.env.PORT || 5000;
 
     return app.listen(port, () => {

@@ -203,10 +203,7 @@ function getLegacyModelMap(configName, model) {
 /**
  * Loads map of config content as app.locals.configs object instead using Mongoose find queries.
  */
-module.exports.loadLegacyConfigs = function () {
-  const uri = process.env.CONFIG_DB_URI || 'mongodb://localhost/config';
-  const conn = mongoose.createConnection(uri);
-
+module.exports.loadLegacyConfigs = function (conn) {
   /* eslint-disable max-len*/
   const models = {
     legacyReportbacks: rootRequire('api/legacy/reportback/reportbackConfigModel')(conn),
@@ -220,8 +217,6 @@ module.exports.loadLegacyConfigs = function () {
     const promise = getLegacyModelMap(modelName, models[modelName]);
     promises.push(promise);
   });
-
-  app.locals.configs = {};
 
   return Promise.all(promises).then((modelMaps) => {
     modelMaps.forEach((modelMap) => {
