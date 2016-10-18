@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Models a CampaignBot.
+ * Models a Gambit Jr. CampaignBot.
  */
 const mongoose = require('mongoose');
 

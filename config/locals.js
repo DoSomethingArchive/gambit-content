@@ -7,30 +7,30 @@ const logger = rootRequire('lib/logger');
 const gambitJunior = rootRequire('lib/gambit-junior');
 
 /**
- * Find CampaignBot model for given CampaignBot id.
+ * Find model for given bot type/id.
  */
-function findCampaignBot(id) {
-  logger.debug(`findCampaignBot:${id}`);
+function findBot(endpoint, id) {
+  logger.debug(`locals.findBot endpoint:${endpoint} id:${id}`);
 
-  return app.locals.db.campaignBots
+  return app.locals.db[endpoint]
     .findById(id)
     .exec();
 }
 
 /**
- * Gets given CampaignBot id from Gambit Jr API and returns cached CampaignBot model.
+ * Gets given bot type/id from Gambit Jr API and returns cached model.
  */
-function getCampaignBot(id) {
-  logger.debug(`getCampaignBot:${id}`);
+function getBot(endpoint, id) {
+  logger.debug(`locals.getBot endpoint:${endpoint} id:${id}`);
 
   return gambitJunior
-    .get('campaignbots', id)
-    .then((campaignBot) => {
-      const data = campaignBot;
-      data._id = campaignBot.id;
+    .get(endpoint, id)
+    .then((bot) => {
+      const data = bot;
+      data._id = bot.id;
       data.id = undefined;
 
-      return app.locals.db.campaignBots
+      return app.locals.db[endpoint]
         .findOneAndUpdate({ _id: id }, data, { upsert: true, new: true })
         .exec();
     })
@@ -109,12 +109,15 @@ function loadCampaign(campaign) {
 }
 
 /**
- * Loads app.locals.db object of Mongoose models.
+ * Returns object of Mongoose api models for given connection, indexed by collection name.
  */
 module.exports.getModels = function (conn) {
   const models = {};
+  // Indexed by collection name:
   models.campaigns = rootRequire('api/models/Campaign')(conn);
-  models.campaignBots = rootRequire('api/models/CampaignBot')(conn);
+  models.campaignbots = rootRequire('api/models/CampaignBot')(conn);
+  models.donorschoosebots = rootRequire('api/models/DonorsChooseBot')(conn);
+  // TODO: Change keys to machine names.
   models.donorsChooseDonations = rootRequire('api/models/DonorsChooseDonation')(conn);
   models.legacyReportbacks = rootRequire('api/legacy/reportback/reportbackModel')(conn);
   models.reportbackSubmissions = rootRequire('api/models/ReportbackSubmission')(conn);
@@ -155,13 +158,14 @@ module.exports.getPhoenixClient = function () {
 module.exports.loadCampaignBotController = function () {
   logger.debug('loadCampaignBotController');
   const CAMPAIGNBOT_ID = process.env.CAMPAIGNBOT_ID || 41;
+  const endpoint = 'campaignbots';
 
-  return getCampaignBot(CAMPAIGNBOT_ID)
+  return getBot('campaignbots', CAMPAIGNBOT_ID)
     .then((campaignBot) => {
       if (!campaignBot) {
         logger.debug('getCampaignBot undefined');
 
-        return findCampaignBot(CAMPAIGNBOT_ID);
+        return findBot(CAMPAIGNBOT_ID);
       }
 
       return campaignBot;
