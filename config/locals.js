@@ -6,6 +6,27 @@ mongoose.Promise = global.Promise;
 const logger = rootRequire('lib/logger');
 const gambitJunior = rootRequire('lib/gambit-junior');
 
+const CAMPAIGNBOT_ID = process.env.CAMPAIGNBOT_ID || 41;
+
+/**
+ * Gets given CampaignBot id from Gambit Jr API and returns cached CampaignBot model.
+ */
+function getCampaignBot(id) {
+  logger.debug(`getCampaignBot:${id}`);
+
+  return gambitJunior
+    .get('campaignbots', id)
+    .then((campaignBot) => {
+      const data = campaignBot;
+      data._id = campaignBot.id;
+      data.id = undefined;
+
+      return app.locals.db.campaignBots
+        .findOneAndUpdate({ _id: id }, data, { upsert: true, new: true })
+        .exec();
+    });
+}
+
 /**
  * Returns object with a data property, containing a hash map of models for modelName by model id.
  */
@@ -77,18 +98,20 @@ function loadCampaign(campaign) {
  * Loads app.locals.controllers.campaignBot from Gambit Jr API.
  */
 function loadCampaignBotController() {
-  const campaignBotId = process.env.CAMPAIGNBOT_ID;
+  logger.debug('loadCampaignBotController');
 
-  return gambitJunior
-    .get('campaignbots', campaignBotId)
+  return getCampaignBot(CAMPAIGNBOT_ID)
     .then((campaignBot) => {
-      logger.debug(`gambitJunior found campaignBot:${campaignBotId}`);
+      logger.debug(`getCampaignBot cached campaignBot:${CAMPAIGNBOT_ID}`);
 
       const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
       app.locals.controllers.campaignBot = new CampaignBotController(campaignBot);
       logger.info('loaded app.locals.controllers.campaignBot');
 
       return app.locals.controllers.campaignBot;
+    })
+    .catch((err) => {
+      logger.error(err);
     });
 }
 
@@ -136,6 +159,7 @@ function loadDonorsChooseBotController() {
  */
 function loadDb(conn) {
   app.locals.db.campaigns = rootRequire('api/models/Campaign')(conn);
+  app.locals.db.campaignBots = rootRequire('api/models/CampaignBot')(conn);
   app.locals.db.donorsChooseDonations = rootRequire('api/models/DonorsChooseDonation')(conn);
   app.locals.db.legacyReportbacks = rootRequire('api/legacy/reportback/reportbackModel')(conn);
   app.locals.db.reportbackSubmissions = rootRequire('api/models/ReportbackSubmission')(conn);
@@ -222,16 +246,16 @@ module.exports.load = function () {
   const connDb = mongoose.createConnection(uri);
   loadDb(connDb);
 
+  app.locals.controllers = {};
   // TODO: We don't want to start listening in Express until loadCampaigns() has finished
   // and loaded app.locals.campaigns, app.locals.keywords.
   connDb.on('connected', () => {
     loadCampaigns();
+    loadCampaignBotController();
     logger.info(`locals.load connDb readyState:${connDb.readyState}`);
   });
 
-  app.locals.controllers = {};
   const promises = [
-    loadCampaignBotController(),
     loadDonorsChooseBotController(),
     loadLegacyConfigs(),
     loadSlothBotController(),
