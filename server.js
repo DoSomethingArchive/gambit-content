@@ -68,18 +68,29 @@ conn.on('connected', () => {
   logger.info(`conn.readyState:${conn.readyState}`);
 
   app.locals.controllers = {};
-  const campaignBot = loader.loadBot('campaignbots',  process.env.CAMPAIGNBOT_ID || 41)
-    .then((campaignBot) => {
-      const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
-      app.locals.controllers.campaignBot = new CampaignBotController(campaignBot);
 
-      return app.locals.controllers.campaignBot; 
+  const campaignBot = loader.loadBot('campaignbots', process.env.CAMPAIGNBOT_ID || 41)
+    .then((bot) => {
+      const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
+      app.locals.controllers.campaignBot = new CampaignBotController(bot);
+      logger.info('loaded app.locals.controllers.campaignBot');
+
+      return app.locals.controllers.campaignBot;
+    });
+
+  const donorsChooseBot = loader.loadBot('donorschoosebots', process.env.DONORSCHOOSEBOT_ID || 31)
+    .then((bot) => {
+      const DonorsChooseBotController = rootRequire('api/controllers/DonorsChooseBotController');
+      app.locals.controllers.donorsChooseBot = new DonorsChooseBotController(bot);
+      logger.info('loaded app.locals.controllers.donorsChooseBot');
+
+      return app.locals.controllers.donorsChooseBot;
     });
 
   const promises = [
     campaignBot,
+    donorsChooseBot,
     loader.loadCampaigns(),
-    loader.loadDonorsChooseBotController(),
     loader.loadLegacyConfigs(),
   ];
 
@@ -89,5 +100,9 @@ conn.on('connected', () => {
     return app.listen(port, () => {
       logger.info(`Gambit is listening on port:${port} env:${process.env.NODE_ENV}.`);
     });
+  })
+  .catch((err) => {
+    logger.error(err);
+    process.exit(1);
   });
 });

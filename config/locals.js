@@ -41,8 +41,6 @@ function getBot(endpoint, id) {
     });
 }
 
-
-
 /**
  * Upserts given Phoenix campaign to campaign model, saves to app.locals.campaign[campaign.id].
  */
@@ -143,7 +141,7 @@ module.exports.loadBot = function (endpoint, id) {
       }
 
       return bot;
-    })
+    });
 };
 
 /**
@@ -162,27 +160,6 @@ module.exports.loadCampaigns = function () {
       logger.debug(`loadCampaigns found ${campaigns.length} campaigns`);
 
       return campaigns.map(campaign => loadCampaign(campaign));
-    });
-};
-
-/**
- * Loads app.locals.controllers.donorsChooseBot from Gambit Jr API.
- */
-module.exports.loadDonorsChooseBotController = function () {
-  const donorsChooseBotId = process.env.DONORSCHOOSEBOT_ID;
-  logger.debug(`loadDonorsChooseBot:${donorsChooseBotId}`);
-
-  // TODO: Needs to handle connection error (add DonorsChooseBot model, findDonorsChooseBot)
-  return gambitJunior
-    .get('donorschoosebots', donorsChooseBotId)
-    .then((donorsChooseBot) => {
-      logger.debug(`gambitJunior found donorsChooseBot:${donorsChooseBotId}`);
-
-      const DonorsChooseBotController = rootRequire('api/controllers/DonorsChooseBotController');
-      app.locals.controllers.donorsChooseBot = new DonorsChooseBotController(donorsChooseBot);
-      logger.info('loaded app.locals.controllers.donorsChooseBot');
-
-      return app.locals.controllers.donorsChooseBot;
     });
 };
 
