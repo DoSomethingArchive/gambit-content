@@ -44,7 +44,7 @@ function getCampaignBot(id) {
 /**
  * Returns object with a data property, containing a hash map of models for modelName by model id.
  */
-function getModelMap(configName, model) {
+function getLegacyModelMap(configName, model) {
   logger.verbose(`loading ${configName}`);
 
   const modelMap = {};
@@ -109,6 +109,47 @@ function loadCampaign(campaign) {
 }
 
 /**
+ * Loads app.locals.db object of Mongoose models.
+ */
+module.exports.getModels = function (conn) {
+  const models = {};
+  models.campaigns = rootRequire('api/models/Campaign')(conn);
+  models.campaignBots = rootRequire('api/models/CampaignBot')(conn);
+  models.donorsChooseDonations = rootRequire('api/models/DonorsChooseDonation')(conn);
+  models.legacyReportbacks = rootRequire('api/legacy/reportback/reportbackModel')(conn);
+  models.reportbackSubmissions = rootRequire('api/models/ReportbackSubmission')(conn);
+  models.signups = rootRequire('api/models/Signup')(conn);
+  models.users = rootRequire('api/models/User')(conn);
+
+  return models;
+};
+
+/**
+ * Returns authenticated Northstar JS client.
+ */
+module.exports.getNorthstarClient = function () {
+  const NorthstarClient = require('@dosomething/northstar-js');
+
+  return new NorthstarClient({
+    baseURI: process.env.DS_NORTHSTAR_API_BASEURI,
+    apiKey: process.env.DS_NORTHSTAR_API_KEY,
+  });
+};
+
+/**
+ * Returns authenticated Phoenix JS client.
+ */
+module.exports.getPhoenixClient = function () {
+  const PhoenixClient = require('@dosomething/phoenix-js');
+
+  return new PhoenixClient({
+    baseURI: process.env.DS_PHOENIX_API_BASEURI,
+    username: process.env.DS_PHOENIX_API_USERNAME,
+    password: process.env.DS_PHOENIX_API_PASSWORD,
+  });
+};
+
+/**
  * Loads app.locals.controllers.campaignBot from Gambit Jr API.
  */
 module.exports.loadCampaignBotController = function () {
@@ -159,10 +200,11 @@ module.exports.loadCampaigns = function () {
 /**
  * Loads app.locals.controllers.donorsChooseBot from Gambit Jr API.
  */
-function loadDonorsChooseBotController() {
+module.exports.loadDonorsChooseBotController = function () {
   const donorsChooseBotId = process.env.DONORSCHOOSEBOT_ID;
   logger.debug(`loadDonorsChooseBot:${donorsChooseBotId}`);
 
+  // TODO: Needs to handle connection error (add DonorsChooseBot model, findDonorsChooseBot)
   return gambitJunior
     .get('donorschoosebots', donorsChooseBotId)
     .then((donorsChooseBot) => {
@@ -174,29 +216,13 @@ function loadDonorsChooseBotController() {
 
       return app.locals.controllers.donorsChooseBot;
     });
-}
-
-/**
- * Loads app.locals.db object of Mongoose models.
- */
-module.exports.loadDb = function (conn) {
-  app.locals.db = {};
-  app.locals.db.campaigns = rootRequire('api/models/Campaign')(conn);
-  app.locals.db.campaignBots = rootRequire('api/models/CampaignBot')(conn);
-  app.locals.db.donorsChooseDonations = rootRequire('api/models/DonorsChooseDonation')(conn);
-  app.locals.db.legacyReportbacks = rootRequire('api/legacy/reportback/reportbackModel')(conn);
-  app.locals.db.reportbackSubmissions = rootRequire('api/models/ReportbackSubmission')(conn);
-  app.locals.db.signups = rootRequire('api/models/Signup')(conn);
-  app.locals.db.users = rootRequire('api/models/User')(conn);
-
-  return app.locals.db;
 };
 
 /**
  * Loads map of config content as app.locals.configs object instead using Mongoose find queries.
  * To be deprecated upon CampaignBot launch.
  */
-function loadLegacyConfigs() {
+module.exports.loadLegacyConfigs = function () {
   const uri = process.env.CONFIG_DB_URI || 'mongodb://localhost/config';
   const conn = mongoose.createConnection(uri);
 
@@ -210,7 +236,7 @@ function loadLegacyConfigs() {
 
   const promises = [];
   Object.keys(models).forEach((modelName) => {
-    const promise = getModelMap(modelName, models[modelName]);
+    const promise = getLegacyModelMap(modelName, models[modelName]);
     promises.push(promise);
   });
 
@@ -222,41 +248,4 @@ function loadLegacyConfigs() {
       logger.debug(`app.locals.configs loaded ${modelMap.count} ${modelMap.name}`);
     });
   });
-}
-
-/**
- * Returns authenticated Northstar JS client.
- */
-module.exports.getNorthstarClient = function () {
-  const NorthstarClient = require('@dosomething/northstar-js');
-
-  return new NorthstarClient({
-    baseURI: process.env.DS_NORTHSTAR_API_BASEURI,
-    apiKey: process.env.DS_NORTHSTAR_API_KEY,
-  });
-};
-
-/**
- * Returns authenticated Phoenix JS client.
- */
-module.exports.getPhoenixClient = function () {
-  const PhoenixClient = require('@dosomething/phoenix-js');
-
-  return new PhoenixClient({
-    baseURI: process.env.DS_PHOENIX_API_BASEURI,
-    username: process.env.DS_PHOENIX_API_USERNAME,
-    password: process.env.DS_PHOENIX_API_PASSWORD,
-  });
-};
- 
-/**
- * Loads required app.locals properties.
- */
-module.exports.load = function () {
-  const promises = [
-    loadDonorsChooseBotController(),
-    loadLegacyConfigs(),
-  ];
-
-  return Promise.all(promises);
 };

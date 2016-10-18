@@ -59,9 +59,10 @@ if (!app.locals.clients.phoenix) {
 
 const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
+
 const uri = process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder';
 const conn = mongoose.createConnection(uri);
-locals.loadDb(conn);
+app.locals.db = locals.getModels(conn);
 
 conn.on('connected', () => {
   logger.info(`conn.readyState:${conn.readyState}`);
@@ -71,12 +72,15 @@ conn.on('connected', () => {
   const promises = [
     locals.loadCampaigns(),
     locals.loadCampaignBotController(),
+    locals.loadDonorsChooseBotController(),
+    locals.loadLegacyConfigs(),
   ];
 
   Promise.all(promises).then(() => {
     const port = process.env.PORT || 5000;
+
     return app.listen(port, () => {
-      logger.info(`Gambit is listening, port:${port} env:${process.env.NODE_ENV}.`);
+      logger.info(`Gambit is listening on port:${port} env:${process.env.NODE_ENV}.`);
     });
   });
 });
