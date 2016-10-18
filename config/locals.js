@@ -153,23 +153,31 @@ module.exports.getPhoenixClient = function () {
 };
 
 /**
+ * Gets given bot from API, or loads from cache if error.
+ */
+function loadBot(endpoint, id) {
+  logger.debug(`locals.loadBot endpoint:${endpoint} id:${id}`);
+
+  return getBot(endpoint, id)
+    .then((bot) => {
+      if (!bot) {
+        logger.debug('getBot undefined');
+
+        return findBot(endpoint, id);
+      }
+
+      return bot;
+    })
+}
+
+/**
  * Loads app.locals.controllers.campaignBot from Gambit Jr API.
  */
 module.exports.loadCampaignBotController = function () {
   logger.debug('loadCampaignBotController');
   const CAMPAIGNBOT_ID = process.env.CAMPAIGNBOT_ID || 41;
-  const endpoint = 'campaignbots';
 
-  return getBot('campaignbots', CAMPAIGNBOT_ID)
-    .then((campaignBot) => {
-      if (!campaignBot) {
-        logger.debug('getCampaignBot undefined');
-
-        return findBot(CAMPAIGNBOT_ID);
-      }
-
-      return campaignBot;
-    })
+  return loadBot('campaignbots', CAMPAIGNBOT_ID)
     .then((campaignBot) => {
       const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
       app.locals.controllers.campaignBot = new CampaignBotController(campaignBot);
