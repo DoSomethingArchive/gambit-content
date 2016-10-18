@@ -6,7 +6,16 @@ mongoose.Promise = global.Promise;
 const logger = rootRequire('lib/logger');
 const gambitJunior = rootRequire('lib/gambit-junior');
 
-const CAMPAIGNBOT_ID = process.env.CAMPAIGNBOT_ID || 41;
+/**
+ * Find CampaignBot model for given CampaignBot id.
+ */
+function findCampaignBot(id) {
+  logger.debug(`findCampaignBot:${id}`);
+
+  return app.locals.db.campaignBots
+    .findById(id)
+    .exec();
+}
 
 /**
  * Gets given CampaignBot id from Gambit Jr API and returns cached CampaignBot model.
@@ -24,6 +33,11 @@ function getCampaignBot(id) {
       return app.locals.db.campaignBots
         .findOneAndUpdate({ _id: id }, data, { upsert: true, new: true })
         .exec();
+    })
+    .catch((err) => {
+      logger.error(err);
+
+      return null;
     });
 }
 
@@ -97,13 +111,21 @@ function loadCampaign(campaign) {
 /**
  * Loads app.locals.controllers.campaignBot from Gambit Jr API.
  */
-function loadCampaignBotController() {
+module.exports.loadCampaignBotController = function () {
   logger.debug('loadCampaignBotController');
+  const CAMPAIGNBOT_ID = process.env.CAMPAIGNBOT_ID || 41;
 
   return getCampaignBot(CAMPAIGNBOT_ID)
     .then((campaignBot) => {
-      logger.debug(`getCampaignBot cached campaignBot:${CAMPAIGNBOT_ID}`);
+      if (!campaignBot) {
+        logger.debug('getCampaignBot undefined');
 
+        return findCampaignBot(CAMPAIGNBOT_ID);
+      }
+
+      return campaignBot;
+    })
+    .then((campaignBot) => {
       const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
       app.locals.controllers.campaignBot = new CampaignBotController(campaignBot);
       logger.info('loaded app.locals.controllers.campaignBot');
@@ -113,12 +135,12 @@ function loadCampaignBotController() {
     .catch((err) => {
       logger.error(err);
     });
-}
+};
 
 /**
  * Loads app.locals.campaigns from DS API.
  */
-function loadCampaigns() {
+module.exports.loadCampaigns = function () {
   app.locals.campaigns = {};
   app.locals.keywords = {};
 
@@ -132,7 +154,7 @@ function loadCampaigns() {
 
       return campaigns.map(campaign => loadCampaign(campaign));
     });
-}
+};
 
 /**
  * Loads app.locals.controllers.donorsChooseBot from Gambit Jr API.
@@ -157,7 +179,8 @@ function loadDonorsChooseBotController() {
 /**
  * Loads app.locals.db object of Mongoose models.
  */
-function loadDb(conn) {
+module.exports.loadDb = function (conn) {
+  app.locals.db = {};
   app.locals.db.campaigns = rootRequire('api/models/Campaign')(conn);
   app.locals.db.campaignBots = rootRequire('api/models/CampaignBot')(conn);
   app.locals.db.donorsChooseDonations = rootRequire('api/models/DonorsChooseDonation')(conn);
@@ -167,7 +190,7 @@ function loadDb(conn) {
   app.locals.db.users = rootRequire('api/models/User')(conn);
 
   return app.locals.db;
-}
+};
 
 /**
  * Loads map of config content as app.locals.configs object instead using Mongoose find queries.
@@ -202,6 +225,31 @@ function loadLegacyConfigs() {
 }
 
 /**
+ * Returns authenticated Northstar JS client.
+ */
+module.exports.getNorthstarClient = function () {
+  const NorthstarClient = require('@dosomething/northstar-js');
+
+  return new NorthstarClient({
+    baseURI: process.env.DS_NORTHSTAR_API_BASEURI,
+    apiKey: process.env.DS_NORTHSTAR_API_KEY,
+  });
+};
+
+/**
+ * Returns authenticated Phoenix JS client.
+ */
+module.exports.getPhoenixClient = function () {
+  const PhoenixClient = require('@dosomething/phoenix-js');
+
+  return new PhoenixClient({
+    baseURI: process.env.DS_PHOENIX_API_BASEURI,
+    username: process.env.DS_PHOENIX_API_USERNAME,
+    password: process.env.DS_PHOENIX_API_PASSWORD,
+  });
+};
+
+/**
  * Loads app.locals.controllers.slothBot for Season 2.
  */
 function loadSlothBotController() {
@@ -216,45 +264,6 @@ function loadSlothBotController() {
  * Loads required app.locals properties.
  */
 module.exports.load = function () {
-  app.locals.clients = {};
-
-  const NorthstarClient = require('@dosomething/northstar-js');
-  app.locals.clients.northstar = new NorthstarClient({
-    baseURI: process.env.DS_NORTHSTAR_API_BASEURI,
-    apiKey: process.env.DS_NORTHSTAR_API_KEY,
-  });
-  if (!app.locals.clients.northstar) {
-    logger.error('app.locals.clients.northstar undefined');
-
-    return false;
-  }
-
-  const PhoenixClient = require('@dosomething/phoenix-js');
-  app.locals.clients.phoenix = new PhoenixClient({
-    baseURI: process.env.DS_PHOENIX_API_BASEURI,
-    username: process.env.DS_PHOENIX_API_USERNAME,
-    password: process.env.DS_PHOENIX_API_PASSWORD,
-  });
-  if (!app.locals.clients.phoenix) {
-    logger.error('app.locals.clients.phoenix undefined');
-
-    return false;
-  }
-
-  app.locals.db = {};
-  const uri = process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder';
-  const connDb = mongoose.createConnection(uri);
-  loadDb(connDb);
-
-  app.locals.controllers = {};
-  // TODO: We don't want to start listening in Express until loadCampaigns() has finished
-  // and loaded app.locals.campaigns, app.locals.keywords.
-  connDb.on('connected', () => {
-    loadCampaigns();
-    loadCampaignBotController();
-    logger.info(`locals.load connDb readyState:${connDb.readyState}`);
-  });
-
   const promises = [
     loadDonorsChooseBotController(),
     loadLegacyConfigs(),
