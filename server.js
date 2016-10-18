@@ -49,7 +49,7 @@ require('./config/router');
 app.locals.clients = {};
 
 const NorthstarClient = require('@dosomething/northstar-js');
-app.locals.clients.northstar =  new NorthstarClient({
+app.locals.clients.northstar = new NorthstarClient({
   baseURI: process.env.DS_NORTHSTAR_API_BASEURI,
   apiKey: process.env.DS_NORTHSTAR_API_KEY,
 });

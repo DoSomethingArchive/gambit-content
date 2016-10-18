@@ -36,7 +36,7 @@ function cacheCampaign(phoenixCampaign) {
 
   return app.locals.db.campaigns
     .findOneAndUpdate({ _id: phoenixCampaign.id }, data, { upsert: true, new: true })
-    .exec()
+    .exec();
 }
 
 /**
@@ -80,7 +80,7 @@ function loadKeywordsForCampaign(campaignModel) {
 
   return campaignModel.keywords.forEach((campaignKeyword) => {
     const keyword = campaignKeyword.toLowerCase();
-    logger.debug(`loaded app.locals.keyword[${keyword}]:${campaignID}`)
+    logger.debug(`loaded app.locals.keyword[${keyword}]:${campaignID}`);
     app.locals.keywords[keyword] = campaignID;
 
     return app.locals.keywords[keyword];
@@ -143,7 +143,7 @@ module.exports.loadCampaign = function (phoenixCampaign) {
       return loadKeywordsForCampaign(campaignDoc);
     })
     .catch(err => logger.error(err));
-}
+};
 
 /**
  * Legacy config models.
