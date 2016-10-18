@@ -16,10 +16,10 @@ http.globalAgent.maxSockets = 100;
 const logger = rootRequire('lib/logger');
 
 // Used by legacy reportback endpoint:
-const phoenix = rootRequire('lib/phoenix')();
+const legacyPhoenix = rootRequire('lib/phoenix')();
 const username = process.env.DS_PHOENIX_API_USERNAME;
 const password = process.env.DS_PHOENIX_API_PASSWORD;
-phoenix.userLogin(username, password, (err, response) => {
+legacyPhoenix.userLogin(username, password, (err, response) => {
   if (err) {
     logger.error(err);
   }
@@ -39,19 +39,19 @@ app.use(require('connect-multiparty')());
 const errorHandler = require('errorhandler');
 app.use(errorHandler());
 
-const locals = rootRequire('config/locals');
+const loader = rootRequire('config/locals');
 
 require('./config/router');
 
 app.locals.clients = {};
 
-app.locals.clients.northstar = locals.getNorthstarClient();
+app.locals.clients.northstar = loader.getNorthstarClient();
 if (!app.locals.clients.northstar) {
   logger.error('app.locals.clients.northstar undefined');
   process.exit(1);
 }
 
-app.locals.clients.phoenix = locals.getPhoenixClient();
+app.locals.clients.phoenix = loader.getPhoenixClient();
 if (!app.locals.clients.phoenix) {
   logger.error('app.locals.clients.phoenix undefined');
   process.exit(1);
@@ -62,18 +62,36 @@ mongoose.Promise = global.Promise;
 
 const uri = process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder';
 const conn = mongoose.createConnection(uri);
-app.locals.db = locals.getModels(conn);
+app.locals.db = loader.getModels(conn);
 
 conn.on('connected', () => {
   logger.info(`conn.readyState:${conn.readyState}`);
 
   app.locals.controllers = {};
 
+  const campaignBot = loader.loadBot('campaignbots', process.env.CAMPAIGNBOT_ID || 41)
+    .then((bot) => {
+      const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
+      app.locals.controllers.campaignBot = new CampaignBotController(bot);
+      logger.info('loaded app.locals.controllers.campaignBot');
+
+      return app.locals.controllers.campaignBot;
+    });
+
+  const donorsChooseBot = loader.loadBot('donorschoosebots', process.env.DONORSCHOOSEBOT_ID || 31)
+    .then((bot) => {
+      const DonorsChooseBotController = rootRequire('api/controllers/DonorsChooseBotController');
+      app.locals.controllers.donorsChooseBot = new DonorsChooseBotController(bot);
+      logger.info('loaded app.locals.controllers.donorsChooseBot');
+
+      return app.locals.controllers.donorsChooseBot;
+    });
+
   const promises = [
-    locals.loadCampaigns(),
-    locals.loadCampaignBotController(),
-    locals.loadDonorsChooseBotController(),
-    locals.loadLegacyConfigs(),
+    campaignBot,
+    donorsChooseBot,
+    loader.loadCampaigns(),
+    loader.loadLegacyConfigs(),
   ];
 
   Promise.all(promises).then(() => {
@@ -82,5 +100,9 @@ conn.on('connected', () => {
     return app.listen(port, () => {
       logger.info(`Gambit is listening on port:${port} env:${process.env.NODE_ENV}.`);
     });
+  })
+  .catch((err) => {
+    logger.error(err);
+    process.exit(1);
   });
 });

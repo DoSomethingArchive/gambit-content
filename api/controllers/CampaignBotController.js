@@ -166,7 +166,7 @@ class CampaignBotController {
     this.debug(req, 'createReportbackSubmission');
     const scope = req;
 
-    return app.locals.db.reportbackSubmissions
+    return app.locals.db.reportback_submissions
       .create({
         campaign: req.campaign._id,
         user: req.user._id,
