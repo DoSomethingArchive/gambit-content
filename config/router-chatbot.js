@@ -59,16 +59,6 @@ router.post('/', (req, res) => {
   logger.debug(`msg:${scope.incoming_message} img:${scope.incoming_image_url}`);
 
   const botType = req.query.bot_type;
-
-  if (botType === 'slothbot') {
-    // TODO: Store as a config variable.
-    const slothbotOptinPath = 210045;
-    const msgTxt = app.locals.controllers.slothBot.renderResponseMessage(req);
-    mobilecommons.chatbot(req.body, slothbotOptinPath, msgTxt);
-
-    return res.send(gambitResponse(msgTxt));
-  }
-
   if (botType === 'donorschoose' || botType === 'donorschoosebot') {
     return app.locals.controllers.donorsChooseBot.chatbot(req, res);
   }

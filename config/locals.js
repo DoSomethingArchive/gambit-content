@@ -248,18 +248,7 @@ module.exports.getPhoenixClient = function () {
     password: process.env.DS_PHOENIX_API_PASSWORD,
   });
 };
-
-/**
- * Loads app.locals.controllers.slothBot for Season 2.
- */
-function loadSlothBotController() {
-  const SlothBotController = rootRequire('api/controllers/SlothBotController');
-  app.locals.controllers.slothBot = new SlothBotController();
-  logger.info('loaded app.locals.controllers.slothBot');
-
-  return app.locals.controllers.slothBot;
-}
-
+ 
 /**
  * Loads required app.locals properties.
  */
@@ -267,7 +256,6 @@ module.exports.load = function () {
   const promises = [
     loadDonorsChooseBotController(),
     loadLegacyConfigs(),
-    loadSlothBotController(),
   ];
 
   return Promise.all(promises);
