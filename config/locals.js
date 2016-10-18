@@ -91,12 +91,12 @@ module.exports.getModels = function (conn) {
   models.campaigns = rootRequire('api/models/Campaign')(conn);
   models.campaignbots = rootRequire('api/models/CampaignBot')(conn);
   models.donorschoosebots = rootRequire('api/models/DonorsChooseBot')(conn);
-  // TODO: Change keys to machine names.
-  models.donorsChooseDonations = rootRequire('api/models/DonorsChooseDonation')(conn);
-  models.legacyReportbacks = rootRequire('api/legacy/reportback/reportbackModel')(conn);
-  models.reportbackSubmissions = rootRequire('api/models/ReportbackSubmission')(conn);
+  models.donorschoose_donations = rootRequire('api/models/DonorsChooseDonation')(conn);
+  models.reportback_submissions = rootRequire('api/models/ReportbackSubmission')(conn);
   models.signups = rootRequire('api/models/Signup')(conn);
   models.users = rootRequire('api/models/User')(conn);
+  // TBDeleted
+  models.legacyReportbacks = rootRequire('api/legacy/reportback/reportbackModel')(conn);
 
   return models;
 };
