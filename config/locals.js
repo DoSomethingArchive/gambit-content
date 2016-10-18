@@ -41,31 +41,7 @@ function getBot(endpoint, id) {
     });
 }
 
-/**
- * Returns object with a data property, containing a hash map of models for modelName by model id.
- */
-function getLegacyModelMap(configName, model) {
-  logger.verbose(`loading ${configName}`);
 
-  const modelMap = {};
-
-  return model.find({}).exec().then((docs) => {
-    docs.forEach((doc) => {
-      if (configName === 'legacyReportbacks') {
-        // Legacy reportback controller loads its config based by endpoint instead of _id.
-        modelMap[doc.endpoint] = doc;
-      } else {
-        modelMap[doc._id] = doc;
-      }
-    });
-
-    return {
-      name: configName,
-      count: docs.length,
-      data: modelMap,
-    };
-  });
-}
 
 /**
  * Upserts given Phoenix campaign to campaign model, saves to app.locals.campaign[campaign.id].
@@ -155,7 +131,7 @@ module.exports.getPhoenixClient = function () {
 /**
  * Gets given bot from API, or loads from cache if error.
  */
-function loadBot(endpoint, id) {
+module.exports.loadBot = function (endpoint, id) {
   logger.debug(`locals.loadBot endpoint:${endpoint} id:${id}`);
 
   return getBot(endpoint, id)
@@ -168,26 +144,6 @@ function loadBot(endpoint, id) {
 
       return bot;
     })
-}
-
-/**
- * Loads app.locals.controllers.campaignBot from Gambit Jr API.
- */
-module.exports.loadCampaignBotController = function () {
-  logger.debug('loadCampaignBotController');
-  const CAMPAIGNBOT_ID = process.env.CAMPAIGNBOT_ID || 41;
-
-  return loadBot('campaignbots', CAMPAIGNBOT_ID)
-    .then((campaignBot) => {
-      const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
-      app.locals.controllers.campaignBot = new CampaignBotController(campaignBot);
-      logger.info('loaded app.locals.controllers.campaignBot');
-
-      return app.locals.controllers.campaignBot;
-    })
-    .catch((err) => {
-      logger.error(err);
-    });
 };
 
 /**
@@ -231,8 +187,37 @@ module.exports.loadDonorsChooseBotController = function () {
 };
 
 /**
+ * Legacy config models.
+ */
+
+/**
+ * Returns object with a data property, containing a hash map of models for modelName by model id.
+ */
+function getLegacyModelMap(configName, model) {
+  logger.verbose(`loading ${configName}`);
+
+  const modelMap = {};
+
+  return model.find({}).exec().then((docs) => {
+    docs.forEach((doc) => {
+      if (configName === 'legacyReportbacks') {
+        // Legacy reportback controller loads its config based by endpoint instead of _id.
+        modelMap[doc.endpoint] = doc;
+      } else {
+        modelMap[doc._id] = doc;
+      }
+    });
+
+    return {
+      name: configName,
+      count: docs.length,
+      data: modelMap,
+    };
+  });
+}
+
+/**
  * Loads map of config content as app.locals.configs object instead using Mongoose find queries.
- * To be deprecated upon CampaignBot launch.
  */
 module.exports.loadLegacyConfigs = function () {
   const uri = process.env.CONFIG_DB_URI || 'mongodb://localhost/config';
