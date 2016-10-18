@@ -15,7 +15,7 @@ Name | Type | Description
 
 Name | Type | Description
 --- | --- | ---
-`bot_type` | `string` | Type of bot to chat with if not CampaignBot, our default. Possible values: `donorschoosebot`, `slothbot`
+`bot_type` | `string` | Can set to `donorschoosebot`, otherwise defaults to `campaignbot`.
 `start` | `boolean` | If set, the bot will begin a new DonorsChoose conversation if `bot_type=donorschoose`. Default: `false`
 
 **Input**

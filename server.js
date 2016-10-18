@@ -9,12 +9,14 @@ global.rootRequire = function (name) {
 
 const express = require('express');
 const http = require('http');
-const logger = rootRequire('lib/logger');
-const phoenix = rootRequire('lib/phoenix')();
 
 // Default is 5. Increasing # of concurrent sockets per host.
 http.globalAgent.maxSockets = 100;
 
+const logger = rootRequire('lib/logger');
+
+// Used by legacy reportback endpoint:
+const phoenix = rootRequire('lib/phoenix')();
 const username = process.env.DS_PHOENIX_API_USERNAME;
 const password = process.env.DS_PHOENIX_API_PASSWORD;
 phoenix.userLogin(username, password, (err, response) => {
@@ -28,28 +30,57 @@ phoenix.userLogin(username, password, (err, response) => {
 
 app = express();
 
-const path = require('path');
-const rootDirName = path.dirname(path.dirname(__dirname));
-const errorHandler = require('errorhandler');
 const bodyParser = require('body-parser');
-
-// Parses request body and populates request.body
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-// For multi-part parsing
+// TODO: I don't think we need this?
 app.use(require('connect-multiparty')());
-// Show all errors in development
+
+const errorHandler = require('errorhandler');
 app.use(errorHandler());
-// Add static path
-app.use(express.static(path.join(rootDirName, 'public')));
 
 const locals = rootRequire('config/locals');
 
 require('./config/router');
 
-locals.load().then(() => {
-  const port = process.env.PORT || 5000;
-  app.listen(port, () => {
-    logger.info(`Gambit is listening, port:${port} env:${process.env.NODE_ENV}.`);
+app.locals.clients = {};
+
+app.locals.clients.northstar = locals.getNorthstarClient();
+if (!app.locals.clients.northstar) {
+  logger.error('app.locals.clients.northstar undefined');
+  process.exit(1);
+}
+
+app.locals.clients.phoenix = locals.getPhoenixClient();
+if (!app.locals.clients.phoenix) {
+  logger.error('app.locals.clients.phoenix undefined');
+  process.exit(1);
+}
+
+const mongoose = require('mongoose');
+mongoose.Promise = global.Promise;
+
+const uri = process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder';
+const conn = mongoose.createConnection(uri);
+app.locals.db = locals.getModels(conn);
+
+conn.on('connected', () => {
+  logger.info(`conn.readyState:${conn.readyState}`);
+
+  app.locals.controllers = {};
+
+  const promises = [
+    locals.loadCampaigns(),
+    locals.loadCampaignBotController(),
+    locals.loadDonorsChooseBotController(),
+    locals.loadLegacyConfigs(),
+  ];
+
+  Promise.all(promises).then(() => {
+    const port = process.env.PORT || 5000;
+
+    return app.listen(port, () => {
+      logger.info(`Gambit is listening on port:${port} env:${process.env.NODE_ENV}.`);
+    });
   });
 });
