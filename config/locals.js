@@ -22,6 +22,24 @@ function cacheBot(endpoint, gambitJuniorBot) {
 }
 
 /**
+ * Returns a campaign model for given Phoenix Campaign.
+ */
+function cacheCampaign(phoenixCampaign) {
+  const data = {
+    status: phoenixCampaign.status,
+    tagline: phoenixCampaign.tagline,
+    title: phoenixCampaign.title,
+    msg_rb_confirmation: phoenixCampaign.reportbackInfo.confirmationMessage,
+    rb_noun: phoenixCampaign.reportbackInfo.noun,
+    rb_verb: phoenixCampaign.reportbackInfo.verb,
+  };
+
+  return app.locals.db.campaigns
+    .findOneAndUpdate({ _id: phoenixCampaign.id }, data, { upsert: true, new: true })
+    .exec()
+}
+
+/**
  * Find model for given bot type/id.
  */
 function findBot(endpoint, id) {
@@ -49,44 +67,45 @@ function getBot(endpoint, id) {
 }
 
 /**
- * Upserts given Phoenix campaign to campaign model, saves to app.locals.campaign[campaign.id].
+ * Caches given phoenixCampaign and loads into app.locals.campaigns, adds to app.locals.keywords.
  */
-function loadCampaign(campaign) {
-  logger.debug(`loadCampaign:${campaign.id}`);
+function loadCampaign(phoenixCampaign) {
+  const campaignID = phoenixCampaign.id;
+  logger.debug(`loadCampaign:${campaignID}`);
 
-  const data = {
-    status: campaign.status,
-    tagline: campaign.tagline,
-    title: campaign.title,
-    msg_rb_confirmation: campaign.reportbackInfo.confirmationMessage,
-    rb_noun: campaign.reportbackInfo.noun,
-    rb_verb: campaign.reportbackInfo.verb,
-  };
-
-  return app.locals.db.campaigns
-    .findOneAndUpdate({ _id: campaign.id }, data, { upsert: true, new: true })
-    .exec()
+  return cacheCampaign(phoenixCampaign)
     .then((campaignDoc) => {
       if (!campaignDoc) {
         return null;
       }
 
-      app.locals.campaigns[campaign.id] = campaignDoc;
-      logger.debug(`loaded app.locals.campaigns[${campaignDoc._id}]`);
+      app.locals.campaigns[campaignID] = campaignDoc;
+      logger.debug(`loaded app.locals.campaigns[${campaignID}]`);
 
-      if (campaignDoc.keywords) {
-        campaignDoc.keywords.forEach((campaignKeyword) => {
-          const keyword = campaignKeyword.toLowerCase();
-          app.locals.keywords[keyword] = campaign.id;
-          logger.debug(`loaded app.locals.keyword[${keyword}]:${campaign.id}`);
-        });
-      } else {
-        logger.warn(`keywords undefined for campaign:${campaign.id} `);
-      }
-
-      return campaignDoc;
+      return loadKeywordsForCampaign(campaignDoc);
     })
     .catch(err => logger.error(err));
+}
+
+/**
+ * Loads given campaignModel's keywords into app.locals.keywords hash map.
+ */
+function loadKeywordsForCampaign(campaignModel) {
+  const campaignID = campaignModel._id;
+
+  if (!campaignModel.keywords.length) {
+    logger.warn(`no keywords for campaign:${campaignID} `);
+
+    return null;
+  }
+
+  return campaignModel.keywords.forEach((campaignKeyword) => {
+    const keyword = campaignKeyword.toLowerCase();
+    logger.debug(`loaded app.locals.keyword[${keyword}]:${campaignID}`)
+    app.locals.keywords[keyword] = campaignID;
+
+    return app.locals.keywords[keyword];
+  });
 }
 
 /**
