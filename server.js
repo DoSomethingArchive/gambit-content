@@ -91,7 +91,7 @@ conn.on('connected', () => {
   app.locals.keywords = {};
 
   const campaigns = app.locals.clients.phoenix.Campaigns
-    .index({ ids: process.env.CAMPAIGNBOT_CAMPAIGNS || [2299] })
+    .index({ ids: process.env.CAMPAIGNBOT_CAMPAIGNS || '2070,2299' })
     .then((phoenixCampaigns) => {
       logger.debug(`app.locals.clients.phoenix found ${phoenixCampaigns.length} campaigns`);
 

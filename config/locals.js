@@ -71,6 +71,11 @@ function getBot(endpoint, id) {
  */
 function loadKeywordsForCampaign(campaignModel) {
   const campaignID = campaignModel._id;
+  if (!campaignID) {
+    logger.warn('loadKeywordsForCampaign campaignID undefined');
+
+    return null;
+  }
 
   if (!campaignModel.keywords.length) {
     logger.warn(`no keywords for campaign:${campaignID} `);
