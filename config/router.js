@@ -29,8 +29,8 @@ router.use('/v1/chatbot', chatbotRouter);
 /**
  * Legacy routes.
  */
-const campaignRouter = rootRequire('api/legacy/ds-routing');
-const reportbackRouter = rootRequire('api/legacy/reportback');
+const campaignRouter = rootRequire('legacy/ds-routing');
+const reportbackRouter = rootRequire('legacy/reportback');
 
 router.use('/ds-routing', campaignRouter);
 router.use('/reportback', reportbackRouter);

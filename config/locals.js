@@ -106,7 +106,7 @@ module.exports.getModels = function (conn) {
   models.signups = rootRequire('api/models/Signup')(conn);
   models.users = rootRequire('api/models/User')(conn);
   // TBDeleted
-  models.legacyReportbacks = rootRequire('api/legacy/reportback/reportbackModel')(conn);
+  models.legacyReportbacks = rootRequire('legacy/reportback/reportbackModel')(conn);
 
   return models;
 };
@@ -186,9 +186,9 @@ function getLegacyModelMap(configName, model) {
 module.exports.loadLegacyConfigs = function (conn) {
   /* eslint-disable max-len*/
   const models = {
-    legacyReportbacks: rootRequire('api/legacy/reportback/reportbackConfigModel')(conn),
-    legacyStartCampaignTransitions: rootRequire('api/legacy/ds-routing/config/startCampaignTransitionsConfigModel')(conn),
-    legacyYesNoPaths: rootRequire('api/legacy/ds-routing/config/yesNoPathsConfigModel')(conn),
+    legacyReportbacks: rootRequire('legacy/reportback/reportbackConfigModel')(conn),
+    legacyStartCampaignTransitions: rootRequire('legacy/ds-routing/config/startCampaignTransitionsConfigModel')(conn),
+    legacyYesNoPaths: rootRequire('legacy/ds-routing/config/yesNoPathsConfigModel')(conn),
   };
   /* eslint-enable max-len*/
 
