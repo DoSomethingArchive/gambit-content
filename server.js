@@ -146,7 +146,7 @@ conn.on('connected', () => {
   const connConfig = mongoose.createConnection(uriConfig);
   const legacyConfigs = loader.loadLegacyConfigs(connConfig);
 
-  const legacyPhoenix = rootRequire('lib/phoenix')();
+  const legacyPhoenix = require('./legacy/lib/phoenix')();
   const username = process.env.DS_PHOENIX_API_USERNAME;
   const password = process.env.DS_PHOENIX_API_PASSWORD;
   const legacyAuth = legacyPhoenix.userLogin(username, password, (err, response) => {

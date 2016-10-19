@@ -1,7 +1,7 @@
 var request = require('request')
   , crypto = require('crypto')
   , RequestRetry = require('node-request-retry')
-  , emitter = rootRequire('lib/eventEmitter')
+  , emitter = rootRequire('legacy/lib/eventEmitter')
   ;
 const logger = app.locals.logger;
 

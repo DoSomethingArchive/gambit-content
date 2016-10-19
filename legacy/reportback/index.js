@@ -5,10 +5,10 @@
 var express = require('express')
   , router = express.Router()
   , mobilecommons = rootRequire('lib/mobilecommons')
-  , emitter = rootRequire('lib/eventEmitter')
-  , phoenix = rootRequire('lib/phoenix')()
+  , emitter = rootRequire('legacy/lib/eventEmitter')
+  , phoenix = rootRequire('legacy/lib/phoenix')()
   , REPORTBACK_PERMALINK_BASE_URL
-  , shortenLink = rootRequire('lib/bitly')
+  , shortenLink = rootRequire('legacy/lib/bitly')
   , Q = require('q')
   , parseForDigits = require('count-von-count')
   ;

@@ -16,7 +16,7 @@ var Q = require('q');
 var requestHttp = require('request');
 const logger = app.locals.logger;
 var mobilecommons = rootRequire('lib/mobilecommons');
-var bitly = rootRequire('lib/bitly');
+var bitly = rootRequire('legacy/lib/bitly');
 var helpers = rootRequire('lib/helpers');
 var donorschoose = rootRequire('lib/donorschoose');
 
