@@ -3,7 +3,7 @@
 /**
  * Imports.
  */
-const gambitJunior = rootRequire('lib/gambit-junior');
+const gambitJunior = rootRequire('lib/junior');
 const logger = app.locals.logger;
 
 /**
