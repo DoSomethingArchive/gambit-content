@@ -5,8 +5,8 @@
  */
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
-const logger = rootRequire('lib/logger');
 const mobilecommons = rootRequire('lib/mobilecommons');
+const logger = app.locals.logger;
 
 /**
  * Formats our Express return response.

@@ -2,7 +2,7 @@
 
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
-const logger = rootRequire('lib/logger');
+const logger = app.locals.logger;
 
 app.use('/', router);
 

@@ -3,7 +3,7 @@
 /**
  * Imports.
  */
-const logger = rootRequire('lib/logger');
+const logger = app.locals.logger;
 const helpers = rootRequire('lib/helpers');
 
 const DS_API_POST_SOURCE = process.env.DS_API_POST_SOURCE || 'sms-mobilecommons';

@@ -14,7 +14,7 @@ var MAX_DONATIONS_ALLOWED = (process.env.DONORSCHOOSE_MAX_DONATIONS_ALLOWED || 5
 
 var Q = require('q');
 var requestHttp = require('request');
-var logger = rootRequire('lib/logger');
+const logger = app.locals.logger;
 var mobilecommons = rootRequire('lib/mobilecommons');
 var bitly = rootRequire('lib/bitly');
 var helpers = rootRequire('lib/helpers');
