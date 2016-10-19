@@ -43,20 +43,37 @@ const loader = rootRequire('config/locals');
 
 require('./config/router');
 
+/**
+ * Load clients.
+ */
 app.locals.clients = {};
 
-app.locals.clients.northstar = loader.getNorthstarClient();
+const NorthstarClient = require('@dosomething/northstar-js');
+app.locals.clients.northstar = new NorthstarClient({
+  baseURI: process.env.DS_NORTHSTAR_API_BASEURI,
+  apiKey: process.env.DS_NORTHSTAR_API_KEY,
+});
+
 if (!app.locals.clients.northstar) {
   logger.error('app.locals.clients.northstar undefined');
   process.exit(1);
 }
 
-app.locals.clients.phoenix = loader.getPhoenixClient();
+const PhoenixClient = require('@dosomething/phoenix-js');
+app.locals.clients.phoenix = new PhoenixClient({
+  baseURI: process.env.DS_PHOENIX_API_BASEURI,
+  username: process.env.DS_PHOENIX_API_USERNAME,
+  password: process.env.DS_PHOENIX_API_PASSWORD,
+});
+
 if (!app.locals.clients.phoenix) {
   logger.error('app.locals.clients.phoenix undefined');
   process.exit(1);
 }
 
+/**
+ * Load models.
+ */
 const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 
@@ -67,6 +84,23 @@ app.locals.db = loader.getModels(conn);
 conn.on('connected', () => {
   logger.info(`conn.readyState:${conn.readyState}`);
 
+  /**
+   * Load campaigns.
+   */
+  app.locals.campaigns = {};
+  app.locals.keywords = {};
+
+  const campaigns = app.locals.clients.phoenix.Campaigns
+    .index({ ids: process.env.CAMPAIGNBOT_CAMPAIGNS || '2070,2299' })
+    .then((phoenixCampaigns) => {
+      logger.debug(`app.locals.clients.phoenix found ${phoenixCampaigns.length} campaigns`);
+
+      return phoenixCampaigns.map(phoenixCampaign => loader.loadCampaign(phoenixCampaign));
+    });
+
+  /**
+   * Load controllers.
+   */
   app.locals.controllers = {};
 
   const campaignBot = loader.loadBot('campaignbots', process.env.CAMPAIGNBOT_ID || 41)
@@ -87,14 +121,18 @@ conn.on('connected', () => {
       return app.locals.controllers.donorsChooseBot;
     });
 
-  const promises = [
-    campaignBot,
-    donorsChooseBot,
-    loader.loadCampaigns(),
-    loader.loadLegacyConfigs(),
-  ];
+  /**
+   * Load legacy configs.
+   */
+  app.locals.configs = {};
+  const uriConfig = process.env.CONFIG_DB_URI || 'mongodb://localhost/config';
+  const connConfig = mongoose.createConnection(uriConfig);
+  const legacyConfigs = loader.loadLegacyConfigs(connConfig);
 
-  Promise.all(promises).then(() => {
+  /**
+   * Start server.
+   */
+  Promise.all([campaigns, campaignBot, donorsChooseBot, legacyConfigs]).then(() => {
     const port = process.env.PORT || 5000;
 
     return app.listen(port, () => {

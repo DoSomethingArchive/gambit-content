@@ -7,6 +7,39 @@ const logger = rootRequire('lib/logger');
 const gambitJunior = rootRequire('lib/gambit-junior');
 
 /**
+ * Returns a bot model for given endpoint and data.
+ */
+function cacheBot(endpoint, gambitJuniorBot) {
+  logger.debug(`locals.cacheBot endpoint:${endpoint} id:${gambitJuniorBot.id}`);
+
+  const data = gambitJuniorBot;
+  data._id = Number(gambitJuniorBot.id);
+  data.id = undefined;
+
+  return app.locals.db[endpoint]
+    .findOneAndUpdate({ _id: data._id }, data, { upsert: true, new: true })
+    .exec();
+}
+
+/**
+ * Returns a campaign model for given Phoenix Campaign.
+ */
+function cacheCampaign(phoenixCampaign) {
+  const data = {
+    status: phoenixCampaign.status,
+    tagline: phoenixCampaign.tagline,
+    title: phoenixCampaign.title,
+    msg_rb_confirmation: phoenixCampaign.reportbackInfo.confirmationMessage,
+    rb_noun: phoenixCampaign.reportbackInfo.noun,
+    rb_verb: phoenixCampaign.reportbackInfo.verb,
+  };
+
+  return app.locals.db.campaigns
+    .findOneAndUpdate({ _id: phoenixCampaign.id }, data, { upsert: true, new: true })
+    .exec();
+}
+
+/**
  * Find model for given bot type/id.
  */
 function findBot(endpoint, id) {
@@ -25,15 +58,7 @@ function getBot(endpoint, id) {
 
   return gambitJunior
     .get(endpoint, id)
-    .then((bot) => {
-      const data = bot;
-      data._id = bot.id;
-      data.id = undefined;
-
-      return app.locals.db[endpoint]
-        .findOneAndUpdate({ _id: id }, data, { upsert: true, new: true })
-        .exec();
-    })
+    .then(bot => cacheBot(endpoint, bot))
     .catch((err) => {
       logger.error(err);
 
@@ -42,44 +67,29 @@ function getBot(endpoint, id) {
 }
 
 /**
- * Upserts given Phoenix campaign to campaign model, saves to app.locals.campaign[campaign.id].
+ * Loads given campaignModel's keywords into app.locals.keywords hash map.
  */
-function loadCampaign(campaign) {
-  logger.debug(`loadCampaign:${campaign.id}`);
+function loadKeywordsForCampaign(campaignModel) {
+  const campaignID = campaignModel._id;
+  if (!campaignID) {
+    logger.warn('loadKeywordsForCampaign campaignID undefined');
 
-  const data = {
-    status: campaign.status,
-    tagline: campaign.tagline,
-    title: campaign.title,
-    msg_rb_confirmation: campaign.reportbackInfo.confirmationMessage,
-    rb_noun: campaign.reportbackInfo.noun,
-    rb_verb: campaign.reportbackInfo.verb,
-  };
+    return null;
+  }
 
-  return app.locals.db.campaigns
-    .findOneAndUpdate({ _id: campaign.id }, data, { upsert: true, new: true })
-    .exec()
-    .then((campaignDoc) => {
-      if (!campaignDoc) {
-        return null;
-      }
+  if (!campaignModel.keywords.length) {
+    logger.warn(`no keywords for campaign:${campaignID} `);
 
-      app.locals.campaigns[campaign.id] = campaignDoc;
-      logger.debug(`loaded app.locals.campaigns[${campaignDoc._id}]`);
+    return null;
+  }
 
-      if (campaignDoc.keywords) {
-        campaignDoc.keywords.forEach((campaignKeyword) => {
-          const keyword = campaignKeyword.toLowerCase();
-          app.locals.keywords[keyword] = campaign.id;
-          logger.debug(`loaded app.locals.keyword[${keyword}]:${campaign.id}`);
-        });
-      } else {
-        logger.warn(`keywords undefined for campaign:${campaign.id} `);
-      }
+  return campaignModel.keywords.forEach((campaignKeyword) => {
+    const keyword = campaignKeyword.toLowerCase();
+    logger.debug(`loaded app.locals.keyword[${keyword}]:${campaignID}`);
+    app.locals.keywords[keyword] = campaignID;
 
-      return campaignDoc;
-    })
-    .catch(err => logger.error(err));
+    return app.locals.keywords[keyword];
+  });
 }
 
 /**
@@ -102,31 +112,6 @@ module.exports.getModels = function (conn) {
 };
 
 /**
- * Returns authenticated Northstar JS client.
- */
-module.exports.getNorthstarClient = function () {
-  const NorthstarClient = require('@dosomething/northstar-js');
-
-  return new NorthstarClient({
-    baseURI: process.env.DS_NORTHSTAR_API_BASEURI,
-    apiKey: process.env.DS_NORTHSTAR_API_KEY,
-  });
-};
-
-/**
- * Returns authenticated Phoenix JS client.
- */
-module.exports.getPhoenixClient = function () {
-  const PhoenixClient = require('@dosomething/phoenix-js');
-
-  return new PhoenixClient({
-    baseURI: process.env.DS_PHOENIX_API_BASEURI,
-    username: process.env.DS_PHOENIX_API_USERNAME,
-    password: process.env.DS_PHOENIX_API_PASSWORD,
-  });
-};
-
-/**
  * Gets given bot from API, or loads from cache if error.
  */
 module.exports.loadBot = function (endpoint, id) {
@@ -145,22 +130,24 @@ module.exports.loadBot = function (endpoint, id) {
 };
 
 /**
- * Loads app.locals.campaigns from DS API.
+ * Caches given phoenixCampaign and loads into app.locals.campaigns, adds to app.locals.keywords.
  */
-module.exports.loadCampaigns = function () {
-  app.locals.campaigns = {};
-  app.locals.keywords = {};
+module.exports.loadCampaign = function (phoenixCampaign) {
+  const campaignID = phoenixCampaign.id;
+  logger.debug(`loadCampaign:${campaignID}`);
 
-  const campaignIds = process.env.CAMPAIGNBOT_CAMPAIGNS;
-  logger.debug(`loadCampaigns:${campaignIds}`);
+  return cacheCampaign(phoenixCampaign)
+    .then((campaignDoc) => {
+      if (!campaignDoc) {
+        return null;
+      }
 
-  return app.locals.clients.phoenix.Campaigns
-    .index({ ids: campaignIds })
-    .then((campaigns) => {
-      logger.debug(`loadCampaigns found ${campaigns.length} campaigns`);
+      app.locals.campaigns[campaignID] = campaignDoc;
+      logger.debug(`loaded app.locals.campaigns[${campaignID}]`);
 
-      return campaigns.map(campaign => loadCampaign(campaign));
-    });
+      return loadKeywordsForCampaign(campaignDoc);
+    })
+    .catch(err => logger.error(err));
 };
 
 /**
@@ -196,10 +183,7 @@ function getLegacyModelMap(configName, model) {
 /**
  * Loads map of config content as app.locals.configs object instead using Mongoose find queries.
  */
-module.exports.loadLegacyConfigs = function () {
-  const uri = process.env.CONFIG_DB_URI || 'mongodb://localhost/config';
-  const conn = mongoose.createConnection(uri);
-
+module.exports.loadLegacyConfigs = function (conn) {
   /* eslint-disable max-len*/
   const models = {
     legacyReportbacks: rootRequire('api/legacy/reportback/reportbackConfigModel')(conn),
@@ -213,8 +197,6 @@ module.exports.loadLegacyConfigs = function () {
     const promise = getLegacyModelMap(modelName, models[modelName]);
     promises.push(promise);
   });
-
-  app.locals.configs = {};
 
   return Promise.all(promises).then((modelMaps) => {
     modelMaps.forEach((modelMap) => {
