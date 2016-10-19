@@ -1,10 +1,10 @@
 'use strict';
 
-const mongoose = require('mongoose');
-mongoose.Promise = global.Promise;
-
-const logger = rootRequire('lib/logger');
+/**
+ * Imports.
+ */
 const gambitJunior = rootRequire('lib/gambit-junior');
+const logger = app.locals.logger;
 
 /**
  * Returns a bot model for given endpoint and data.

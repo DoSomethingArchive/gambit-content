@@ -2,9 +2,9 @@
  * Custom DS routing for transition logic within and between Mobile Commons campaigns.
  */
 
-var mobilecommons = rootRequire('lib/mobilecommons');
-var logger = rootRequire('lib/logger');
-var helpers = rootRequire('lib/helpers');
+const mobilecommons = rootRequire('lib/mobilecommons');
+const helpers = rootRequire('lib/helpers');
+const logger = app.locals.logger;
 
 /**
  * MCRouting

@@ -6,13 +6,13 @@ var express = require('express')
   , router = express.Router()
   , mobilecommons = rootRequire('lib/mobilecommons')
   , emitter = rootRequire('lib/eventEmitter')
-  , logger = rootRequire('lib/logger')
   , phoenix = rootRequire('lib/phoenix')()
   , REPORTBACK_PERMALINK_BASE_URL
   , shortenLink = rootRequire('lib/bitly')
   , Q = require('q')
   , parseForDigits = require('count-von-count')
   ;
+const logger = app.locals.logger;
 
 if (process.env.NODE_ENV == 'production') {
   REPORTBACK_PERMALINK_BASE_URL = 'https://www.dosomething.org/reportback/';

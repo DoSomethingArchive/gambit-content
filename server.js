@@ -13,21 +13,6 @@ const http = require('http');
 // Default is 5. Increasing # of concurrent sockets per host.
 http.globalAgent.maxSockets = 100;
 
-const logger = rootRequire('lib/logger');
-
-// Used by legacy reportback endpoint:
-const legacyPhoenix = rootRequire('lib/phoenix')();
-const username = process.env.DS_PHOENIX_API_USERNAME;
-const password = process.env.DS_PHOENIX_API_PASSWORD;
-legacyPhoenix.userLogin(username, password, (err, response) => {
-  if (err) {
-    logger.error(err);
-  }
-  if (response && response.statusCode === 200) {
-    logger.info('Successfully logged in to %s Phoenix API.', process.env.NODE_ENV);
-  }
-});
-
 app = express();
 
 const bodyParser = require('body-parser');
@@ -35,13 +20,54 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 // TODO: I don't think we need this?
 app.use(require('connect-multiparty')());
-
+// Also unsure if this is used:
 const errorHandler = require('errorhandler');
 app.use(errorHandler());
 
-const loader = rootRequire('config/locals');
+const DB_URI = process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder';
+
+/**
+ * Load logger.
+ */
+const winston = require('winston');
+require('winston-mongodb').MongoDB; // eslint-disable-line no-unused-expressions
+const WINSTON_LEVEL = process.env.LOGGING_LEVEL || 'info';
+
+app.locals.logger = new (winston.Logger)({
+  levels: {
+    verbose: 0,
+    debug: 1,
+    info: 2,
+    warn: 3,
+    error: 4,
+  },
+  transports: [
+    new winston.transports.Console({ prettyPrint: true, colorize: true, level: WINSTON_LEVEL }),
+    new winston.transports.MongoDB({ dbUri: DB_URI, level: WINSTON_LEVEL }),
+  ],
+  exceptionHandlers: [
+    new winston.transports.Console({ prettyPrint: true, colorize: true }),
+    new winston.transports.MongoDB({ dbUri: DB_URI }),
+  ],
+});
+if (!app.locals.logger) {
+  process.exit(1);
+}
+
+const loader = require('./config/locals');
 
 require('./config/router');
+
+/**
+ * Load models.
+ */
+const mongoose = require('mongoose');
+mongoose.Promise = global.Promise;
+
+const conn = mongoose.createConnection(DB_URI);
+app.locals.db = loader.getModels(conn);
+
+const logger = app.locals.logger;
 
 /**
  * Load clients.
@@ -71,15 +97,6 @@ if (!app.locals.clients.phoenix) {
   process.exit(1);
 }
 
-/**
- * Load models.
- */
-const mongoose = require('mongoose');
-mongoose.Promise = global.Promise;
-
-const uri = process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder';
-const conn = mongoose.createConnection(uri);
-app.locals.db = loader.getModels(conn);
 
 conn.on('connected', () => {
   logger.info(`conn.readyState:${conn.readyState}`);
@@ -129,10 +146,22 @@ conn.on('connected', () => {
   const connConfig = mongoose.createConnection(uriConfig);
   const legacyConfigs = loader.loadLegacyConfigs(connConfig);
 
+  const legacyPhoenix = rootRequire('lib/phoenix')();
+  const username = process.env.DS_PHOENIX_API_USERNAME;
+  const password = process.env.DS_PHOENIX_API_PASSWORD;
+  const legacyAuth = legacyPhoenix.userLogin(username, password, (err, response) => {
+    if (err) {
+      logger.error(err);
+    }
+    if (response && response.statusCode === 200) {
+      logger.info('Successfully logged in to %s Phoenix API.', process.env.NODE_ENV);
+    }
+  });
+
   /**
    * Start server.
    */
-  Promise.all([campaigns, campaignBot, donorsChooseBot, legacyConfigs]).then(() => {
+  Promise.all([campaigns, campaignBot, donorsChooseBot, legacyConfigs, legacyAuth]).then(() => {
     const port = process.env.PORT || 5000;
 
     return app.listen(port, () => {
