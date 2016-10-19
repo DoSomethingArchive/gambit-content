@@ -3,7 +3,7 @@
  */
 var mongoose = require('mongoose');
 
-var rbSchema = new mongoose.Schema({
+var schema = new mongoose.Schema({
   // Mobile Commons ID of the campaign just completed
   campaign_completed_id: Number,
 
@@ -40,5 +40,5 @@ var rbSchema = new mongoose.Schema({
 });
 
 module.exports = function(connection) {
-  return connection.model(app.ConfigName.REPORTBACK, rbSchema);
+  return connection.model('reportbacks', schema);
 }

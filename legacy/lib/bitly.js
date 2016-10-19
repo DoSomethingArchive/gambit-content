@@ -11,9 +11,8 @@
  *   a shortened form of the long URL
  */
 
-var requestHttp = require('request')
-  , logger = rootRequire('lib/logger')
-  ;
+const requestHttp = require('request');
+const logger = app.locals.logger;
 
 var bitlyToken = (process.env.BITLY_GENERIC_ACCESS_TOKEN || null);
 var baseURL = 'https://api-ssl.bitly.com'; // alternate: api.bitly.com

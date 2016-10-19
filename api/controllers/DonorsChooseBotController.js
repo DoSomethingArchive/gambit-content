@@ -1,36 +1,36 @@
 "use strict";
 
 /**
- * Submits a donation to DonorsChoose.org on behalf of a MoCo member.
+ * Submits a donation to DonorsChoose.org on behalf of a Mobile Commons profile.
  * Currently only supports running one DonorsChoose Donation Campaign at a time,
- * set by the DONORSCHOOSE_MOCO_CAMPAIGN_ID environment variable.
+ * set by the MOBILECOMMONS_OIP_DONORSCHOOSEBOT environment variables.
  */
 var donorsChooseApiKey = process.env.DONORSCHOOSE_API_KEY;
 var donorsChooseApiPassword = process.env.DONORSCHOOSE_API_PASSWORD;
 
 var DONATION_AMOUNT = (process.env.DONORSCHOOSE_DONATION_AMOUNT || 10);
 var DONATION_COUNT_FIELDNAME = 'ss2016_donation_count';
-var DONORSCHOOSEBOT_ID = process.env.DONORSCHOOSEBOT_ID;
 var MAX_DONATIONS_ALLOWED = (process.env.DONORSCHOOSE_MAX_DONATIONS_ALLOWED || 5);
-var MOCO_CAMPAIGN_ID = process.env.DONORSCHOOSE_MOCO_CAMPAIGN_ID;
 
 var Q = require('q');
 var requestHttp = require('request');
-var logger = rootRequire('lib/logger');
+const logger = app.locals.logger;
 var mobilecommons = rootRequire('lib/mobilecommons');
-var bitly = rootRequire('lib/bitly');
+var bitly = rootRequire('legacy/lib/bitly');
 var helpers = rootRequire('lib/helpers');
 var donorschoose = rootRequire('lib/donorschoose');
-var connOps = rootRequire('config/connectionOperations');
-var donationModel = require('../models/donation/DonorsChooseDonation')(connOps);
 
 /**
  * DonorsChooseBotController
  * @constructor
  */
-function DonorsChooseBotController() {
-  this.mocoCampaign = app.getConfig(app.ConfigName.CHATBOT_MOBILECOMMONS_CAMPAIGNS, MOCO_CAMPAIGN_ID);
-  this.bot = app.getConfig(app.ConfigName.DONORSCHOOSEBOTS, DONORSCHOOSEBOT_ID);
+function DonorsChooseBotController(donorsChooseBot) {
+  this.bot = donorsChooseBot;
+  // Mobile Commons OIP posts back user's response to our chatbot?bot_type=donorschoosebot.
+  this.oipChat = process.env.MOBILECOMMONS_OIP_DONORSCHOOSEBOT;
+  // Mobile Commons OIPs that no longer posts user responses back to chatbot.
+  this.oipSuccess = process.env.MOBILECOMMONS_OIP_DONORSCHOOSEBOT_END;
+  this.oipError = process.env.MOBILECOMMONS_OIP_DONORSCHOOSEBOT_ERROR;
 };
 
 /**
@@ -40,7 +40,7 @@ function DonorsChooseBotController() {
  * @param {object} profileFields - key/value MoCo Custom Fields to update
  */
 DonorsChooseBotController.prototype.chat = function(member, msgText, profileFields) {
-  mobilecommons.chatbot(member, this.mocoCampaign.oip_chat, msgText, profileFields);
+  mobilecommons.chatbot(member, this.oipChat, msgText, profileFields);
 }
 
 /**
@@ -50,7 +50,7 @@ DonorsChooseBotController.prototype.chat = function(member, msgText, profileFiel
  * @param {object} profileFields - key/value MoCo Custom Fields to update
  */
 DonorsChooseBotController.prototype.endChat = function(member, msgText, profileFields) {
-  mobilecommons.chatbot(member, this.mocoCampaign.oip_success, msgText, profileFields);
+  mobilecommons.chatbot(member, this.oipSuccess, msgText, profileFields);
 }
 
 /**
@@ -58,7 +58,7 @@ DonorsChooseBotController.prototype.endChat = function(member, msgText, profileF
  * @param {object} member - MoCo request.body
  */
 DonorsChooseBotController.prototype.endChatWithFail = function(member) {
-  mobilecommons.chatbot(member, this.mocoCampaign.oip_error, this.bot.msg_error_generic);
+  mobilecommons.chatbot(member, this.oipError, this.bot.msg_error_generic);
 }
 
 /**
@@ -71,10 +71,19 @@ DonorsChooseBotController.prototype.chatbot = function(request, response) {
   var member = request.body;
   logger.log('verbose', 'dc.chat member:', member);
 
-  if (!this.bot || !this.mocoCampaign) {
+  if (!this.bot) {
+    logger.error('dc.bot undefined');
     response.sendStatus(500);
     return;
   }
+
+  const configured = this.oipChat && this.oipSuccess && this.oipError;
+  if (!configured) {
+    logger.error('missing required DONORSCHOOSEBOT_MOBILECOMMONS config variables');
+    response.sendStatus(500);
+    return;
+  }
+
   response.send();
   var firstWord = null;
 
@@ -338,8 +347,7 @@ DonorsChooseBotController.prototype.postDonation = function(member, project) {
         profile_email: member.profile_email,
         profile_first_name: member.profile_first_name,
         profile_postal_code: member.profile_postal_code,
-        mobilecommons_campaign_id: MOCO_CAMPAIGN_ID,
-        donorschoosebot_id: DONORSCHOOSEBOT_ID,
+        donorschoosebot_id: self.bot._id,
         donation_id: donation.donationId,
         donation_amount: DONATION_AMOUNT,
         proposal_id: project.id,
@@ -349,7 +357,7 @@ DonorsChooseBotController.prototype.postDonation = function(member, project) {
         school_city: project.city,
         school_state: project.state
       };
-      donationModel.create(donationLogData).then(function(doc) {
+      app.locals.db.donorschoose_donations.create(donationLogData).then(function(doc) {
         logger.log('debug', 'dc.createDonationDoc success:%s', donation);
       }, promiseErrorCallback('dc.createDonationDoc user: ' + member.phone));
     };

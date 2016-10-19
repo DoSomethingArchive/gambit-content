@@ -1,24 +1,26 @@
+'use strict';
+
 /**
  * Models a DS User.
  */
-var mongoose = require('mongoose');
-var Mixed = mongoose.Schema.Types.Mixed;
+const mongoose = require('mongoose');
 
-var schema = new mongoose.Schema({
+const schema = new mongoose.Schema({
 
-  _id: {type: String, index: true},
-
-  mobile: {type: String, index: true},
-
+  _id: { type: String, index: true },
+  // TODO: Not sure we need this index
+  mobile: { type: String, index: true },
+  phoenix_id: Number,
+  email: String,
+  role: String,
   first_name: String,
-
-  supports_mms: {type: Boolean, default: false},
-
   // Hash table to store current signups: e.g. campaigns[campaignId] = signupId;
-  campaigns: {type: Mixed, default: {}}
+  campaigns: { type: mongoose.Schema.Types.Mixed, default: {} },
+  // Campaign the user is currently participating in via chatbot.
+  current_campaign: Number,
 
-})
+});
 
-module.exports = function(connection) {
+module.exports = function (connection) {
   return connection.model('users', schema);
 };

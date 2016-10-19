@@ -8,7 +8,7 @@
  */
 var mongoose = require('mongoose');
 
-var yesNoPathsConfigSchema = new mongoose.Schema({
+var schema = new mongoose.Schema({
 
   // Reassigning the _id value to the incoming OIP--that OIP which asks the user the yes/no question.
   _id: Number,
@@ -25,5 +25,5 @@ var yesNoPathsConfigSchema = new mongoose.Schema({
 })
 
 module.exports = function(connection) {
-  return connection.model(app.ConfigName.YES_NO_PATHS, yesNoPathsConfigSchema);
+  return connection.model('yes_no_paths', schema);
 }

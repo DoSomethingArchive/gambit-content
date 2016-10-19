@@ -9,6 +9,8 @@ npm-debug.log*
 # npm
 node_modules
 
+.wercker
+
 # test coverage
 .coveralls.yml
 coverage
