@@ -32,16 +32,37 @@ function sendSmsResponse(req, msg) {
   if (req.cmd_member_support) {
     mobilecommonsOIP = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
   }
+  logger.debug(`sendSmsResponse OIP:${mobilecommonsOIP}`);
+
   // The Mobile Commons OIP we post to below needs to render our user's gambit_chatbot_response
   // Custom Field in their Mobile Commons Profile, which we update via profile_update POST below.
   // @see https://github.com/DoSomething/gambit/wiki/Chatbot#mobile-commons
   const data = {
     gambit_chatbot_response: msg,
+    // Store current campaign ID to support Mobile Commons filtering by members' current Campaign.
+    gambit_current_campaign: req.campaign._id,
   };
+
   // If no Northstar ID is currently saved on user's Mobile Commons profile:
   if (!req.body.profile_northstar_id) {
     // Save it to avoid future Northstar GET users requests in subsequent incoming Gambit requests.
     data.northstar_id = req.user._id;
+  }
+
+  // Store User's Signup status for current campaign on Mobile Commons profile:
+  const statusField = `campaign_${req.campaign._id}_status`;
+  const statusValue = req.body[`profile_${statusField}`];
+  logger.debug(`req.profile_${statusField}:${statusValue}`);
+
+  const SIGNUP_STATUS_DOING = 'signedup';
+  const SIGNUP_STATUS_COMPLETED = 'completed';
+
+  if (statusValue !== SIGNUP_STATUS_COMPLETED) {
+    if (req.signup.reportback) {
+      data[statusField] = SIGNUP_STATUS_COMPLETED;
+    } else {
+      data[statusField] = SIGNUP_STATUS_DOING;
+    }
   }
 
   mobilecommons.profile_update(req.user.mobile, mobilecommonsOIP, data);
