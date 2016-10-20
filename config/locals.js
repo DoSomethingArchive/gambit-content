@@ -4,6 +4,8 @@
  * Imports.
  */
 const gambitJunior = rootRequire('lib/junior');
+const mobilecommons = rootRequire('lib/mobilecommons');
+
 const logger = app.locals.logger;
 
 /**
@@ -37,6 +39,22 @@ function cacheCampaign(phoenixCampaign) {
   return app.locals.db.campaigns
     .findOneAndUpdate({ _id: phoenixCampaign.id }, data, { upsert: true, new: true })
     .exec();
+}
+
+/**
+ * Create Doing/Completed Mobile Commons Groups to support Mobile Commons broadcasting.
+ * @see https://github.com/DoSomething/gambit/issues/673
+ */
+function createMobileCommonsGroupsForCampaign(campaignModel) {
+  const prefix = `campaign_${campaignModel._id}`;
+  // Makes sense to namespace for Thor for testing?
+  // if (process.env.NODE_ENV !== 'production') {
+  //   prefix = `thor_${prefix}`;
+  // }
+  mobilecommons.createGroup(`${prefix}_doing`);
+  mobilecommons.createGroup(`${prefix}_completed`);
+
+  return true;
 }
 
 /**
@@ -136,17 +154,21 @@ module.exports.loadCampaign = function (phoenixCampaign) {
   const campaignID = phoenixCampaign.id;
   logger.debug(`loadCampaign:${campaignID}`);
 
+  let campaign;
+
   return cacheCampaign(phoenixCampaign)
     .then((campaignDoc) => {
       if (!campaignDoc) {
         return null;
       }
+      campaign = campaignDoc;
 
-      app.locals.campaigns[campaignID] = campaignDoc;
+      app.locals.campaigns[campaignID] = campaign;
       logger.debug(`loaded app.locals.campaigns[${campaignID}]`);
 
-      return loadKeywordsForCampaign(campaignDoc);
+      return loadKeywordsForCampaign(campaign);
     })
+    .then(() => createMobileCommonsGroupsForCampaign(campaign))
     .catch(err => logger.error(err));
 };
 
