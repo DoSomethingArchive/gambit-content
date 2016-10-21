@@ -42,12 +42,12 @@ module.exports = function (connection) {
 /**
  * Query DS API for given Signup id and store.
  */
-signupSchema.statics.getById = Promise.method(function(id) {
+signupSchema.statics.getById = Promise.method((id) => {
   app.locals.logger.debug(`Signup.getById:${id}`);
 
   return app.locals.clients.northstar.Signups.get(id)
     .then(northstarSignup => {
-      logger.debug(northstarSignup);
+      logger.debug(`northstar.Signups.get:${id} success`);
 
       return signupSchema.statics.store(northstarSignup);
     });
@@ -56,8 +56,8 @@ signupSchema.statics.getById = Promise.method(function(id) {
 /**
  * Parse given Northstar Signup and return Signup model.
  */
-signupSchema.statics.store = Promise.method(function(northstarSignup) {
-  logger.debug(`cacheSignup id:${northstarSignup.id}`);
+signupSchema.statics.store = Promise.method((northstarSignup) => {
+  logger.debug(`Signup.store id:${northstarSignup.id}`);
 
   const data = {
     _id: Number(northstarSignup.id),

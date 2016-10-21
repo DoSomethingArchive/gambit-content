@@ -23,34 +23,6 @@ class CampaignBotController {
   }
 
   /**
-   * Upserts model for given Northstar Signup.
-   */
-  cacheSignup(northstarSignup) {
-    logger.debug(`cacheSignup id:${northstarSignup.id}`);
-
-    const data = {
-      _id: Number(northstarSignup.id),
-      user: northstarSignup.user,
-      campaign: northstarSignup.campaign,
-      // Delete existing draft submission in case we're updating existing
-      // Signup model (e.g. if we're handling a clear cache command)
-      draft_reportback_submission: null,
-    };
-    // Only set if this was called from postSignup(req).
-    if (northstarSignup.keyword) {
-      data.keyword = northstarSignup.keyword;
-    }
-    if (northstarSignup.reportback) {
-      data.reportback = Number(northstarSignup.reportback.id);
-      data.total_quantity_submitted = northstarSignup.reportback.quantity;
-    }
-
-    return app.locals.db.signups
-      .findOneAndUpdate({ _id: northstarSignup.id }, data, { upsert: true, new: true })
-      .exec();
-  }
-
-  /**
    * Upserts model for given Northstar User.
    */
   cacheUser(northstarUser) {
@@ -222,7 +194,7 @@ class CampaignBotController {
       const currentSignup = signups[0];
       this.debug(req, `currentSignup.id:${currentSignup.id}`);
 
-      return this.cacheSignup(currentSignup);
+      return app.locals.db.signups.store(currentSignup);
     })
     .then((signupDoc) => {
       if (!signupDoc) {
