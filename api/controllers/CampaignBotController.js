@@ -217,28 +217,6 @@ class CampaignBotController {
   }
 
   /**
-   * Gets User from DS API if exists for given type/id, else creates new User.
-   * @param {object} req
-   * @return {object} - User model
-   */
-  getUser(type, id) {
-    logger.debug(`getUser type:${type} id:${id}`);
-
-    return app.locals.clients.northstar.Users
-      .get(type, id)
-      .then((user) => {
-        logger.debug('northstar.Users.get success');
-
-        return this.cacheUser(user);
-      })
-      .catch(() => {
-        logger.debug(`could not getUser type:${type} id:${id}`);
-
-        return null;
-      });
-  }
-
-  /**
    * Returns whether current user has submitted a Reportback for the current campaign.
    * @param {object} req
    * @return {bool}
@@ -337,7 +315,7 @@ class CampaignBotController {
           if (!user) {
             this.debug(req, `no doc for user:${userID}`);
 
-            return this.getUser('id', userID);
+            return app.locals.db.users.get('id', userID);
           }
           this.debug(req, `found doc for user:${userID}`);
 
@@ -352,8 +330,8 @@ class CampaignBotController {
     }
 
     // Check if Northstar User exists for mobile number.
-    return this
-      .getUser('mobile', req.body.phone)
+    return app.locals.db.users
+      .get('mobile', req.body.phone)
       .then((user) => {
         if (!user) {
           return this.postUser(req);

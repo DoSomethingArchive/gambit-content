@@ -116,7 +116,7 @@ router.post('/', (req, res) => {
     return app.locals.db.signups
       .getById(signupID)
       .then((signup) => {
-        logger.debug(signup);
+        logger.debug(`signup.user:${signup.user}`);
 
         return res.send(signup);
       });
