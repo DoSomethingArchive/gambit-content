@@ -47,6 +47,7 @@ function cacheCampaign(phoenixCampaign) {
  * @see https://github.com/DoSomething/gambit/issues/673
  */
 function createMobileCommonsGroupsForCampaign(campaignModel) {
+  const campaignScope = campaignModel;
   const prefix = `env=${process.env.NODE_ENV} campaign_id=${campaignModel._id}`;
 
   // Migrate old campaign models.
@@ -55,7 +56,7 @@ function createMobileCommonsGroupsForCampaign(campaignModel) {
       doing: '',
       completed: '',
     };
-    campaignModel.mobileCommonsGroups = groups;
+    campaignScope.mobileCommonsGroups = groups;
   }
 
   // Create mobile commons groups & store ID on campaign model.
@@ -64,7 +65,7 @@ function createMobileCommonsGroupsForCampaign(campaignModel) {
     const parsedGroup = JSON.parse(parser.toJson(doingGroup));
     if (parsedGroup.response.success === 'true') {
       const groupId = parsedGroup.response.group.id;
-      campaignModel.mobileCommonsGroups.doing = groupId;
+      campaignScope.mobileCommonsGroups.doing = groupId;
     }
   })
   .then(() => mobilecommons.createGroup(`${prefix} status=completed`))
@@ -72,10 +73,10 @@ function createMobileCommonsGroupsForCampaign(campaignModel) {
     const parsedGroup = JSON.parse(parser.toJson(completedGroup));
     if (parsedGroup.response.success === 'true') {
       const groupId = parsedGroup.response.group.id;
-      campaignModel.mobileCommonsGroups.completed = groupId;
+      campaignScope.mobileCommonsGroups.completed = groupId;
     }
   })
-  .then(() => campaignModel.save())
+  .then(() => campaignScope.save())
   .catch(err => logger.error(err));
 }
 
