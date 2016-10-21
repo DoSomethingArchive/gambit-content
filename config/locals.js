@@ -32,6 +32,7 @@ function cacheCampaign(phoenixCampaign) {
     status: phoenixCampaign.status,
     tagline: phoenixCampaign.tagline,
     title: phoenixCampaign.title,
+    run_id: phoenixCampaign.currentCampaignRun.id,
     msg_rb_confirmation: phoenixCampaign.reportbackInfo.confirmationMessage,
     rb_noun: phoenixCampaign.reportbackInfo.noun,
     rb_verb: phoenixCampaign.reportbackInfo.verb,
@@ -48,7 +49,7 @@ function cacheCampaign(phoenixCampaign) {
  */
 function createMobileCommonsGroupsForCampaign(campaignModel) {
   const campaignScope = campaignModel;
-  const prefix = `env=${process.env.NODE_ENV} campaign_id=${campaignModel._id}`;
+  const prefix = `env=${process.env.NODE_ENV} campaign_id=${campaignModel._id} run_id=${campaignModel.run_id}`;
 
   // Migrate old campaign models.
   if (!campaignModel.mobileCommonsGroups.doing || !campaignModel.mobileCommonsGroups.completed) {
