@@ -52,6 +52,12 @@ function sendSmsResponse(req, msg) {
  */
 router.post('/', (req, res) => {
   const scope = req;
+  const controller = app.locals.controllers.campaignBot;
+  if (!controller) {
+    logger.error('app.locals.controllers.campaignBot undefined');
+
+    return res.sendStatus(500);
+  }
 
   scope.incoming_message = req.body.args;
   scope.incoming_image_url = req.body.mms_image_url;
@@ -114,13 +120,6 @@ router.post('/', (req, res) => {
 
         return res.send(signup);
       });
-  }
-
-  const controller = app.locals.controllers.campaignBot;
-  if (!controller) {
-    logger.error('app.locals.controllers.campaignBot undefined');
-
-    return res.sendStatus(500);
   }
 
   return controller
