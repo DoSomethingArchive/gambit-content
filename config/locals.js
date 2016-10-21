@@ -5,6 +5,7 @@
  */
 const gambitJunior = rootRequire('lib/junior');
 const mobilecommons = rootRequire('lib/mobilecommons');
+const parser = require('xml2json');
 
 const logger = app.locals.logger;
 
@@ -46,15 +47,33 @@ function cacheCampaign(phoenixCampaign) {
  * @see https://github.com/DoSomething/gambit/issues/673
  */
 function createMobileCommonsGroupsForCampaign(campaignModel) {
-  const prefix = `campaign_${campaignModel._id}`;
-  // Makes sense to namespace for Thor for testing?
-  // if (process.env.NODE_ENV !== 'production') {
-  //   prefix = `thor_${prefix}`;
-  // }
-  mobilecommons.createGroup(`${prefix}_doing`);
-  mobilecommons.createGroup(`${prefix}_completed`);
+  const prefix = `env=${process.env.NODE_ENV} campaign_id=${campaignModel._id}`;
 
-  return true;
+  // Migrate old campaign models.
+  if (!campaignModel.mobileCommonsGroups.doing || !campaignModel.mobileCommonsGroups.completed) {
+    campaignModel.mobileCommonsGroups = {
+      doing: '',
+      completed: '',
+    }
+  }
+
+  // Create mobile commons groups & store ID on campaign model.
+  mobilecommons.createGroup(`${prefix} status=doing`)
+  .then(doingGroup => {
+    doingGroup = JSON.parse(parser.toJson(doingGroup));
+    if (doingGroup.response.success === 'true') {
+      campaignModel.mobileCommonsGroups.doing = doingGroup.response.group.id;
+    }
+  })
+  .then(() => mobilecommons.createGroup(`${prefix} status=completed`))
+  .then(completedGroup => {
+    completedGroup = JSON.parse(parser.toJson(completedGroup));
+    if (completedGroup.response.success === 'true') {
+      campaignModel.mobileCommonsGroups.completed = completedGroup.response.group.id;
+    }
+  })
+  .then(() => campaignModel.save())
+  .catch(err => console.log(err));
 }
 
 /**
