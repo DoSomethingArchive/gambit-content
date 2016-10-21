@@ -84,6 +84,9 @@ router.post('/', (req, res) => {
 
   let campaignID;
 
+  /**
+   * Check for Mobile Commons Keyword Signup from incoming mData request.
+   */
   if (req.body.keyword) {
     scope.keyword = req.body.keyword.toLowerCase();
     logger.debug(`keyword:${scope.keyword}`);
@@ -95,6 +98,22 @@ router.post('/', (req, res) => {
 
       return res.sendStatus(500);
     }
+  }
+
+  /**
+   * Check for external Signup from incoming Quicksilver request.
+   */
+  if (req.body.signup) {
+    const signupID = Number(req.body.signup);
+    logger.debug(`signupID:${signupID}`);
+
+    return app.locals.db.signups
+      .getById(signupID)
+      .then((signup) => {
+        logger.debug(signup);
+
+        return res.send(signup);
+      });
   }
 
   const controller = app.locals.controllers.campaignBot;

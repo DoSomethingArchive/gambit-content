@@ -1,11 +1,16 @@
 'use strict';
 
 /**
- * Models a DS Signup.
+ * Imports.
  */
 const mongoose = require('mongoose');
+const Promise = require('bluebird');
 
-const schema = new mongoose.Schema({
+const logger = app.locals.logger;
+/**
+ * Schema.
+ */
+const signupSchema = new mongoose.Schema({
 
   _id: { type: Number, index: true },
   user: { type: String, index: true },
@@ -27,5 +32,49 @@ const schema = new mongoose.Schema({
 });
 
 module.exports = function (connection) {
-  return connection.model('signups', schema);
+  return connection.model('signups', signupSchema);
 };
+
+/**
+ * Statics.
+ */
+
+/**
+ * Query DS API for given Signup id and store.
+ */
+signupSchema.statics.getById = Promise.method(function(id) {
+  app.locals.logger.debug(`Signup.getById:${id}`);
+
+  return app.locals.clients.northstar.Signups.get(id)
+    .then(northstarSignup => {
+      logger.debug(northstarSignup);
+
+      return signupSchema.statics.store(northstarSignup);
+    });
+});
+
+/**
+ * Parse given Northstar Signup and return Signup model.
+ */
+signupSchema.statics.store = Promise.method(function(northstarSignup) {
+  logger.debug(`cacheSignup id:${northstarSignup.id}`);
+
+  const data = {
+    _id: Number(northstarSignup.id),
+    user: northstarSignup.user,
+    campaign: northstarSignup.campaign,
+  };
+  // Only set if this was called from postSignup(req).
+  if (northstarSignup.keyword) {
+    data.keyword = northstarSignup.keyword;
+  }
+  if (northstarSignup.reportback) {
+    data.reportback = Number(northstarSignup.reportback.id);
+    data.total_quantity_submitted = northstarSignup.reportback.quantity;
+  }
+
+  // Something's off here -- should be able to use this instead of app.locals.db.signups
+  return app.locals.db.signups
+    .findOneAndUpdate({ _id: northstarSignup.id }, data, { upsert: true, new: true })
+    .exec();
+});
