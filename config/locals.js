@@ -51,10 +51,11 @@ function createMobileCommonsGroupsForCampaign(campaignModel) {
 
   // Migrate old campaign models.
   if (!campaignModel.mobileCommonsGroups.doing || !campaignModel.mobileCommonsGroups.completed) {
-    campaignModel.mobileCommonsGroups = {
+    const groups = {
       doing: '',
       completed: '',
-    }
+    };
+    campaignModel.mobileCommonsGroups = campaignModel.mobileCommonsGroups;
   }
 
   // Create mobile commons groups & store ID on campaign model.
@@ -62,18 +63,20 @@ function createMobileCommonsGroupsForCampaign(campaignModel) {
   .then(doingGroup => {
     doingGroup = JSON.parse(parser.toJson(doingGroup));
     if (doingGroup.response.success === 'true') {
-      campaignModel.mobileCommonsGroups.doing = doingGroup.response.group.id;
+      const groupId = doingGroup.response.group.id;
+      campaignModel.mobileCommonsGroups.doing = groupId;
     }
   })
   .then(() => mobilecommons.createGroup(`${prefix} status=completed`))
   .then(completedGroup => {
     completedGroup = JSON.parse(parser.toJson(completedGroup));
     if (completedGroup.response.success === 'true') {
-      campaignModel.mobileCommonsGroups.completed = completedGroup.response.group.id;
+      const groupId = completedGroup.response.group.id;
+      campaignModel.mobileCommonsGroups.completed = groupId;
     }
   })
   .then(() => campaignModel.save())
-  .catch(err => console.log(err));
+  .catch(err => logger.error(err));
 }
 
 /**
