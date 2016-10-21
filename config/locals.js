@@ -55,7 +55,7 @@ function createMobileCommonsGroupsForCampaign(campaignModel) {
       doing: '',
       completed: '',
     };
-    campaignModel.mobileCommonsGroups = campaignModel.mobileCommonsGroups;
+    campaignModel.mobileCommonsGroups = groups;
   }
 
   // Create mobile commons groups & store ID on campaign model.
