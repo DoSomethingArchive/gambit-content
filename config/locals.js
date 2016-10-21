@@ -49,7 +49,9 @@ function cacheCampaign(phoenixCampaign) {
  */
 function createMobileCommonsGroupsForCampaign(campaignModel) {
   const campaignScope = campaignModel;
-  const prefix = `env=${process.env.NODE_ENV} campaign_id=${campaignModel._id} run_id=${campaignModel.run_id}`;
+  const prefix = `env=${process.env.NODE_ENV}
+                  campaign_id=${campaignModel._id}
+                  run_id=${campaignModel.run_id}`;
 
   // Migrate old campaign models.
   if (!campaignModel.mobileCommonsGroups.doing || !campaignModel.mobileCommonsGroups.completed) {
