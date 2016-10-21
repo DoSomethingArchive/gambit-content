@@ -30,6 +30,12 @@ const schema = new mongoose.Schema({
   msg_menu_signedup: String,
   msg_no_photo_sent: String,
 
+  // Mobile Commons Specific Fields.
+  mobileCommonsGroups: {
+    doing: String,
+    completed: String,
+  },
+
 });
 
 module.exports = function (connection) {
