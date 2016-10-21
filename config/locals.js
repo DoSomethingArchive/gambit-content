@@ -61,17 +61,17 @@ function createMobileCommonsGroupsForCampaign(campaignModel) {
   // Create mobile commons groups & store ID on campaign model.
   mobilecommons.createGroup(`${prefix} status=doing`)
   .then(doingGroup => {
-    doingGroup = JSON.parse(parser.toJson(doingGroup));
-    if (doingGroup.response.success === 'true') {
-      const groupId = doingGroup.response.group.id;
+    const parsedGroup = JSON.parse(parser.toJson(doingGroup));
+    if (parsedGroup.response.success === 'true') {
+      const groupId = parsedGroup.response.group.id;
       campaignModel.mobileCommonsGroups.doing = groupId;
     }
   })
   .then(() => mobilecommons.createGroup(`${prefix} status=completed`))
   .then(completedGroup => {
-    completedGroup = JSON.parse(parser.toJson(completedGroup));
-    if (completedGroup.response.success === 'true') {
-      const groupId = completedGroup.response.group.id;
+    const parsedGroup = JSON.parse(parser.toJson(completedGroup));
+    if (parsedGroup.response.success === 'true') {
+      const groupId = parsedGroup.response.group.id;
       campaignModel.mobileCommonsGroups.completed = groupId;
     }
   })
