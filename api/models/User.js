@@ -27,40 +27,10 @@ const userSchema = new mongoose.Schema({
 
 });
 
-module.exports = function (connection) {
-  return connection.model('users', userSchema);
-};
-
 /**
- * Statics.
+ * Parse given Northstar User for User model.
  */
-
-/**
- * Query DS API for given User type/id and store.
- */
-userSchema.statics.get = Promise.method((type, id) => {
-  logger.debug(`User.get type:${type} id:${id}`);
-
-  return app.locals.clients.northstar.Users
-    .get(type, id)
-    .then((northstarUser) => {
-      logger.debug('northstar.Users.get success');
-
-      return userSchema.statics.store(northstarUser);
-    })
-    .catch(() => {
-      logger.debug(`could not getUser type:${type} id:${id}`);
-
-      return null;
-    });
-});
-
-/**
- * Parse given Northstar User and return User model.
- */
-userSchema.statics.store = Promise.method((northstarUser) => {
-  logger.debug(`User.store id:${northstarUser.id}`);
-
+function parseNorthstarUser(northstarUser) {
   const data = {
     _id: northstarUser.id,
     mobile: northstarUser.mobile,
@@ -68,12 +38,52 @@ userSchema.statics.store = Promise.method((northstarUser) => {
     email: northstarUser.email,
     phoenix_id: northstarUser.drupalID,
     role: northstarUser.role,
-    campaigns: {},
   };
 
-  return app.locals.db.users
-    .findOneAndUpdate({ _id: data._id }, data, {
-      upsert: true,
-      new: true,
-    });
-});
+  return data;
+}
+
+/**
+ * Query DS API for given User type/id and store.
+ */
+userSchema.statics.get = function (type, id) {
+  const model = this;
+
+  return new Promise((resolve, reject) => {
+    logger.debug(`User.get type:${type} id:${id}`);
+
+    return app.locals.clients.northstar.Users
+      .get(type, id)
+      .then((northstarUser) => {
+        logger.debug('northstar.Users.get success');
+        const data = parseNorthstarUser(northstarUser);
+
+        return model
+          .findOneAndUpdate({ _id: data._id }, data, { upsert: true, new: true })
+          .exec()
+          .then(user => resolve(user))
+          .catch(error => reject(error));
+      });
+  });
+};
+
+/**
+ * Set given signup campaign to user current_campaign, stores to campaigns hash map.
+ */
+userSchema.methods.setCurrentSignup = function (signup) {
+  const user = this;
+
+  return new Promise((resolve, reject) => {
+    logger.debug(`setCurrentSignup user:${user._id} campaigns[${signup.campaign}]:${signup.id}`);
+
+    user.campaigns[signup.campaign] = signup.id;
+    user.current_campaign = signup.campaign;
+    return user.save()
+      .then(updatedUser => resolve(updatedUser))
+      .catch(error => reject(error));
+  });
+};
+
+module.exports = function (connection) {
+  return connection.model('users', userSchema);
+};

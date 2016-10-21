@@ -21,7 +21,7 @@ function gambitResponse(msg) {
  * @param {object} req - Incoming Express request, with loaded req.user model
  * @param {string} msg - Chatbot message responding back to user
  */
-function sendSmsResponse(req, msg) {
+function sendToMobileCommons(req, msg) {
   if (process.env.MOBILECOMMONS_DISABLED) {
     logger.warn('MOBILECOMMONS_DISABLED');
 
@@ -53,15 +53,9 @@ function sendSmsResponse(req, msg) {
 router.post('/', (req, res) => {
   const scope = req;
   const controller = app.locals.controllers.campaignBot;
-  if (!controller) {
-    logger.error('app.locals.controllers.campaignBot undefined');
-
-    return res.sendStatus(500);
-  }
 
   scope.incoming_message = req.body.args;
   scope.incoming_image_url = req.body.mms_image_url;
-
   logger.debug(`msg:${scope.incoming_message} img:${scope.incoming_image_url}`);
 
   const botType = req.query.bot_type;
@@ -88,6 +82,44 @@ router.post('/', (req, res) => {
     return res.sendStatus(500);
   }
 
+  let currentSignup;
+
+  /**
+   * Check for external Signup from incoming Quicksilver request.
+   */
+  if (req.body.signup_id) {
+    const signupID = req.body.signup_id;
+    const source = req.body.signup_source;
+    logger.debug(`chatbot signup:${signupID} source:${source}`);
+
+    if (req.body.signup_source === process.env.DS_API_POST_SOURCE) {
+      return res.send(`Already sent confirmation for signup ${signupID} source:${source}.`);
+    }
+
+    return app.locals.db.signups
+      .lookupByID(signupID)
+      .then((signup) => {
+        currentSignup = signup;
+
+        return app.locals.db.users.get('id', currentSignup.user);
+      })
+      .then((user) => {
+        if (!user) {
+          return res.status(500).status('Cannot find user for signup');
+        }
+
+        return user.setCurrentSignup(currentSignup);
+      })
+      .then((user) => {
+        scope.user = user;
+        scope.signup = currentSignup;
+        scope.campaign = app.locals.campaigns[currentSignup.campaign];
+        const responseMsg = controller.renderResponseMessage(scope, 'menu_signedup');
+
+        return res.send(gambitResponse(responseMsg));
+      });
+  }
+
   let campaignID;
 
   /**
@@ -104,22 +136,6 @@ router.post('/', (req, res) => {
 
       return res.sendStatus(500);
     }
-  }
-
-  /**
-   * Check for external Signup from incoming Quicksilver request.
-   */
-  if (req.body.signup) {
-    const signupID = Number(req.body.signup);
-    logger.debug(`signupID:${signupID}`);
-
-    return app.locals.db.signups
-      .getById(signupID)
-      .then((signup) => {
-        logger.debug(`signup.user:${signup.user}`);
-
-        return res.send(signup);
-      });
   }
 
   return controller
@@ -208,7 +224,7 @@ router.post('/', (req, res) => {
     .then(msg => {
       controller.debug(scope, `sendMessage:${msg}`);
       controller.setCurrentCampaign(scope.user, scope.campaign._id);
-      sendSmsResponse(scope, msg);
+      sendToMobileCommons(scope, msg);
 
       return res.send(gambitResponse(msg));
     })

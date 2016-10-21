@@ -174,6 +174,7 @@ class CampaignBotController {
    * Gets Signup from DS API if exists for given user, else creates new Signup.
    * @param {object} req - Express request, expects loaded user and campaign.
    * @return {object} - Signup model
+   * TODO: Split this out into Signup/User methods.
    */
   getCurrentSignup(req) {
     this.debug(req, 'getCurrentSignup');
@@ -194,7 +195,7 @@ class CampaignBotController {
       const currentSignup = signups[0];
       this.debug(req, `currentSignup.id:${currentSignup.id}`);
 
-      return app.locals.db.signups.store(currentSignup);
+      return app.locals.db.signups.storeNorthstarSignup(currentSignup);
     })
     .then((signupDoc) => {
       if (!signupDoc) {
@@ -535,7 +536,7 @@ class CampaignBotController {
     msg = msg.replace(/{{cmd_reportback}}/i, process.env.GAMBIT_CMD_REPORTBACK);
     msg = msg.replace(/{{cmd_member_support}}/i, process.env.GAMBIT_CMD_MEMBER_SUPPORT);
 
-    if (campaign.keywords) {
+    if (campaign.keywords.length) {
       let keyword = campaign.keywords[0].toUpperCase();
       if (req.signup && req.signup.keyword) {
         keyword = req.signup.keyword.toUpperCase();

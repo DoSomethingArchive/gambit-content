@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 const Promise = require('bluebird');
 
 const logger = app.locals.logger;
+
 /**
  * Schema.
  */
@@ -14,7 +15,10 @@ const signupSchema = new mongoose.Schema({
 
   _id: { type: Number, index: true },
   user: { type: String, index: true },
-  campaign: { type: Number, index: true },
+  campaign: {
+    type: Number,
+    ref: 'campaigns',
+  },
   keyword: String,
   draft_reportback_submission: {
     type: mongoose.Schema.Types.ObjectId,
@@ -31,38 +35,11 @@ const signupSchema = new mongoose.Schema({
 
 });
 
-module.exports = function (connection) {
-  return connection.model('signups', signupSchema);
-};
-
-/**
- * Statics.
- */
-
-/**
- * Query DS API for given Signup id and store.
- */
-signupSchema.statics.getById = Promise.method((id) => {
-  app.locals.logger.debug(`Signup.getById:${id}`);
-
-  return app.locals.clients.northstar.Signups.get(id)
-    .then(northstarSignup => {
-      logger.debug(`northstar.Signups.get:${id} success`);
-
-      return signupSchema.statics.store(northstarSignup);
-    });
-});
-
-/**
- * Parse given Northstar Signup and return Signup model.
- */
-signupSchema.statics.store = Promise.method((northstarSignup) => {
-  logger.debug(`Signup.store id:${northstarSignup.id}`);
-
+function parseNorthstarSignup(northstarSignup) {
   const data = {
     _id: Number(northstarSignup.id),
     user: northstarSignup.user,
-    campaign: northstarSignup.campaign,
+    campaign: Number(northstarSignup.campaign),
   };
   // Only set if this was called from postSignup(req).
   if (northstarSignup.keyword) {
@@ -73,8 +50,48 @@ signupSchema.statics.store = Promise.method((northstarSignup) => {
     data.total_quantity_submitted = northstarSignup.reportback.quantity;
   }
 
-  // Something's off here -- should be able to use this instead of app.locals.db.signups
-  return app.locals.db.signups
-    .findOneAndUpdate({ _id: northstarSignup.id }, data, { upsert: true, new: true })
-    .exec();
-});
+  return data;
+}
+
+/**
+ * Get given Signup ID from DS API then store.
+ */
+signupSchema.statics.lookupByID = function (signupID) {
+  const model = this;
+
+  return new Promise((resolve, reject) => {
+    logger.debug(`Signup.lookupByID:${signupID}`);
+
+    return app.locals.clients.northstar
+      .Signups.get(signupID)
+      .then(northstarSignup => {
+        logger.debug(`northstar.Signups.get:${signupID} success`);
+        const data = parseNorthstarSignup(northstarSignup);
+
+        return model.findOneAndUpdate({ _id: signupID }, data, { upsert: true, new: true })
+          .exec()
+          .then(signup => resolve(signup))
+          .catch(error => reject(error));
+      });
+  });
+};
+
+
+// TODO: DRY - when we move CampaignBotController getCurrentSignup to this class
+signupSchema.statics.storeNorthstarSignup = function (northstarSignup) {
+  const model = this;
+
+  return new Promise((resolve, reject) => {
+    logger.debug(`Signup.storeNorthstarSignup:${northstarSignup.id}`);
+    const data = parseNorthstarSignup(northstarSignup);
+
+    return model.findOneAndUpdate({ _id: data._id }, data, { upsert: true, new: true })
+      .exec()
+      .then(signup => resolve(signup))
+      .catch(error => reject(error));
+  });
+};
+
+module.exports = function (connection) {
+  return connection.model('signups', signupSchema);
+};
