@@ -63,7 +63,33 @@ userSchema.statics.lookup = function (type, id) {
           .exec()
           .then(user => resolve(user))
           .catch(error => reject(error));
-      });
+      })
+      .catch((error) => reject(error));
+  });
+};
+
+/**
+ * Post user to DS API.
+ */
+userSchema.statics.post = function (newUser) {
+  const model = this;
+
+  return new Promise((resolve, reject) => {
+    logger.debug(`User.post data:${JSON.stringify(newUser)}`);
+
+    return app.locals.clients.northstar.Users
+      .create(newUser)
+      .then((northstarUser) => {
+        logger.info(`northstar.Users created user:${northstarUser.id}`);
+        const data = parseNorthstarUser(northstarUser);
+
+        return model
+          .findOneAndUpdate({ _id: data._id }, data, { upsert: true, new: true })
+          .exec()
+          .then(user => resolve(user))
+          .catch(error => reject(error));
+      })
+      .catch(error => reject(error));
   });
 };
 

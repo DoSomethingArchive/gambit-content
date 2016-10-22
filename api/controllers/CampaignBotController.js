@@ -23,29 +23,6 @@ class CampaignBotController {
   }
 
   /**
-   * Upserts model for given Northstar User.
-   */
-  cacheUser(northstarUser) {
-    logger.debug(`cacheUser id:${northstarUser.id}`);
-
-    const data = {
-      _id: northstarUser.id,
-      mobile: northstarUser.mobile,
-      first_name: northstarUser.firstName,
-      email: northstarUser.email,
-      phoenix_id: northstarUser.drupalID,
-      role: northstarUser.role,
-      campaigns: {},
-    };
-
-    return app.locals.db.users
-      .findOneAndUpdate({ _id: data._id }, data, {
-        upsert: true,
-        new: true,
-      });
-  }
-
-  /**
    * Handles asking for and saving the given property to our draft submission.
    * Posts completed submissions to DS API
    * @param {object} req - Express request
@@ -263,6 +240,7 @@ class CampaignBotController {
   }
 
   /**
+   * TODO: Move to User as instance function.
    * Returns whether given user is DS staff.
    * @param {object} user
    * @return {bool}
@@ -274,6 +252,7 @@ class CampaignBotController {
   }
 
   /**
+   * TODO: Move to Signup as Static function.
    * Loads Signup model if exists for given id, else get/create from API.
    * @param {object} req - Express request
    * @param {number} id - DS Signup ID
@@ -299,6 +278,7 @@ class CampaignBotController {
   }
 
   /**
+   * TODO: Move to User.js as static function
    * Loads User model if exists for given id, else get/create from API.
    * @param {string} id - DS User ID (Northstar)
    * @return {object}
@@ -333,12 +313,11 @@ class CampaignBotController {
     // Check if Northstar User exists for mobile number.
     return app.locals.db.users
       .lookup('mobile', req.body.phone)
-      .then((user) => {
-        if (!user) {
-          return this.postUser(req);
-        }
+      .then(user => user)
+      .catch(() => {
+        logger.debug(`app.locals.db.users.lookup could not find mobile:${req.body.phone}`);
 
-        return user;
+        return this.postUser(req);
       });
   }
 
@@ -456,6 +435,7 @@ class CampaignBotController {
   }
 
   /**
+   * TODO: Move this into Signup class as static method.
    * Posts Signup to DS API and returns cached signup.
    * @param {object} req - Express request - expects loaded user and campaign
    * @return {object} - Signup model
@@ -477,8 +457,9 @@ class CampaignBotController {
           keyword: req.keyword,
         };
 
-        return this.cacheSignup(signupObject);
-      });
+        return app.locals.db.signups.storeNorthstarSignup(signupObject);
+      })
+      .catch(error => logger.error(error));
   }
 
   /**
@@ -497,13 +478,7 @@ class CampaignBotController {
       data.email = `${data.mobile}@${defaultEmail}`;
     }
 
-    return app.locals.clients.northstar.Users
-      .create(data)
-      .then((user) => {
-        this.debug(req, `created user:${user.id}`);
-
-        return this.cacheUser(user);
-      });
+    return app.locals.db.users.post(data);
   }
 
   /**
