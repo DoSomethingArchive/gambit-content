@@ -17,34 +17,36 @@ function gambitResponse(msg) {
 }
 
 /**
- * Sends SMS response back to the incoming Mobile Commons request.
+ * Send SMS with given msg back to our incoming Mobile Commons user by updating their MC Profile.
  * @param {object} req - Incoming Express request, with loaded req.user model
  * @param {string} msg - Chatbot message responding back to user
  */
-function sendToMobileCommons(req, msg) {
+function postMobileCommonsProfile(req, msg) {
   if (process.env.MOBILECOMMONS_DISABLED) {
     logger.warn('MOBILECOMMONS_DISABLED');
 
     return;
   }
 
-  let mobilecommonsOIP = process.env.MOBILECOMMONS_OIP_CHATBOT;
+  let mobileCommonsOIP = process.env.MOBILECOMMONS_OIP_CHATBOT;
   if (req.cmd_member_support) {
-    mobilecommonsOIP = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
+    mobileCommonsOIP = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
   }
-  // The Mobile Commons OIP we post to below needs to render our user's gambit_chatbot_response
-  // Custom Field in their Mobile Commons Profile, which we update via profile_update POST below.
-  // @see https://github.com/DoSomething/gambit/wiki/Chatbot#mobile-commons
+
   const data = {
+    // Target Mobile Commons OIP must render gambit_chatbot_response in Liquid to deliver the msg.
+    // @see https://github.com/DoSomething/gambit/wiki/Chatbot#mobile-commons
     gambit_chatbot_response: msg,
+    // Store campaign for current conversation to expose in a Mobile Commons Profile.
+    gambit_current_campaign: req.campaign._id,
   };
   // If no Northstar ID is currently saved on user's Mobile Commons profile:
   if (!req.body.profile_northstar_id) {
-    // Save it to avoid future Northstar GET users requests in subsequent incoming Gambit requests.
+    // Save it to avoid future Northstar GET users requests in subsequent incoming chatbot requests.
     data.northstar_id = req.user._id;
   }
 
-  mobilecommons.profile_update(req.user.mobile, mobilecommonsOIP, data);
+  mobilecommons.profile_update(req.user.mobile, mobileCommonsOIP, data);
 }
 
 /**
@@ -224,7 +226,7 @@ router.post('/', (req, res) => {
     .then(msg => {
       controller.debug(scope, `sendMessage:${msg}`);
       scope.user.setCurrentCampaign(scope.signup);
-      sendToMobileCommons(scope, msg);
+      postMobileCommonsProfile(scope, msg);
 
       return res.send(gambitResponse(msg));
     })
