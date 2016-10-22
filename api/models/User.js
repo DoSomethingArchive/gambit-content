@@ -46,16 +46,16 @@ function parseNorthstarUser(northstarUser) {
 /**
  * Query DS API for given User type/id and store.
  */
-userSchema.statics.get = function (type, id) {
+userSchema.statics.lookup = function (type, id) {
   const model = this;
 
   return new Promise((resolve, reject) => {
-    logger.debug(`User.get type:${type} id:${id}`);
+    logger.debug(`User.lookup type:${type} id:${id}`);
 
     return app.locals.clients.northstar.Users
       .get(type, id)
       .then((northstarUser) => {
-        logger.debug('northstar.Users.get success');
+        logger.debug('northstar.Users.lookup success');
         const data = parseNorthstarUser(northstarUser);
 
         return model

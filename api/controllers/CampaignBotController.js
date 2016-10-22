@@ -332,7 +332,7 @@ class CampaignBotController {
 
     // Check if Northstar User exists for mobile number.
     return app.locals.db.users
-      .get('mobile', req.body.phone)
+      .lookup('mobile', req.body.phone)
       .then((user) => {
         if (!user) {
           return this.postUser(req);

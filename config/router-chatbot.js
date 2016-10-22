@@ -101,7 +101,7 @@ router.post('/', (req, res) => {
       .then((signup) => {
         currentSignup = signup;
 
-        return app.locals.db.users.get('id', currentSignup.user);
+        return app.locals.db.users.lookup('id', currentSignup.user);
       })
       .then((user) => {
         if (!user) {
