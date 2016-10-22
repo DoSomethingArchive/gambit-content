@@ -108,7 +108,7 @@ router.post('/', (req, res) => {
           return res.status(500).status('Cannot find user for signup');
         }
 
-        return user.setCurrentSignup(currentSignup);
+        return user.setCurrentCampaign(currentSignup);
       })
       .then((user) => {
         scope.user = user;
@@ -223,7 +223,7 @@ router.post('/', (req, res) => {
     })
     .then(msg => {
       controller.debug(scope, `sendMessage:${msg}`);
-      controller.setCurrentCampaign(scope.user, scope.campaign._id);
+      scope.user.setCurrentCampaign(scope.signup);
       sendToMobileCommons(scope, msg);
 
       return res.send(gambitResponse(msg));

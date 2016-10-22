@@ -94,9 +94,9 @@ userSchema.statics.post = function (newUser) {
 };
 
 /**
- * Set given signup campaign to user current_campaign, stores to campaigns hash map.
+ * Set given signup on user's campaigns hash map, sets signup.campaign to user.current_campaign.
  */
-userSchema.methods.setCurrentSignup = function (signup) {
+userSchema.methods.setCurrentCampaign = function (signup) {
   const user = this;
 
   return new Promise((resolve, reject) => {

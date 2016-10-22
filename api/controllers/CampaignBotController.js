@@ -537,19 +537,6 @@ class CampaignBotController {
     return msg;
   }
 
-  /**
-   * Updates the given User model's current_campaign property to given campaignId.
-   */
-  setCurrentCampaign(user, campaignId) {
-    if (campaignId === user.current_campaign) {
-      return true;
-    }
-
-    return app.locals.db.users
-      .findByIdAndUpdate(user._id, { current_campaign: campaignId })
-      .exec();
-  }
-
 }
 
 module.exports = CampaignBotController;
