@@ -102,6 +102,8 @@ router.post('/', (req, res) => {
       .lookupByID(signupID)
       .then((signup) => {
         currentSignup = signup;
+        // TODO: Check if currentSignup.campaign is defined in CAMPAIGNBOT_CAMPAIGNS.
+        // If it's not, send Express response to alert, and exit.
 
         return app.locals.db.users.lookup('id', currentSignup.user);
       })
