@@ -4,6 +4,7 @@
  * Imports.
  */
 const gambitJunior = rootRequire('lib/junior');
+
 const logger = app.locals.logger;
 
 /**
@@ -29,6 +30,7 @@ function cacheCampaign(phoenixCampaign) {
     status: phoenixCampaign.status,
     tagline: phoenixCampaign.tagline,
     title: phoenixCampaign.title,
+    current_run: phoenixCampaign.currentCampaignRun.id,
     msg_rb_confirmation: phoenixCampaign.reportbackInfo.confirmationMessage,
     rb_noun: phoenixCampaign.reportbackInfo.noun,
     rb_verb: phoenixCampaign.reportbackInfo.verb,
@@ -136,16 +138,20 @@ module.exports.loadCampaign = function (phoenixCampaign) {
   const campaignID = phoenixCampaign.id;
   logger.debug(`loadCampaign:${campaignID}`);
 
+  let campaign;
+
   return cacheCampaign(phoenixCampaign)
     .then((campaignDoc) => {
       if (!campaignDoc) {
         return null;
       }
+      campaign = campaignDoc;
+      campaign.createMobileCommonsGroups();
 
-      app.locals.campaigns[campaignID] = campaignDoc;
+      app.locals.campaigns[campaignID] = campaign;
       logger.debug(`loaded app.locals.campaigns[${campaignID}]`);
 
-      return loadKeywordsForCampaign(campaignDoc);
+      return loadKeywordsForCampaign(campaign);
     })
     .catch(err => logger.error(err));
 };
