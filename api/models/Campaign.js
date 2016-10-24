@@ -46,7 +46,6 @@ const schema = new mongoose.Schema({
 function setMobileCommonsGroup(campaign, status, group) {
   const scope = campaign;
   const parsedGroup = JSON.parse(parser.toJson(group));
-
   // If the group name is available...
   if (parsedGroup.response.success === 'true') {
 
@@ -72,7 +71,7 @@ schema.methods.createMobileCommonsGroups = function () {
   .then(() => mobilecommons.createGroup(`${prefix} status=completed`))
   .then(completedGroup => setMobileCommonsGroup(campaign, 'completed', completedGroup))
   .then(() => campaign.save())
-  .catch(err => logger.error(err));
+  .catch(err => logger.error(err););
 }
 
 module.exports = function (connection) {
