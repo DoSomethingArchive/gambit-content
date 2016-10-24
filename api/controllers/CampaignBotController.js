@@ -296,7 +296,7 @@ class CampaignBotController {
           if (!user) {
             this.debug(req, `no doc for user:${userID}`);
 
-            return app.locals.db.users.get('id', userID);
+            return app.locals.db.users.lookup('id', userID);
           }
           this.debug(req, `found doc for user:${userID}`);
 

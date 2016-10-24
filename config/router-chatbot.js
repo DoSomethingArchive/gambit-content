@@ -118,9 +118,11 @@ router.post('/', (req, res) => {
         scope.user = user;
         scope.signup = currentSignup;
         scope.campaign = app.locals.campaigns[currentSignup.campaign];
-        const responseMsg = controller.renderResponseMessage(scope, 'menu_signedup');
 
-        return res.send(gambitResponse(responseMsg));
+        const msg = controller.renderResponseMessage(scope, 'menu_signedup_external');
+        postMobileCommonsProfile(scope, msg);
+
+        return res.send(gambitResponse(msg));
       });
   }
 
@@ -220,7 +222,7 @@ router.post('/', (req, res) => {
       }
 
       if (scope.keyword) {
-        return controller.renderResponseMessage(scope, 'menu_signedup');
+        return controller.renderResponseMessage(scope, 'menu_signedup_gambit');
       }
 
       return controller.renderResponseMessage(scope, 'invalid_cmd_signedup');
