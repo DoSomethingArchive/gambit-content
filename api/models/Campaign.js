@@ -48,7 +48,6 @@ function setMobileCommonsGroup(campaign, status, group) {
   const parsedGroup = JSON.parse(parser.toJson(group));
   // If the group name is available...
   if (parsedGroup.response.success === 'true') {
-
     // Save newly created group id to this campaign.
     const groupId = parsedGroup.response.group.id;
     scope.mobile_commons_groups[status] = groupId;
