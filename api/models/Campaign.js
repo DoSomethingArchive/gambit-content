@@ -71,7 +71,7 @@ schema.methods.createMobileCommonsGroups = function () {
   .then(completedGroup => setMobileCommonsGroup(campaign, 'completed', completedGroup))
   .then(() => campaign.save())
   .catch(err => logger.error(err));
-}
+};
 
 module.exports = function (connection) {
   return connection.model('campaigns', schema);
