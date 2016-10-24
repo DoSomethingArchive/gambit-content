@@ -4,7 +4,6 @@
  * Imports.
  */
 const gambitJunior = rootRequire('lib/junior');
-const mobilecommons = rootRequire('lib/mobilecommons');
 
 const logger = app.locals.logger;
 
