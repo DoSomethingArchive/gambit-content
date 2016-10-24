@@ -5,7 +5,6 @@
  */
 const gambitJunior = rootRequire('lib/junior');
 const mobilecommons = rootRequire('lib/mobilecommons');
-const parser = require('xml2json');
 
 const logger = app.locals.logger;
 
@@ -41,37 +40,6 @@ function cacheCampaign(phoenixCampaign) {
   return app.locals.db.campaigns
     .findOneAndUpdate({ _id: phoenixCampaign.id }, data, { upsert: true, new: true })
     .exec();
-}
-
-/**
- * Create Doing/Completed Mobile Commons Groups to support Mobile Commons broadcasting.
- * @see https://github.com/DoSomething/gambit/issues/673
- */
-function createMobileCommonsGroupsForCampaign(campaignModel) {
-  const campaignScope = campaignModel;
-  const prefix = `env=${process.env.NODE_ENV}
-                  campaign_id=${campaignModel._id}
-                  run_id=${campaignModel.current_run}`;
-
-  // Create mobile commons groups & store ID on campaign model.
-  mobilecommons.createGroup(`${prefix} status=doing`)
-  .then(doingGroup => {
-    const parsedGroup = JSON.parse(parser.toJson(doingGroup));
-    if (parsedGroup.response.success === 'true') {
-      const groupId = parsedGroup.response.group.id;
-      campaignScope.mobile_commons_groups.doing = groupId;
-    }
-  })
-  .then(() => mobilecommons.createGroup(`${prefix} status=completed`))
-  .then(completedGroup => {
-    const parsedGroup = JSON.parse(parser.toJson(completedGroup));
-    if (parsedGroup.response.success === 'true') {
-      const groupId = parsedGroup.response.group.id;
-      campaignScope.mobile_commons_groups.completed = groupId;
-    }
-  })
-  .then(() => campaignScope.save())
-  .catch(err => logger.error(err));
 }
 
 /**
@@ -179,13 +147,13 @@ module.exports.loadCampaign = function (phoenixCampaign) {
         return null;
       }
       campaign = campaignDoc;
+      campaign.createMobileCommonsGroups();
 
       app.locals.campaigns[campaignID] = campaign;
       logger.debug(`loaded app.locals.campaigns[${campaignID}]`);
 
       return loadKeywordsForCampaign(campaign);
     })
-    .then(() => createMobileCommonsGroupsForCampaign(campaign))
     .catch(err => logger.error(err));
 };
 

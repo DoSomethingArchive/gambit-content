@@ -4,6 +4,8 @@
  * Models a DS Campaign.
  */
 const mongoose = require('mongoose');
+const mobilecommons = rootRequire('lib/mobilecommons');
+const parser = require('xml2json');
 
 const schema = new mongoose.Schema({
 
@@ -38,6 +40,37 @@ const schema = new mongoose.Schema({
   },
 
 });
+
+function setMobileCommonsGroup(campaign, status, group) {
+  const parsedGroup = JSON.parse(parser.toJson(group));
+
+  // If the group name is available...
+  if (parsedGroup.response.success === 'true') {
+
+    // Save newly created group id to this campaign.
+    const groupId = parsedGroup.response.group.id;
+    campaign.mobile_commons_groups[status] = groupId;
+  }
+}
+
+/**
+ * Create Doing/Completed Mobile Commons Groups to support Mobile Commons broadcasting.
+ * @see https://github.com/DoSomething/gambit/issues/673
+ */
+schema.methods.createMobileCommonsGroups = function() {
+  const campaign = this;
+  const prefix = `env=${process.env.NODE_ENV}
+                  campaign_id=${campaign._id}
+                  run_id=${campaign.current_run}`;
+
+  // Create mobile commons group with custom name based on this campaign
+  mobilecommons.createGroup(`${prefix} status=doing`)
+  .then(doingGroup => setMobileCommonsGroup(campaign, 'doing', doingGroup))
+  .then(() => mobilecommons.createGroup(`${prefix} status=completed`))
+  .then(completedGroup => setMobileCommonsGroup(campaign, 'completed', completedGroup))
+  .then(() => campaign.save())
+  .catch(err => logger.error(err));
+}
 
 module.exports = function (connection) {
   return connection.model('campaigns', schema);
