@@ -36,21 +36,28 @@ const schema = new mongoose.Schema({
   msg_no_photo_sent: String,
 
   // Mobile Commons Specific Fields.
-  mobile_commons_groups: {
+  mobilecommons_groups: {
     doing: Number,
     completed: Number,
   },
 
 });
 
-function setMobileCommonsGroup(campaign, status, group) {
+/**
+ * For a given campaign, update its mobile commons group id,
+ * based on the mobile commons response.
+ * @param {Campaign} campaign    Campaign model to update.
+ * @param {string} status        Either completed or doing.
+ * @param {string} groupResponse XML string from mobile commons API.
+ */
+function setMobileCommonsGroup(campaign, status, groupResponse) {
   const scope = campaign;
-  const parsedGroup = JSON.parse(parser.toJson(group));
+  const parsedGroup = JSON.parse(parser.toJson(groupResponse));
   // If the group name is available...
   if (parsedGroup.response.success === 'true') {
     // Save newly created group id to this campaign.
     const groupId = parsedGroup.response.group.id;
-    scope.mobile_commons_groups[status] = groupId;
+    scope.mobilecommons_groups[status] = groupId;
   }
 }
 
