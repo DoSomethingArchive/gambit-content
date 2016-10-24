@@ -32,7 +32,7 @@ function cacheCampaign(phoenixCampaign) {
     status: phoenixCampaign.status,
     tagline: phoenixCampaign.tagline,
     title: phoenixCampaign.title,
-    run_id: phoenixCampaign.currentCampaignRun.id,
+    current_run: phoenixCampaign.currentCampaignRun.id,
     msg_rb_confirmation: phoenixCampaign.reportbackInfo.confirmationMessage,
     rb_noun: phoenixCampaign.reportbackInfo.noun,
     rb_verb: phoenixCampaign.reportbackInfo.verb,
@@ -51,16 +51,7 @@ function createMobileCommonsGroupsForCampaign(campaignModel) {
   const campaignScope = campaignModel;
   const prefix = `env=${process.env.NODE_ENV}
                   campaign_id=${campaignModel._id}
-                  run_id=${campaignModel.run_id}`;
-
-  // Migrate old campaign models.
-  if (!campaignModel.mobileCommonsGroups.doing || !campaignModel.mobileCommonsGroups.completed) {
-    const groups = {
-      doing: '',
-      completed: '',
-    };
-    campaignScope.mobileCommonsGroups = groups;
-  }
+                  run_id=${campaignModel.current_run}`;
 
   // Create mobile commons groups & store ID on campaign model.
   mobilecommons.createGroup(`${prefix} status=doing`)
@@ -68,7 +59,7 @@ function createMobileCommonsGroupsForCampaign(campaignModel) {
     const parsedGroup = JSON.parse(parser.toJson(doingGroup));
     if (parsedGroup.response.success === 'true') {
       const groupId = parsedGroup.response.group.id;
-      campaignScope.mobileCommonsGroups.doing = groupId;
+      campaignScope.mobile_commons_groups.doing = groupId;
     }
   })
   .then(() => mobilecommons.createGroup(`${prefix} status=completed`))
@@ -76,7 +67,7 @@ function createMobileCommonsGroupsForCampaign(campaignModel) {
     const parsedGroup = JSON.parse(parser.toJson(completedGroup));
     if (parsedGroup.response.success === 'true') {
       const groupId = parsedGroup.response.group.id;
-      campaignScope.mobileCommonsGroups.completed = groupId;
+      campaignScope.mobile_commons_groups.completed = groupId;
     }
   })
   .then(() => campaignScope.save())

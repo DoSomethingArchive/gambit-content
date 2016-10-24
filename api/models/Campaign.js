@@ -12,7 +12,7 @@ const schema = new mongoose.Schema({
 
   // Properties cached from DS API.
   title: String,
-  run_id: Number,
+  current_run: Number,
   msg_rb_confirmation: String,
   rb_noun: String,
   rb_verb: String,
@@ -32,7 +32,7 @@ const schema = new mongoose.Schema({
   msg_no_photo_sent: String,
 
   // Mobile Commons Specific Fields.
-  mobileCommonsGroups: {
+  mobile_commons_groups: {
     doing: Number,
     completed: Number,
   },
