@@ -1,17 +1,22 @@
-# Gambit
-
-This is __Gambit__, a DoSomething.org chatbot API for use with Mobile Commons.
+# API
 
 
-## Endpoints
+## Chatbot
 
-#### Chatbot
 Endpoint                                       | Functionality                                           
 ---------------------------------------------- | --------------------------------------------------------
 `POST /v1/chatbot` | [Chat](endpoints/chatbot.md#chat)
 
 
-#### DS Campaigns
+## Campaigns
+
+Endpoint                                       | Functionality                                           
+---------------------------------------------- | --------------------------------------------------------
+`GET /v1/campaigns` | [Retrieve all campaigns](endpoints/campaigns.md#retrieve-all-campaigns)
+`GET /v1/campaigns/:id` | [Retrieve a campaign](endpoints/campaigns.md#retrieve-a-campaigns)
+
+
+## Legacy
 
 > :memo: We're looking to deprecate these, so don't get too attached!
 
