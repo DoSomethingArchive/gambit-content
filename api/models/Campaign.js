@@ -27,7 +27,8 @@ const schema = new mongoose.Schema({
   msg_invalid_quantity: String,
   msg_member_support: String,
   msg_menu_completed: String,
-  msg_menu_signedup: String,
+  msg_menu_signedup_external: String,
+  msg_menu_signedup_gambit: String,
   msg_no_photo_sent: String,
 
 });

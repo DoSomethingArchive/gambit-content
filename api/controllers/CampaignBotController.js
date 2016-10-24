@@ -23,57 +23,6 @@ class CampaignBotController {
   }
 
   /**
-   * Upserts model for given Northstar Signup.
-   */
-  cacheSignup(northstarSignup) {
-    logger.debug(`cacheSignup id:${northstarSignup.id}`);
-
-    const data = {
-      _id: Number(northstarSignup.id),
-      user: northstarSignup.user,
-      campaign: northstarSignup.campaign,
-      // Delete existing draft submission in case we're updating existing
-      // Signup model (e.g. if we're handling a clear cache command)
-      draft_reportback_submission: null,
-    };
-    // Only set if this was called from postSignup(req).
-    if (northstarSignup.keyword) {
-      data.keyword = northstarSignup.keyword;
-    }
-    if (northstarSignup.reportback) {
-      data.reportback = Number(northstarSignup.reportback.id);
-      data.total_quantity_submitted = northstarSignup.reportback.quantity;
-    }
-
-    return app.locals.db.signups
-      .findOneAndUpdate({ _id: northstarSignup.id }, data, { upsert: true, new: true })
-      .exec();
-  }
-
-  /**
-   * Upserts model for given Northstar User.
-   */
-  cacheUser(northstarUser) {
-    logger.debug(`cacheUser id:${northstarUser.id}`);
-
-    const data = {
-      _id: northstarUser.id,
-      mobile: northstarUser.mobile,
-      first_name: northstarUser.firstName,
-      email: northstarUser.email,
-      phoenix_id: northstarUser.drupalID,
-      role: northstarUser.role,
-      campaigns: {},
-    };
-
-    return app.locals.db.users
-      .findOneAndUpdate({ _id: data._id }, data, {
-        upsert: true,
-        new: true,
-      });
-  }
-
-  /**
    * Handles asking for and saving the given property to our draft submission.
    * Posts completed submissions to DS API
    * @param {object} req - Express request
@@ -202,6 +151,7 @@ class CampaignBotController {
    * Gets Signup from DS API if exists for given user, else creates new Signup.
    * @param {object} req - Express request, expects loaded user and campaign.
    * @return {object} - Signup model
+   * TODO: Split this out into Signup/User methods.
    */
   getCurrentSignup(req) {
     this.debug(req, 'getCurrentSignup');
@@ -222,7 +172,7 @@ class CampaignBotController {
       const currentSignup = signups[0];
       this.debug(req, `currentSignup.id:${currentSignup.id}`);
 
-      return this.cacheSignup(currentSignup);
+      return app.locals.db.signups.storeNorthstarSignup(currentSignup);
     })
     .then((signupDoc) => {
       if (!signupDoc) {
@@ -242,28 +192,6 @@ class CampaignBotController {
 
       return signup;
     });
-  }
-
-  /**
-   * Gets User from DS API if exists for given type/id, else creates new User.
-   * @param {object} req
-   * @return {object} - User model
-   */
-  getUser(type, id) {
-    logger.debug(`getUser type:${type} id:${id}`);
-
-    return app.locals.clients.northstar.Users
-      .get(type, id)
-      .then((user) => {
-        logger.debug('northstar.Users.get success');
-
-        return this.cacheUser(user);
-      })
-      .catch(() => {
-        logger.debug(`could not getUser type:${type} id:${id}`);
-
-        return null;
-      });
   }
 
   /**
@@ -312,6 +240,7 @@ class CampaignBotController {
   }
 
   /**
+   * TODO: Move to User as instance function.
    * Returns whether given user is DS staff.
    * @param {object} user
    * @return {bool}
@@ -323,6 +252,7 @@ class CampaignBotController {
   }
 
   /**
+   * TODO: Move to Signup as Static function.
    * Loads Signup model if exists for given id, else get/create from API.
    * @param {object} req - Express request
    * @param {number} id - DS Signup ID
@@ -348,6 +278,7 @@ class CampaignBotController {
   }
 
   /**
+   * TODO: Move to User.js as static function
    * Loads User model if exists for given id, else get/create from API.
    * @param {string} id - DS User ID (Northstar)
    * @return {object}
@@ -365,7 +296,7 @@ class CampaignBotController {
           if (!user) {
             this.debug(req, `no doc for user:${userID}`);
 
-            return this.getUser('id', userID);
+            return app.locals.db.users.lookup('id', userID);
           }
           this.debug(req, `found doc for user:${userID}`);
 
@@ -380,14 +311,13 @@ class CampaignBotController {
     }
 
     // Check if Northstar User exists for mobile number.
-    return this
-      .getUser('mobile', req.body.phone)
-      .then((user) => {
-        if (!user) {
-          return this.postUser(req);
-        }
+    return app.locals.db.users
+      .lookup('mobile', req.body.phone)
+      .then(user => user)
+      .catch(() => {
+        logger.debug(`app.locals.db.users.lookup could not find mobile:${req.body.phone}`);
 
-        return user;
+        return this.postUser(req);
       });
   }
 
@@ -505,6 +435,7 @@ class CampaignBotController {
   }
 
   /**
+   * TODO: Move this into Signup class as static method.
    * Posts Signup to DS API and returns cached signup.
    * @param {object} req - Express request - expects loaded user and campaign
    * @return {object} - Signup model
@@ -526,8 +457,9 @@ class CampaignBotController {
           keyword: req.keyword,
         };
 
-        return this.cacheSignup(signupObject);
-      });
+        return app.locals.db.signups.storeNorthstarSignup(signupObject);
+      })
+      .catch(error => logger.error(error));
   }
 
   /**
@@ -546,13 +478,7 @@ class CampaignBotController {
       data.email = `${data.mobile}@${defaultEmail}`;
     }
 
-    return app.locals.clients.northstar.Users
-      .create(data)
-      .then((user) => {
-        this.debug(req, `created user:${user.id}`);
-
-        return this.cacheUser(user);
-      });
+    return app.locals.db.users.post(data);
   }
 
   /**
@@ -585,7 +511,7 @@ class CampaignBotController {
     msg = msg.replace(/{{cmd_reportback}}/i, process.env.GAMBIT_CMD_REPORTBACK);
     msg = msg.replace(/{{cmd_member_support}}/i, process.env.GAMBIT_CMD_MEMBER_SUPPORT);
 
-    if (campaign.keywords) {
+    if (campaign.keywords.length) {
       let keyword = campaign.keywords[0].toUpperCase();
       if (req.signup && req.signup.keyword) {
         keyword = req.signup.keyword.toUpperCase();
@@ -609,19 +535,6 @@ class CampaignBotController {
     }
 
     return msg;
-  }
-
-  /**
-   * Updates the given User model's current_campaign property to given campaignId.
-   */
-  setCurrentCampaign(user, campaignId) {
-    if (campaignId === user.current_campaign) {
-      return true;
-    }
-
-    return app.locals.db.users
-      .findByIdAndUpdate(user._id, { current_campaign: campaignId })
-      .exec();
   }
 
 }
