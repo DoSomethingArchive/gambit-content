@@ -17,34 +17,36 @@ function gambitResponse(msg) {
 }
 
 /**
- * Sends SMS response back to the incoming Mobile Commons request.
+ * Send SMS with given msg back to our incoming Mobile Commons user by updating their MC Profile.
  * @param {object} req - Incoming Express request, with loaded req.user model
  * @param {string} msg - Chatbot message responding back to user
  */
-function sendSmsResponse(req, msg) {
+function postMobileCommonsProfile(req, msg) {
   if (process.env.MOBILECOMMONS_DISABLED) {
     logger.warn('MOBILECOMMONS_DISABLED');
 
     return;
   }
 
-  let mobilecommonsOIP = process.env.MOBILECOMMONS_OIP_CHATBOT;
+  let mobileCommonsOIP = process.env.MOBILECOMMONS_OIP_CHATBOT;
   if (req.cmd_member_support) {
-    mobilecommonsOIP = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
+    mobileCommonsOIP = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
   }
-  // The Mobile Commons OIP we post to below needs to render our user's gambit_chatbot_response
-  // Custom Field in their Mobile Commons Profile, which we update via profile_update POST below.
-  // @see https://github.com/DoSomething/gambit/wiki/Chatbot#mobile-commons
+
   const data = {
+    // Target Mobile Commons OIP must render gambit_chatbot_response in Liquid to deliver the msg.
+    // @see https://github.com/DoSomething/gambit/wiki/Chatbot#mobile-commons
     gambit_chatbot_response: msg,
+    // Store campaign for current conversation to expose in a Mobile Commons Profile.
+    gambit_current_campaign: req.campaign._id,
   };
   // If no Northstar ID is currently saved on user's Mobile Commons profile:
   if (!req.body.profile_northstar_id) {
-    // Save it to avoid future Northstar GET users requests in subsequent incoming Gambit requests.
+    // Save it to avoid future Northstar GET users requests in subsequent incoming chatbot requests.
     data.northstar_id = req.user._id;
   }
 
-  mobilecommons.profile_update(req.user.mobile, mobilecommonsOIP, data);
+  mobilecommons.profile_update(req.user.mobile, mobileCommonsOIP, data);
 }
 
 /**
@@ -52,10 +54,10 @@ function sendSmsResponse(req, msg) {
  */
 router.post('/', (req, res) => {
   const scope = req;
+  const controller = app.locals.controllers.campaignBot;
 
   scope.incoming_message = req.body.args;
   scope.incoming_image_url = req.body.mms_image_url;
-
   logger.debug(`msg:${scope.incoming_message} img:${scope.incoming_image_url}`);
 
   const botType = req.query.bot_type;
@@ -82,8 +84,53 @@ router.post('/', (req, res) => {
     return res.sendStatus(500);
   }
 
+  let currentSignup;
+
+  /**
+   * Check for external Signup from incoming Quicksilver request.
+   */
+  if (req.body.signup_id) {
+    const signupID = req.body.signup_id;
+    const source = req.body.signup_source;
+    logger.debug(`chatbot signup:${signupID} source:${source}`);
+
+    if (req.body.signup_source === process.env.DS_API_POST_SOURCE) {
+      return res.send(`Already sent confirmation for signup ${signupID} source:${source}.`);
+    }
+
+    return app.locals.db.signups
+      .lookupByID(signupID)
+      .then((signup) => {
+        currentSignup = signup;
+        // TODO: Check if currentSignup.campaign is defined in CAMPAIGNBOT_CAMPAIGNS.
+        // If it's not, send Express response to alert, and exit.
+
+        return app.locals.db.users.lookup('id', currentSignup.user);
+      })
+      .then((user) => {
+        if (!user) {
+          return res.status(500).status('Cannot find user for signup');
+        }
+
+        return user.setCurrentCampaign(currentSignup);
+      })
+      .then((user) => {
+        scope.user = user;
+        scope.signup = currentSignup;
+        scope.campaign = app.locals.campaigns[currentSignup.campaign];
+
+        const msg = controller.renderResponseMessage(scope, 'menu_signedup_external');
+        postMobileCommonsProfile(scope, msg);
+
+        return res.send(gambitResponse(msg));
+      });
+  }
+
   let campaignID;
 
+  /**
+   * Check for Mobile Commons Keyword Signup from incoming mData request.
+   */
   if (req.body.keyword) {
     scope.keyword = req.body.keyword.toLowerCase();
     logger.debug(`keyword:${scope.keyword}`);
@@ -95,13 +142,6 @@ router.post('/', (req, res) => {
 
       return res.sendStatus(500);
     }
-  }
-
-  const controller = app.locals.controllers.campaignBot;
-  if (!controller) {
-    logger.error('app.locals.controllers.campaignBot undefined');
-
-    return res.sendStatus(500);
   }
 
   return controller
@@ -182,15 +222,15 @@ router.post('/', (req, res) => {
       }
 
       if (scope.keyword) {
-        return controller.renderResponseMessage(scope, 'menu_signedup');
+        return controller.renderResponseMessage(scope, 'menu_signedup_gambit');
       }
 
       return controller.renderResponseMessage(scope, 'invalid_cmd_signedup');
     })
     .then(msg => {
       controller.debug(scope, `sendMessage:${msg}`);
-      controller.setCurrentCampaign(scope.user, scope.campaign._id);
-      sendSmsResponse(scope, msg);
+      scope.user.setCurrentCampaign(scope.signup);
+      postMobileCommonsProfile(scope, msg);
 
       return res.send(gambitResponse(msg));
     })
