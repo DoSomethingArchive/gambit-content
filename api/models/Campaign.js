@@ -43,7 +43,8 @@ const schema = new mongoose.Schema({
 
 });
 
-function setMobileCommonsGroup(status, group) {
+function setMobileCommonsGroup(campaign, status, group) {
+  const scope = campaign;
   const parsedGroup = JSON.parse(parser.toJson(group));
 
   // If the group name is available...
@@ -51,7 +52,7 @@ function setMobileCommonsGroup(status, group) {
 
     // Save newly created group id to this campaign.
     const groupId = parsedGroup.response.group.id;
-    this.mobile_commons_groups[status] = groupId;
+    scope.mobile_commons_groups[status] = groupId;
   }
 }
 
@@ -67,9 +68,9 @@ schema.methods.createMobileCommonsGroups = function () {
 
   // Create mobile commons group with custom name based on this campaign
   mobilecommons.createGroup(`${prefix} status=doing`)
-  .then(doingGroup => setMobileCommonsGroup('doing', doingGroup).bind(campaign))
+  .then(doingGroup => setMobileCommonsGroup(campaign, 'doing', doingGroup))
   .then(() => mobilecommons.createGroup(`${prefix} status=completed`))
-  .then(completedGroup => setMobileCommonsGroup('completed', completedGroup).bind(campaign))
+  .then(completedGroup => setMobileCommonsGroup(campaign, 'completed', completedGroup))
   .then(() => campaign.save())
   .catch(err => logger.error(err));
 }
