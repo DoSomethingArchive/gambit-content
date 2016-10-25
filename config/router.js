@@ -50,7 +50,13 @@ router.get('/v1/campaigns/:id', (req, res) => {
   return app.locals.db.campaigns
     .findById(req.params.id)
     .exec()
-    .then(campaign => res.send({ data: campaign }))
+    .then(campaign => {
+      if (!campaign) {
+        return res.sendStatus(404);
+      }
+
+      return res.send({ data: campaign });
+    })
     .catch(error => res.send(error));
 });
 
