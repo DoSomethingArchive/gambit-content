@@ -37,8 +37,6 @@ function postMobileCommonsProfile(req, msg) {
     // Target Mobile Commons OIP must render gambit_chatbot_response in Liquid to deliver the msg.
     // @see https://github.com/DoSomething/gambit/wiki/Chatbot#mobile-commons
     gambit_chatbot_response: msg,
-    // Store campaign for current conversation to expose in a Mobile Commons Profile.
-    gambit_current_campaign: req.campaign._id,
   };
   // If no Northstar ID is currently saved on user's Mobile Commons profile:
   if (!req.body.profile_northstar_id) {
@@ -142,6 +140,18 @@ router.post('/', (req, res) => {
 
       return res.sendStatus(500);
     }
+    if (scope.campaign.status === 'closed') {
+      // TODO: Custom newrelic event? Stathat? the keyword needs to be turned off in Mobile Commons
+      // or assigned to a different active CampaignBot Campaign.
+      logger.error(`Received keyword:${scope.keyword} for closed campaign:${campaignID}`);
+
+      const msg = controller.renderResponseMessage(scope, 'campaign_closed');
+      // TODO: This won't work because we don't have a loaded scope.user to update Northstar ID.
+      // Need to load current User before we check for a keyword.
+      // postMobileCommonsProfile(scope, msg);
+
+      return res.send(gambitResponse(msg));
+    }
   }
 
   return controller
@@ -197,12 +207,6 @@ router.post('/', (req, res) => {
       if (controller.isCommand(scope, 'member_support')) {
         scope.cmd_member_support = true;
         return controller.renderResponseMessage(scope, 'member_support');
-      }
-
-      if (scope.campaign.status === 'closed') {
-        controller.debug(scope, 'campaign closed');
-
-        return controller.renderResponseMessage(scope, 'campaign_closed');
       }
 
       if (scope.signup.draft_reportback_submission) {
