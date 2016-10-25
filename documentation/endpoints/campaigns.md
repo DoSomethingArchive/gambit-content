@@ -12,7 +12,7 @@ Returns index of Gambit Campaign models stored in `campaigns` collection.
 
 Name | Type | Description
 --- | --- | ---
-`start` | `boolean` | If set to `true`, only return Campaigns defined in `CAMPAIGNBOT_CAMPAIGNS`
+`campaignbot` | `boolean` | If set to `true`, only return Campaigns defined in `CAMPAIGNBOT_CAMPAIGNS`
 
 ## Retrieve a Campaign
 
