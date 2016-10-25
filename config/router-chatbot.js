@@ -56,7 +56,14 @@ router.post('/', (req, res) => {
 
   scope.incoming_message = req.body.args;
   scope.incoming_image_url = req.body.mms_image_url;
-  logger.debug(`msg:${scope.incoming_message} img:${scope.incoming_image_url}`);
+  let incomingLog = `msg:${scope.incoming_message} img:${scope.incoming_image_url}`;
+
+  if (req.body.keyword) {
+    scope.keyword = req.body.keyword.toLowerCase();
+    incomingLog = `${incomingLog} keyword:${scope.keyword}`;
+  }
+
+  logger.debug(incomingLog);
 
   const botType = req.query.bot_type;
   if (botType === 'donorschoose' || botType === 'donorschoosebot') {
@@ -160,6 +167,7 @@ router.post('/', (req, res) => {
   }
 
   let campaignID;
+  let currentCampaign;
 
   return currentUser
     .then((user) => {
@@ -167,51 +175,53 @@ router.post('/', (req, res) => {
 
       scope.user = user;
 
-      /**
-       * Check if incoming Mobile Commons request was triggered by a keyword.
-       */
-      if (req.body.keyword) {
-        scope.keyword = req.body.keyword.toLowerCase();
-        logger.debug(`keyword:${scope.keyword}`);
+      // Check if incoming Mobile Commons request was triggered by a keyword.
+      if (scope.keyword) {
+        // Find the Campaign associated with keyword.
+        campaignID = app.locals.keywords[scope.keyword];
+        currentCampaign = app.locals.campaigns[campaignID];
 
-        campaignID = app.locals.keywords[req.keyword];
-        scope.campaign = app.locals.campaigns[campaignID];
-        if (!scope.campaign) {
-          logger.error(`app.locals.campaigns[${campaignID}] undefined`);
+        if (!currentCampaign) {
+          // TODO: throw custom CampaignNotFoundError
+          logger.error(`keyword app.locals.campaigns[${campaignID}] undefined`);
 
-          return res.sendStatus(500);
+          return false;
         }
-        if (scope.campaign.status === 'closed') {
+
+        if (currentCampaign.status === 'closed') {
           // TODO: Fire custom newrelic/stathat event? keyword needs to be removed in Mobile Commons
           // or assigned to a different active CampaignBot Campaign.
           logger.error(`Received keyword:${scope.keyword} for closed campaign:${campaignID}`);
+          // TODO: throw custom CampaignClosedError
 
-          const msg = controller.renderResponseMessage(scope, 'campaign_closed');
-          // TODO: This won't work because we don't have a loaded scope.user to update Northstar ID.
-          // Need to load current User before we check for a keyword.
-          postMobileCommonsProfile(scope, msg);
-
-          return res.send(gambitResponse(msg));
+          return false;
         }
+
+        return currentCampaign;
       }
 
-      // If we haven't loaded a campaign from an incoming keyword yet:
-      if (!scope.campaign) {
-        // Load user's current campaign (set from our last response).
-        campaignID = user.current_campaign;
-        controller.debug(scope, `current_campaign:${campaignID}`);
+      // Load user's current campaign (set from our last response).
+      campaignID = user.current_campaign;
+      logger.debug(`user.current_campaign:${campaignID}`);
+      const notFound = !(campaignID && app.locals.campaigns[campaignID]);
 
-        if (!campaignID) {
-          // TODO: Send to non-existent start menu to select a campaign.
-          logger.error(`user:${user._id} current_campaign undefined`);
-        }
+      if (!notFound) {
+        // TODO: Send to non-existent start menu to select a campaign.
+        logger.error(`user:${user._id} current_campaign ${campaignID} undefined`);
+        // TODO: throw CampaignNotFoundError
 
-        scope.campaign = app.locals.campaigns[campaignID];
-        if (!scope.campaign) {
-          // TODO: Send to non-existent start menu to select campaign if saved campaign not found.
-          logger.error(`app.locals.campaigns[${campaignID}] undefined`);
-        }
+        return false;
       }
+
+      return currentCampaign;
+    })
+    .then((campaign) => {
+      if (!campaign) {
+        return false;
+      }
+
+      scope.campaign = campaign;
+      logger.debug(`loaded campaign:${campaign._id}`);
 
       if (controller.isCommand(req, 'clear_cache')) {
         scope.user.campaigns = {};
@@ -220,9 +230,7 @@ router.post('/', (req, res) => {
         return controller.getCurrentSignup(scope);
       }
 
-      // TODO: Sanity check. If we still haven't loaded scope.campaign here, push to the menu.
-
-      const signupID = user.campaigns[campaignID];
+      const signupID = scope.user.campaigns[campaignID];
       if (signupID) {
         return controller.loadCurrentSignup(scope, signupID);
       }
