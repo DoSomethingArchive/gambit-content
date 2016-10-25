@@ -107,7 +107,7 @@ router.post('/', (req, res) => {
       })
       .then((user) => {
         if (!user) {
-          return res.status(500).status('Cannot find user for signup');
+          return res.status(500).send({ error: 'Cannot find user for signup' });
         }
 
         return user.setCurrentCampaign(currentSignup);
@@ -124,42 +124,76 @@ router.post('/', (req, res) => {
       });
   }
 
-  let campaignID;
-
   /**
-   * Check for Mobile Commons Keyword Signup from incoming mData request.
+   * Load current User from incoming Mobile Commons request.
    */
-  if (req.body.keyword) {
-    scope.keyword = req.body.keyword.toLowerCase();
-    logger.debug(`keyword:${scope.keyword}`);
-
-    campaignID = app.locals.keywords[req.keyword];
-    scope.campaign = app.locals.campaigns[campaignID];
-    if (!scope.campaign) {
-      logger.error(`app.locals.campaigns[${campaignID}] undefined`);
-
-      return res.sendStatus(500);
-    }
-    if (scope.campaign.status === 'closed') {
-      // TODO: Custom newrelic event? Stathat? the keyword needs to be turned off in Mobile Commons
-      // or assigned to a different active CampaignBot Campaign.
-      logger.error(`Received keyword:${scope.keyword} for closed campaign:${campaignID}`);
-
-      const msg = controller.renderResponseMessage(scope, 'campaign_closed');
-      // TODO: This won't work because we don't have a loaded scope.user to update Northstar ID.
-      // Need to load current User before we check for a keyword.
-      // postMobileCommonsProfile(scope, msg);
-
-      return res.send(gambitResponse(msg));
-    }
+  if (!req.body.profile_northstar_id && !req.body.phone) {
+    return res.status(422).send({ error: 'profile_northstar_id or phone is required.' });
   }
 
-  return controller
-    .loadUser(req)
-    .then(user => {
+  let currentUser;
+
+  if (req.body.profile_northstar_id) {
+    const userID = req.body.profile_northstar_id;
+    currentUser = app.locals.db.users
+      .findById(userID)
+      .exec()
+      .then(user => {
+        if (!user) {
+          logger.debug(`no doc for user:${userID}`);
+
+          return app.locals.db.users.lookup('id', userID);
+        }
+        logger.debug(`found doc for user:${userID}`);
+
+        return user;
+      });
+  } else {
+    currentUser = app.locals.db.users
+      .lookup('mobile', req.body.phone)
+      .then(user => user)
+      .catch(() => {
+        logger.debug(`app.locals.db.users.lookup could not find mobile:${req.body.phone}`);
+
+        return app.locals.db.users.createForMobileCommonsRequest(req);
+      });
+  }
+
+  let campaignID;
+
+  return currentUser
+    .then((user) => {
       logger.debug(`loaded user:${user._id}`);
 
       scope.user = user;
+
+      /**
+       * Check if incoming Mobile Commons request was triggered by a keyword.
+       */
+      if (req.body.keyword) {
+        scope.keyword = req.body.keyword.toLowerCase();
+        logger.debug(`keyword:${scope.keyword}`);
+
+        campaignID = app.locals.keywords[req.keyword];
+        scope.campaign = app.locals.campaigns[campaignID];
+        if (!scope.campaign) {
+          logger.error(`app.locals.campaigns[${campaignID}] undefined`);
+
+          return res.sendStatus(500);
+        }
+        if (scope.campaign.status === 'closed') {
+          // TODO: Fire custom newrelic/stathat event? keyword needs to be removed in Mobile Commons
+          // or assigned to a different active CampaignBot Campaign.
+          logger.error(`Received keyword:${scope.keyword} for closed campaign:${campaignID}`);
+
+          const msg = controller.renderResponseMessage(scope, 'campaign_closed');
+          // TODO: This won't work because we don't have a loaded scope.user to update Northstar ID.
+          // Need to load current User before we check for a keyword.
+          postMobileCommonsProfile(scope, msg);
+
+          return res.send(gambitResponse(msg));
+        }
+      }
 
       // If we haven't loaded a campaign from an incoming keyword yet:
       if (!scope.campaign) {
