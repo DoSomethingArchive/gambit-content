@@ -146,7 +146,9 @@ module.exports.loadCampaign = function (phoenixCampaign) {
         return null;
       }
       campaign = campaignDoc;
-      campaign.createMobileCommonsGroups();
+
+      // Commenting this out for now to unblock prod deploy.
+      // campaign.createMobileCommonsGroups();
 
       app.locals.campaigns[campaignID] = campaign;
       logger.debug(`loaded app.locals.campaigns[${campaignID}]`);
