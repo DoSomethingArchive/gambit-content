@@ -16,6 +16,7 @@ const campaignSchema = new mongoose.Schema({
   // Properties cached from DS API.
   title: String,
   current_run: Number,
+  fact_problem: String,
   msg_rb_confirmation: String,
   rb_noun: String,
   rb_verb: String,
@@ -49,6 +50,7 @@ function parsePhoenixCampaign(phoenixCampaign) {
     tagline: phoenixCampaign.tagline,
     title: phoenixCampaign.title,
     current_run: phoenixCampaign.currentCampaignRun.id,
+    fact_problem: phoenixCampaign.facts.problem,
     msg_rb_confirmation: phoenixCampaign.reportbackInfo.confirmationMessage,
     rb_noun: phoenixCampaign.reportbackInfo.noun,
     rb_verb: phoenixCampaign.reportbackInfo.verb,
