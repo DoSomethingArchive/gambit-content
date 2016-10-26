@@ -155,7 +155,7 @@ router.post('/', (req, res) => {
       return app.locals.db.users
         .findById(userID)
         .exec()
-        .then(user => {
+        .then((user) => {
           if (!user) {
             logger.debug(`no doc for user:${userID}`);
 
