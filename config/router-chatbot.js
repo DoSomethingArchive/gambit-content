@@ -9,12 +9,8 @@ const mobilecommons = rootRequire('lib/mobilecommons');
 const logger = app.locals.logger;
 const Promise = require('bluebird');
 
-function CampaignClosedError() {}
-CampaignClosedError.prototype = Object.create(Error.prototype);
-
-function CampaignNotFoundError() {}
-CampaignNotFoundError.prototype = Object.create(Error.prototype);
-
+class CampaignClosedError extends Error {}
+class CampaignNotFoundError extends Error {}
 
 /**
  * Formats our Express return response.
