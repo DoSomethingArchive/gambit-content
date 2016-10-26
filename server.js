@@ -56,7 +56,7 @@ if (!app.locals.logger) {
 
 const loader = require('./config/locals');
 
-require('./config/router');
+require('./router');
 
 /**
  * Load models.

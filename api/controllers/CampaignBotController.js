@@ -278,50 +278,6 @@ class CampaignBotController {
   }
 
   /**
-   * TODO: Move to User.js as static function
-   * Loads User model if exists for given id, else get/create from API.
-   * @param {string} id - DS User ID (Northstar)
-   * @return {object}
-   */
-  loadUser(req) {
-    this.debug(req, 'loadUser');
-
-    const userID = req.body.profile_northstar_id;
-    // If request already contains a User ID, load from cache.
-    if (userID) {
-      return app.locals.db.users
-        .findById(userID)
-        .exec()
-        .then(user => {
-          if (!user) {
-            this.debug(req, `no doc for user:${userID}`);
-
-            return app.locals.db.users.lookup('id', userID);
-          }
-          this.debug(req, `found doc for user:${userID}`);
-
-          return user;
-        });
-    }
-
-    if (!req.body.phone) {
-      logger.error('Undefined req.body.phone');
-
-      return null;
-    }
-
-    // Check if Northstar User exists for mobile number.
-    return app.locals.db.users
-      .lookup('mobile', req.body.phone)
-      .then(user => user)
-      .catch(() => {
-        logger.debug(`app.locals.db.users.lookup could not find mobile:${req.body.phone}`);
-
-        return this.postUser(req);
-      });
-  }
-
-  /**
    * Helper function for this.debug and this.error functions.
    * @param {object} req - Express request
    * @return {string}
@@ -344,29 +300,6 @@ class CampaignBotController {
    */
   parseCommand(req) {
     return helpers.getFirstWordUppercase(req.incoming_message);
-  }
-
-  /**
-   * Parse incoming request for User data to post to DS API.
-   */
-  parseMobilecommonsProfile(req) {
-    const data = {
-      mobile: req.body.phone,
-    };
-    if (req.body.profile_email) {
-      data.email = req.body.profile_email;
-    }
-    if (req.body.profile_first_name) {
-      data.first_name = req.body.profile_first_name;
-    }
-    if (req.body.profile_id) {
-      data.mobilecommons_id = req.body.profile_id;
-    }
-    if (req.body.profile_postal_code) {
-      data.addr_zip = req.body.profile_postal_code;
-    }
-
-    return data;
   }
 
   /**
@@ -459,26 +392,9 @@ class CampaignBotController {
 
         return app.locals.db.signups.storeNorthstarSignup(signupObject);
       })
-      .catch(error => logger.error(error));
-  }
-
-  /**
-   * Posts new User to DS API.
-   * @param {object} req - Express request
-   * @return {object} - User model
-   */
-  postUser(req) {
-    this.debug(req, 'postUser');
-
-    const data = this.parseMobilecommonsProfile(req);
-    data.source = DS_API_POST_SOURCE;
-    data.password = helpers.generatePassword(data.mobile);
-    if (!data.email) {
-      const defaultEmail = process.env.DS_API_DEFAULT_USER_EMAIL || 'mobile.import';
-      data.email = `${data.mobile}@${defaultEmail}`;
-    }
-
-    return app.locals.db.users.post(data);
+      .catch((error) => {
+        logger.error(`postSignup error status=${error.status}`);
+      });
   }
 
   /**
@@ -488,7 +404,7 @@ class CampaignBotController {
    * @return {string} - msgTxt with all variables replaced with req properties
    */
   renderResponseMessage(req, msgType) {
-    this.debug(req, `renderResponseMessage:${msgType}`);
+    logger.debug(`renderResponseMessage:${msgType}`);
     const campaign = req.campaign;
 
     const botProperty = `msg_${msgType}`;
@@ -500,6 +416,12 @@ class CampaignBotController {
 
     if (!msg) {
       return this.error(req, 'bot msgType not found');
+    }
+
+    if (!req.campaign) {
+      logger.error('renderResponseMessage req.campaign undefined');
+
+      return msg;
     }
 
     msg = msg.replace(/{{br}}/gi, '\n');

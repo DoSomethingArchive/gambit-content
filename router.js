@@ -23,7 +23,7 @@ router.use((req, res, next) => {
 /**
  * Chatbot.
  */
-const chatbotRouter = rootRequire('config/router-chatbot');
+const chatbotRouter = require('./router-chatbot');
 router.use('/v1/chatbot', chatbotRouter);
 
 /**

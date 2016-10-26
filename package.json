@@ -10,7 +10,7 @@
   "scripts": {
     "test": "npm run lint",
     "start": "node server",
-    "lint": "eslint --ext=.js server.js config api/models api/controllers/CampaignBotController.js lib/gambit-junior.js"
+    "lint": "eslint --ext=.js server.js router.js router-chatbot.js config api/exceptions api/models api/controllers/CampaignBotController.js lib/gambit-junior.js"
   },
   "eslintConfig": {
     "globals": {
