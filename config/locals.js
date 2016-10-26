@@ -75,10 +75,9 @@ module.exports.loadBot = function (botType, id) {
   const model = app.locals.db[endpoint];
 
   return model.lookupByID(id)
-    .then((bot) => {
-      if (bot) {
-        return bot;
-      }
+    .then((bot) => bot)
+    .catch((err) => {
+      logger.error(`${endpoint}.lookupByID:${id} failed`);
 
       return app.locals.db[endpoint]
         .findById(id)
