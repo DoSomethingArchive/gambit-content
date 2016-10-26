@@ -24,8 +24,8 @@ module.exports.getModels = function (conn) {
 /**
  * Gets given bot from API, or loads from cache if error.
  */
-module.exports.loadBot = function (botType, id) {
-  const endpoint = `${botType}s`;
+module.exports.loadBot = function (type, id) {
+  const endpoint = `${type}s`;
   logger.debug(`locals.loadBot endpoint:${endpoint} id:${id}`);
   const model = app.locals.db[endpoint];
 

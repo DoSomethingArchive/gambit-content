@@ -55,6 +55,11 @@ if (!app.locals.logger) {
   process.exit(1);
 }
 
+if (!process.env.CAMPAIGNBOT_CAMPAIGNS) {
+  app.locals.logger.error('process.env.CAMPAIGNBOT_CAMPAIGNS undefined');
+  process.exit(1);
+}
+
 const loader = require('./config/locals');
 
 require('./router');
@@ -98,7 +103,6 @@ if (!app.locals.clients.phoenix) {
   process.exit(1);
 }
 
-
 conn.on('connected', () => {
   logger.info(`conn.readyState:${conn.readyState}`);
 
@@ -109,7 +113,7 @@ conn.on('connected', () => {
   app.locals.keywords = {};
 
   const loadCampaigns = app.locals.db.campaigns
-    .lookupByIDs(process.env.CAMPAIGNBOT_CAMPAIGNS || '2070,2299')
+    .lookupByIDs(process.env.CAMPAIGNBOT_CAMPAIGNS)
     .then((campaigns) => {
       logger.debug(`app.locals.db.campaigns.lookupByIDs found ${campaigns.length} campaigns`);
 
