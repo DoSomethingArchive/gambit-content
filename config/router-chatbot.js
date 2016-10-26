@@ -195,6 +195,8 @@ router.post('/', (req, res) => {
         }
 
         if (campaign.status === 'closed') {
+          // Store campaign to render in closed message.
+          scope.campaign = campaign;
           // TODO: Fire custom newrelic/stathat event? keyword needs to be removed in Mobile Commons
           // or assigned to a different active CampaignBot Campaign.
           logger.error(`keyword:${scope.keyword} is set to closed campaign:${campaignID}`);
@@ -206,16 +208,16 @@ router.post('/', (req, res) => {
 
       // Load user's current campaign (set from our last response).
       campaignID = user.current_campaign;
+      campaign = app.locals.campaigns[campaignID];
       logger.debug(`user.current_campaign:${campaignID}`);
-      const notFound = !(campaignID && app.locals.campaigns[campaignID]);
 
-      if (!notFound) {
+      if (!campaign) {
         // TODO: Send to non-existent start menu to select a campaign.
         logger.error(`user:${user._id} current_campaign ${campaignID} undefined`);
         throw new CampaignNotFoundError();
       }
 
-      return app.locals.campaigns[campaignID];
+      return campaign;
     })
     .then((campaign) => {
       logger.debug(`loaded campaign:${campaign._id}`);
@@ -291,13 +293,15 @@ router.post('/', (req, res) => {
     })
     .catch(CampaignClosedError, () => {
       logger.error('CampaignClosedError');
+      const msg = controller.renderResponseMessage(scope, 'campaign_closed');
+      postMobileCommonsProfile(scope, msg);
 
-      return res.sendStatus(400);
+      return res.send(gambitResponse(msg));
     })
     .catch(err => {
       controller.error(req, scope, err);
 
-      res.sendStatus(500);
+      return res.sendStatus(500);
     });
 });
 

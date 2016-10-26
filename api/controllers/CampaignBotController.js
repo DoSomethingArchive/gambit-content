@@ -404,7 +404,7 @@ class CampaignBotController {
    * @return {string} - msgTxt with all variables replaced with req properties
    */
   renderResponseMessage(req, msgType) {
-    this.debug(req, `renderResponseMessage:${msgType}`);
+    logger.debug(`renderResponseMessage:${msgType}`);
     const campaign = req.campaign;
 
     const botProperty = `msg_${msgType}`;
@@ -416,6 +416,12 @@ class CampaignBotController {
 
     if (!msg) {
       return this.error(req, 'bot msgType not found');
+    }
+
+    if (!req.campaign) {
+      logger.error('renderResponseMessage req.campaign undefined');
+
+      return msg;
     }
 
     msg = msg.replace(/{{br}}/gi, '\n');
