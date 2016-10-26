@@ -146,33 +146,36 @@ router.post('/', (req, res) => {
     return res.status(422).send({ error: 'profile_northstar_id or phone is required.' });
   }
 
-  let loadUser;
+  // TODO: Add reject, and throw new custom errors to indicate various error types.
+  const loadUser = new Promise((resolve) => {
+    logger.log('loadUser');
 
-  if (req.body.profile_northstar_id) {
-    const userID = req.body.profile_northstar_id;
-    loadUser = app.locals.db.users
-      .findById(userID)
-      .exec()
-      .then(user => {
-        if (!user) {
-          logger.debug(`no doc for user:${userID}`);
+    if (req.body.profile_northstar_id) {
+      const userID = req.body.profile_northstar_id;
+      return app.locals.db.users
+        .findById(userID)
+        .exec()
+        .then(user => {
+          if (!user) {
+            logger.debug(`no doc for user:${userID}`);
 
-          return app.locals.db.users.lookup('id', userID);
-        }
-        logger.debug(`found doc for user:${userID}`);
+            return resolve(app.locals.db.users.lookup('id', userID));
+          }
+          logger.debug(`found doc for user:${userID}`);
 
-        return user;
-      });
-  } else {
-    loadUser = app.locals.db.users
+          return resolve(user);
+        });
+    }
+
+    return app.locals.db.users
       .lookup('mobile', req.body.phone)
-      .then(user => user)
+      .then(user => resolve(user))
       .catch(() => {
         logger.debug(`app.locals.db.users.lookup could not find mobile:${req.body.phone}`);
 
-        return app.locals.db.users.createForMobileCommonsRequest(req);
+        return resolve(app.locals.db.users.createForMobileCommonsRequest(req));
       });
-  }
+  });
 
   const loadSignup = new Promise((resolve, reject) => {
     logger.log('loadSignup');
