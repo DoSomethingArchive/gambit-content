@@ -3,51 +3,6 @@
 const logger = app.locals.logger;
 
 /**
- * Returns a campaign model for given Phoenix Campaign.
- */
-function cacheCampaign(phoenixCampaign) {
-  const data = {
-    status: phoenixCampaign.status,
-    tagline: phoenixCampaign.tagline,
-    title: phoenixCampaign.title,
-    current_run: phoenixCampaign.currentCampaignRun.id,
-    msg_rb_confirmation: phoenixCampaign.reportbackInfo.confirmationMessage,
-    rb_noun: phoenixCampaign.reportbackInfo.noun,
-    rb_verb: phoenixCampaign.reportbackInfo.verb,
-  };
-
-  return app.locals.db.campaigns
-    .findOneAndUpdate({ _id: phoenixCampaign.id }, data, { upsert: true, new: true })
-    .exec();
-}
-
-/**
- * Loads given campaignModel's keywords into app.locals.keywords hash map.
- */
-function loadKeywordsForCampaign(campaignModel) {
-  const campaignID = campaignModel._id;
-  if (!campaignID) {
-    logger.warn('loadKeywordsForCampaign campaignID undefined');
-
-    return null;
-  }
-
-  if (!campaignModel.keywords.length) {
-    logger.warn(`no keywords for campaign:${campaignID} `);
-
-    return null;
-  }
-
-  return campaignModel.keywords.forEach((campaignKeyword) => {
-    const keyword = campaignKeyword.toLowerCase();
-    logger.debug(`loaded app.locals.keyword[${keyword}]:${campaignID}`);
-    app.locals.keywords[keyword] = campaignID;
-
-    return app.locals.keywords[keyword];
-  });
-}
-
-/**
  * Returns object of Mongoose api models for given connection, indexed by collection name.
  */
 module.exports.getModels = function (conn) {
@@ -78,38 +33,12 @@ module.exports.loadBot = function (botType, id) {
     .then((bot) => bot)
     .catch((err) => {
       logger.error(`${endpoint}.lookupByID:${id} failed`);
+      logger.error(err);
 
       return app.locals.db[endpoint]
         .findById(id)
         .exec();
     });
-};
-
-/**
- * Caches given phoenixCampaign and loads into app.locals.campaigns, adds to app.locals.keywords.
- */
-module.exports.loadCampaign = function (phoenixCampaign) {
-  const campaignID = phoenixCampaign.id;
-  logger.debug(`loadCampaign:${campaignID}`);
-
-  let campaign;
-
-  return cacheCampaign(phoenixCampaign)
-    .then((campaignDoc) => {
-      if (!campaignDoc) {
-        return null;
-      }
-      campaign = campaignDoc;
-
-      // Commenting this out for now to unblock prod deploy.
-      // campaign.createMobileCommonsGroups();
-
-      app.locals.campaigns[campaignID] = campaign;
-      logger.debug(`loaded app.locals.campaigns[${campaignID}]`);
-
-      return loadKeywordsForCampaign(campaign);
-    })
-    .catch(err => logger.error(err));
 };
 
 /**

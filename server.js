@@ -108,20 +108,35 @@ conn.on('connected', () => {
   app.locals.campaigns = {};
   app.locals.keywords = {};
 
-  const campaigns = app.locals.clients.phoenix.Campaigns
-    .index({ ids: process.env.CAMPAIGNBOT_CAMPAIGNS || '2070,2299' })
-    .then((phoenixCampaigns) => {
-      logger.debug(`app.locals.clients.phoenix found ${phoenixCampaigns.length} campaigns`);
+  const loadCampaigns = app.locals.db.campaigns
+    .lookupByIDs(process.env.CAMPAIGNBOT_CAMPAIGNS || '2070,2299')
+    .then((campaigns) => {
+      logger.debug(`app.locals.db.campaigns.lookupByIDs found ${campaigns.length} campaigns`);
 
-      return phoenixCampaigns.map(phoenixCampaign => loader.loadCampaign(phoenixCampaign));
-    });
+      return campaigns.forEach((campaign) => {
+        const campaignID = campaign._id;
+        app.locals.campaigns[campaignID] = campaign;
+        logger.debug(`loaded app.locals.campaigns[${campaignID}]`);
+
+        if (!campaign.keywords.length) {
+          logger.warn(`no keywords defined for campaign:${campaignID}`);
+        }
+        campaign.keywords.forEach((campaignKeyword) => {
+          const keyword = campaignKeyword.toLowerCase();
+          app.locals.keywords[keyword] = campaignID;
+          logger.debug(`loaded app.locals.db.keywords[${keyword}]:${campaignID}`);
+        });
+      });
+    })
+    .catch(err => logger.error(err));
 
   /**
    * Load controllers.
    */
   app.locals.controllers = {};
 
-  const campaignBot = loader.loadBot('campaignbot', process.env.CAMPAIGNBOT_ID || 41)
+  const campaignBotID = process.env.CAMPAIGNBOT_ID || 41;
+  const loadCampaignBot = loader.loadBot('campaignbot', campaignBotID)
     .then((bot) => {
       const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
       app.locals.controllers.campaignBot = new CampaignBotController(bot);
@@ -131,7 +146,8 @@ conn.on('connected', () => {
     })
     .catch(err => logger.error(err));
 
-  const donorsChooseBot = loader.loadBot('donorschoosebot', process.env.DONORSCHOOSEBOT_ID || 31)
+  const donorsChooseBotID = process.env.DONORSCHOOSEBOT_ID || 31;
+  const loadDonorsChooseBot = loader.loadBot('donorschoosebot', donorsChooseBotID)
     .then((bot) => {
       const DonorsChooseBotController = rootRequire('api/controllers/DonorsChooseBotController');
       app.locals.controllers.donorsChooseBot = new DonorsChooseBotController(bot);
@@ -163,15 +179,16 @@ conn.on('connected', () => {
   /**
    * Start server.
    */
-  Promise.all([campaigns, campaignBot, donorsChooseBot, legacyConfigs, legacyAuth]).then(() => {
-    const port = process.env.PORT || 5000;
+  Promise.all([loadCampaigns, loadCampaignBot, loadDonorsChooseBot, legacyConfigs, legacyAuth])
+    .then(() => {
+      const port = process.env.PORT || 5000;
 
-    return app.listen(port, () => {
-      logger.info(`Gambit is listening on port:${port} env:${process.env.NODE_ENV}.`);
+      return app.listen(port, () => {
+        logger.info(`Gambit is listening on port:${port} env:${process.env.NODE_ENV}.`);
+      });
+    })
+    .catch((err) => {
+      logger.error(err);
+      process.exit(1);
     });
-  })
-  .catch((err) => {
-    logger.error(err);
-    process.exit(1);
-  });
 });

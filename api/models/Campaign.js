@@ -8,7 +8,7 @@ const mobilecommons = rootRequire('lib/mobilecommons');
 const parser = require('xml2json');
 const logger = app.locals.logger;
 
-const schema = new mongoose.Schema({
+const campaignSchema = new mongoose.Schema({
 
   _id: { type: Number, index: true },
   keywords: [String],
@@ -43,6 +43,20 @@ const schema = new mongoose.Schema({
 
 });
 
+function parsePhoenixCampaign(phoenixCampaign) {
+  const data = {
+    status: phoenixCampaign.status,
+    tagline: phoenixCampaign.tagline,
+    title: phoenixCampaign.title,
+    current_run: phoenixCampaign.currentCampaignRun.id,
+    msg_rb_confirmation: phoenixCampaign.reportbackInfo.confirmationMessage,
+    rb_noun: phoenixCampaign.reportbackInfo.noun,
+    rb_verb: phoenixCampaign.reportbackInfo.verb,
+  };
+
+  return data;
+}
+
 /**
  * For a given campaign, update its mobile commons group id,
  * based on the mobile commons response.
@@ -62,10 +76,40 @@ function setMobileCommonsGroup(campaign, status, groupResponse) {
 }
 
 /**
+ * Get given Campaigns from DS API then store.
+ */
+campaignSchema.statics.lookupByIDs = function (campaignIDs) {
+  const model = this;
+
+  return new Promise((resolve, reject) => {
+    logger.debug(`Campaign.lookupByIDs:${campaignIDs}`);
+
+    const promises = [];
+
+    return app.locals.clients.phoenix.Campaigns
+      .index({ ids: campaignIDs })
+      .then((phoenixCampaigns) => {
+        phoenixCampaigns.forEach((phoenixCampaign) => {
+          const data = parsePhoenixCampaign(phoenixCampaign);
+          const upsert = model
+            .findOneAndUpdate({ _id: phoenixCampaign.id }, data, { upsert: true, new: true })
+            .exec()
+            .then(campaign => campaign)
+            .catch(error => reject(error));
+          promises.push(upsert);
+        });
+
+        return resolve(Promise.all(promises));
+      })
+      .catch(error => reject(error));
+  });
+};
+
+/**
  * Create Doing/Completed Mobile Commons Groups to support Mobile Commons broadcasting.
  * @see https://github.com/DoSomething/gambit/issues/673
  */
-schema.methods.createMobileCommonsGroups = function () {
+campaignSchema.methods.createMobileCommonsGroups = function () {
   const campaign = this;
   const prefix = `env=${process.env.NODE_ENV}
                   campaign_id=${campaign._id}
@@ -81,5 +125,5 @@ schema.methods.createMobileCommonsGroups = function () {
 };
 
 module.exports = function (connection) {
-  return connection.model('campaigns', schema);
+  return connection.model('campaigns', campaignSchema);
 };
