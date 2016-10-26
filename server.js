@@ -9,6 +9,7 @@ global.rootRequire = function (name) {
 
 const express = require('express');
 const http = require('http');
+const Promise = require('bluebird');
 
 // Default is 5. Increasing # of concurrent sockets per host.
 http.globalAgent.maxSockets = 100;
@@ -120,14 +121,17 @@ conn.on('connected', () => {
    */
   app.locals.controllers = {};
 
-  const campaignBot = loader.loadBot('campaignbots', process.env.CAMPAIGNBOT_ID || 41)
+  const campaignBotID = process.env.CAMPAIGNBOT_ID || 41;
+  const campaignBot = app.locals.db.campaignbots
+    .lookupByID(campaignBotID)
     .then((bot) => {
       const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
       app.locals.controllers.campaignBot = new CampaignBotController(bot);
       logger.info('loaded app.locals.controllers.campaignBot');
 
       return app.locals.controllers.campaignBot;
-    });
+    })
+    .catch(err => logger.error(err));
 
   const donorsChooseBot = loader.loadBot('donorschoosebots', process.env.DONORSCHOOSEBOT_ID || 31)
     .then((bot) => {
