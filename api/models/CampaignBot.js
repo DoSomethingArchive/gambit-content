@@ -4,8 +4,11 @@
  * Models a Gambit Jr. CampaignBot.
  */
 const mongoose = require('mongoose');
+const Promise = require('bluebird');
+const gambitJunior = rootRequire('lib/junior');
+const logger = app.locals.logger;
 
-const schema = new mongoose.Schema({
+const campaignBotSchema = new mongoose.Schema({
 
   _id: { type: Number, index: true },
   msg_ask_caption: String,
@@ -24,6 +27,32 @@ const schema = new mongoose.Schema({
 
 });
 
+/**
+ * Query Gambit Jr API for given CampaignBot and store.
+ */
+campaignBotSchema.statics.lookupByID = function (id) {
+  const model = this;
+
+  return new Promise((resolve, reject) => {
+    logger.debug(`campaignBotSchema.lookupByID:${id}`);
+
+    return gambitJunior
+      .get('campaignbots', id)
+      .then(response => {
+        const data = response;
+        data._id = Number(response.id);
+        data.id = undefined;
+
+        return model
+          .findOneAndUpdate({ _id: data._id }, data, { upsert: true, new: true })
+          .exec()
+          .then(campaignBot => resolve(campaignBot))
+          .catch(error => reject(error));
+      })
+      .catch(error => reject(error));
+  });
+};
+
 module.exports = function (connection) {
-  return connection.model('campaignbots', schema);
+  return connection.model('campaignbots', campaignBotSchema);
 };

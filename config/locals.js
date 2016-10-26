@@ -1,98 +1,6 @@
 'use strict';
 
-/**
- * Imports.
- */
-const gambitJunior = rootRequire('lib/junior');
-
 const logger = app.locals.logger;
-
-/**
- * Returns a bot model for given endpoint and data.
- */
-function cacheBot(endpoint, gambitJuniorBot) {
-  logger.debug(`locals.cacheBot endpoint:${endpoint} id:${gambitJuniorBot.id}`);
-
-  const data = gambitJuniorBot;
-  data._id = Number(gambitJuniorBot.id);
-  data.id = undefined;
-
-  return app.locals.db[endpoint]
-    .findOneAndUpdate({ _id: data._id }, data, { upsert: true, new: true })
-    .exec();
-}
-
-/**
- * Returns a campaign model for given Phoenix Campaign.
- */
-function cacheCampaign(phoenixCampaign) {
-  const data = {
-    status: phoenixCampaign.status,
-    tagline: phoenixCampaign.tagline,
-    title: phoenixCampaign.title,
-    current_run: phoenixCampaign.currentCampaignRun.id,
-    msg_rb_confirmation: phoenixCampaign.reportbackInfo.confirmationMessage,
-    rb_noun: phoenixCampaign.reportbackInfo.noun,
-    rb_verb: phoenixCampaign.reportbackInfo.verb,
-  };
-
-  return app.locals.db.campaigns
-    .findOneAndUpdate({ _id: phoenixCampaign.id }, data, { upsert: true, new: true })
-    .exec();
-}
-
-/**
- * Find model for given bot type/id.
- */
-function findBot(endpoint, id) {
-  logger.debug(`locals.findBot endpoint:${endpoint} id:${id}`);
-
-  return app.locals.db[endpoint]
-    .findById(id)
-    .exec();
-}
-
-/**
- * Gets given bot type/id from Gambit Jr API and returns cached model.
- */
-function getBot(endpoint, id) {
-  logger.debug(`locals.getBot endpoint:${endpoint} id:${id}`);
-
-  return gambitJunior
-    .get(endpoint, id)
-    .then(bot => cacheBot(endpoint, bot))
-    .catch((err) => {
-      logger.error(err);
-
-      return null;
-    });
-}
-
-/**
- * Loads given campaignModel's keywords into app.locals.keywords hash map.
- */
-function loadKeywordsForCampaign(campaignModel) {
-  const campaignID = campaignModel._id;
-  if (!campaignID) {
-    logger.warn('loadKeywordsForCampaign campaignID undefined');
-
-    return null;
-  }
-
-  if (!campaignModel.keywords.length) {
-    logger.warn(`no keywords for campaign:${campaignID} `);
-
-    return null;
-  }
-
-  return campaignModel.keywords.forEach((campaignKeyword) => {
-    const keyword = campaignKeyword.toLowerCase();
-    logger.debug(`loaded app.locals.keyword[${keyword}]:${campaignID}`);
-    app.locals.keywords[keyword] = campaignID;
-
-    return app.locals.keywords[keyword];
-  });
-}
 
 /**
  * Returns object of Mongoose api models for given connection, indexed by collection name.
@@ -116,46 +24,21 @@ module.exports.getModels = function (conn) {
 /**
  * Gets given bot from API, or loads from cache if error.
  */
-module.exports.loadBot = function (endpoint, id) {
+module.exports.loadBot = function (type, id) {
+  const endpoint = `${type}s`;
   logger.debug(`locals.loadBot endpoint:${endpoint} id:${id}`);
+  const model = app.locals.db[endpoint];
 
-  return getBot(endpoint, id)
-    .then((bot) => {
-      if (!bot) {
-        logger.debug('getBot undefined');
+  return model.lookupByID(id)
+    .then((bot) => bot)
+    .catch((err) => {
+      logger.error(`${endpoint}.lookupByID:${id} failed`);
+      logger.error(err);
 
-        return findBot(endpoint, id);
-      }
-
-      return bot;
+      return app.locals.db[endpoint]
+        .findById(id)
+        .exec();
     });
-};
-
-/**
- * Caches given phoenixCampaign and loads into app.locals.campaigns, adds to app.locals.keywords.
- */
-module.exports.loadCampaign = function (phoenixCampaign) {
-  const campaignID = phoenixCampaign.id;
-  logger.debug(`loadCampaign:${campaignID}`);
-
-  let campaign;
-
-  return cacheCampaign(phoenixCampaign)
-    .then((campaignDoc) => {
-      if (!campaignDoc) {
-        return null;
-      }
-      campaign = campaignDoc;
-
-      // Commenting this out for now to unblock prod deploy.
-      // campaign.createMobileCommonsGroups();
-
-      app.locals.campaigns[campaignID] = campaign;
-      logger.debug(`loaded app.locals.campaigns[${campaignID}]`);
-
-      return loadKeywordsForCampaign(campaign);
-    })
-    .catch(err => logger.error(err));
 };
 
 /**

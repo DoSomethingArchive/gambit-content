@@ -427,6 +427,7 @@ class CampaignBotController {
     msg = msg.replace(/{{br}}/gi, '\n');
     msg = msg.replace(/{{title}}/gi, campaign.title);
     msg = msg.replace(/{{tagline}}/i, campaign.tagline);
+    msg = msg.replace(/{{fact_problem}}/gi, campaign.fact_problem);
     msg = msg.replace(/{{rb_noun}}/gi, campaign.rb_noun);
     msg = msg.replace(/{{rb_verb}}/gi, campaign.rb_verb);
     msg = msg.replace(/{{rb_confirmation_msg}}/i, campaign.msg_rb_confirmation);
