@@ -1,26 +1,6 @@
 'use strict';
 
-/**
- * Imports.
- */
-const gambitJunior = rootRequire('lib/junior');
-
 const logger = app.locals.logger;
-
-/**
- * Returns a bot model for given endpoint and data.
- */
-function cacheBot(endpoint, gambitJuniorBot) {
-  logger.debug(`locals.cacheBot endpoint:${endpoint} id:${gambitJuniorBot.id}`);
-
-  const data = gambitJuniorBot;
-  data._id = Number(gambitJuniorBot.id);
-  data.id = undefined;
-
-  return app.locals.db[endpoint]
-    .findOneAndUpdate({ _id: data._id }, data, { upsert: true, new: true })
-    .exec();
-}
 
 /**
  * Returns a campaign model for given Phoenix Campaign.
@@ -39,33 +19,6 @@ function cacheCampaign(phoenixCampaign) {
   return app.locals.db.campaigns
     .findOneAndUpdate({ _id: phoenixCampaign.id }, data, { upsert: true, new: true })
     .exec();
-}
-
-/**
- * Find model for given bot type/id.
- */
-function findBot(endpoint, id) {
-  logger.debug(`locals.findBot endpoint:${endpoint} id:${id}`);
-
-  return app.locals.db[endpoint]
-    .findById(id)
-    .exec();
-}
-
-/**
- * Gets given bot type/id from Gambit Jr API and returns cached model.
- */
-function getBot(endpoint, id) {
-  logger.debug(`locals.getBot endpoint:${endpoint} id:${id}`);
-
-  return gambitJunior
-    .get(endpoint, id)
-    .then(bot => cacheBot(endpoint, bot))
-    .catch((err) => {
-      logger.error(err);
-
-      return null;
-    });
 }
 
 /**
@@ -116,18 +69,20 @@ module.exports.getModels = function (conn) {
 /**
  * Gets given bot from API, or loads from cache if error.
  */
-module.exports.loadBot = function (endpoint, id) {
+module.exports.loadBot = function (botType, id) {
+  const endpoint = `${botType}s`;
   logger.debug(`locals.loadBot endpoint:${endpoint} id:${id}`);
+  const model = app.locals.db[endpoint];
 
-  return getBot(endpoint, id)
+  return model.lookupByID(id)
     .then((bot) => {
-      if (!bot) {
-        logger.debug('getBot undefined');
-
-        return findBot(endpoint, id);
+      if (bot) {
+        return bot;
       }
 
-      return bot;
+      return app.locals.db[endpoint]
+        .findById(id)
+        .exec();
     });
 };
 

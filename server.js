@@ -121,9 +121,7 @@ conn.on('connected', () => {
    */
   app.locals.controllers = {};
 
-  const campaignBotID = process.env.CAMPAIGNBOT_ID || 41;
-  const campaignBot = app.locals.db.campaignbots
-    .lookupByID(campaignBotID)
+  const campaignBot = loader.loadBot('campaignbot', process.env.CAMPAIGNBOT_ID || 41)
     .then((bot) => {
       const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
       app.locals.controllers.campaignBot = new CampaignBotController(bot);
@@ -133,7 +131,7 @@ conn.on('connected', () => {
     })
     .catch(err => logger.error(err));
 
-  const donorsChooseBot = loader.loadBot('donorschoosebots', process.env.DONORSCHOOSEBOT_ID || 31)
+  const donorsChooseBot = loader.loadBot('donorschoosebot', process.env.DONORSCHOOSEBOT_ID || 31)
     .then((bot) => {
       const DonorsChooseBotController = rootRequire('api/controllers/DonorsChooseBotController');
       app.locals.controllers.donorsChooseBot = new DonorsChooseBotController(bot);
