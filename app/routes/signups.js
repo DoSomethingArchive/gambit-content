@@ -5,6 +5,17 @@ const router = express.Router(); // eslint-disable-line new-cap
 const CampaignNotFoundError = require('../exceptions/CampaignNotFoundError');
 const logger = app.locals.logger;
 
+function successResponse(msg) {
+  const response = {
+    success: {
+      code: 200,
+      message: msg,
+    },
+  };
+
+  return response;
+}
+
 router.post('/', (req, res) => {
   if (!req.body.id) {
     res.status(422).send({ error: 'id is required' });
@@ -19,7 +30,9 @@ router.post('/', (req, res) => {
   logger.debug(`POST /v1/signups { id:${signupID}, source:${source} }`);
 
   if (source === process.env.DS_API_POST_SOURCE) {
-    return res.send(`Already sent confirmation for signup ${signupID} with source ${source}.`);
+    const msg = `Already sent confirmation for signup ${signupID} with source ${source}.`;
+
+    return res.send(successResponse(msg));
   }
 
   let currentSignup;
@@ -50,7 +63,7 @@ router.post('/', (req, res) => {
       const msg = controller.renderResponseMessage(scope, 'menu_signedup_external');
       user.postMobileCommonsProfileUpdate(req, process.env.MOBILECOMMONS_OIP_CHATBOT, msg);
 
-      return res.send(msg);
+      return res.send(successResponse(msg));
     })
     .catch(CampaignNotFoundError, () => {
       const msg = `Campaign ${currentSignup.campaign} is not a CampaignBot campaign.`;
