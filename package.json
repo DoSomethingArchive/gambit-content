@@ -1,6 +1,6 @@
 {
   "name": "gambit",
-  "version": "2.4.1",
+  "version": "2.5.0",
   "description": "Interface for interacting with DoSomething.org SMS experiences.",
   "license": "MIT",
   "repository": {
@@ -10,7 +10,7 @@
   "scripts": {
     "test": "npm run lint",
     "start": "node server",
-    "lint": "eslint --ext=.js server.js config api/models api/controllers/CampaignBotController.js lib/gambit-junior.js"
+    "lint": "eslint --ext=.js server.js app/routes app/exceptions app/models app/controllers/CampaignBotController.js lib/gambit-junior.js"
   },
   "eslintConfig": {
     "globals": {
@@ -43,11 +43,13 @@
     "path": "~0.4.9",
     "q": "^1.0.1",
     "request": "2.34.x",
+    "request-promise-native": "^1.0.3",
     "stathat": "0.0.8",
     "superagent": "^2.3.0",
     "underscore": "^1.8.3",
     "winston": "0.8.x",
-    "winston-mongodb": "0.5.x"
+    "winston-mongodb": "0.5.x",
+    "xml2json": "^0.10.0"
   },
   "devDependencies": {
     "@dosomething/eslint-config": "^1.1.1",
