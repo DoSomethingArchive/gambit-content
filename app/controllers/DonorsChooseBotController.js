@@ -84,6 +84,8 @@ DonorsChooseBotController.prototype.chatbot = function(request, response) {
     return;
   }
 
+  // TODO: Don't send response until we deliver the message, and return the message in response
+  // like we do for CampaignBot.
   response.send();
   var firstWord = null;
 
