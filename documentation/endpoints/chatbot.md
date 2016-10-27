@@ -8,7 +8,7 @@ POST /v1/chatbot
 
 Name | Type | Description
 --- | --- | ---
-`x-gambit-api-key` | `string` | **Required.** Used to authenticate POST requests.
+`x-gambit-api-key` | `string` | **Required.**
 
 **Parameters**
 

@@ -19,44 +19,11 @@ function gambitResponse(msg) {
   return { message: msg };
 }
 
-/**
- * Send SMS with given msg back to our incoming Mobile Commons user by updating their MC Profile.
- * @param {object} req - Incoming Express request, with loaded req.user model
- * @param {string} msg - Chatbot message responding back to user
- */
-function postMobileCommonsProfile(req, msg) {
-  if (process.env.MOBILECOMMONS_DISABLED) {
-    logger.warn('MOBILECOMMONS_DISABLED');
-
-    return;
-  }
-
-  let mobileCommonsOIP = process.env.MOBILECOMMONS_OIP_CHATBOT;
-  if (req.cmd_member_support) {
-    mobileCommonsOIP = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
-  }
-
-  const data = {
-    // Target Mobile Commons OIP must render gambit_chatbot_response in Liquid to deliver the msg.
-    // @see https://github.com/DoSomething/gambit/wiki/Chatbot#mobile-commons
-    gambit_chatbot_response: msg,
-  };
-  // If no Northstar ID is currently saved on user's Mobile Commons profile:
-  if (!req.body.profile_northstar_id) {
-    // Save it to avoid future Northstar GET users requests in subsequent incoming chatbot requests.
-    data.northstar_id = req.user._id;
-  }
-
-  mobilecommons.profile_update(req.user.mobile, mobileCommonsOIP, data);
-}
-
-/**
- * Handle chatbot conversations.
- */
 router.post('/', (req, res) => {
-  const scope = req;
   const controller = app.locals.controllers.campaignBot;
 
+  const scope = req;  
+  scope.oip = process.env.MOBILECOMMONS_OIP_CHATBOT;
   scope.incoming_message = req.body.args;
   scope.incoming_image_url = req.body.mms_image_url;
   let incomingLog = `msg:${scope.incoming_message} img:${scope.incoming_image_url}`;
@@ -93,46 +60,6 @@ router.post('/', (req, res) => {
   }
 
   let currentSignup;
-
-  /**
-   * Check for external Signup from incoming Quicksilver request.
-   */
-  if (req.body.signup_id) {
-    const signupID = req.body.signup_id;
-    const source = req.body.signup_source;
-    logger.debug(`chatbot signup:${signupID} source:${source}`);
-
-    if (req.body.signup_source === process.env.DS_API_POST_SOURCE) {
-      return res.send(`Already sent confirmation for signup ${signupID} source:${source}.`);
-    }
-
-    return app.locals.db.signups
-      .lookupByID(signupID)
-      .then((signup) => {
-        currentSignup = signup;
-        // TODO: Check if currentSignup.campaign is defined in CAMPAIGNBOT_CAMPAIGNS.
-        // If it's not, send Express response to alert, and exit.
-
-        return app.locals.db.users.lookup('id', currentSignup.user);
-      })
-      .then((user) => {
-        if (!user) {
-          return res.status(500).send({ error: 'Cannot find user for signup' });
-        }
-
-        return user.setCurrentCampaign(currentSignup);
-      })
-      .then((user) => {
-        scope.user = user;
-        scope.signup = currentSignup;
-        scope.campaign = app.locals.campaigns[currentSignup.campaign];
-
-        const msg = controller.renderResponseMessage(scope, 'menu_signedup_external');
-        postMobileCommonsProfile(scope, msg);
-
-        return res.send(gambitResponse(msg));
-      });
-  }
 
   /**
    * Load current User from incoming Mobile Commons request.
@@ -252,6 +179,7 @@ router.post('/', (req, res) => {
 
       if (controller.isCommand(scope, 'member_support')) {
         scope.cmd_member_support = true;
+        scope.oip = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
         return controller.renderResponseMessage(scope, 'member_support');
       }
 
@@ -280,7 +208,7 @@ router.post('/', (req, res) => {
     .then((msg) => {
       controller.debug(scope, `sendMessage:${msg}`);
       scope.user.setCurrentCampaign(scope.signup);
-      postMobileCommonsProfile(scope, msg);
+      scope.user.postMobileCommonsProfileUpdate(req, scope.oip, msg);
 
       return res.send(gambitResponse(msg));
     })
@@ -292,11 +220,12 @@ router.post('/', (req, res) => {
     .catch(CampaignClosedError, () => {
       logger.error('CampaignClosedError');
       const msg = controller.renderResponseMessage(scope, 'campaign_closed');
-      postMobileCommonsProfile(scope, msg);
+      scope.user.postMobileCommonsProfileUpdate(req, scope.oip, msg);
 
       return res.send(gambitResponse(msg));
     })
     .catch(err => {
+      console.log(err);
       controller.error(req, scope, err);
 
       return res.sendStatus(500);

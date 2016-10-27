@@ -16,6 +16,13 @@ Endpoint                                       | Functionality
 `GET /v1/campaigns/:id` | [Retrieve a campaign](endpoints/campaigns.md#retrieve-a-campaigns)
 
 
+## Signups
+
+Endpoint                                       | Functionality                                           
+---------------------------------------------- | --------------------------------------------------------
+`POST /v1/signups` | [Post existing signup](endpoints/signups.md)
+
+
 ## Legacy
 
 > :memo: We're looking to deprecate these, so don't get too attached!

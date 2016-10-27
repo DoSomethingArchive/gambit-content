@@ -20,13 +20,9 @@ router.use((req, res, next) => {
 });
 
 router.use('/v1/campaigns', require('./campaigns'));
-router.use('/v1/chatbot',  require('./chatbot'));
+router.use('/v1/chatbot', require('./chatbot'));
+router.use('/v1/signups', require('./signups'));
 
-/**
- * Legacy.
- */
-const campaignRouter = rootRequire('legacy/ds-routing');
-const reportbackRouter = rootRequire('legacy/reportback');
-
-router.use('/ds-routing', campaignRouter);
-router.use('/reportback', reportbackRouter);
+// Legacy endpoints.
+router.use('/ds-routing', rootRequire('legacy/ds-routing'));
+router.use('/reportback', rootRequire('legacy/reportback'));
