@@ -62,7 +62,7 @@ if (!process.env.CAMPAIGNBOT_CAMPAIGNS) {
 
 const loader = require('./config/locals');
 
-require('./router');
+require('./app/routes');
 
 /**
  * Load models.
@@ -142,7 +142,7 @@ conn.on('connected', () => {
   const campaignBotID = process.env.CAMPAIGNBOT_ID || 41;
   const loadCampaignBot = loader.loadBot('campaignbot', campaignBotID)
     .then((bot) => {
-      const CampaignBotController = rootRequire('api/controllers/CampaignBotController');
+      const CampaignBotController = rootRequire('app/controllers/CampaignBotController');
       app.locals.controllers.campaignBot = new CampaignBotController(bot);
       logger.info('loaded app.locals.controllers.campaignBot');
 
@@ -153,7 +153,7 @@ conn.on('connected', () => {
   const donorsChooseBotID = process.env.DONORSCHOOSEBOT_ID || 31;
   const loadDonorsChooseBot = loader.loadBot('donorschoosebot', donorsChooseBotID)
     .then((bot) => {
-      const DonorsChooseBotController = rootRequire('api/controllers/DonorsChooseBotController');
+      const DonorsChooseBotController = rootRequire('app/controllers/DonorsChooseBotController');
       app.locals.controllers.donorsChooseBot = new DonorsChooseBotController(bot);
       logger.info('loaded app.locals.controllers.donorsChooseBot');
 

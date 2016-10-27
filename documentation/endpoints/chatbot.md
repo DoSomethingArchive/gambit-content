@@ -1,5 +1,8 @@
 # Chatbot
 
+Our Mobile Commons Chatbot mData will POST here to send the message a User texted to the DoSomething shortcode. Gambit determines how to respond to the message, and delivers a SMS response back to User 
+by posting the response message to a Custom Field on their Mobile Commons Profile.
+
 ```
 POST /v1/chatbot
 ```
@@ -8,7 +11,7 @@ POST /v1/chatbot
 
 Name | Type | Description
 --- | --- | ---
-`x-gambit-api-key` | `string` | **Required.** Used to authenticate POST requests.
+`x-gambit-api-key` | `string` | **Required.**
 
 **Parameters**
 
@@ -18,10 +21,7 @@ Name | Type | Description
 `start` | `boolean` | If set, the bot will begin a new DonorsChoose conversation if `bot_type=donorschoose`. Default: `false`
 
 **Input**
-
-***Mobile Commons***
-
-Params from incoming [Mobile Commons](https://github.com/DoSomething/gambit/wiki/Chatbot#networking) mData requests.
+Parameter names are defined by the data included in a Mobile Commons mData POST request.
 
 Name | Type | Description
 --- | --- | ---
@@ -35,11 +35,23 @@ Name | Type | Description
 `profile_postal_code` | `string` | 
 `profile_ss2016_donation_count` | `string` | Used by `donorschoose` bots to limit # of donations. This parameter name can be changed by `DONORSCHOOSE_DONATION_FIELDNAME`
 
-***Quicksilver***
+<details>
+<summary>**Example Request**</summary>
+````
+curl -X "POST" "http://localhost:5000/v1/chatbot" \
+     -H "x-gambit-api-key: totallysecret" \
+     -H "Content-Type: application/x-www-form-urlencoded; charset=utf-8" \
+     --data-urlencode "phone=5555555511" \
+     --data-urlencode "profile_northstar_id=5547be89469c64ec7d8b518d" \
+     --data-urlencode "keyword=slothieboi"
+````
+</details>
 
-Params from incoming [Quicksilver](https://github.com/DoSomething/gambit/wiki/Chatbot#quicksilver) requests.
-
-Name | Type | Description
---- | --- | ---
-`signup_id` | `number` | DS Signup ID to update Gambit cache for
-`signup_source` | `string` | Required if `signup_id` is set
+<details>
+<summary>**Example Response**</summary>
+````
+{
+  "message":  "Picking up where you left off on Yeah Science...\n\nSweet! First, what's the total number of products you shipped?\r\n\r\nSend the exact number back."
+}
+````
+</details>

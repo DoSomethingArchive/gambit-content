@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 const Promise = require('bluebird');
 
 const helpers = rootRequire('lib/helpers');
+const mobilecommons = rootRequire('lib/mobilecommons');
 const logger = app.locals.logger;
 
 /**
@@ -118,6 +119,24 @@ userSchema.statics.createForMobileCommonsRequest = function (req) {
       })
       .catch(error => reject(error));
   });
+};
+
+/**
+ * Updates user's Mobile Commons Profile to send msgTxt as SMS via given Opt-in Path oip.
+ */
+userSchema.methods.postMobileCommonsProfileUpdate = function (req, oip, msgTxt) {
+  const data = {
+    // Target Opt oip needs to render gambit_chatbot_response Custom Field in Liquid to send msg.
+    // @see https://github.com/DoSomething/gambit/wiki/Chatbot#mobile-commons
+    gambit_chatbot_response: msgTxt,
+  };
+
+  if (!req.body.profile_northstar_id) {
+    // Save it to avoid future Northstar GET users requests in subsequent incoming chatbot requests.
+    data.northstar_id = this._id;
+  }
+
+  return mobilecommons.profile_update(this.mobile, oip, data);
 };
 
 /**
