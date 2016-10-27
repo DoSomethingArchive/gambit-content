@@ -8,13 +8,13 @@ const logger = app.locals.logger;
 module.exports.getModels = function (conn) {
   const models = {};
   // Indexed by collection name:
-  models.campaigns = rootRequire('api/models/Campaign')(conn);
-  models.campaignbots = rootRequire('api/models/CampaignBot')(conn);
-  models.donorschoosebots = rootRequire('api/models/DonorsChooseBot')(conn);
-  models.donorschoose_donations = rootRequire('api/models/DonorsChooseDonation')(conn);
-  models.reportback_submissions = rootRequire('api/models/ReportbackSubmission')(conn);
-  models.signups = rootRequire('api/models/Signup')(conn);
-  models.users = rootRequire('api/models/User')(conn);
+  models.campaigns = rootRequire('app/models/Campaign')(conn);
+  models.campaignbots = rootRequire('app/models/CampaignBot')(conn);
+  models.donorschoosebots = rootRequire('app/models/DonorsChooseBot')(conn);
+  models.donorschoose_donations = rootRequire('app/models/DonorsChooseDonation')(conn);
+  models.reportback_submissions = rootRequire('app/models/ReportbackSubmission')(conn);
+  models.signups = rootRequire('app/models/Signup')(conn);
+  models.users = rootRequire('app/models/User')(conn);
   // TBDeleted
   models.legacyReportbacks = rootRequire('legacy/reportback/reportbackModel')(conn);
 
