@@ -5,7 +5,7 @@
  */
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
-const mobilecommons = rootRequire('lib/mobilecommons');
+
 const logger = app.locals.logger;
 const Promise = require('bluebird');
 const CampaignClosedError = require('../exceptions/CampaignClosedError');
@@ -21,8 +21,7 @@ function gambitResponse(msg) {
 
 router.post('/', (req, res) => {
   const controller = app.locals.controllers.campaignBot;
-
-  const scope = req;  
+  const scope = req;
   scope.oip = process.env.MOBILECOMMONS_OIP_CHATBOT;
   scope.incoming_message = req.body.args;
   scope.incoming_image_url = req.body.mms_image_url;
@@ -58,8 +57,6 @@ router.post('/', (req, res) => {
   if (!configured) {
     return res.sendStatus(500);
   }
-
-  let currentSignup;
 
   /**
    * Load current User from incoming Mobile Commons request.
@@ -225,7 +222,7 @@ router.post('/', (req, res) => {
       return res.send(gambitResponse(msg));
     })
     .catch(err => {
-      console.log(err);
+      logger.error(err);
       controller.error(req, scope, err);
 
       return res.sendStatus(500);

@@ -42,8 +42,6 @@ router.post('/', (req, res) => {
       return user.setCurrentCampaign(currentSignup);
     })
     .then((user) => {
-      console.log(currentSignup);
-
       const scope = req;
       scope.user = user;
       scope.signup = currentSignup;
@@ -54,11 +52,11 @@ router.post('/', (req, res) => {
 
       return res.send(msg);
     })
-    .catch(CampaignNotFoundError, (err) => {
-      const msg = `Campaign ${currentSignup.campaign} is not a CampaignBot campaign.`
+    .catch(CampaignNotFoundError, () => {
+      const msg = `Campaign ${currentSignup.campaign} is not a CampaignBot campaign.`;
       logger.warn(msg);
 
-      return res.status(422).send({ error: msg })
+      return res.status(422).send({ error: msg });
     });
 });
 
