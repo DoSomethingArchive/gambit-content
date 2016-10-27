@@ -8,8 +8,8 @@ const router = express.Router(); // eslint-disable-line new-cap
 const mobilecommons = rootRequire('lib/mobilecommons');
 const logger = app.locals.logger;
 const Promise = require('bluebird');
-const CampaignClosedError = require('./app/exceptions/CampaignClosedError');
-const CampaignNotFoundError = require('./app/exceptions/CampaignNotFoundError');
+const CampaignClosedError = require('../exceptions/CampaignClosedError');
+const CampaignNotFoundError = require('../exceptions/CampaignNotFoundError');
 
 /**
  * Formats our Express return response.

@@ -62,7 +62,7 @@ if (!process.env.CAMPAIGNBOT_CAMPAIGNS) {
 
 const loader = require('./config/locals');
 
-require('./router');
+require('./app/routes');
 
 /**
  * Load models.
