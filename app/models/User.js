@@ -122,11 +122,11 @@ userSchema.statics.createForMobileCommonsRequest = function (req) {
 };
 
 /**
- * Updates user's Mobile Commons Profile to send msgTxt as SMS via target mobileCommonsOIP.
+ * Updates user's Mobile Commons Profile to send msgTxt as SMS via given Opt-in Path oip.
  */
-userSchema.methods.postMobileCommonsProfileUpdate = function (req, mobileCommonsOIP, msgTxt) {
+userSchema.methods.postMobileCommonsProfileUpdate = function (req, oip, msgTxt) {
   const data = {
-    // mobileCommonsOIP needs to render gambit_chatbot_response Custom Field in Liquid to send msg.
+    // Target Opt oip needs to render gambit_chatbot_response Custom Field in Liquid to send msg.
     // @see https://github.com/DoSomething/gambit/wiki/Chatbot#mobile-commons
     gambit_chatbot_response: msgTxt,
   };
@@ -136,7 +136,7 @@ userSchema.methods.postMobileCommonsProfileUpdate = function (req, mobileCommons
     data.northstar_id = this._id;
   }
 
-  return mobilecommons.profile_update(this.mobile, mobileCommonsOIP, data);
+  return mobilecommons.profile_update(this.mobile, oip, data);
 };
 
 /**
