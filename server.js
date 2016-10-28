@@ -126,7 +126,7 @@ conn.on('connected', () => {
           campaign.createMobileCommonsGroups();
         }
 
-        if (!campaign.keywords.length) {
+        if (!campaign.keywords.length < 1) {
           logger.warn(`no keywords defined for campaign:${campaignID}`);
         }
         campaign.keywords.forEach((campaignKeyword) => {
