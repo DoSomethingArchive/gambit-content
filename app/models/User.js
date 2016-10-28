@@ -22,8 +22,6 @@ const userSchema = new mongoose.Schema({
   email: String,
   role: String,
   first_name: String,
-  // Hash table to store current signups: e.g. campaigns[campaignId] = signupId;
-  campaigns: { type: mongoose.Schema.Types.Mixed, default: {} },
   // Campaign the user is currently participating in via chatbot.
   current_campaign: Number,
 
@@ -116,23 +114,6 @@ userSchema.methods.postMobileCommonsProfileUpdate = function (optInPathID, msgTx
   };
 
   return mobilecommons.profile_update(this.mobile, optInPathID, data);
-};
-
-/**
- * Set given signup on user's campaigns hash map, sets signup.campaign to user.current_campaign.
- */
-userSchema.methods.setCurrentCampaign = function (signup) {
-  const user = this;
-
-  return new Promise((resolve, reject) => {
-    logger.debug(`setCurrentSignup user:${user._id} campaigns[${signup.campaign}]:${signup.id}`);
-
-    user.campaigns[signup.campaign] = signup.id;
-    user.current_campaign = signup.campaign;
-    return user.save()
-      .then(updatedUser => resolve(updatedUser))
-      .catch(error => reject(error));
-  });
 };
 
 module.exports = function (connection) {

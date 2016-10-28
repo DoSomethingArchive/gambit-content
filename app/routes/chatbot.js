@@ -205,11 +205,16 @@ router.post('/', (req, res) => {
       return controller.renderResponseMessage(scope, 'invalid_cmd_signedup');
     })
     .then((msg) => {
-      controller.debug(scope, `sendMessage:${msg}`);
-      scope.user.setCurrentCampaign(scope.signup);
-      scope.user.postMobileCommonsProfileUpdate(mobileCommonsOIP, msg);
+      scope.response_message = msg;
+      controller.debug(scope, `chatbotResponseMessage:${msg}`);
+      // Save to continue conversation with future mData requests that don't contain a keyword.
+      scope.user.current_campaign = scope.campaign._id;
+      return scope.user.save();
+    })
+    .then(() => {
+      scope.user.postMobileCommonsProfileUpdate(mobileCommonsOIP, scope.response_message);
 
-      return res.send(gambitResponse(msg));
+      return res.send(gambitResponse(scope.response_message));
     })
     .catch(CampaignNotFoundError, () => {
       logger.error('CampaignNotFoundError');
