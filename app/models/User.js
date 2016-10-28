@@ -75,7 +75,7 @@ userSchema.statics.post = function (data) {
   const model = this;
 
   const scope = data;
-  scope.source = process.env.DS_API_POST_SOURCE;
+  scope.source = process.env.DS_API_USER_REGISTRATION_SOURCE || 'sms';
   scope.password = helpers.generatePassword(data.mobile);
   const emailDomain = process.env.DS_API_DEFAULT_USER_EMAIL || 'mobile.import';
   scope.email = `${data.mobile}@${emailDomain}`;
