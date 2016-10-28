@@ -27,7 +27,7 @@ Name | Type | Description
 `phone` | `string` | **Required.** Mobile number that sent incoming message.
 `args` | `string` | Incoming text sent.
 `mms_image_url` | `string` | Incoming image sent.
-`keyword` | `string` | [Mobile Commons keyword](https://github.com/DoSomething/gambit/wiki/Chatbot#mdata) that the triggered incoming Mobile Commons mData request.
+`keyword` | `string` | [Mobile Commons keyword](https://github.com/DoSomething/gambit/wiki/Chatbot#mdata) that triggered the incoming mData POST.
 `profile_first_name` | `string` | Only used by `donorschoosebot`
 `profile_email` | `string` | Only used by `donorschoosebot`
 `profile_postal_code` | `string` |  Only used by `donorschoosebot`
@@ -40,7 +40,6 @@ curl -X "POST" "http://localhost:5000/v1/chatbot" \
      -H "x-gambit-api-key: totallysecret" \
      -H "Content-Type: application/x-www-form-urlencoded; charset=utf-8" \
      --data-urlencode "phone=5555555511" \
-     --data-urlencode "profile_northstar_id=5547be89469c64ec7d8b518d" \
      --data-urlencode "keyword=slothieboi"
 ````
 </details>
