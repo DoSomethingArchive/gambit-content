@@ -74,7 +74,11 @@ router.post('/', (req, res) => {
         if (err && err.status === 404) {
           logger.debug(`app.locals.db.users.lookup could not find mobile:${req.body.phone}`);
 
-          return resolve(app.locals.db.users.createForMobileCommonsRequest(req));
+          const user = app.locals.db.users.post({
+            mobile: req.body.phone,
+            mobilecommons_id: req.profile_id,
+          });
+          return resolve(user);
         }
         return reject(err);
       });

@@ -30,21 +30,6 @@ const userSchema = new mongoose.Schema({
 });
 
 /**
- * Parse given Mobile Commons request as a northstarUser to POST to DS API Users endpoint.
- */
-function parseMobileCommonsProfileAsNorthstarUser(req) {
-  const data = {
-    mobile: req.body.phone,
-    email: req.body.profile_email,
-    first_name: req.body.profile_first_name,
-    mobilecommons_id: req.body.profile_id,
-    addr_zip: req.body.profile_postal_code,
-  };
-
-  return data;
-}
-
-/**
  * Parse given Northstar User for User model.
  */
 function parseNorthstarUser(northstarUser) {
@@ -88,23 +73,20 @@ userSchema.statics.lookup = function (type, id) {
 /**
  * Post user to DS API.
  */
-userSchema.statics.createForMobileCommonsRequest = function (req) {
-  logger.debug(`User.createForMobileCommonsRequest profile_id:${req.body.profile_id}`);
+userSchema.statics.post = function (data) {
   const model = this;
 
-  const data = parseMobileCommonsProfileAsNorthstarUser(req);
-  data.source = process.env.DS_API_POST_SOURCE;
-  data.password = helpers.generatePassword(data.mobile);
-  if (!data.email) {
-    const defaultEmail = process.env.DS_API_DEFAULT_USER_EMAIL || 'mobile.import';
-    data.email = `${data.mobile}@${defaultEmail}`;
-  }
+  const scope = data;
+  scope.source = process.env.DS_API_POST_SOURCE;
+  scope.password = helpers.generatePassword(data.mobile);
+  const emailDomain = process.env.DS_API_DEFAULT_USER_EMAIL || 'mobile.import';
+  scope.email = `${data.mobile}@${emailDomain}`;
 
   return new Promise((resolve, reject) => {
     logger.debug('User.post');
 
     return app.locals.clients.northstar.Users
-      .create(data)
+      .create(scope)
       .then((northstarUser) => {
         logger.info(`northstar.Users created user:${northstarUser.id}`);
 
