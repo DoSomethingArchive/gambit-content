@@ -4,9 +4,8 @@
  * Models a DS Campaign.
  */
 const mongoose = require('mongoose');
-const mobilecommons = rootRequire('lib/mobilecommons');
-const parser = require('xml2json');
 const logger = app.locals.logger;
+const gambitGroups = require('../../lib/groups');
 
 const campaignSchema = new mongoose.Schema({
 
@@ -59,23 +58,6 @@ function parsePhoenixCampaign(phoenixCampaign) {
   return data;
 }
 
-/**
- * For a given campaign, update its mobile commons group id,
- * based on the mobile commons response.
- * @param {Campaign} campaign    Campaign model to update.
- * @param {string} status        Either completed or doing.
- * @param {string} groupResponse XML string from mobile commons API.
- */
-function setMobileCommonsGroup(campaign, status, groupResponse) {
-  const scope = campaign;
-  const parsedGroup = JSON.parse(parser.toJson(groupResponse));
-  // If the group name is available...
-  if (parsedGroup.response.success === 'true') {
-    // Save newly created group id to this campaign.
-    const groupId = parsedGroup.response.group.id;
-    scope.mobilecommons_groups[status] = groupId;
-  }
-}
 
 /**
  * Get given Campaigns from DS API then store.
@@ -112,18 +94,51 @@ campaignSchema.statics.lookupByIDs = function (campaignIDs) {
  * @see https://github.com/DoSomething/gambit/issues/673
  */
 campaignSchema.methods.createMobileCommonsGroups = function () {
-  const campaign = this;
-  const prefix = `env=${process.env.NODE_ENV}
-                  campaign_id=${campaign._id}
-                  run_id=${campaign.current_run}`;
+  const campaignId = this._id;
+  const campaignRunId = this.current_run;
 
-  // Create mobile commons group with custom name based on this campaign
-  mobilecommons.createGroup(`${prefix} status=doing`)
-  .then(doingGroup => setMobileCommonsGroup(campaign, 'doing', doingGroup))
-  .then(() => mobilecommons.createGroup(`${prefix} status=completed`))
-  .then(completedGroup => setMobileCommonsGroup(campaign, 'completed', completedGroup))
-  .then(() => campaign.save())
-  .catch(err => logger.error(err));
+  function parseApiRes(res) {
+    if (res._id) {
+      // If a group is in the response, save the data for this env.
+      const env = process.env.NODE_ENV;
+      return {
+        doing: res.mobilecommons_groups[env].doing,
+        completed: res.mobilecommons_groups[env].completed
+      };
+    }
+
+    return false;
+  }
+
+  gambitGroups.findGroup(campaignId, campaignRunId).then(res => {
+    // If a group was found, save the data.
+    const parsedRes = parseApiRes(res);
+    if (parsedRes) {
+      this.mobilecommons_groups.doing = parsedRes.doing;
+      this.mobilecommons_groups.completed = parsedRes.completed;
+      return true;
+    }
+
+    return false
+  })
+  .then(requiresCreation => {
+    if (!requiresCreation) {
+      return;
+    }
+
+    // Otherwise, create a new group.
+    gambitGroups.createGroup(campaignId, campaignRunId).then(res => {
+      const parsedRes = parseApiRes(res);
+      if (parsedRes) {
+        this.mobilecommons_groups.doing = parsedRes.doing;
+        this.mobilecommons_groups.completed = parsedRes.completed;
+        return;
+      }
+    });
+  })
+  .then(() => {
+    this.save();
+  })
 };
 
 module.exports = function (connection) {
