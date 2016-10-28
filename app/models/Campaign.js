@@ -103,7 +103,7 @@ campaignSchema.methods.createMobileCommonsGroups = function () {
       const env = process.env.NODE_ENV;
       return {
         doing: res.mobilecommons_groups[env].doing,
-        completed: res.mobilecommons_groups[env].completed
+        completed: res.mobilecommons_groups[env].completed,
       };
     }
 
@@ -122,7 +122,7 @@ campaignSchema.methods.createMobileCommonsGroups = function () {
     return gambitGroups.createGroup(campaignId, campaignRunId);
   })
   .then(res => {
-    if (res == undefined) {
+    if (res === undefined) {
       return;
     }
 
@@ -134,7 +134,7 @@ campaignSchema.methods.createMobileCommonsGroups = function () {
   })
   .then(() => {
     this.save();
-  })
+  });
 };
 
 module.exports = function (connection) {
