@@ -183,6 +183,7 @@ router.post('/', (req, res) => {
       }
 
       if (scope.signup.draft_reportback_submission) {
+        logger.debug(`draft_reportback_submission:${scope.signup.draft_reportback_submission._id}`);
         return controller.continueReportbackSubmission(scope);
       }
 
@@ -212,6 +213,7 @@ router.post('/', (req, res) => {
       return scope.user.save();
     })
     .then(() => {
+      logger.debug(`saved user.current_campaign:${scope.campaign._id}`);
       scope.user.postMobileCommonsProfileUpdate(mobileCommonsOIP, scope.response_message);
 
       return res.send(gambitResponse(scope.response_message));
