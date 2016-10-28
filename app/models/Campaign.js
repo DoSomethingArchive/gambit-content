@@ -36,10 +36,8 @@ const campaignSchema = new mongoose.Schema({
   msg_no_photo_sent: String,
 
   // Mobile Commons Specific Fields.
-  mobilecommons_groups: {
-    doing: Number,
-    completed: Number,
-  },
+  mobilecommons_group_doing: Number,
+  mobilecommons_group_completed: Number,
 
 });
 
@@ -114,8 +112,8 @@ campaignSchema.methods.createMobileCommonsGroups = function () {
     // If a group was found, save the data.
     const parsedRes = parseApiRes(res);
     if (parsedRes) {
-      this.mobilecommons_groups.doing = parsedRes.doing;
-      this.mobilecommons_groups.completed = parsedRes.completed;
+      this.mobilecommons_group_doing = parsedRes.doing;
+      this.mobilecommons_group_completed = parsedRes.completed;
       return undefined;
     }
 
@@ -128,8 +126,8 @@ campaignSchema.methods.createMobileCommonsGroups = function () {
 
     const parsedRes = parseApiRes(res);
     if (parsedRes) {
-      this.mobilecommons_groups.doing = parsedRes.doing;
-      this.mobilecommons_groups.completed = parsedRes.completed;
+      this.mobilecommons_group_doing = parsedRes.doing;
+      this.mobilecommons_group_completed = parsedRes.completed;
     }
   })
   .then(() => {

@@ -122,7 +122,7 @@ conn.on('connected', () => {
         app.locals.campaigns[campaignID] = campaign;
         logger.debug(`loaded app.locals.campaigns[${campaignID}]`);
 
-        if (!campaign.mobilecommons_groups.doing || !campaign.mobilecommons_groups.completed) {
+        if (!campaign.mobilecommons_group_doing || !campaign.mobilecommons_group_completed) {
           campaign.createMobileCommonsGroups();
         }
 
