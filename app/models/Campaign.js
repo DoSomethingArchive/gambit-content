@@ -108,7 +108,7 @@ campaignSchema.methods.createMobileCommonsGroups = function () {
     return {
       doing: res.mobilecommons_groups[env].doing,
       completed: res.mobilecommons_groups[env].completed,
-    }
+    };
   }
 
   gambitGroups.findGroup(campaignId, campaignRunId).then((res) => {
