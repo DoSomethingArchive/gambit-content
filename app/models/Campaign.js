@@ -98,7 +98,8 @@ campaignSchema.methods.createMobileCommonsGroups = function () {
   function parseApiRes(res) {
     if (res._id) {
       // If a group is in the response, save the data for this env.
-      const hasEnv = process.env.NODE_ENV in res.mobilecommons_groups;
+      const env = process.env.NODE_ENV;
+      const hasEnv = env in res.mobilecommons_groups;
       return {
         doing: hasEnv ? res.mobilecommons_groups[env].doing : '',
         completed: hasEnv ? res.mobilecommons_groups[env].completed : '',
