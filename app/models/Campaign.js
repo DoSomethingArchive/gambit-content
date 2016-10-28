@@ -96,17 +96,19 @@ campaignSchema.methods.createMobileCommonsGroups = function () {
   const campaignRunId = this.current_run;
 
   function parseApiRes(res) {
-    if (res._id) {
-      // If a group is in the response, save the data for this env.
-      const env = process.env.NODE_ENV;
-      const hasEnv = env in res.mobilecommons_groups;
-      return {
-        doing: hasEnv ? res.mobilecommons_groups[env].doing : '',
-        completed: hasEnv ? res.mobilecommons_groups[env].completed : '',
-      };
+    if (!res._id) {
+      return false;
     }
 
-    return false;
+    const env = process.env.NODE_ENV;
+    if (!res.mobilecommons_groups[env]) {
+      return false;
+    }
+
+    return {
+      doing: res.mobilecommons_groups[env].doing,
+      completed: res.mobilecommons_groups[env].completed,
+    }
   }
 
   gambitGroups.findGroup(campaignId, campaignRunId).then((res) => {
