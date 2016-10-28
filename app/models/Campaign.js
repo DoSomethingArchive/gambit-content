@@ -116,25 +116,21 @@ campaignSchema.methods.createMobileCommonsGroups = function () {
     if (parsedRes) {
       this.mobilecommons_groups.doing = parsedRes.doing;
       this.mobilecommons_groups.completed = parsedRes.completed;
-      return true;
+      return undefined;
     }
 
-    return false
+    return gambitGroups.createGroup(campaignId, campaignRunId);
   })
-  .then(requiresCreation => {
-    if (!requiresCreation) {
+  .then(res => {
+    if (res == undefined) {
       return;
     }
 
-    // Otherwise, create a new group.
-    gambitGroups.createGroup(campaignId, campaignRunId).then(res => {
-      const parsedRes = parseApiRes(res);
-      if (parsedRes) {
-        this.mobilecommons_groups.doing = parsedRes.doing;
-        this.mobilecommons_groups.completed = parsedRes.completed;
-        return;
-      }
-    });
+    const parsedRes = parseApiRes(res);
+    if (parsedRes) {
+      this.mobilecommons_groups.doing = parsedRes.doing;
+      this.mobilecommons_groups.completed = parsedRes.completed;
+    }
   })
   .then(() => {
     this.save();
