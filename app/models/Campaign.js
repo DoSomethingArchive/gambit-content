@@ -98,17 +98,17 @@ campaignSchema.methods.createMobileCommonsGroups = function () {
   function parseApiRes(res) {
     if (res._id) {
       // If a group is in the response, save the data for this env.
-      const env = process.env.NODE_ENV;
+      const hasEnv = process.env.NODE_ENV in res.mobilecommons_groups;
       return {
-        doing: res.mobilecommons_groups[env].doing,
-        completed: res.mobilecommons_groups[env].completed,
+        doing: hasEnv ? res.mobilecommons_groups[env].doing : '',
+        completed: hasEnv ? res.mobilecommons_groups[env].completed : '',
       };
     }
 
     return false;
   }
 
-  gambitGroups.findGroup(campaignId, campaignRunId).then(res => {
+  gambitGroups.findGroup(campaignId, campaignRunId).then((res) => {
     // If a group was found, save the data.
     const parsedRes = parseApiRes(res);
     if (parsedRes) {
@@ -119,8 +119,8 @@ campaignSchema.methods.createMobileCommonsGroups = function () {
 
     return gambitGroups.createGroup(campaignId, campaignRunId);
   })
-  .then(res => {
-    if (res === undefined) {
+  .then((res) => {
+    if (!res) {
       return;
     }
 
