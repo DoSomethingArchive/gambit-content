@@ -10,6 +10,7 @@ const DS_API_POST_SOURCE = process.env.DS_API_POST_SOURCE || 'sms-mobilecommons'
 
 /**
  * CampaignBotController.
+ * Likely to be deprecated as we refactor functions as relevant Mongoose static/instance methods.
  */
 class CampaignBotController {
 
@@ -148,53 +149,6 @@ class CampaignBotController {
   }
 
   /**
-   * Gets Signup from DS API if exists for given user, else creates new Signup.
-   * @param {object} req - Express request, expects loaded user and campaign.
-   * @return {object} - Signup model
-   * TODO: Split this out into Signup/User methods.
-   */
-  getCurrentSignup(req) {
-    this.debug(req, 'getCurrentSignup');
-    let signup;
-
-    return app.locals.clients.northstar.Signups.index({
-      campaigns: req.campaign._id,
-      user: req.user._id,
-    })
-    .then(signups => {
-      logger.verbose(signups);
-      if (!signups.length) {
-        return this.postSignup(req);
-      }
-
-      // TODO: Loop through signups to find signup where campaign_run.current.
-      // Hardcoded to first result for now.
-      const currentSignup = signups[0];
-      this.debug(req, `currentSignup.id:${currentSignup.id}`);
-
-      return app.locals.db.signups.storeNorthstarSignup(currentSignup);
-    })
-    .then((signupDoc) => {
-      if (!signupDoc) {
-        logger.error('signupDoc undefined');
-      }
-      signup = signupDoc;
-      this.debug(req, `created signupDoc:${signup._id}`);
-
-      const user = req.user;
-      user.campaigns[req.campaign._id] = signupDoc._id;
-      user.markModified('campaigns');
-
-      return user.save();
-    })
-    .then(() => {
-      this.debug(req, `updated user.campaigns[${req.campaign._id}]:${signup._id}`);
-
-      return signup;
-    });
-  }
-
-  /**
    * Returns whether current user has submitted a Reportback for the current campaign.
    * @param {object} req
    * @return {bool}
@@ -249,32 +203,6 @@ class CampaignBotController {
     const result = user.role && (user.role === 'staff' || user.role === 'admin');
 
     return result;
-  }
-
-  /**
-   * TODO: Move to Signup as Static function.
-   * Loads Signup model if exists for given id, else get/create from API.
-   * @param {object} req - Express request
-   * @param {number} id - DS Signup ID
-   * @return {object}
-   */
-  loadCurrentSignup(req, id) {
-    this.debug(req, `loadCurrentSignup:${id}`);
-
-    return app.locals.db.signups
-      .findById(id)
-      .populate('draft_reportback_submission')
-      .exec()
-      .then(signup => {
-        if (!signup) {
-          this.debug(req, `signup not found for id:${id}`);
-
-          return this.getCurrentSignup(req);
-        }
-
-        // TODO Validate cached Signup is current by checking Campaign end date.
-        return signup;
-      });
   }
 
   /**
@@ -364,36 +292,6 @@ class CampaignBotController {
         this.debug(req, `updated signup:${scope.signup._id}`);
 
         return this.renderResponseMessage(scope, 'menu_completed');
-      });
-  }
-
-  /**
-   * TODO: Move this into Signup class as static method.
-   * Posts Signup to DS API and returns cached signup.
-   * @param {object} req - Express request - expects loaded user and campaign
-   * @return {object} - Signup model
-   */
-  postSignup(req) {
-    this.debug(req, 'postSignup');
-
-    return app.locals.clients.phoenix.Campaigns
-      .signup(req.campaign._id, {
-        source: DS_API_POST_SOURCE,
-        uid: req.user.phoenix_id,
-      })
-      .then((signupID) => {
-        // Phoenix returns just a numeric Signup ID, but our req contains user and campaign data.
-        const signupObject = {
-          id: signupID,
-          campaign: req.campaign._id,
-          user: req.user._id,
-          keyword: req.keyword,
-        };
-
-        return app.locals.db.signups.storeNorthstarSignup(signupObject);
-      })
-      .catch((error) => {
-        logger.error(`postSignup error status=${error.status}`);
       });
   }
 

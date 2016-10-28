@@ -122,7 +122,7 @@ conn.on('connected', () => {
         app.locals.campaigns[campaignID] = campaign;
         logger.debug(`loaded app.locals.campaigns[${campaignID}]`);
 
-        if (!campaign.keywords.length) {
+        if (campaign.keywords.length < 1) {
           logger.warn(`no keywords defined for campaign:${campaignID}`);
         }
         campaign.keywords.forEach((campaignKeyword) => {
