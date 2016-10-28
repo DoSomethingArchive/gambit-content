@@ -76,19 +76,59 @@ signupSchema.statics.lookupByID = function (signupID) {
   });
 };
 
-
-// TODO: DRY - when we move CampaignBotController getCurrentSignup to this class
-signupSchema.statics.storeNorthstarSignup = function (northstarSignup) {
+/**
+ * Gets current Signup for given User and Campaign from DS API, stores if found.
+ */
+signupSchema.statics.lookupCurrentForUserAndCampaign = function (user, campaign) {
   const model = this;
 
   return new Promise((resolve, reject) => {
-    logger.debug(`Signup.storeNorthstarSignup:${northstarSignup.id}`);
-    const data = parseNorthstarSignup(northstarSignup);
+    logger.debug(`Signup.lookupCurrentForUserAndCampaign:${user._id}, ${campaign._id}`);
 
-    return model.findOneAndUpdate({ _id: data._id }, data, { upsert: true, new: true })
-      .exec()
-      .then(signup => resolve(signup))
-      .catch(error => reject(error));
+    return app.locals.clients.northstar
+      .Signups.index({ user: user._id, campaigns: campaign._id })
+      .then(northstarSignups => {
+        if (!northstarSignups.length) {
+          return resolve(false);
+        }
+
+        // TODO: Loop through results to find result with northstarSignup.campaignRun.current.
+        const data = parseNorthstarSignup(northstarSignups[0]);
+
+        return model.findOneAndUpdate({ _id: data._id }, data, { upsert: true, new: true })
+          .populate('draft_reportback_submission')
+          .exec()
+          .then(signup => resolve(signup))
+          .catch(error => reject(error));
+      });
+  });
+};
+
+signupSchema.statics.post = function (user, campaign, keyword) {
+  const model = this;
+
+  return new Promise((resolve, reject) => {
+    logger.debug(`Signup.post (${user._id}, ${campaign._id}, ${keyword}`);
+
+    return app.locals.clients.phoenix.Campaigns
+      .signup(campaign._id, {
+        source: process.env.DS_API_POST_SOURCE,
+        uid: user.phoenix_id,
+      })
+      .then((signupID) => {
+        logger.debug(`Signup.post created signup:${signupID}`);
+        const data = {
+          campaign: campaign._id,
+          user: user._id,
+          keyword,
+        };
+
+        return model.findOneAndUpdate({ _id: signupID }, data, { upsert: true, new: true })
+          .exec()
+          .then(signup => resolve(signup))
+          .catch(error => reject(error));
+      })
+      .catch(err => reject(err));
   });
 };
 

@@ -84,71 +84,85 @@ router.post('/', (req, res) => {
       });
   });
 
-  const loadSignup = new Promise((resolve, reject) => {
-    logger.log('loadSignup');
+  const loadCampaign = new Promise((resolve, reject) => {
+    logger.log('loadCampaign');
 
-    return loadUser.then((user) => {
-      logger.debug(`loaded user:${user._id}`);
-      scope.user = user;
+    return loadUser
+      .then((user) => {
+        logger.debug(`loaded user:${user._id}`);
+        scope.user = user;
 
-      let campaign;
-      let campaignID;
+        let campaign;
+        let campaignID;
 
-      if (scope.keyword) {
-        // Find the Campaign associated with keyword.
-        campaignID = app.locals.keywords[scope.keyword];
+        if (scope.keyword) {
+          logger.debug(`load campaign for keyword:${scope.keyword}`);
+          campaignID = app.locals.keywords[scope.keyword];
+          campaign = app.locals.campaigns[campaignID];
+
+          if (!campaign) {
+            logger.error(`keyword app.locals.campaigns[${campaignID}] undefined`);
+            throw new CampaignNotFoundError();
+          }
+
+          if (campaign.status === 'closed') {
+            // Store campaign to render in closed message.
+            scope.campaign = campaign;
+            // TODO: Include this message to the CampaignClosedError.
+            logger.error(`keyword:${scope.keyword} is set to closed campaign:${campaignID}`);
+            throw new CampaignClosedError();
+          }
+
+          return resolve(campaign);
+        }
+
+        campaignID = user.current_campaign;
         campaign = app.locals.campaigns[campaignID];
+        logger.debug(`user.current_campaign:${campaignID}`);
 
         if (!campaign) {
-          logger.error(`keyword app.locals.campaigns[${campaignID}] undefined`);
+          // TODO: Send to non-existent start menu to select a campaign.
+          logger.error(`user:${user._id} current_campaign ${campaignID} undefined`);
           throw new CampaignNotFoundError();
         }
 
-        if (campaign.status === 'closed') {
-          // Store campaign to render in closed message.
-          scope.campaign = campaign;
-          // TODO: Fire custom newrelic/stathat event? keyword needs to be removed in Mobile Commons
-          // or assigned to a different active CampaignBot Campaign.
-          logger.error(`keyword:${scope.keyword} is set to closed campaign:${campaignID}`);
-          throw new CampaignClosedError();
-        }
+        return resolve(campaign);
+      })
+      .catch((err) => {
+        logger.error(err);
 
-        return campaign;
-      }
+        return reject(err);
+      });
+  });
 
-      // Load user's current campaign (set from our last response).
-      campaignID = user.current_campaign;
-      campaign = app.locals.campaigns[campaignID];
-      logger.debug(`user.current_campaign:${campaignID}`);
+  const loadSignup = new Promise((resolve, reject) => {
+    logger.log('loadSignup');
 
-      if (!campaign) {
-        // TODO: Send to non-existent start menu to select a campaign.
-        logger.error(`user:${user._id} current_campaign ${campaignID} undefined`);
-        throw new CampaignNotFoundError();
-      }
+    return loadCampaign
+      .then((campaign) => {
+        logger.log(`loaded campaign:${campaign._id}`);
+        scope.campaign = campaign;
 
-      return campaign;
-    })
-    .then((campaign) => {
-      logger.debug(`loaded campaign:${campaign._id}`);
-      scope.campaign = campaign;
+        return app.locals.db.signups
+          .lookupCurrentForUserAndCampaign(scope.user, scope.campaign)
+          .then((currentSignup) => {
+            if (currentSignup) {
+              logger.debug(`loadSignup found signup:${currentSignup._id}`);
 
-      if (controller.isCommand(req, 'clear_cache')) {
-        scope.user.campaigns = {};
-        logger.info(`${controller.loggerPrefix(scope)} cleared user.campaigns`);
+              return resolve(currentSignup);
+            }
 
-        return controller.getCurrentSignup(scope);
-      }
+            logger.debug('loadSignup not find signup');
+            const newSignup = app.locals.db.signups.post(scope.user, scope.campaign, scope.keyword);
 
-      const signupID = scope.user.campaigns[campaign._id];
-      if (signupID) {
-        return controller.loadCurrentSignup(scope, signupID);
-      }
+            return resolve(newSignup);
+          });
+      })
+      .catch((err) => {
+        logger.error(err);
 
-      return controller.getCurrentSignup(scope);
-    })
-    .then(signup => resolve(signup))
-    .catch(err => reject(err));
+        return reject(err);
+      });
   });
 
   return loadSignup
