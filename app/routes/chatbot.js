@@ -58,41 +58,25 @@ router.post('/', (req, res) => {
     return res.sendStatus(500);
   }
 
-  /**
-   * Load current User from incoming Mobile Commons request.
-   */
-  if (!req.body.profile_northstar_id && !req.body.phone) {
-    return res.status(422).send({ error: 'profile_northstar_id or phone is required.' });
+  if (!req.body.phone) {
+    return res.status(422).send({ error: 'phone is required.' });
   }
 
-  // TODO: Add reject, and throw new custom errors to indicate various error types.
-  const loadUser = new Promise((resolve) => {
+  let mobileCommonsOIP = process.env.MOBILECOMMONS_OIP_CHATBOT;
+
+  const loadUser = new Promise((resolve, reject) => {
     logger.log('loadUser');
-
-    if (req.body.profile_northstar_id) {
-      const userID = req.body.profile_northstar_id;
-      return app.locals.db.users
-        .findById(userID)
-        .exec()
-        .then((user) => {
-          if (!user) {
-            logger.debug(`no doc for user:${userID}`);
-
-            return resolve(app.locals.db.users.lookup('id', userID));
-          }
-          logger.debug(`found doc for user:${userID}`);
-
-          return resolve(user);
-        });
-    }
 
     return app.locals.db.users
       .lookup('mobile', req.body.phone)
       .then(user => resolve(user))
-      .catch(() => {
-        logger.debug(`app.locals.db.users.lookup could not find mobile:${req.body.phone}`);
+      .catch((err) => {
+        if (err && err.status === 404) {
+          logger.debug(`app.locals.db.users.lookup could not find mobile:${req.body.phone}`);
 
-        return resolve(app.locals.db.users.createForMobileCommonsRequest(req));
+          return resolve(app.locals.db.users.createForMobileCommonsRequest(req));
+        }
+        return reject(err);
       });
   });
 
@@ -176,7 +160,7 @@ router.post('/', (req, res) => {
 
       if (controller.isCommand(scope, 'member_support')) {
         scope.cmd_member_support = true;
-        scope.oip = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
+        mobileCommonsOIP = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
         return controller.renderResponseMessage(scope, 'member_support');
       }
 
@@ -205,7 +189,7 @@ router.post('/', (req, res) => {
     .then((msg) => {
       controller.debug(scope, `sendMessage:${msg}`);
       scope.user.setCurrentCampaign(scope.signup);
-      scope.user.postMobileCommonsProfileUpdate(req, scope.oip, msg);
+      scope.user.postMobileCommonsProfileUpdate(mobileCommonsOIP, msg);
 
       return res.send(gambitResponse(msg));
     })
@@ -217,7 +201,7 @@ router.post('/', (req, res) => {
     .catch(CampaignClosedError, () => {
       logger.error('CampaignClosedError');
       const msg = controller.renderResponseMessage(scope, 'campaign_closed');
-      scope.user.postMobileCommonsProfileUpdate(req, scope.oip, msg);
+      scope.user.postMobileCommonsProfileUpdate(mobileCommonsOIP, msg);
 
       return res.send(gambitResponse(msg));
     })
