@@ -64,7 +64,7 @@ signupSchema.statics.lookupByID = function (signupID) {
 
     return app.locals.clients.northstar
       .Signups.get(signupID)
-      .then(northstarSignup => {
+      .then((northstarSignup) => {
         logger.debug(`northstar.Signups.get:${signupID} success`);
         const data = parseNorthstarSignup(northstarSignup);
 
@@ -87,8 +87,8 @@ signupSchema.statics.lookupCurrentForUserAndCampaign = function (user, campaign)
 
     return app.locals.clients.northstar
       .Signups.index({ user: user._id, campaigns: campaign._id })
-      .then(northstarSignups => {
-        if (!northstarSignups.length) {
+      .then((northstarSignups) => {
+        if (northstarSignups.length < 1) {
           return resolve(false);
         }
 
