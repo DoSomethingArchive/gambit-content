@@ -58,109 +58,111 @@ router.post('/', (req, res) => {
     return res.sendStatus(500);
   }
 
-  /**
-   * Load current User from incoming Mobile Commons request.
-   */
-  if (!req.body.profile_northstar_id && !req.body.phone) {
-    return res.status(422).send({ error: 'profile_northstar_id or phone is required.' });
+  if (!req.body.phone) {
+    return res.status(422).send({ error: 'phone is required.' });
   }
 
-  // TODO: Add reject, and throw new custom errors to indicate various error types.
-  const loadUser = new Promise((resolve) => {
+  let mobileCommonsOIP = process.env.MOBILECOMMONS_OIP_CHATBOT;
+
+  const loadUser = new Promise((resolve, reject) => {
     logger.log('loadUser');
-
-    if (req.body.profile_northstar_id) {
-      const userID = req.body.profile_northstar_id;
-      return app.locals.db.users
-        .findById(userID)
-        .exec()
-        .then((user) => {
-          if (!user) {
-            logger.debug(`no doc for user:${userID}`);
-
-            return resolve(app.locals.db.users.lookup('id', userID));
-          }
-          logger.debug(`found doc for user:${userID}`);
-
-          return resolve(user);
-        });
-    }
 
     return app.locals.db.users
       .lookup('mobile', req.body.phone)
       .then(user => resolve(user))
-      .catch(() => {
-        logger.debug(`app.locals.db.users.lookup could not find mobile:${req.body.phone}`);
+      .catch((err) => {
+        if (err && err.status === 404) {
+          logger.debug(`app.locals.db.users.lookup could not find mobile:${req.body.phone}`);
 
-        return resolve(app.locals.db.users.createForMobileCommonsRequest(req));
+          const user = app.locals.db.users.post({
+            mobile: req.body.phone,
+            mobilecommons_id: req.profile_id,
+          });
+          return resolve(user);
+        }
+        return reject(err);
+      });
+  });
+
+  const loadCampaign = new Promise((resolve, reject) => {
+    logger.log('loadCampaign');
+
+    return loadUser
+      .then((user) => {
+        logger.debug(`loaded user:${user._id}`);
+        scope.user = user;
+
+        let campaign;
+        let campaignID;
+
+        if (scope.keyword) {
+          logger.debug(`load campaign for keyword:${scope.keyword}`);
+          campaignID = app.locals.keywords[scope.keyword];
+          campaign = app.locals.campaigns[campaignID];
+
+          if (!campaign) {
+            logger.error(`keyword app.locals.campaigns[${campaignID}] undefined`);
+            throw new CampaignNotFoundError();
+          }
+
+          if (campaign.status === 'closed') {
+            // Store campaign to render in closed message.
+            scope.campaign = campaign;
+            // TODO: Include this message to the CampaignClosedError.
+            logger.error(`keyword:${scope.keyword} is set to closed campaign:${campaignID}`);
+            throw new CampaignClosedError();
+          }
+
+          return resolve(campaign);
+        }
+
+        campaignID = user.current_campaign;
+        campaign = app.locals.campaigns[campaignID];
+        logger.debug(`user.current_campaign:${campaignID}`);
+
+        if (!campaign) {
+          // TODO: Send to non-existent start menu to select a campaign.
+          logger.error(`user:${user._id} current_campaign ${campaignID} undefined`);
+          throw new CampaignNotFoundError();
+        }
+
+        return resolve(campaign);
+      })
+      .catch((err) => {
+        logger.error(err);
+
+        return reject(err);
       });
   });
 
   const loadSignup = new Promise((resolve, reject) => {
     logger.log('loadSignup');
 
-    return loadUser.then((user) => {
-      logger.debug(`loaded user:${user._id}`);
-      scope.user = user;
+    return loadCampaign
+      .then((campaign) => {
+        logger.log(`loaded campaign:${campaign._id}`);
+        scope.campaign = campaign;
 
-      let campaign;
-      let campaignID;
+        return app.locals.db.signups
+          .lookupCurrentForUserAndCampaign(scope.user, scope.campaign)
+          .then((currentSignup) => {
+            if (currentSignup) {
+              logger.debug(`loadSignup found signup:${currentSignup._id}`);
 
-      if (scope.keyword) {
-        // Find the Campaign associated with keyword.
-        campaignID = app.locals.keywords[scope.keyword];
-        campaign = app.locals.campaigns[campaignID];
+              return resolve(currentSignup);
+            }
 
-        if (!campaign) {
-          logger.error(`keyword app.locals.campaigns[${campaignID}] undefined`);
-          throw new CampaignNotFoundError();
-        }
+            logger.debug('loadSignup not find signup');
+            const newSignup = app.locals.db.signups.post(scope.user, scope.campaign, scope.keyword);
 
-        if (campaign.status === 'closed') {
-          // Store campaign to render in closed message.
-          scope.campaign = campaign;
-          // TODO: Fire custom newrelic/stathat event? keyword needs to be removed in Mobile Commons
-          // or assigned to a different active CampaignBot Campaign.
-          logger.error(`keyword:${scope.keyword} is set to closed campaign:${campaignID}`);
-          throw new CampaignClosedError();
-        }
+            return resolve(newSignup);
+          });
+      })
+      .catch((err) => {
+        logger.error(err);
 
-        return campaign;
-      }
-
-      // Load user's current campaign (set from our last response).
-      campaignID = user.current_campaign;
-      campaign = app.locals.campaigns[campaignID];
-      logger.debug(`user.current_campaign:${campaignID}`);
-
-      if (!campaign) {
-        // TODO: Send to non-existent start menu to select a campaign.
-        logger.error(`user:${user._id} current_campaign ${campaignID} undefined`);
-        throw new CampaignNotFoundError();
-      }
-
-      return campaign;
-    })
-    .then((campaign) => {
-      logger.debug(`loaded campaign:${campaign._id}`);
-      scope.campaign = campaign;
-
-      if (controller.isCommand(req, 'clear_cache')) {
-        scope.user.campaigns = {};
-        logger.info(`${controller.loggerPrefix(scope)} cleared user.campaigns`);
-
-        return controller.getCurrentSignup(scope);
-      }
-
-      const signupID = scope.user.campaigns[campaign._id];
-      if (signupID) {
-        return controller.loadCurrentSignup(scope, signupID);
-      }
-
-      return controller.getCurrentSignup(scope);
-    })
-    .then(signup => resolve(signup))
-    .catch(err => reject(err));
+        return reject(err);
+      });
   });
 
   return loadSignup
@@ -176,11 +178,12 @@ router.post('/', (req, res) => {
 
       if (controller.isCommand(scope, 'member_support')) {
         scope.cmd_member_support = true;
-        scope.oip = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
+        mobileCommonsOIP = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
         return controller.renderResponseMessage(scope, 'member_support');
       }
 
       if (scope.signup.draft_reportback_submission) {
+        logger.debug(`draft_reportback_submission:${scope.signup.draft_reportback_submission._id}`);
         return controller.continueReportbackSubmission(scope);
       }
 
@@ -203,11 +206,17 @@ router.post('/', (req, res) => {
       return controller.renderResponseMessage(scope, 'invalid_cmd_signedup');
     })
     .then((msg) => {
-      controller.debug(scope, `sendMessage:${msg}`);
-      scope.user.setCurrentCampaign(scope.signup);
-      scope.user.postMobileCommonsProfileUpdate(req, scope.oip, msg);
+      scope.response_message = msg;
+      controller.debug(scope, `chatbotResponseMessage:${msg}`);
+      // Save to continue conversation with future mData requests that don't contain a keyword.
+      scope.user.current_campaign = scope.campaign._id;
+      return scope.user.save();
+    })
+    .then(() => {
+      logger.debug(`saved user.current_campaign:${scope.campaign._id}`);
+      scope.user.postMobileCommonsProfileUpdate(mobileCommonsOIP, scope.response_message);
 
-      return res.send(gambitResponse(msg));
+      return res.send(gambitResponse(scope.response_message));
     })
     .catch(CampaignNotFoundError, () => {
       logger.error('CampaignNotFoundError');
@@ -217,7 +226,7 @@ router.post('/', (req, res) => {
     .catch(CampaignClosedError, () => {
       logger.error('CampaignClosedError');
       const msg = controller.renderResponseMessage(scope, 'campaign_closed');
-      scope.user.postMobileCommonsProfileUpdate(req, scope.oip, msg);
+      scope.user.postMobileCommonsProfileUpdate(mobileCommonsOIP, msg);
 
       return res.send(gambitResponse(msg));
     })
