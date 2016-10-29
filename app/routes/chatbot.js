@@ -101,7 +101,7 @@ router.post('/', (req, res) => {
           campaign = app.locals.campaigns[campaignID];
 
           if (!campaign) {
-            const msg = `Keyword received does not have a campaign associated with it.`;
+            const msg = `Keyword '${scope.keyword}' does not have matching campaign.`;
             throw new NotFoundError(msg);
           }
 
@@ -218,16 +218,23 @@ router.post('/', (req, res) => {
 
       return res.send(gambitResponse(scope.response_message));
     })
-    .catch(NotFoundError, (err) => res.status(404).send(err.message))
-    .catch(UnprocessibleEntityError, () => {
+    .catch(NotFoundError, (err) => {
+      logger.error(err.message);
+
+      return res.status(404).send(err.message);
+    })
+    .catch(UnprocessibleEntityError, (err) => {
+      logger.error(err.message);
+      // TODO: Send StatHat report to inform staff CampaignBot is running a closed Campaign.
+      // We don't want to send an error back as response, but instead deliver success to Mobile
+      // Commons and deliver the Campaign Closed message back to our User.
       const msg = controller.renderResponseMessage(scope, 'campaign_closed');
       scope.user.postMobileCommonsProfileUpdate(mobileCommonsOIP, msg);
 
       return res.send(gambitResponse(msg));
     })
     .catch(err => {
-      logger.error(err);
-      controller.error(req, scope, err);
+      logger.error(err.message);
 
       return res.sendStatus(500);
     });

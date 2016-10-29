@@ -2,89 +2,88 @@
 
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
-const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
 const logger = app.locals.logger;
 
-function successResponse(msg) {
-  const response = {
-    success: {
-      code: 200,
-      message: msg,
-    },
-  };
+function sendResponse(res, code, message) {
+  let type = 'success';
+  if (code > 200) {
+    type = 'error';
+    logger.error(message);
+  }
 
-  return response;
+  const response = {};
+  response[type] = { code, message };
+
+  return res.status(code).send(response);
 }
 
 router.post('/', (req, res) => {
   if (!req.body.id) {
-    res.status(422).send({ error: 'id is required' });
+    return sendResponse(res, 422, 'Missing required id.');
   }
-  const signupID = req.body.id;
+  const signupId = req.body.id;
 
   if (!req.body.source) {
-    res.status(422).send({ error: 'source is required' });
+    return sendResponse(res, 422, 'Missing required source.');
   }
   const source = req.body.source;
 
-  logger.debug(`POST /v1/signups { id:${signupID}, source:${source} }`);
+  logger.info(`POST signup:${signupId} source:${source}`);
 
   if (source === process.env.DS_API_POST_SOURCE) {
-    const msg = `CampaignBot already sent confirmation for signup ${signupID} (source==${source}).`;
+    const msg = `CampaignBot only sends confirmation when source not equal to ${source}.`;
 
-    return res.send(successResponse(msg));
+    return sendResponse(res, 208, msg);
   }
 
   let currentSignup;
-  let currentCampaign;
-  let chatbotMsg;
+  let chatbotMessage;
 
   return app.locals.db.signups
-    .lookupByID(signupID)
+    .lookupById(signupId)
     .then((signup) => {
-      currentSignup = signup;
       if (!app.locals.campaigns[signup.campaign]) {
-        const msg = `Campaign ID ${signup.campaign} is not enabled for CampaignBot.`;
+        const msg = `Campaign ${signup.campaign} is not running on CampaignBot.`;
         throw new UnprocessibleEntityError(msg);
       }
 
-      return app.locals.db.users.lookup('id', currentSignup.user);
+      currentSignup = signup;
+
+      return app.locals.db.users.lookup('id', signup.user);
     })
     .then((user) => {
-      if (!user) {
-        const msg = `Northstar 404 for user {currentSignup.user} on signup ${signupID}.`;
-        throw new NotFoundError(msg);
-      }
-
       if (!user.mobile) {
-        throw new UnprocessibleEntityError('Missing user mobile.');
+        throw new UnprocessibleEntityError('Missing required user.mobile.');
       }
 
-      const scope = req;
-      scope.user = user;
-      scope.signup = currentSignup;
-      currentCampaign = app.locals.campaigns[currentSignup.campaign];
-
+      // Render the chatbot message to send.
       const controller = app.locals.controllers.campaignBot;
-      chatbotMsg = controller.renderResponseMessage(scope, 'menu_signedup_external');
+      const scope = {
+        user,
+        campaign: app.locals.campaigns[currentSignup.campaign],
+      };
+      chatbotMessage = controller.renderResponseMessage(scope, 'menu_signedup_external');
 
-      user.current_campaign = currentCampaign._id;
-      return user.save();
+      // Technically we don't want to ovewrite current_campaign until we know the Mobile Commons
+      // message was delivered.. but responding to the message won't work correctly without
+      // ensuring the current_campaign is set for our signup campaign. The ol' chicken and egg.
+      // Set current_campaign first and assume user isn't in the middle of a chatbot conversation
+      // for a different campaign.
+      scope.user.current_campaign = currentSignup.campaign;
+
+      return scope.user.save();
     })
     .then((user) => {
-      user.postMobileCommonsProfileUpdate(process.env.MOBILECOMMONS_OIP_CHATBOT, chatbotMsg);
+      logger.debug(`updated user:${user._id} current_campaign:${user.current_campaign}`);
+      // TODO: Promisify postMobileCommonsProfileUpdate and send success if we know the
+      // Mobile Commons Profile Update request succeeded.
+      user.postMobileCommonsProfileUpdate(process.env.MOBILECOMMONS_OIP_CHATBOT, chatbotMessage);
 
-      return res.send(successResponse(chatbotMsg));
+      return sendResponse(res, 200, chatbotMessage);
     })
-    .catch(NotFoundError, (err) => {
- 
-      return res.status(404).send({ error: err.msg });
-    })
-    .catch(UnprocessibleEntityError, (err) => {
- 
-      return res.status(422).send({ error: err.msg });
-    });
+    .catch(UnprocessibleEntityError, err => sendResponse(res, 422, err.message))
+    .catch(err => sendResponse(res, 500, err.message));
 });
 
 module.exports = router;

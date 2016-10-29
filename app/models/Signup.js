@@ -56,23 +56,24 @@ function parseNorthstarSignup(northstarSignup) {
 /**
  * Get given Signup ID from DS API then store.
  */
-signupSchema.statics.lookupByID = function (signupID) {
+signupSchema.statics.lookupById = function (id) {
   const model = this;
 
   return new Promise((resolve, reject) => {
-    logger.debug(`Signup.lookupByID:${signupID}`);
+    logger.debug(`Signup.lookupById:${id}`);
 
     return app.locals.clients.northstar
-      .Signups.get(signupID)
+      .Signups.get(id)
       .then((northstarSignup) => {
-        logger.debug(`northstar.Signups.get:${signupID} success`);
+        logger.debug(`northstar.Signups.get:${id} success`);
         const data = parseNorthstarSignup(northstarSignup);
 
-        return model.findOneAndUpdate({ _id: signupID }, data, { upsert: true, new: true })
+        return model.findOneAndUpdate({ _id: id }, data, { upsert: true, new: true })
           .exec()
           .then(signup => resolve(signup))
           .catch(error => reject(error));
-      });
+      })
+      .catch(err => reject(err));
   });
 };
 
