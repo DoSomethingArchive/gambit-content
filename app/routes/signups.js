@@ -2,6 +2,7 @@
 
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
+const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
 const logger = app.locals.logger;
 
@@ -82,6 +83,7 @@ router.post('/', (req, res) => {
 
       return sendResponse(res, 200, chatbotMessage);
     })
+    .catch(NotFoundError, err => sendResponse(res, 404, err.message))
     .catch(UnprocessibleEntityError, err => sendResponse(res, 422, err.message))
     .catch(err => sendResponse(res, 500, err.message));
 });

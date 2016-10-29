@@ -5,7 +5,7 @@
  */
 const mongoose = require('mongoose');
 const Promise = require('bluebird');
-
+const NotFoundError = require('../exceptions/NotFoundError');
 const logger = app.locals.logger;
 
 /**
@@ -73,7 +73,15 @@ signupSchema.statics.lookupById = function (id) {
           .then(signup => resolve(signup))
           .catch(error => reject(error));
       })
-      .catch(err => reject(err));
+      .catch(err => {
+        if (err.status === 404) {
+          const msg = `Signup ${id} not found.`;
+          const notFoundError = new NotFoundError(msg);
+          return reject(notFoundError);
+        }
+
+        return reject(err);
+      });
   });
 };
 
@@ -90,6 +98,7 @@ signupSchema.statics.lookupCurrentForUserAndCampaign = function (user, campaign)
       .Signups.index({ user: user._id, campaigns: campaign._id })
       .then((northstarSignups) => {
         if (northstarSignups.length < 1) {
+          // TODO: Refactor to throw NotFoundError.
           return resolve(false);
         }
 
