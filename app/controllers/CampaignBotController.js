@@ -24,6 +24,7 @@ class CampaignBotController {
   }
 
   /**
+   * TODO: Move validation logic into routes/chatbot, save logic into Reportback Submission model.
    * Handles asking for and saving the given property to our draft submission.
    * Posts completed submissions to DS API
    * @param {object} req - Express request
@@ -38,11 +39,16 @@ class CampaignBotController {
       return this.renderResponseMessage(req, `ask_${property}`);
     }
 
+    // Begin validation.
     let input = req.incoming_message;
 
-    // Validate input received for our given Reportback property.
+    // TODO: Improve quantity check by looking for commas: @see gambit issue#608
+    // Search string for numbers to accept values like "Around 100" or "60 bumble bands"
+    const validQuantity = Number(input) && !helpers.hasLetters(input);
+    const validTextProperty = input.length > 3 && helpers.hasLetters(input);
+
     if (property === 'quantity') {
-      if (helpers.hasLetters(input) || !Number(input)) {
+      if (!validQuantity) {
         return this.renderResponseMessage(req, 'invalid_quantity');
       }
       input = Number(input);
@@ -51,6 +57,11 @@ class CampaignBotController {
       if (!input) {
         return this.renderResponseMessage(req, 'no_photo_sent');
       }
+    } else if (!validTextProperty) {
+      logger.debug(`invalid ${property} sent`);
+      const prefix = 'Sorry, I didn\'t understand that.\n\n';
+
+      return this.renderResponseMessage(req, `ask_${property}`, prefix);
     }
 
     const submission = req.signup.draft_reportback_submission;
@@ -76,6 +87,7 @@ class CampaignBotController {
   }
 
   /**
+   * TODO: Refactor, move this logic into the router.
    * Handles conversation for collecting ReportbackSubmission data or posting.
    * @param {object} req - Express request
    */
@@ -108,6 +120,7 @@ class CampaignBotController {
   }
 
   /**
+   * TODO: Move into router.
    * Creates new ReportbackSubmission model and updates Signup model's draft.
    * @param {object} req - Express request
    * @return {string} - Message to send and begin collecting Reportback data.
@@ -296,20 +309,24 @@ class CampaignBotController {
   }
 
   /**
+   * TODO: Move this function as either a Campaign or CampaignBot instance function.
    * Replaces placeholder variables in given msgTxt with data from incoming req
    * @param {object} req - Express request
    * @param {string} msgType - Type of bot message to send back
    * @return {string} - msgTxt with all variables replaced with req properties
    */
-  renderResponseMessage(req, msgType) {
+  renderResponseMessage(req, msgType, prefix) {
     logger.debug(`renderResponseMessage:${msgType}`);
     const campaign = req.campaign;
 
     const botProperty = `msg_${msgType}`;
     let msg = this.bot[botProperty];
     if (!campaign) {
+      logger.error('renderResponseMessage req.campaign undefined');
+
       return msg;
     }
+
     // Check if campaign has an override defined.
     if (campaign[botProperty]) {
       msg = campaign[botProperty];
@@ -319,10 +336,8 @@ class CampaignBotController {
       return this.error(req, 'bot msgType not found');
     }
 
-    if (!req.campaign) {
-      logger.error('renderResponseMessage req.campaign undefined');
-
-      return msg;
+    if (prefix) {
+      msg = `${prefix}${msg}`;
     }
 
     msg = msg.replace(/{{br}}/gi, '\n');
@@ -336,7 +351,9 @@ class CampaignBotController {
     msg = msg.replace(/{{cmd_member_support}}/i, process.env.GAMBIT_CMD_MEMBER_SUPPORT);
 
     if (campaign.keywords.length) {
+      // Campaign could have multiple keywords, use the first by default.
       let keyword = campaign.keywords[0].toUpperCase();
+      // If User signed up via keyword, use the keyword they used (vs the first defined above).
       if (req.signup && req.signup.keyword) {
         keyword = req.signup.keyword.toUpperCase();
       }
