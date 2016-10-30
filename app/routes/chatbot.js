@@ -8,8 +8,8 @@ const router = express.Router(); // eslint-disable-line new-cap
 
 const logger = app.locals.logger;
 const Promise = require('bluebird');
-const CampaignClosedError = require('../exceptions/CampaignClosedError');
-const CampaignNotFoundError = require('../exceptions/CampaignNotFoundError');
+const NotFoundError = require('../exceptions/NotFoundError');
+const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
 
 /**
  * Formats our Express return response.
@@ -101,16 +101,16 @@ router.post('/', (req, res) => {
           campaign = app.locals.campaigns[campaignID];
 
           if (!campaign) {
-            logger.error(`keyword app.locals.campaigns[${campaignID}] undefined`);
-            throw new CampaignNotFoundError();
+            const msg = `Keyword '${scope.keyword}' does not have matching campaign.`;
+            throw new NotFoundError(msg);
           }
 
           if (campaign.status === 'closed') {
             // Store campaign to render in closed message.
             scope.campaign = campaign;
             // TODO: Include this message to the CampaignClosedError.
-            logger.error(`keyword:${scope.keyword} is set to closed campaign:${campaignID}`);
-            throw new CampaignClosedError();
+            const msg = `Keyword received for closed campaign ${campaignID}.`;
+            throw new UnprocessibleEntityError(msg);
           }
 
           return resolve(campaign);
@@ -122,8 +122,8 @@ router.post('/', (req, res) => {
 
         if (!campaign) {
           // TODO: Send to non-existent start menu to select a campaign.
-          logger.error(`user:${user._id} current_campaign ${campaignID} undefined`);
-          throw new CampaignNotFoundError();
+          const msg = `User ${user._id} current_campaign ${campaignID} not found in CampaignBot.`;
+          throw new NotFoundError(msg);
         }
 
         return resolve(campaign);
@@ -218,21 +218,23 @@ router.post('/', (req, res) => {
 
       return res.send(gambitResponse(scope.response_message));
     })
-    .catch(CampaignNotFoundError, () => {
-      logger.error('CampaignNotFoundError');
+    .catch(NotFoundError, (err) => {
+      logger.error(err.message);
 
-      return res.sendStatus(404);
+      return res.status(404).send(err.message);
     })
-    .catch(CampaignClosedError, () => {
-      logger.error('CampaignClosedError');
+    .catch(UnprocessibleEntityError, (err) => {
+      logger.error(err.message);
+      // TODO: Send StatHat report to inform staff CampaignBot is running a closed Campaign.
+      // We don't want to send an error back as response, but instead deliver success to Mobile
+      // Commons and deliver the Campaign Closed message back to our User.
       const msg = controller.renderResponseMessage(scope, 'campaign_closed');
       scope.user.postMobileCommonsProfileUpdate(mobileCommonsOIP, msg);
 
       return res.send(gambitResponse(msg));
     })
     .catch(err => {
-      logger.error(err);
-      controller.error(req, scope, err);
+      logger.error(err.message);
 
       return res.sendStatus(500);
     });
