@@ -5,6 +5,8 @@
  */
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
+const superagent = require('superagent');
+const donorschoose = require('../../lib/donorschoose');
 const helpers = require('../../lib/helpers');
 const logger = app.locals.logger;
 
@@ -78,7 +80,24 @@ router.post('/', (req, res) => {
   // We've made it this far, time to donate.
   // TODO: When time to post to MC Profile, we'll need to save email if !req.body.profile_email.
 
-  return res.send('hi');
+  const donationAmount = (process.env.DONORSCHOOSE_DONATION_AMOUNT || 10);
+  const olderThan = process.env.DONORSCHOOSE_PROPOSALS_OLDERTHAN;
+  const zip = req.body.profile_postal_code;
+  // Find a project for zip code that has at least DONATION_AMOUNT left to completion.
+  const proposalsUri = donorschoose.getProposalsQueryUrl(zip, donationAmount, olderThan);
+  logger.debug(proposalsUri);
+
+  return superagent.get(proposalsUri).set('Accept', 'application/json')
+    .then((response) => {
+      const body = JSON.parse(response.text);
+      if (body.proposals.length < 1) {
+        logger.error(`'No proposals found for zip ${zip}`);
+        // TODO: Inform User, either by throwing an error or adding a no projects found message.
+      }
+      const project = body.proposals[0];
+      return res.status(200).send(project);
+    })
+    .catch(err => res.status(err.status).send(err.message));
 });
 
 module.exports = router;
