@@ -313,6 +313,7 @@ class CampaignBotController {
    * Replaces placeholder variables in given msgTxt with data from incoming req
    * @param {object} req - Express request
    * @param {string} msgType - Type of bot message to send back
+   * @param {string} prefix - If set, prepended to the bot message text
    * @return {string} - msgTxt with all variables replaced with req properties
    */
   renderResponseMessage(req, msgType, prefix) {
