@@ -14,7 +14,10 @@ router.get('/', (req, res) => {
   return app.locals.db.campaigns
     .find(findClause)
     .exec()
-    .then(campaigns => res.send({ data: campaigns }))
+    .then((campaigns) => {
+      const data = campaigns.map(campaign => campaign.formatApiResponse());
+      res.send({ data });
+    })
     .catch(error => res.send(error));
 });
 
@@ -28,8 +31,9 @@ router.get('/:id', (req, res) => {
       if (!campaign) {
         return res.sendStatus(404);
       }
+      const data = campaign.formatApiResponse();
 
-      return res.send({ data: campaign });
+      return res.send({ data });
     })
     .catch(error => res.send(error));
 });
