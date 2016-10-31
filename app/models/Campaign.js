@@ -138,6 +138,24 @@ campaignSchema.methods.createMobileCommonsGroups = function () {
   });
 };
 
+/**
+ * Returns formatted Campaign object to return in campaigns endpoint.
+ */
+campaignSchema.methods.formatApiResponse = function () {
+  // TODO: Add all other properties.
+  const data = {
+    id: this._id,
+    title: this.title,
+    status: this.status,
+    current_run: this.current_run,
+    mobilecommons_group_doing: this.mobilecommons_group_doing,
+    mobilecommons_group_completed: this.mobilecommons_group_completed,
+    keywords: this.keywords,
+  };
+
+  return data;
+};
+
 module.exports = function (connection) {
   return connection.model('campaigns', campaignSchema);
 };
