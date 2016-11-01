@@ -83,19 +83,71 @@ router.post('/', (req, res) => {
   const donationAmount = (process.env.DONORSCHOOSE_DONATION_AMOUNT || 10);
   const olderThan = process.env.DONORSCHOOSE_PROPOSALS_OLDERTHAN;
   const zip = req.body.profile_postal_code;
+
+  const apiKey = process.env.DONORSCHOOSE_API_KEY;
+  const apiPassword = process.env.DONORSCHOOSE_API_PASSWORD;
   // Find a project for zip code that has at least DONATION_AMOUNT left to completion.
   const proposalsUri = donorschoose.getProposalsQueryUrl(zip, donationAmount, olderThan);
-  logger.debug(proposalsUri);
+  const donationsUri = `${donorschoose.getDonationsPostUrl()}?APIKey=${apiKey}`;
+  logger.debug(donationsUri);
+  let selectedProposal;
 
-  return superagent.get(proposalsUri).set('Accept', 'application/json')
+  return superagent.get(proposalsUri)
+    .set('Accept', 'application/json')
+    .set('Content-Type', 'application/json')
     .then((response) => {
       const body = JSON.parse(response.text);
       if (body.proposals.length < 1) {
         logger.error(`'No proposals found for zip ${zip}`);
         // TODO: Inform User, either by throwing an error or adding a no projects found message.
       }
-      const project = body.proposals[0];
-      return res.status(200).send(project);
+
+      return body.proposals[0];
+    })
+    .then((proposal) => {
+      selectedProposal = proposal;
+
+      // Submitting a Donation request first requires requesting a transaction token.
+      // @see https://data.donorschoose.org/docs/transactions/
+      return superagent.post(donationsUri)
+        .set('Accept', 'application/json')
+        .set('Content-Type', 'application/json')
+        .type('form')
+        .send({
+          APIKey: apiKey,
+          apipassword: apiPassword,
+          action: 'token',
+        });
+    })
+    .then((response) => {
+      const requestTokenResponse = JSON.parse(response.text);
+      if (requestTokenResponse.statusDescription !== 'success') {
+        throw new Error('DonorsChoose request token failed.');
+      }
+
+      const donorEmail = process.env.DONORSCHOOSE_DEFAULT_EMAIL || 'donorschoose@dosomething.org';
+      const data = {
+        APIKey: apiKey,
+        apipassword: apiPassword,
+        action: 'donate',
+        token: requestTokenResponse.token,
+        proposalId: selectedProposal.id,
+        amount: donationAmount,
+        email: donorEmail,
+        honoreeEmail: req.body.profile_email,
+        honoreeFirst: req.body.profile_first_name,
+      };
+
+      return superagent.post(donationsUri)
+        .set('Accept', 'application/json')
+        .set('Content-Type', 'application/json')
+        .type('form')
+        .send(data);
+    })
+    .then((response) => {
+      const body = JSON.parse(response.text);
+
+      return res.status(200).send(body);
     })
     .catch(err => res.status(err.status).send(err.message));
 });
