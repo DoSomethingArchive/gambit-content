@@ -89,7 +89,7 @@ router.post('/', (req, res) => {
   // Find a project for zip code that has at least DONATION_AMOUNT left to completion.
   const proposalsUri = donorschoose.getProposalsQueryUrl(zip, donationAmount, olderThan);
   const donationsUri = `${donorschoose.getDonationsPostUrl()}?APIKey=${apiKey}`;
-  logger.debug(donationsUri);
+
   let selectedProposal;
 
   return superagent.get(proposalsUri)
@@ -105,7 +105,7 @@ router.post('/', (req, res) => {
       return body.proposals[0];
     })
     .then((proposal) => {
-      selectedProposal = proposal;
+      selectedProposal = donorschoose.decodeProposal(proposal);
 
       // Submitting a Donation request first requires requesting a transaction token.
       // @see https://data.donorschoose.org/docs/transactions/
@@ -145,9 +145,30 @@ router.post('/', (req, res) => {
         .send(data);
     })
     .then((response) => {
-      const body = JSON.parse(response.text);
+      const donation = JSON.parse(response.text);
 
-      return res.status(200).send(body);
+      const data = {
+        mobile: req.body.phone,
+        profile_email: req.body.profile_email,
+        profile_first_name: req.body.profile_first_name,
+        profile_postal_code: req.body.profile_postal_code,
+        donation_id: donation.donationId,
+        donation_amount: donationAmount,
+        proposal_id: selectedProposal.id,
+        proposal_remaining_amount: donation.remainingProposalAmount,
+        proposal_url: selectedProposal.url,
+        school_name: selectedProposal.schoolName,
+        school_city: selectedProposal.city,
+        school_state: selectedProposal.state
+      };
+
+      return app.locals.db.donorschoose_donations
+        .create(data);
+    })
+    .then((donation) => {
+      logger.debug(`stored donation ${donation.donation_id}`);
+
+      return res.status(200).send(donation);
     })
     .catch(err => res.status(err.status).send(err.message));
 });
