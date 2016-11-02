@@ -121,6 +121,12 @@ signupSchema.statics.lookupCurrent = function (user, campaign) {
   });
 };
 
+/**
+ * Posts Signup to DS API.
+ * @param {User} user - User model.
+ * @param {Campaign} campaign - Campaign model.
+ * @param {string} keyword - Keyword used to trigger Campaign Signup.
+ */
 signupSchema.statics.post = function (user, campaign, keyword) {
   const model = this;
 
