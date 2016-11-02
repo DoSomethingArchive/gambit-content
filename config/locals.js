@@ -75,13 +75,9 @@ function getLegacyModelMap(configName, model) {
  * Loads map of config content as app.locals.configs object instead using Mongoose find queries.
  */
 module.exports.loadLegacyConfigs = function (conn) {
-  /* eslint-disable max-len*/
   const models = {
     legacyReportbacks: rootRequire('legacy/reportback/reportbackConfigModel')(conn),
-    legacyStartCampaignTransitions: rootRequire('legacy/ds-routing/config/startCampaignTransitionsConfigModel')(conn),
-    legacyYesNoPaths: rootRequire('legacy/ds-routing/config/yesNoPathsConfigModel')(conn),
   };
-  /* eslint-enable max-len*/
 
   const promises = [];
   Object.keys(models).forEach((modelName) => {
