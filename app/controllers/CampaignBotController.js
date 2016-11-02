@@ -350,6 +350,11 @@ class CampaignBotController {
       msg = `${continueMsg} ${campaign.title}...\n\n${msg}`;
     }
 
+    const senderPrefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
+    if (senderPrefix) {
+      msg = `${senderPrefix} ${msg}`;
+    }
+
     return msg;
   }
 
