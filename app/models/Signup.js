@@ -86,7 +86,7 @@ signupSchema.statics.lookupById = function (id) {
 };
 
 /**
- * Gets current Signup for given User and Campaign from DS API, stores if found.
+ * Gets current Signup for given User and Campaign from DS API.
  */
 signupSchema.statics.lookupCurrentForUserAndCampaign = function (user, campaign) {
   const model = this;
@@ -98,19 +98,23 @@ signupSchema.statics.lookupCurrentForUserAndCampaign = function (user, campaign)
       .Signups.index({ user: user._id, campaigns: campaign._id })
       .then((northstarSignups) => {
         if (northstarSignups.length < 1) {
-          // TODO: Refactor to throw NotFoundError.
           return resolve(false);
         }
 
-        // TODO: Loop through results to find result with northstarSignup.campaignRun.current.
-        const data = parseNorthstarSignup(northstarSignups[0]);
+        const currentSignup = northstarSignups.find(signup => signup.campaignRun.current);
+        if (!currentSignup) {
+          return resolve(false);
+        }
+
+        const data = parseNorthstarSignup(currentSignup);
 
         return model.findOneAndUpdate({ _id: data._id }, data, { upsert: true, new: true })
           .populate('draft_reportback_submission')
           .exec()
           .then(signup => resolve(signup))
           .catch(error => reject(error));
-      });
+      })
+      .catch(err => reject(err));
   });
 };
 
