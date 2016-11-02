@@ -55,6 +55,7 @@ function parseNorthstarSignup(northstarSignup) {
 
 /**
  * Get given Signup ID from DS API then store.
+ * @param {number} id - DS Signup id.
  */
 signupSchema.statics.lookupById = function (id) {
   const model = this;
@@ -86,9 +87,11 @@ signupSchema.statics.lookupById = function (id) {
 };
 
 /**
- * Gets current Signup for given User and Campaign from DS API.
+ * Gets current Signup for given User / Campaign from DS API, stores if found. Returns false if not.
+ * @param {User} user - User model.
+ * @param {Campaign} campaign - Campaign model.
  */
-signupSchema.statics.lookupCurrentForUserAndCampaign = function (user, campaign) {
+signupSchema.statics.lookupCurrent = function (user, campaign) {
   const model = this;
 
   return new Promise((resolve, reject) => {
