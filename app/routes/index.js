@@ -23,6 +23,6 @@ router.use('/v1/campaigns', require('./campaigns'));
 router.use('/v1/chatbot', require('./chatbot'));
 router.use('/v1/signups', require('./signups'));
 
-// Legacy endpoints.
-router.use('/ds-routing', rootRequire('legacy/ds-routing'));
+// Legacy.
+// @see https://github.com/DoSomething/gambit/issues/706
 router.use('/reportback', rootRequire('legacy/reportback'));

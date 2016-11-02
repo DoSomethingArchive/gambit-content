@@ -144,7 +144,7 @@ router.post('/', (req, res) => {
         scope.campaign = campaign;
 
         return app.locals.db.signups
-          .lookupCurrentForUserAndCampaign(scope.user, scope.campaign)
+          .lookupCurrent(scope.user, scope.campaign)
           .then((currentSignup) => {
             if (currentSignup) {
               logger.debug(`loadSignup found signup:${currentSignup._id}`);
