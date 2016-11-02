@@ -55,6 +55,7 @@ function parseNorthstarSignup(northstarSignup) {
 
 /**
  * Get given Signup ID from DS API then store.
+ * @param {number} id - DS Signup id.
  */
 signupSchema.statics.lookupById = function (id) {
   const model = this;
@@ -86,9 +87,11 @@ signupSchema.statics.lookupById = function (id) {
 };
 
 /**
- * Gets current Signup for given User and Campaign from DS API, stores if found.
+ * Gets current Signup for given User / Campaign from DS API, stores if found. Returns false if not.
+ * @param {User} user - User model.
+ * @param {Campaign} campaign - Campaign model.
  */
-signupSchema.statics.lookupCurrentForUserAndCampaign = function (user, campaign) {
+signupSchema.statics.lookupCurrent = function (user, campaign) {
   const model = this;
 
   return new Promise((resolve, reject) => {
@@ -98,22 +101,32 @@ signupSchema.statics.lookupCurrentForUserAndCampaign = function (user, campaign)
       .Signups.index({ user: user._id, campaigns: campaign._id })
       .then((northstarSignups) => {
         if (northstarSignups.length < 1) {
-          // TODO: Refactor to throw NotFoundError.
           return resolve(false);
         }
 
-        // TODO: Loop through results to find result with northstarSignup.campaignRun.current.
-        const data = parseNorthstarSignup(northstarSignups[0]);
+        const currentSignup = northstarSignups.find(signup => signup.campaignRun.current);
+        if (!currentSignup) {
+          return resolve(false);
+        }
+
+        const data = parseNorthstarSignup(currentSignup);
 
         return model.findOneAndUpdate({ _id: data._id }, data, { upsert: true, new: true })
           .populate('draft_reportback_submission')
           .exec()
           .then(signup => resolve(signup))
           .catch(error => reject(error));
-      });
+      })
+      .catch(err => reject(err));
   });
 };
 
+/**
+ * Posts Signup to DS API.
+ * @param {User} user - User model.
+ * @param {Campaign} campaign - Campaign model.
+ * @param {string} keyword - Keyword used to trigger Campaign Signup.
+ */
 signupSchema.statics.post = function (user, campaign, keyword) {
   const model = this;
 

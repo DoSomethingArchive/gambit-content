@@ -187,33 +187,7 @@ class CampaignBotController {
 
     const configName = `GAMBIT_CMD_${type.toUpperCase()}`;
     const configValue = process.env[configName];
-    if (!configValue) {
-      logger.warn(`${this.loggerPrefix(req)} process.env.${configName} is undefined`);
-
-      return false;
-    }
-
     const result = this.parseCommand(req) === configValue.toUpperCase();
-
-    if (result && type === 'clear_cache') {
-      if (!this.isStaff(req.user)) {
-        logger.warn(`${this.loggerPrefix(req)} unauthorized command clear_cache`);
-
-        return false;
-      }
-    }
-
-    return result;
-  }
-
-  /**
-   * TODO: Move to User as instance function.
-   * Returns whether given user is DS staff.
-   * @param {object} user
-   * @return {bool}
-   */
-  isStaff(user) {
-    const result = user.role && (user.role === 'staff' || user.role === 'admin');
 
     return result;
   }
@@ -374,6 +348,11 @@ class CampaignBotController {
       // TODO: New bot property for continue draft message
       const continueMsg = 'Picking up where you left off on';
       msg = `${continueMsg} ${campaign.title}...\n\n${msg}`;
+    }
+
+    const senderPrefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
+    if (senderPrefix) {
+      msg = `${senderPrefix} ${msg}`;
     }
 
     return msg;
