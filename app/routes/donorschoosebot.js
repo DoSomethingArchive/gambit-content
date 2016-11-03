@@ -159,7 +159,7 @@ router.post('/', (req, res) => {
         proposal_url: selectedProposal.url,
         school_name: selectedProposal.schoolName,
         school_city: selectedProposal.city,
-        school_state: selectedProposal.state
+        school_state: selectedProposal.state,
       };
 
       return app.locals.db.donorschoose_donations
