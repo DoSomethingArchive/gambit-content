@@ -8,6 +8,7 @@ const router = express.Router(); // eslint-disable-line new-cap
 
 const logger = app.locals.logger;
 const Promise = require('bluebird');
+const helpers = require('../../lib/helpers');
 const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
 
@@ -93,15 +94,34 @@ router.post('/', (req, res) => {
         scope.user = user;
 
         let campaign;
-        let campaignID;
+        let campaignId;
+
+        if (req.query.broadcast) {
+          campaignId = process.env.CAMPAIGNBOT_BROADCAST_CAMPAIGN;
+          campaign = app.locals.campaigns[campaignId];
+
+          if (!campaign) {
+            const msg = `Broadcast Campaign '${campaignId}' not found.`;
+            throw new NotFoundError(msg);
+          }
+
+          // TODO: Add check on app start to trigger alert if Broadcast Campaign is closed.
+          if (campaign.status === 'closed') {
+            // TODO: Include this message to the CampaignClosedError.
+            const msg = `Broadcast Campaign ${campaignId} is closed.`;
+            throw new UnprocessibleEntityError(msg);
+          }
+
+          return resolve(campaign);
+        }
 
         if (scope.keyword) {
           logger.debug(`load campaign for keyword:${scope.keyword}`);
-          campaignID = app.locals.keywords[scope.keyword];
-          campaign = app.locals.campaigns[campaignID];
+          campaignId = app.locals.keywords[scope.keyword];
+          campaign = app.locals.campaigns[campaignId];
 
           if (!campaign) {
-            const msg = `Keyword '${scope.keyword}' does not have matching campaign.`;
+            const msg = `Campaign not found for keyword '${scope.keyword}'.`;
             throw new NotFoundError(msg);
           }
 
@@ -109,20 +129,20 @@ router.post('/', (req, res) => {
             // Store campaign to render in closed message.
             scope.campaign = campaign;
             // TODO: Include this message to the CampaignClosedError.
-            const msg = `Keyword received for closed campaign ${campaignID}.`;
+            const msg = `Keyword received for closed campaign ${campaignId}.`;
             throw new UnprocessibleEntityError(msg);
           }
 
           return resolve(campaign);
         }
 
-        campaignID = user.current_campaign;
-        campaign = app.locals.campaigns[campaignID];
-        logger.debug(`user.current_campaign:${campaignID}`);
+        campaignId = user.current_campaign;
+        campaign = app.locals.campaigns[campaignId];
+        logger.debug(`user.current_campaign:${campaignId}`);
 
         if (!campaign) {
           // TODO: Send to non-existent start menu to select a campaign.
-          const msg = `User ${user._id} current_campaign ${campaignID} not found in CampaignBot.`;
+          const msg = `User ${user._id} current_campaign ${campaignId} not found in CampaignBot.`;
           throw new NotFoundError(msg);
         }
 
@@ -134,6 +154,15 @@ router.post('/', (req, res) => {
         return reject(err);
       });
   });
+
+  if (req.query.broadcast) {
+    let msg = 'You said yes!';
+    if (!helpers.isYesResponse(req.incoming_message)) {
+      msg = 'Aw, you said no';
+    }
+
+    return res.send(gambitResponse(msg));
+  }
 
   const loadSignup = new Promise((resolve, reject) => {
     logger.log('loadSignup');
