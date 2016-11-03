@@ -80,24 +80,25 @@ router.post('/', (req, res) => {
   // We've made it this far, time to donate.
   // TODO: When time to post to MC Profile, we'll need to save email if !req.body.profile_email.
 
-  const donationAmount = process.env.DONORSCHOOSE_DONATION_AMOUNT || 10;
-  const olderThan = process.env.DONORSCHOOSE_PROPOSALS_OLDERTHAN;
-
   const apiKey = process.env.DONORSCHOOSE_API_KEY;
   const apiPassword = process.env.DONORSCHOOSE_API_PASSWORD;
-  const donationsUri = `${donorschoose.getDonationsPostUrl()}?APIKey=${apiKey}`;
-
-  let selectedProposal;
   const proposalsUri = `${process.env.DONORSCHOOSE_API_BASEURI}/common/json_feed.html`;
+  const secureBaseUri = process.env.DONORSCHOOSE_API_SECURE_BASEURI;
+  const donationsUri = `${secureBaseUri}/common/json_api.html?APIKey=${apiKey}`;
+//  const donationsUri = `${donorschoose.getDonationsPostUrl()}
+  const donationAmount = process.env.DONORSCHOOSE_DONATION_AMOUNT || 10;
+
   const query = {
     // TODO: Fix -- This is throwing a 400 Bad error
     // costToCompleteRange: `${donationAmount}+TO+10000`,
     max: 1,
-    olderThan,
-    sortBy: 2,
-    subject4: -4,
+    olderThan: process.env.DONORSCHOOSE_PROPOSALS_OLDERTHAN,
+    sortBy: process.env.DONORSCHOOSE_PROPOSALS_SORTBY || 2,
+    subject4: process.env.DONORSCHOOSE_PROPOSALS_SUBJECT || -4,
     zip: req.body.profile_postal_code,
   };
+
+  let selectedProposal;
 
   return donorschoose.get(proposalsUri, query)
     .then((response) => {
@@ -110,33 +111,31 @@ router.post('/', (req, res) => {
     })
     .then((proposal) => {
       selectedProposal = donorschoose.decodeProposal(proposal);
+      logger.debug(`DonorsChoose API found selectedProposal:${selectedProposal.id}`);
 
       // Submitting a Donation request first requires requesting a transaction token.
       // @see https://data.donorschoose.org/docs/transactions/
-      return superagent.post(donationsUri)
-        .set('Accept', 'application/json')
-        .set('Content-Type', 'application/json')
-        .type('form')
-        .send({
-          APIKey: apiKey,
-          apipassword: apiPassword,
-          action: 'token',
-        });
-    })
-    .then((response) => {
-      const requestTokenResponse = JSON.parse(response.text);
+      const data = {
+        APIKey: apiKey,
+        apipassword: apiPassword,
+        action: 'token', 
+      };
 
-      if (requestTokenResponse.statusDescription !== 'success') {
-        throw new Error('DonorsChoose request token failed.');
+      return donorschoose.post(donationsUri, data);
+    })
+    .then((tokenResponse) => {
+      logger.debug(tokenResponse);
+      logger.debug(`DonorsChoose API token statusDescription:${tokenResponse.statusDescription}`);
+      if (tokenResponse.statusDescription !== 'success') {
+        throw new Error('DonorsChoose API request for token failed.');
       }
-      logger.debug(`Request token success for donation to proposal:${selectedProposal.id}`);
 
       const donorEmail = process.env.DONORSCHOOSE_DEFAULT_EMAIL || 'donorschoose@dosomething.org';
       const data = {
         APIKey: apiKey,
         apipassword: apiPassword,
         action: 'donate',
-        token: requestTokenResponse.token,
+        token: tokenResponse.token,
         proposalId: selectedProposal.id,
         amount: donationAmount,
         email: donorEmail,
@@ -144,15 +143,11 @@ router.post('/', (req, res) => {
         honoreeFirst: req.body.profile_first_name,
       };
 
-      return superagent.post(donationsUri)
-        .set('Accept', 'application/json')
-        .set('Content-Type', 'application/json')
-        .type('form')
-        .send(data);
+      return donorschoose.post(donationsUri, data);
     })
-    .then((response) => {
-      const donation = JSON.parse(response.text);
-      logger.debug(`Donation request created donation_id:${donation.donationId}`);
+    .then((donation) => {
+      logger.debug(donation);
+      logger.debug(`DonorsChoose API created donation_id:${donation.donationId}`);
 
       const data = {
         mobile: req.body.phone,
@@ -172,7 +167,7 @@ router.post('/', (req, res) => {
       return app.locals.db.donorschoose_donations.create(data);
     })
     .then((donation) => {
-      logger.debug(`stored donation ${donation.donation_id}`);
+      logger.debug(`stored donorschoose_donation:${donation.donation_id}`);
 
       return res.status(200).send(donation);
     })
