@@ -11,9 +11,6 @@ const express = require('express');
 const http = require('http');
 const Promise = require('bluebird');
 
-// Default is 5. Increasing # of concurrent sockets per host.
-http.globalAgent.maxSockets = 100;
-
 app = express();
 
 const bodyParser = require('body-parser');

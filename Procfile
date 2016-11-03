@@ -1,1 +1,1 @@
-web: node --prof server.js
+web: npm start
