@@ -63,8 +63,6 @@ router.post('/', (req, res) => {
     return res.status(422).send({ error: 'phone is required.' });
   }
 
-  let mobileCommonsOIP = process.env.MOBILECOMMONS_OIP_CHATBOT;
-
   const loadUser = new Promise((resolve, reject) => {
     logger.log('loadUser');
 
@@ -155,11 +153,9 @@ router.post('/', (req, res) => {
       });
   });
 
-  if (req.query.broadcast) {
-    let msg = 'You said yes!';
-    if (!helpers.isYesResponse(req.incoming_message)) {
-      msg = 'Aw, you said no';
-    }
+  const broadcastDeclined = req.query.broadcast && !helpers.isYesResponse(req.incoming_message);
+  if (broadcastDeclined) {
+    const msg = 'OK, no bigs.';
 
     return res.send(gambitResponse(msg));
   }
@@ -207,7 +203,7 @@ router.post('/', (req, res) => {
 
       if (controller.isCommand(scope, 'member_support')) {
         scope.cmd_member_support = true;
-        mobileCommonsOIP = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
+        scope.oip = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
         return controller.renderResponseMessage(scope, 'member_support');
       }
 
@@ -220,15 +216,15 @@ router.post('/', (req, res) => {
         return controller.createReportbackSubmission(scope);
       }
 
-      if (scope.signup.total_quantity_submitted) {
-        if (scope.keyword) {
+      if (scope.signup.reportback) {
+        if (scope.keyword || req.query.broadcast) {
           return controller.renderResponseMessage(scope, 'menu_completed');
         }
         // If we're this far, member didn't text back Reportback or Member Support commands.
         return controller.renderResponseMessage(scope, 'invalid_cmd_completed');
       }
 
-      if (scope.keyword) {
+      if (scope.keyword || req.query.broadcast) {
         return controller.renderResponseMessage(scope, 'menu_signedup_gambit');
       }
 
@@ -243,7 +239,7 @@ router.post('/', (req, res) => {
     })
     .then(() => {
       logger.debug(`saved user.current_campaign:${scope.campaign._id}`);
-      scope.user.postMobileCommonsProfileUpdate(mobileCommonsOIP, scope.response_message);
+      scope.user.postMobileCommonsProfileUpdate(scope.oip, scope.response_message);
 
       return res.send(gambitResponse(scope.response_message));
     })
@@ -258,7 +254,7 @@ router.post('/', (req, res) => {
       // We don't want to send an error back as response, but instead deliver success to Mobile
       // Commons and deliver the Campaign Closed message back to our User.
       const msg = controller.renderResponseMessage(scope, 'campaign_closed');
-      scope.user.postMobileCommonsProfileUpdate(mobileCommonsOIP, msg);
+      scope.user.postMobileCommonsProfileUpdate(scope.oip, msg);
 
       return res.send(gambitResponse(msg));
     })
