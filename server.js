@@ -8,7 +8,6 @@ global.rootRequire = function (name) {
 };
 
 const express = require('express');
-const http = require('http');
 const Promise = require('bluebird');
 
 app = express();
