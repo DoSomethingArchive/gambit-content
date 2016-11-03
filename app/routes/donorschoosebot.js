@@ -80,29 +80,33 @@ router.post('/', (req, res) => {
   // We've made it this far, time to donate.
   // TODO: When time to post to MC Profile, we'll need to save email if !req.body.profile_email.
 
-  const donationAmount = (process.env.DONORSCHOOSE_DONATION_AMOUNT || 10);
+  const donationAmount = process.env.DONORSCHOOSE_DONATION_AMOUNT || 10;
   const olderThan = process.env.DONORSCHOOSE_PROPOSALS_OLDERTHAN;
-  const zip = req.body.profile_postal_code;
 
   const apiKey = process.env.DONORSCHOOSE_API_KEY;
   const apiPassword = process.env.DONORSCHOOSE_API_PASSWORD;
-  // Find a project for zip code that has at least DONATION_AMOUNT left to completion.
-  const proposalsUri = donorschoose.getProposalsQueryUrl(zip, donationAmount, olderThan);
   const donationsUri = `${donorschoose.getDonationsPostUrl()}?APIKey=${apiKey}`;
 
   let selectedProposal;
+  const proposalsUri = `${process.env.DONORSCHOOSE_API_BASEURI}/common/json_feed.html`;
+  const query = {
+    // TODO: Fix -- This is throwing a 400 Bad error
+    // costToCompleteRange: `${donationAmount}+TO+10000`,
+    max: 1,
+    olderThan,
+    sortBy: 2,
+    subject4: -4,
+    zip: req.body.profile_postal_code,
+  };
 
-  return superagent.get(proposalsUri)
-    .set('Accept', 'application/json')
-    .set('Content-Type', 'application/json')
+  return donorschoose.get(proposalsUri, query)
     .then((response) => {
-      const body = JSON.parse(response.text);
-      if (body.proposals.length < 1) {
+      if (response.proposals.length < 1) {
         logger.error(`'No proposals found for zip ${zip}`);
         // TODO: Inform User, either by throwing an error or adding a no projects found message.
       }
 
-      return body.proposals[0];
+      return response.proposals[0];
     })
     .then((proposal) => {
       selectedProposal = donorschoose.decodeProposal(proposal);
@@ -121,9 +125,11 @@ router.post('/', (req, res) => {
     })
     .then((response) => {
       const requestTokenResponse = JSON.parse(response.text);
+
       if (requestTokenResponse.statusDescription !== 'success') {
         throw new Error('DonorsChoose request token failed.');
       }
+      logger.debug(`Request token success for donation to proposal:${selectedProposal.id}`);
 
       const donorEmail = process.env.DONORSCHOOSE_DEFAULT_EMAIL || 'donorschoose@dosomething.org';
       const data = {
@@ -146,6 +152,7 @@ router.post('/', (req, res) => {
     })
     .then((response) => {
       const donation = JSON.parse(response.text);
+      logger.debug(`Donation request created donation_id:${donation.donationId}`);
 
       const data = {
         mobile: req.body.phone,
@@ -162,8 +169,7 @@ router.post('/', (req, res) => {
         school_state: selectedProposal.state,
       };
 
-      return app.locals.db.donorschoose_donations
-        .create(data);
+      return app.locals.db.donorschoose_donations.create(data);
     })
     .then((donation) => {
       logger.debug(`stored donation ${donation.donation_id}`);
