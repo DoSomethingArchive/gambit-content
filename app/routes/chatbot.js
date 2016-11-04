@@ -83,114 +83,90 @@ router.post('/', (req, res) => {
       });
   });
 
-  const loadCampaign = new Promise((resolve, reject) => {
-    logger.log('loadCampaign');
+  const agentViewOip = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
 
-    return loadUser
-      .then((user) => {
-        logger.debug(`loaded user:${user._id}`);
-        scope.user = user;
+  return loadUser
+    .then((user) => {
+      logger.debug(`loaded user:${user._id}`);
+      scope.user = user;
 
-        let campaign;
-        let campaignId;
+      let campaign;
+      let campaignId;
 
-        if (req.query.broadcast) {
-          campaignId = process.env.CAMPAIGNBOT_BROADCAST_CAMPAIGN;
-          campaign = app.locals.campaigns[campaignId];
-
-          if (!campaign) {
-            const msg = `Broadcast Campaign '${campaignId}' not found.`;
-            throw new NotFoundError(msg);
-          }
-
-          // TODO: Add check on app start to trigger alert if Broadcast Campaign is closed.
-          if (campaign.status === 'closed') {
-            // TODO: Include this message to the CampaignClosedError.
-            const msg = `Broadcast Campaign ${campaignId} is closed.`;
-            throw new UnprocessibleEntityError(msg);
-          }
-
-          return resolve(campaign);
-        }
-
-        if (scope.keyword) {
-          logger.debug(`load campaign for keyword:${scope.keyword}`);
-          campaignId = app.locals.keywords[scope.keyword];
-          campaign = app.locals.campaigns[campaignId];
-
-          if (!campaign) {
-            const msg = `Campaign not found for keyword '${scope.keyword}'.`;
-            throw new NotFoundError(msg);
-          }
-
-          if (campaign.status === 'closed') {
-            // Store campaign to render in closed message.
-            scope.campaign = campaign;
-            // TODO: Include this message to the CampaignClosedError.
-            const msg = `Keyword received for closed campaign ${campaignId}.`;
-            throw new UnprocessibleEntityError(msg);
-          }
-
-          return resolve(campaign);
-        }
-
-        campaignId = user.current_campaign;
+      if (req.query.broadcast) {
+        campaignId = process.env.CAMPAIGNBOT_BROADCAST_CAMPAIGN;
         campaign = app.locals.campaigns[campaignId];
-        logger.debug(`user.current_campaign:${campaignId}`);
 
         if (!campaign) {
-          // TODO: Send to non-existent start menu to select a campaign.
-          const msg = `User ${user._id} current_campaign ${campaignId} not found in CampaignBot.`;
+          const msg = `Broadcast Campaign '${campaignId}' not found.`;
           throw new NotFoundError(msg);
         }
 
-        return resolve(campaign);
-      })
-      .catch((err) => {
-        logger.error(err);
+        // TODO: Add check on app start to trigger alert if Broadcast Campaign is closed.
+        if (campaign.status === 'closed') {
+          // TODO: Include this message to the CampaignClosedError.
+          const msg = `Broadcast Campaign ${campaignId} is closed.`;
+          throw new UnprocessibleEntityError(msg);
+        }
 
-        return reject(err);
-      });
-  });
+        const userDeclined = !req.incoming_message || !helpers.isYesResponse(req.incoming_message);
+        if (userDeclined) {
+          // Feels a little hacky to throw an error to break chain, but it's simple enough to catch.
+          throw new Error('broadcast declined');
+        }
 
-  const broadcastDeclined = req.query.broadcast && !helpers.isYesResponse(req.incoming_message);
-  if (broadcastDeclined) {
-    const msg = 'OK, no bigs.';
+        return campaign;
+      }
 
-    return res.send(gambitResponse(msg));
-  }
+      if (scope.keyword) {
+        logger.debug(`load campaign for keyword:${scope.keyword}`);
+        campaignId = app.locals.keywords[scope.keyword];
+        campaign = app.locals.campaigns[campaignId];
 
-  const loadSignup = new Promise((resolve, reject) => {
-    logger.log('loadSignup');
+        if (!campaign) {
+          const msg = `Campaign not found for keyword '${scope.keyword}'.`;
+          throw new NotFoundError(msg);
+        }
 
-    return loadCampaign
-      .then((campaign) => {
-        logger.log(`loaded campaign:${campaign._id}`);
-        scope.campaign = campaign;
+        if (campaign.status === 'closed') {
+          // Store campaign to render in closed message.
+          scope.campaign = campaign;
+          // TODO: Include this message to the CampaignClosedError.
+          const msg = `Keyword received for closed campaign ${campaignId}.`;
+          throw new UnprocessibleEntityError(msg);
+        }
 
-        return app.locals.db.signups
-          .lookupCurrent(scope.user, scope.campaign)
-          .then((currentSignup) => {
-            if (currentSignup) {
-              logger.debug(`loadSignup found signup:${currentSignup._id}`);
+        return campaign;
+      }
 
-              return resolve(currentSignup);
-            }
+      campaignId = user.current_campaign;
+      campaign = app.locals.campaigns[campaignId];
+      logger.debug(`user.current_campaign:${campaignId}`);
 
-            logger.debug('loadSignup not find signup');
-            const newSignup = app.locals.db.signups.post(scope.user, scope.campaign, scope.keyword);
+      if (!campaign) {
+        // TODO: Send to non-existent start menu to select a campaign.
+        const msg = `User ${user._id} current_campaign ${campaignId} not found in CampaignBot.`;
+        throw new NotFoundError(msg);
+      }
 
-            return resolve(newSignup);
-          });
-      })
-      .catch((err) => {
-        logger.error(err);
+      return campaign;
+    })
+    .then((campaign) => {
+      logger.log(`loaded campaign:${campaign._id}`);
+      scope.campaign = campaign;
 
-        return reject(err);
-      });
-  });
+      return app.locals.db.signups.lookupCurrent(scope.user, scope.campaign);
+    })
+    .then((currentSignup) => {
+      if (currentSignup) {
+        logger.debug(`loadSignup found signup:${currentSignup._id}`);
 
-  return loadSignup
+        return currentSignup;
+      }
+      logger.debug('loadSignup not find signup');
+
+      return app.locals.db.signups.post(scope.user, scope.campaign, scope.keyword);
+    })
     .then((signup) => {
       controller.debug(scope, `loaded signup:${signup._id.toString()}`);
       scope.signup = signup;
@@ -203,7 +179,7 @@ router.post('/', (req, res) => {
 
       if (controller.isCommand(scope, 'member_support')) {
         scope.cmd_member_support = true;
-        scope.oip = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
+        scope.oip = agentViewOip;
         return controller.renderResponseMessage(scope, 'member_support');
       }
 
@@ -259,9 +235,16 @@ router.post('/', (req, res) => {
       return res.send(gambitResponse(msg));
     })
     .catch(err => {
+      if (err.message === 'broadcast declined') {
+        const declinedMessage = 'K, no prob!';
+
+        scope.user.postMobileCommonsProfileUpdate(agentViewOip, declinedMessage);
+        return res.status(200).send(declinedMessage);
+      }
+
       logger.error(err.message);
 
-      return res.sendStatus(500);
+      return res.status(500).send(err.message);
     });
 });
 
