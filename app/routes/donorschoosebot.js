@@ -5,7 +5,6 @@
  */
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
-const superagent = require('superagent');
 const donorschoose = require('../../lib/donorschoose');
 const helpers = require('../../lib/helpers');
 const logger = app.locals.logger;
@@ -16,15 +15,21 @@ const logger = app.locals.logger;
 const COUNT_FIELD = process.env.DONORSCHOOSE_DONATION_COUNT_FIELDNAME || 'ss2016_donation_count';
 const MAX_DONATIONS_ALLOWED = (process.env.DONORSCHOOSE_MAX_DONATIONS_ALLOWED || 5);
 
+/**
+ * Sends response object and posts update to user's Mobile Commons Profile to send SMS message.
+ * @param {object} res - Express response
+ * @param {number} code - Response HTTP code to send
+ * @param {string} msgType - The type of DonorsChooseBot message to send
+ * @param {object} profileUpdate - field values to update on current User's Mobile Commons Profile
+ */
 function sendResponse(res, code, msgType, profileUpdate) {
   logger.debug(`dcbot sendResponse:${msgType} profileUpdate:${JSON.stringify(profileUpdate)}`);
 
-  // TODO: Refactor to store donorsChooseBot instead of Controller once ready to drecpate.
-  const bot = app.locals.controllers.donorsChooseBot.bot;
   const property = `msg_${msgType}`;
+  const responseMessage = app.locals.donorsChooseBot[property];
   // TODO: Post to Mobile Commons Profile
 
-  return helpers.sendResponse(res, 200, bot[property]);
+  return helpers.sendResponse(res, 200, responseMessage);
 }
 
 router.post('/', (req, res) => {
@@ -85,8 +90,8 @@ router.post('/', (req, res) => {
   const proposalsUri = `${process.env.DONORSCHOOSE_API_BASEURI}/common/json_feed.html`;
   const secureBaseUri = process.env.DONORSCHOOSE_API_SECURE_BASEURI;
   const donationsUri = `${secureBaseUri}/common/json_api.html?APIKey=${apiKey}`;
-//  const donationsUri = `${donorschoose.getDonationsPostUrl()}
   const donationAmount = process.env.DONORSCHOOSE_DONATION_AMOUNT || 10;
+  const zip = req.body.profile_postal_code;
 
   const query = {
     // TODO: Fix -- This is throwing a 400 Bad error
@@ -95,7 +100,7 @@ router.post('/', (req, res) => {
     olderThan: process.env.DONORSCHOOSE_PROPOSALS_OLDERTHAN,
     sortBy: process.env.DONORSCHOOSE_PROPOSALS_SORTBY || 2,
     subject4: process.env.DONORSCHOOSE_PROPOSALS_SUBJECT || -4,
-    zip: req.body.profile_postal_code,
+    zip,
   };
 
   let selectedProposal;
@@ -118,7 +123,7 @@ router.post('/', (req, res) => {
       const data = {
         APIKey: apiKey,
         apipassword: apiPassword,
-        action: 'token', 
+        action: 'token',
       };
 
       return donorschoose.post(donationsUri, data);
@@ -153,7 +158,7 @@ router.post('/', (req, res) => {
         mobile: req.body.phone,
         profile_email: req.body.profile_email,
         profile_first_name: req.body.profile_first_name,
-        profile_postal_code: req.body.profile_postal_code,
+        profile_postal_code: zip,
         donation_id: donation.donationId,
         donation_amount: donationAmount,
         proposal_id: selectedProposal.id,
