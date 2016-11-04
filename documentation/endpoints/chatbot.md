@@ -16,6 +16,7 @@ Name | Type | Description
 
 Name | Type | Description
 --- | --- | ---
+`broadcast` | `boolean` | For use with `campaignbot` -- if set, parses User's sent message as either Yes or No response to Signup for whatever the `CAMPAIGNBOT_BROADCAST_CAMPAIGN` config var is set to.
 `bot_type` | `string` | Defaults to `campaignbot`, accepts `donorschoosebot`
 `start` | `boolean` | If set, the bot will begin a new DonorsChoose conversation if `bot_type=donorschoose`. Default: `false`
 
