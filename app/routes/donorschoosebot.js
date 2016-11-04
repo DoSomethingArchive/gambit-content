@@ -32,6 +32,21 @@ function sendResponse(res, code, msgType, profileUpdate) {
   return helpers.sendResponse(res, 200, responseMessage);
 }
 
+/**
+ * This route was built for the Science Sleuth SMS Game on Mobile Commons, where the final game OIP
+ * triggers an mData that posts here, to donate to DonorsChoose project on behalf of the player.
+ *
+ * DonorsChooseBot asks for the sender's zip code, first name, and email to post a donation to the
+ * DonorsChoose API, donating to the first project it finds closest to the sender's zip code.
+ *
+ * If the Mobile Commons Profile doesn't have a value saved for zip, first name, or email, we send
+ * a message back to the User prompting for it (and a 200 response back to Mobile Commons, since we
+ * know how to respond the sender's message and have posted to their profile to respond by SMS).
+ *
+ * DonorsChooseBot was the predecessor to CampaignBot - we didn't have models or DS API integration.
+ * We use the incoming Mobile Commons Profile to retreive required info for the sender, and post to
+ * it to update it with their email, zip, first name, and a custom field to keep donation count.
+ */
 router.post('/', (req, res) => {
   let incomingMessage = req.body.args;
   if (!incomingMessage) {
@@ -42,7 +57,7 @@ router.post('/', (req, res) => {
   logger.debug(`dcbot incomingMessage:${incomingMessage}`);
 
   const profileFieldName = `profile_${COUNT_FIELD}`;
-  const numDonations = req.body[profileFieldName];
+  const numDonations = req.body[profileFieldName] ? Number(req.body[profileFieldName]) : 0;
 
   if (numDonations >= MAX_DONATIONS_ALLOWED) {
     return sendResponse(res, 200, 'max_donations_reached');
