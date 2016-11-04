@@ -13,13 +13,9 @@ const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
 
 /**
- * Formats our Express return response.
- * @param {string} msg - Chatbot message responding back to user
+ * Posts to chatbot route will find or create a Northstar User for the given req.body.phone.
+ * Currently only supports Mobile Commons mData's.
  */
-function gambitResponse(msg) {
-  return { message: msg };
-}
-
 router.post('/', (req, res) => {
   const controller = app.locals.controllers.campaignBot;
   const scope = req;
@@ -217,12 +213,12 @@ router.post('/', (req, res) => {
       logger.debug(`saved user.current_campaign:${scope.campaign._id}`);
       scope.user.postMobileCommonsProfileUpdate(scope.oip, scope.response_message);
 
-      return res.send(gambitResponse(scope.response_message));
+      return helpers.sendResponse(res, 200, scope.response_message);
     })
     .catch(NotFoundError, (err) => {
       logger.error(err.message);
 
-      return res.status(404).send(err.message);
+      return helpers.sendResponse(res, 404, err.message);
     })
     .catch(UnprocessibleEntityError, (err) => {
       logger.error(err.message);
@@ -230,21 +226,23 @@ router.post('/', (req, res) => {
       // We don't want to send an error back as response, but instead deliver success to Mobile
       // Commons and deliver the Campaign Closed message back to our User.
       const msg = controller.renderResponseMessage(scope, 'campaign_closed');
-      scope.user.postMobileCommonsProfileUpdate(scope.oip, msg);
+      // Send to Agent View for now until we get a Select Campaign menu up and running.
+      scope.user.postMobileCommonsProfileUpdate(agentViewOip, msg);
 
-      return res.send(gambitResponse(msg));
+      // Send 200 back -- we're handling closed campaign by responding with campaign_closed message.
+      return helpers.sendResponse(res, 200, msg);
     })
     .catch(err => {
       if (err.message === 'broadcast declined') {
-        const declinedMessage = 'K, no prob!';
+        const msg = controller.renderResponseMessage(scope, 'signup_broadcast_declined');
+        scope.user.postMobileCommonsProfileUpdate(agentViewOip, msg);
 
-        scope.user.postMobileCommonsProfileUpdate(agentViewOip, declinedMessage);
-        return res.status(200).send(declinedMessage);
+        return helpers.sendResponse(res, 200, msg);
       }
 
       logger.error(err.message);
 
-      return res.status(500).send(err.message);
+      return helpers.sendResponse(res, 500, err.message);
     });
 });
 
