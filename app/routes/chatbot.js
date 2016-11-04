@@ -236,10 +236,10 @@ router.post('/', (req, res) => {
     })
     .catch(err => {
       if (err.message === 'broadcast declined') {
-        const declinedMessage = 'K, no prob!';
+        const msg = controller.renderResponseMessage(scope, 'signup_broadcast_declined');
+        scope.user.postMobileCommonsProfileUpdate(agentViewOip, msg);
 
-        scope.user.postMobileCommonsProfileUpdate(agentViewOip, declinedMessage);
-        return res.status(200).send(declinedMessage);
+        return res.status(200).send(gambitResponse(msg));
       }
 
       logger.error(err.message);
