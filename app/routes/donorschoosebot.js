@@ -10,14 +10,12 @@ const mobilecommons = require('../../lib/mobilecommons');
 const helpers = require('../../lib/helpers');
 const logger = app.locals.logger;
 
-/**
- * Setup.
- */
-const COUNT_FIELD = process.env.DONORSCHOOSE_DONATION_COUNT_FIELDNAME || 'ss2016_donation_count';
-const MAX_DONATIONS_ALLOWED = (process.env.DONORSCHOOSE_MAX_DONATIONS_ALLOWED || 5);
-
 function debug(req, message) {
   logger.debug(`donorschoosebot ${req.body.phone} ${message}`);
+}
+
+function info(req, message) {
+  logger.info(`donorschoosebot ${req.body.phone} ${message}`);
 }
 
 /**
@@ -30,9 +28,7 @@ function debug(req, message) {
 function sendResponse(req, res, code, msgType) {
   debug(req, `sendResponse:${msgType}`);
   const scope = req;
-
-  const property = `msg_${msgType}`;
-  const responseMessage = app.locals.donorsChooseBot[property];
+  const responseMessage = app.locals.donorsChooseBot.renderMessage(req, msgType);
 
   scope.profile_update.gambit_chatbot_response = responseMessage;
   mobilecommons.profile_update(req.body.phone, scope.oip, scope.profile_update);
@@ -65,12 +61,12 @@ router.post('/', (req, res) => {
   incomingMessage = helpers.getFirstWord(incomingMessage);
   debug(req, `incomingMessage:${incomingMessage}`);
 
-  const profileFieldName = `profile_${COUNT_FIELD}`;
+  const countField = process.env.DONORSCHOOSE_DONATION_COUNT_FIELDNAME || 'ss2016_donation_count';
+  const profileFieldName = `profile_${countField}`;
   const numDonations = req.body[profileFieldName] ? Number(req.body[profileFieldName]) : 0;
+  const maxDonationsAllowed = (process.env.DONORSCHOOSE_MAX_DONATIONS_ALLOWED || 5);
 
-  if (numDonations >= MAX_DONATIONS_ALLOWED) {
-    logger.debug('MAX_DONATIONS_ALLOWED');
-
+  if (numDonations >= maxDonationsAllowed) {
     return sendResponse(scope, res, 200, 'max_donations_reached');
   }
 
@@ -159,7 +155,7 @@ router.post('/', (req, res) => {
     })
     .then((proposal) => {
       selectedProposal = donorschoose.decodeProposal(proposal);
-      logger.debug(`DonorsChoose API found selectedProposal:${selectedProposal.id}`);
+      debug(req, `found selectedProposal:${selectedProposal.id}`);
 
       // Submitting a Donation request first requires requesting a transaction token.
       // @see https://data.donorschoose.org/docs/transactions/
@@ -172,8 +168,7 @@ router.post('/', (req, res) => {
       return donorschoose.post(donationsUri, data);
     })
     .then((tokenResponse) => {
-      logger.debug(tokenResponse);
-      logger.debug(`DonorsChoose API token statusDescription:${tokenResponse.statusDescription}`);
+      debug(req, `token.statusDescription:${tokenResponse.statusDescription}`);
       if (tokenResponse.statusDescription !== 'success') {
         throw new Error('DonorsChoose API request for token failed.');
       }
@@ -194,8 +189,7 @@ router.post('/', (req, res) => {
       return donorschoose.post(donationsUri, data);
     })
     .then((donation) => {
-      logger.debug(donation);
-      logger.debug(`DonorsChoose API created donation_id:${donation.donationId}`);
+      info(req, `created donation_id:${donation.donationId}`);
 
       const data = {
         mobile: req.body.phone,
@@ -210,13 +204,16 @@ router.post('/', (req, res) => {
         school_name: selectedProposal.schoolName,
         school_city: selectedProposal.city,
         school_state: selectedProposal.state,
+        teacher_name: selectedProposal.teacherName,
+        proposal_description: selectedProposal.fulfillmentTrailer,
       };
 
       return app.locals.db.donorschoose_donations.create(data);
     })
     .then((donation) => {
-      logger.debug(`stored donorschoose_donation:${donation.donation_id}`);
+      info(req, `stored donorschoose_donation:${donation.donation_id}`);
       scope.donation = donation;
+      scope.profile_update[countField] = numDonations + 1;
 
       return sendResponse(scope, res, 200, 'donation_confirmation');
     })

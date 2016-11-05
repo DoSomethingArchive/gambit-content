@@ -9,9 +9,6 @@ const schema = new mongoose.Schema({
 
   created_at: { type: Date, default: Date.now },
 
-  mobilecommons_campaign_id: Number,
-  donorschoosebot_id: Number,
-
   // Member profile our donation is on behalf of.
   mobile: { type: String, index: true },
   profile_email: String,
@@ -27,6 +24,8 @@ const schema = new mongoose.Schema({
   school_name: String,
   school_city: String,
   school_state: String,
+  teacher_name: String,
+  proposal_description: String,
 
 });
 

@@ -53,6 +53,27 @@ donorsChooseBotSchema.statics.lookupByID = function (id) {
   });
 };
 
+/**
+ * Returns rendered DonorsChooseBot message for given Express req and given msgType
+ */
+donorsChooseBotSchema.methods.renderMessage = function (req, msgType) {
+  const property = `msg_${msgType}`;
+  let msg = this[property];
+
+  if (req.body.profile_postal_code) {
+    msg = msg.replace('{{postal_code}}', req.body.profile_postal_code);
+  }
+  if (req.donation) {
+    msg = msg.replace('{{description}}', req.donation.proposal_description);
+    msg = msg.replace('{{school_name}}', req.donation.school_name);
+    msg = msg.replace('{{teacher_name}}', req.donation.teacher_name);
+    // TODO: Use bitly if production.
+    msg = msg.replace('{{url}}', req.donation.proposal_url);
+  }
+
+  return msg;
+};
+
 module.exports = function (connection) {
   return connection.model('donorschoosebots', donorsChooseBotSchema);
 };
