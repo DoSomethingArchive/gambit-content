@@ -135,7 +135,8 @@ router.post('/', (req, res) => {
     }
 
     const email = incomingMessage.toLowerCase();
-    scope.profile_update.profile_email = email;
+    scope.profile_update.email = email;
+    // Save to body for later when we create a Donation document.
     scope.body.profile_email = email;
   }
 
