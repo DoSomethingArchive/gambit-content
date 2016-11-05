@@ -11,11 +11,11 @@ const helpers = require('../../lib/helpers');
 const logger = app.locals.logger;
 
 function debug(req, message) {
-  logger.debug(`donorschoosebot ${req.body.phone} ${message}`);
+  logger.debug(`donorschoosebot profile:${req.body.profile_id} ${message}`);
 }
 
 function info(req, message) {
-  logger.info(`donorschoosebot ${req.body.phone} ${message}`);
+  logger.info(`donorschoosebot profile:${req.body.profile_id} ${message}`);
 }
 
 /**
@@ -128,23 +128,25 @@ router.post('/', (req, res) => {
   }
 
   // We've got all required profile fields -- time to donate.
+  const zip = req.body.profile_postal_code;
   const apiKey = process.env.DONORSCHOOSE_API_KEY;
   const apiPassword = process.env.DONORSCHOOSE_API_PASSWORD;
   const proposalsUri = `${process.env.DONORSCHOOSE_API_BASEURI}/common/json_feed.html`;
   const secureBaseUri = process.env.DONORSCHOOSE_API_SECURE_BASEURI;
   const donationsUri = `${secureBaseUri}/common/json_api.html?APIKey=${apiKey}`;
   const donationAmount = process.env.DONORSCHOOSE_DONATION_AMOUNT || 10;
-  const zip = req.body.profile_postal_code;
+  const sortBy = process.env.DONORSCHOOSE_PROPOSALS_SORTBY || 2;
+  const subjectCode = process.env.DONORSCHOOSE_PROPOSALS_SUBJECT_CODE || -4;
 
-  const query = {
-    // TODO: Fix -- This is throwing a 400 Bad error
-    // costToCompleteRange: `${donationAmount}+TO+10000`,
-    max: 1,
-    olderThan: process.env.DONORSCHOOSE_PROPOSALS_OLDERTHAN,
-    sortBy: process.env.DONORSCHOOSE_PROPOSALS_SORTBY || 2,
-    subject4: process.env.DONORSCHOOSE_PROPOSALS_SUBJECT || -4,
-    zip,
-  };
+  // Define query as a string, defining as an object causes costToCompleteRange to throw 400 error.
+  let query = `costToCompleteRange=${donationAmount}+TO+10000&max=1&zip=${zip}`;
+  query = `${query}&sortBy=${sortBy}&subject4=${subjectCode}`;
+
+  // If query doesn't return any results, check on DONORSCHOOSE_PROPOSALS_OLDERTHAN value stored.
+  // @see https://github.com/DoSomething/gambit/pull/545
+  if (process.env.DONORSCHOOSE_PROPOSALS_OLDERTHAN) {
+    query = `${query}&olderThan=${process.env.DONORSCHOOSE_PROPOSALS_OLDERTHAN}`;
+  }
 
   let selectedProposal;
 
