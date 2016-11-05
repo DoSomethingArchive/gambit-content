@@ -14,6 +14,10 @@ function debug(req, message) {
   logger.debug(`donorschoosebot profile:${req.body.profile_id} ${message}`);
 }
 
+function error(req, message) {
+  logger.error(`donorschoosebot profile:${req.body.profile_id} ${message}`);
+}
+
 function info(req, message) {
   logger.info(`donorschoosebot profile:${req.body.profile_id} ${message}`);
 }
@@ -59,8 +63,12 @@ router.post('/', (req, res) => {
   let incomingMessage = req.body.args;
 
   const scope = req;
-  scope.oip = process.env.MOBILECOMMONS_OIP_DONORSCHOOSEBOT;
+  // Initialize object to store profile data to save when posting Mobile Commons profile_update API.
   scope.profile_update = {};
+
+  // Opt user into chat OIP by default.
+  scope.oip = process.env.MOBILECOMMONS_OIP_DONORSCHOOSEBOT;
+  const agentViewOip = process.env.MOBILECOMMONS_OIP_DONORSCHOOSEBOT_END;
 
   incomingMessage = helpers.getFirstWord(incomingMessage);
   debug(req, `incomingMessage:${incomingMessage}`);
@@ -71,6 +79,8 @@ router.post('/', (req, res) => {
   const maxDonationsAllowed = (process.env.DONORSCHOOSE_MAX_DONATIONS_ALLOWED || 5);
 
   if (numDonations >= maxDonationsAllowed) {
+    scope.oip = agentViewOip;
+
     return sendResponse(scope, res, 200, 'max_donations_reached');
   }
 
@@ -155,8 +165,8 @@ router.post('/', (req, res) => {
   return donorschoose.get(proposalsUri, query)
     .then((response) => {
       if (response.proposals.length < 1) {
-        logger.error(`'No proposals found for zip ${zip}`);
-        // TODO: Inform User, either by throwing an error or adding a no projects found message.
+        error(req, `no search results for zip:${zip}`);
+        throw new Error('no search results');
       }
 
       return response.proposals[0];
@@ -222,10 +232,21 @@ router.post('/', (req, res) => {
       info(req, `stored donorschoose_donation:${donation.donation_id}`);
       scope.donation = donation;
       scope.profile_update[countField] = numDonations + 1;
+      scope.oip = agentViewOip;
 
       return sendResponse(scope, res, 200, 'donation_confirmation');
     })
-    .catch(err => res.status(500).send(err.message));
+    .catch((err) => {
+      if (err.message === 'no search results') {
+        scope.oip = process.env.MOBILECOMMONS_OIP_DONORSCHOOSEBOT_ERROR;
+
+        return sendResponse(scope, res, 200, 'search_no_results');
+      }
+
+      error(req, err.message);
+
+      return res.status(500).send(err.message);
+    });
 });
 
 module.exports = router;

@@ -54,7 +54,7 @@ donorsChooseBotSchema.statics.lookupByID = function (id) {
 };
 
 /**
- * Returns rendered DonorsChooseBot message for given Express req and given msgType
+ * Returns rendered DonorsChooseBot message for given Express req and given DonorsChooseBot msgType.
  */
 donorsChooseBotSchema.methods.renderMessage = function (req, msgType) {
   const property = `msg_${msgType}`;
@@ -67,7 +67,6 @@ donorsChooseBotSchema.methods.renderMessage = function (req, msgType) {
     msg = msg.replace('{{description}}', req.donation.proposal_description);
     msg = msg.replace('{{school_name}}', req.donation.school_name);
     msg = msg.replace('{{teacher_name}}', req.donation.teacher_name);
-    // TODO: Use bitly if production.
     msg = msg.replace('{{url}}', req.donation.proposal_url);
   }
 
