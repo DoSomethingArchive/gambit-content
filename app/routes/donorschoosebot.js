@@ -216,8 +216,9 @@ router.post('/', (req, res) => {
     })
     .then((donation) => {
       logger.debug(`stored donorschoose_donation:${donation.donation_id}`);
+      scope.donation = donation;
 
-      return res.send(donation);
+      return sendResponse(scope, res, 200, 'donation_confirmation');
     })
     .catch(err => res.status(500).send(err.message));
 });

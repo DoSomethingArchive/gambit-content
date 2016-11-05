@@ -14,6 +14,7 @@ const donorsChooseBotSchema = new mongoose.Schema({
   msg_ask_email: String,
   msg_ask_first_name: String,
   msg_ask_zip: String,
+  msg_donation_confirmation: String,
   msg_donation_success: String,
   msg_error_generic: String,
   msg_invalid_email: String,
