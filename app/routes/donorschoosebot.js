@@ -124,7 +124,9 @@ router.post('/', (req, res) => {
       return sendResponse(scope, res, 200, 'invalid_email');
     }
 
-    scope.profile_update.profile_email = incomingMessage;
+    const email = incomingMessage.toLowerCase();
+    scope.profile_update.profile_email = email;
+    scope.body.profile_email = email;
   }
 
   // We've got all required profile fields -- time to donate.
@@ -188,7 +190,7 @@ router.post('/', (req, res) => {
         proposalId: selectedProposal.id,
         amount: donationAmount,
         email: donorEmail,
-        honoreeEmail: req.body.profile_email,
+        honoreeEmail: scope.body.profile_email,
         honoreeFirst: req.body.profile_first_name,
       };
 
@@ -199,7 +201,7 @@ router.post('/', (req, res) => {
 
       const data = {
         mobile: req.body.phone,
-        profile_email: req.body.profile_email,
+        profile_email: scope.body.profile_email,
         profile_first_name: req.body.profile_first_name,
         profile_postal_code: zip,
         donation_id: donation.donationId,
