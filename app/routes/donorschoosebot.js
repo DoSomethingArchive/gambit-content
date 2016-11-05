@@ -6,6 +6,7 @@
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
 const donorschoose = require('../../lib/donorschoose');
+const mobilecommons = require('../../lib/mobilecommons');
 const helpers = require('../../lib/helpers');
 const logger = app.locals.logger;
 
@@ -15,6 +16,10 @@ const logger = app.locals.logger;
 const COUNT_FIELD = process.env.DONORSCHOOSE_DONATION_COUNT_FIELDNAME || 'ss2016_donation_count';
 const MAX_DONATIONS_ALLOWED = (process.env.DONORSCHOOSE_MAX_DONATIONS_ALLOWED || 5);
 
+function debug(req, message) {
+  logger.debug(`donorschoosebot ${req.body.phone} ${message}`);
+}
+
 /**
  * Sends response object and posts update to user's Mobile Commons Profile to send SMS message.
  * @param {object} res - Express response
@@ -22,14 +27,17 @@ const MAX_DONATIONS_ALLOWED = (process.env.DONORSCHOOSE_MAX_DONATIONS_ALLOWED ||
  * @param {string} msgType - The type of DonorsChooseBot message to send
  * @param {object} profileUpdate - field values to update on current User's Mobile Commons Profile
  */
-function sendResponse(res, code, msgType, profileUpdate) {
-  logger.debug(`dcbot sendResponse:${msgType} profileUpdate:${JSON.stringify(profileUpdate)}`);
+function sendResponse(req, res, code, msgType) {
+  debug(req, `sendResponse:${msgType}`);
+  const scope = req;
 
   const property = `msg_${msgType}`;
   const responseMessage = app.locals.donorsChooseBot[property];
-  // TODO: Post to Mobile Commons Profile
 
-  return helpers.sendResponse(res, 200, responseMessage);
+  scope.profile_update.gambit_chatbot_response = responseMessage;
+  mobilecommons.profile_update(req.body.phone, scope.oip, scope.profile_update);
+
+  return helpers.sendResponse(res, code, responseMessage);
 }
 
 /**
@@ -49,57 +57,77 @@ function sendResponse(res, code, msgType, profileUpdate) {
  */
 router.post('/', (req, res) => {
   let incomingMessage = req.body.args;
-  if (!incomingMessage) {
-    return helpers.sendResponse(res, 422, 'Missing required args.');
-  }
+
+  const scope = req;
+  scope.oip = process.env.MOBILECOMMONS_OIP_DONORSCHOOSEBOT;
+  scope.profile_update = {};
 
   incomingMessage = helpers.getFirstWord(incomingMessage);
-  logger.debug(`dcbot incomingMessage:${incomingMessage}`);
+  debug(req, `incomingMessage:${incomingMessage}`);
 
   const profileFieldName = `profile_${COUNT_FIELD}`;
   const numDonations = req.body[profileFieldName] ? Number(req.body[profileFieldName]) : 0;
 
   if (numDonations >= MAX_DONATIONS_ALLOWED) {
-    return sendResponse(res, 200, 'max_donations_reached');
+    logger.debug('MAX_DONATIONS_ALLOWED');
+
+    return sendResponse(scope, res, 200, 'max_donations_reached');
   }
 
   // If start param passed, initiate conversation, ignoring incomingMessage.
   const prompt = req.query.start;
 
   if (!req.body.profile_postal_code) {
+    debug(req, 'profile_postal_code undefined');
+
     if (prompt) {
-      return sendResponse(res, 200, 'ask_zip');
-    }
-    if (!helpers.isValidZip(incomingMessage)) {
-      return sendResponse(res, 200, 'invalid_zip');
+      return sendResponse(scope, res, 200, 'ask_zip');
     }
 
-    return sendResponse(res, 200, 'ask_first_name', { postal_code: incomingMessage });
+    const validate = incomingMessage && helpers.isValidZip(incomingMessage);
+    if (!validate) {
+      return sendResponse(scope, res, 200, 'invalid_zip');
+    }
+
+    scope.profile_update.postal_code = incomingMessage;
+
+    return sendResponse(scope, res, 200, 'ask_first_name');
   }
 
   if (!req.body.profile_first_name) {
+    debug(req, 'profile_first_name undefined');
+
     if (prompt) {
-      return sendResponse(res, 200, 'ask_first_name');
-    }
-    if (helpers.containsNaughtyWords(incomingMessage) || !helpers.hasLetters(incomingMessage)) {
-      return sendResponse(res, 200, 'invalid_first_name');
+      return sendResponse(scope, res, 200, 'ask_first_name');
     }
 
-    return sendResponse(res, 200, 'ask_email', { first_name: incomingMessage });
+    let validate = incomingMessage && helpers.hasLetters(incomingMessage);
+    validate = validate && !helpers.containsNaughtyWords(incomingMessage);
+    if (!validate) {
+      return sendResponse(scope, res, 200, 'invalid_first_name');
+    }
+
+    scope.profile_update.first_name = incomingMessage;
+
+    return sendResponse(scope, res, 200, 'ask_email');
   }
 
   if (!req.body.profile_email) {
+    debug(req, 'profile_email undefined');
+
     if (prompt) {
-      return sendResponse(res, 200, 'ask_email');
+      return sendResponse(scope, res, 200, 'ask_email');
     }
-    if (!helpers.isValidEmail(incomingMessage)) {
-      return sendResponse(res, 200, 'invalid_email');
+
+    const validate = incomingMessage && helpers.isValidEmail(incomingMessage);
+    if (!validate) {
+      return sendResponse(scope, res, 200, 'invalid_email');
     }
+
+    scope.profile_update.profile_email = incomingMessage;
   }
 
-  // We've made it this far, time to donate.
-  // TODO: When time to post to MC Profile, we'll need to save email if !req.body.profile_email.
-
+  // We've got all required profile fields -- time to donate.
   const apiKey = process.env.DONORSCHOOSE_API_KEY;
   const apiPassword = process.env.DONORSCHOOSE_API_PASSWORD;
   const proposalsUri = `${process.env.DONORSCHOOSE_API_BASEURI}/common/json_feed.html`;
@@ -189,9 +217,9 @@ router.post('/', (req, res) => {
     .then((donation) => {
       logger.debug(`stored donorschoose_donation:${donation.donation_id}`);
 
-      return res.status(200).send(donation);
+      return res.send(donation);
     })
-    .catch(err => res.status(err.status).send(err.message));
+    .catch(err => res.status(500).send(err.message));
 });
 
 module.exports = router;
