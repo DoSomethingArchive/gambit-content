@@ -28,7 +28,11 @@ function info(req, message) {
 function sendResponse(req, res, code, msgType) {
   debug(req, `sendResponse:${msgType}`);
   const scope = req;
-  const responseMessage = app.locals.donorsChooseBot.renderMessage(req, msgType);
+  let responseMessage = app.locals.donorsChooseBot.renderMessage(req, msgType);
+  const senderPrefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
+  if (senderPrefix) {
+    responseMessage = `${senderPrefix} ${responseMessage}`;
+  }
 
   scope.profile_update.gambit_chatbot_response = responseMessage;
   mobilecommons.profile_update(req.body.phone, scope.oip, scope.profile_update);
