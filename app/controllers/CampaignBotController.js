@@ -7,8 +7,6 @@ const logger = app.locals.logger;
 const campaignBot = app.locals.campaignBot;
 const helpers = rootRequire('lib/helpers');
 
-const DS_API_POST_SOURCE = process.env.DS_API_POST_SOURCE || 'sms-mobilecommons';
-
 /**
  * CampaignBotController.
  * To be deprecated as we refactor functions as relevant Mongoose static/instance methods.
@@ -154,25 +152,6 @@ class CampaignBotController {
     return result;
   }
 
-  /**
-   * Returns whether incoming request is the given command type.
-   * @param {object} req
-   * @param {string} type
-   * @return {bool}
-   */
-  isCommand(req, type) {
-    this.debug(req, `isCommand:${type}`);
-
-    if (!type) {
-      return false;
-    }
-
-    const configName = `GAMBIT_CMD_${type.toUpperCase()}`;
-    const configValue = process.env[configName];
-    const result = this.parseCommand(req) === configValue.toUpperCase();
-
-    return result;
-  }
 
   /**
    * Helper function for this.debug and this.error functions.
@@ -193,13 +172,6 @@ class CampaignBotController {
   }
 
   /**
-   * Parse incoming request as Gambit command.
-   */
-  parseCommand(req) {
-    return helpers.getFirstWordUppercase(req.incoming_message);
-  }
-
-  /**
    * Posts ReportbackSubmission to DS API for incoming Express req
    * @param {object} req - Express request
    * @return {Promise}
@@ -207,61 +179,10 @@ class CampaignBotController {
   postReportback(req) {
     this.debug(req, 'postReportback');
 
-    const submission = req.signup.draft_reportback_submission;
-    const data = {
-      source: DS_API_POST_SOURCE,
-      uid: req.user.phoenix_id,
-      quantity: submission.quantity,
-      caption: submission.caption,
-      file_url: submission.photo,
-    };
-    if (submission.why_participated) {
-      data.why_participated = submission.why_participated;
-    }
-
-    return app.locals.clients.phoenix.Campaigns
-      .reportback(req.campaign._id, data)
-      .then(rbId => this.postReportbackSuccess(req, rbId))
-      .catch((err) => {
-        submission.failed_at = Date.now();
-        req.signup.save();
-
-        return this.error(req, `postReportback ${err}`);
-      });
-  }
-
-  /**
-   * Handles successful Reportback POST request.
-   * @param {object} req - Express request
-   * @param {number} rbid - Reportback id returned from our post to DS API.
-   * @return {string}
-   */
-  postReportbackSuccess(req, rbid) {
-    this.debug(req, `postReportbackSuccess reportback:${rbid}`);
-
-    const dateSubmitted = Date.now();
-    const submission = req.signup.draft_reportback_submission;
-    submission.submitted_at = dateSubmitted;
-
-    return submission
-      .save()
-      .then(() => {
-        this.debug(req, `updated submission:${submission._id.toString()}`);
-
-        const signup = req.signup;
-        signup.reportback = rbid;
-        signup.total_quantity_submitted = Number(req.signup.draft_reportback_submission.quantity);
-        signup.updated_at = dateSubmitted;
-        signup.draft_reportback_submission = undefined;
-        return signup.save();
-      })
-      .then((signupDoc) => {
-        const scope = req;
-        scope.signup = signupDoc;
-        this.debug(req, `updated signup:${scope.signup._id}`);
-
-        return campaignBot.renderMessage(scope, 'menu_completed');
-      });
+    return req.signup
+      .postDraftReportbackSubmission()
+      .then(() => campaignBot.renderMessage(req, 'menu_completed'))
+      .catch(err => this.error(req, `postReportback ${err}`));
   }
 
 }

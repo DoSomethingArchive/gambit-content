@@ -8,13 +8,22 @@ const Promise = require('bluebird');
 const NotFoundError = require('../exceptions/NotFoundError');
 const logger = app.locals.logger;
 
+const postSource = process.env.DS_API_POST_SOURCE || 'sms-mobilecommons';
+
 /**
  * Schema.
  */
 const signupSchema = new mongoose.Schema({
 
-  _id: { type: Number, index: true },
-  user: { type: String, index: true },
+  _id: {
+    type: Number,
+    index: true,
+  },
+  user: {
+    type: String,
+    index: true,
+    ref: 'users',
+  },
   campaign: {
     type: Number,
     ref: 'campaigns',
@@ -29,9 +38,6 @@ const signupSchema = new mongoose.Schema({
   // We'll want to update this number from DS API once we're querying for
   // any existing or updates to Reportbacks for this Signup.
   total_quantity_submitted: Number,
-  // Corresponds to the submitted_at of User's most recent ReportbackSubmission.
-  // Set this value as last import date if we start querying for updates.
-  updated_at: Date,
 
 });
 
@@ -112,6 +118,7 @@ signupSchema.statics.lookupCurrent = function (user, campaign) {
         const data = parseNorthstarSignup(currentSignup);
 
         return model.findOneAndUpdate({ _id: data._id }, data, { upsert: true, new: true })
+          .populate('user')
           .populate('draft_reportback_submission')
           .exec()
           .then(signup => resolve(signup))
@@ -135,7 +142,7 @@ signupSchema.statics.post = function (user, campaign, keyword) {
 
     return app.locals.clients.phoenix.Campaigns
       .signup(campaign._id, {
-        source: process.env.DS_API_POST_SOURCE,
+        source: postSource,
         uid: user.phoenix_id,
       })
       .then((signupID) => {
@@ -156,7 +163,7 @@ signupSchema.statics.post = function (user, campaign, keyword) {
 };
 
 /**
- * Creates a new Reportback Submission model and saves it to Signup's draft_reportback_submission.
+ * Creates a new Reportback Submission model and saves it to Signup's Draft Reportback Submission.
  */
 signupSchema.methods.createDraftReportbackSubmission = function () {
   const signup = this;
@@ -178,6 +185,60 @@ signupSchema.methods.createDraftReportbackSubmission = function () {
       })
       .then(updatedSignup => resolve(updatedSignup))
       .catch(err => reject(err));
+  });
+};
+
+/**
+ * Posts Signup Draft Reportback Submission to DS API and updates Submission and Signup accordingly.
+ */
+signupSchema.methods.postDraftReportbackSubmission = function () {
+  const signup = this;
+  const dateSubmitted = Date.now();
+
+  return new Promise((resolve, reject) => {
+    logger.debug('Signup.postDraftReportbackSubmission');
+
+    const submission = signup.draft_reportback_submission;
+    const data = {
+      source: postSource,
+      uid: signup.user.phoenix_id,
+      quantity: submission.quantity,
+      caption: submission.caption,
+      file_url: submission.photo,
+    };
+    if (submission.why_participated) {
+      data.why_participated = submission.why_participated;
+    }
+
+    return app.locals.clients.phoenix.Campaigns
+      .reportback(signup.campaign, data)
+      .then((reportbackId) => {
+        logger.debug(`phoenix.Campaigns.reportback:${reportbackId}`);
+        signup.reportback = reportbackId;
+        signup.total_quantity_submitted = Number(submission.quantity);
+        signup.draft_reportback_submission = undefined;
+
+        return signup.save();
+      })
+      .then(() => {
+        logger.debug(`updated signup:${signup._id}`);
+        submission.submitted_at = dateSubmitted;
+
+        return submission.save();
+      })
+      .then(() => {
+        logger.debug(`updated reportback_submission:${submission._id.toString()}`);
+
+        return resolve(signup);
+      })
+      .catch((err) => {
+        logger.error(err.message);
+
+        submission.failed_at = dateSubmitted;
+        submission.save();
+
+        return reject(err);
+      });
   });
 };
 

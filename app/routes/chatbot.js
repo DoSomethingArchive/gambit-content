@@ -12,6 +12,15 @@ const helpers = require('../../lib/helpers');
 const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
 
+function isCommand(incomingMessage, commandType) {
+  const firstWord = helpers.getFirstWordUppercase(incomingMessage);
+  const configName = `GAMBIT_CMD_${commandType.toUpperCase()}`;
+  const configValue = process.env[configName];
+  const result = firstWord === configValue.toUpperCase();
+
+  return result;
+}
+
 /**
  * Posts to chatbot route will find or create a Northstar User for the given req.body.phone.
  * Currently only supports Mobile Commons mData's.
@@ -157,16 +166,16 @@ router.post('/', (req, res) => {
     })
     .then((currentSignup) => {
       if (currentSignup) {
-        logger.debug(`loadSignup found signup:${currentSignup._id}`);
+        logger.debug(`lookupCurrent found signup:${currentSignup._id}`);
 
         return currentSignup;
       }
-      logger.debug('loadSignup not find signup');
+      logger.debug('lookupCurrent not find signup');
 
       return app.locals.db.signups.post(scope.user, scope.campaign, scope.keyword);
     })
     .then((signup) => {
-      controller.debug(scope, `loaded signup:${signup._id.toString()}`);
+      logger.debug(`loaded signup:${signup._id.toString()}`);
       scope.signup = signup;
 
       if (!scope.signup) {
@@ -175,7 +184,7 @@ router.post('/', (req, res) => {
         return false;
       }
 
-      if (controller.isCommand(scope, 'member_support')) {
+      if (isCommand(scope.incoming_message, 'member_support')) {
         scope.cmd_member_support = true;
         scope.oip = agentViewOip;
         return campaignBot.renderMessage(scope, 'member_support');
@@ -186,7 +195,7 @@ router.post('/', (req, res) => {
         return controller.continueReportbackSubmission(scope);
       }
 
-      if (controller.isCommand(scope, 'reportback')) {
+      if (isCommand(scope.incoming_message, 'reportback')) {
         return controller.createReportbackSubmission(scope);
       }
 
@@ -206,7 +215,6 @@ router.post('/', (req, res) => {
     })
     .then((msg) => {
       scope.response_message = msg;
-      controller.debug(scope, `chatbotResponseMessage:${msg}`);
       // Save to continue conversation with future mData requests that don't contain a keyword.
       scope.user.current_campaign = scope.campaign._id;
       return scope.user.save();
