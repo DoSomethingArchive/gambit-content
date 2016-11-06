@@ -4,24 +4,16 @@
  * Imports.
  */
 const logger = app.locals.logger;
+const campaignBot = app.locals.campaignBot;
 const helpers = rootRequire('lib/helpers');
 
 const DS_API_POST_SOURCE = process.env.DS_API_POST_SOURCE || 'sms-mobilecommons';
 
 /**
  * CampaignBotController.
- * Likely to be deprecated as we refactor functions as relevant Mongoose static/instance methods.
+ * To be deprecated as we refactor functions as relevant Mongoose static/instance methods.
  */
 class CampaignBotController {
-
-  /**
-   * Controls chatbot conversations to Signup and Reportback to DS Campaigns.
-   * @constructor
-   * @param {object} campaignBot - CampaignBot model
-   */
-  constructor(campaignBot) {
-    this.bot = campaignBot;
-  }
 
   /**
    * TODO: Move validation logic into routes/chatbot, save logic into Reportback Submission model.
@@ -36,7 +28,7 @@ class CampaignBotController {
     this.debug(req, `collectReportbackProperty:${property}`);
 
     if (ask || req.keyword) {
-      return this.renderResponseMessage(req, `ask_${property}`);
+      return campaignBot.renderMessage(req, `ask_${property}`);
     }
 
     // Begin validation.
@@ -49,19 +41,19 @@ class CampaignBotController {
 
     if (property === 'quantity') {
       if (!validQuantity) {
-        return this.renderResponseMessage(req, 'invalid_quantity');
+        return campaignBot.renderMessage(req, 'invalid_quantity');
       }
       input = Number(input);
     } else if (property === 'photo') {
       input = req.incoming_image_url;
       if (!input) {
-        return this.renderResponseMessage(req, 'no_photo_sent');
+        return campaignBot.renderMessage(req, 'no_photo_sent');
       }
     } else if (!validTextProperty) {
       logger.debug(`invalid ${property} sent`);
       const prefix = 'Sorry, I didn\'t understand that.\n\n';
 
-      return this.renderResponseMessage(req, `ask_${property}`, prefix);
+      return campaignBot.renderMessage(req, `ask_${property}`, prefix);
     }
 
     const submission = req.signup.draft_reportback_submission;
@@ -73,12 +65,12 @@ class CampaignBotController {
         this.debug(req, `saved ${property}:${input}`);
 
         if (property === 'quantity') {
-          return this.renderResponseMessage(req, 'ask_photo');
+          return campaignBot.renderMessage(req, 'ask_photo');
         } else if (property === 'photo') {
-          return this.renderResponseMessage(req, 'ask_caption');
+          return campaignBot.renderMessage(req, 'ask_caption');
         } else if (property === 'caption') {
           if (!this.hasReportedBack(req)) {
-            return this.renderResponseMessage(req, 'ask_why_participated');
+            return campaignBot.renderMessage(req, 'ask_why_participated');
           }
         }
 
@@ -278,84 +270,8 @@ class CampaignBotController {
         scope.signup = signupDoc;
         this.debug(req, `updated signup:${scope.signup._id}`);
 
-        return this.renderResponseMessage(scope, 'menu_completed');
+        return campaignBot.renderMessage(scope, 'menu_completed');
       });
-  }
-
-  /**
-   * TODO: Move this function as either a Campaign or CampaignBot instance function.
-   * Replaces placeholder variables in given msgTxt with data from incoming req
-   * @param {object} req - Express request
-   * @param {string} msgType - Type of bot message to send back
-   * @param {string} prefix - If set, prepended to the bot message text
-   * @return {string} - msgTxt with all variables replaced with req properties
-   */
-  renderResponseMessage(req, msgType, prefix) {
-    logger.debug(`renderResponseMessage:${msgType}`);
-    const campaign = req.campaign;
-
-    const botProperty = `msg_${msgType}`;
-    let msg = this.bot[botProperty];
-    if (!campaign) {
-      logger.error('renderResponseMessage req.campaign undefined');
-
-      return msg;
-    }
-
-    // Check if campaign has an override defined.
-    if (campaign[botProperty]) {
-      msg = campaign[botProperty];
-    }
-
-    if (!msg) {
-      return this.error(req, 'bot msgType not found');
-    }
-
-    if (prefix) {
-      msg = `${prefix}${msg}`;
-    }
-
-    msg = msg.replace(/{{br}}/gi, '\n');
-    msg = msg.replace(/{{title}}/gi, campaign.title);
-    msg = msg.replace(/{{tagline}}/i, campaign.tagline);
-    msg = msg.replace(/{{fact_problem}}/gi, campaign.fact_problem);
-    msg = msg.replace(/{{rb_noun}}/gi, campaign.rb_noun);
-    msg = msg.replace(/{{rb_verb}}/gi, campaign.rb_verb);
-    msg = msg.replace(/{{rb_confirmation_msg}}/i, campaign.msg_rb_confirmation);
-    msg = msg.replace(/{{cmd_reportback}}/i, process.env.GAMBIT_CMD_REPORTBACK);
-    msg = msg.replace(/{{cmd_member_support}}/i, process.env.GAMBIT_CMD_MEMBER_SUPPORT);
-
-    if (campaign.keywords.length) {
-      // Campaign could have multiple keywords, use the first by default.
-      let keyword = campaign.keywords[0].toUpperCase();
-      // If User signed up via keyword, use the keyword they used (vs the first defined above).
-      if (req.signup && req.signup.keyword) {
-        keyword = req.signup.keyword.toUpperCase();
-      }
-      msg = msg.replace(/{{keyword}}/i, keyword);
-    }
-
-    if (req.signup) {
-      let quantity = req.signup.total_quantity_submitted;
-      if (req.signup.draft_reportback_submission) {
-        quantity = req.signup.draft_reportback_submission.quantity;
-      }
-      msg = msg.replace(/{{quantity}}/gi, quantity);
-    }
-
-    const revisiting = req.keyword && req.signup && req.signup.draft_reportback_submission;
-    if (revisiting) {
-      // TODO: New bot property for continue draft message
-      const continueMsg = 'Picking up where you left off on';
-      msg = `${continueMsg} ${campaign.title}...\n\n${msg}`;
-    }
-
-    const senderPrefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
-    if (senderPrefix) {
-      msg = `${senderPrefix} ${msg}`;
-    }
-
-    return msg;
   }
 
 }

@@ -142,6 +142,7 @@ conn.on('connected', () => {
   const campaignBotID = process.env.CAMPAIGNBOT_ID || 41;
   const loadCampaignBot = loader.loadBot('campaignbot', campaignBotID)
     .then((bot) => {
+      app.locals.campaignBot = bot;
       const CampaignBotController = rootRequire('app/controllers/CampaignBotController');
       app.locals.controllers.campaignBot = new CampaignBotController(bot);
       logger.info('loaded app.locals.controllers.campaignBot');

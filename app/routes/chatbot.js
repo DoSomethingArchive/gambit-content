@@ -18,6 +18,8 @@ const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError
  */
 router.post('/', (req, res) => {
   const controller = app.locals.controllers.campaignBot;
+  const campaignBot = app.locals.campaignBot;
+
   const scope = req;
   scope.oip = process.env.MOBILECOMMONS_OIP_CHATBOT;
   scope.incoming_message = req.body.args;
@@ -176,7 +178,7 @@ router.post('/', (req, res) => {
       if (controller.isCommand(scope, 'member_support')) {
         scope.cmd_member_support = true;
         scope.oip = agentViewOip;
-        return controller.renderResponseMessage(scope, 'member_support');
+        return campaignBot.renderMessage(scope, 'member_support');
       }
 
       if (scope.signup.draft_reportback_submission) {
@@ -190,17 +192,17 @@ router.post('/', (req, res) => {
 
       if (scope.signup.reportback) {
         if (scope.keyword || req.query.broadcast) {
-          return controller.renderResponseMessage(scope, 'menu_completed');
+          return campaignBot.renderMessage(scope, 'menu_completed');
         }
         // If we're this far, member didn't text back Reportback or Member Support commands.
-        return controller.renderResponseMessage(scope, 'invalid_cmd_completed');
+        return campaignBot.renderMessage(scope, 'invalid_cmd_completed');
       }
 
       if (scope.keyword || req.query.broadcast) {
-        return controller.renderResponseMessage(scope, 'menu_signedup_gambit');
+        return campaignBot.renderMessage(scope, 'menu_signedup_gambit');
       }
 
-      return controller.renderResponseMessage(scope, 'invalid_cmd_signedup');
+      return campaignBot.renderMessage(scope, 'invalid_cmd_signedup');
     })
     .then((msg) => {
       scope.response_message = msg;
@@ -225,7 +227,7 @@ router.post('/', (req, res) => {
       // TODO: Send StatHat report to inform staff CampaignBot is running a closed Campaign.
       // We don't want to send an error back as response, but instead deliver success to Mobile
       // Commons and deliver the Campaign Closed message back to our User.
-      const msg = controller.renderResponseMessage(scope, 'campaign_closed');
+      const msg = campaignBot.renderMessage(scope, 'campaign_closed');
       // Send to Agent View for now until we get a Select Campaign menu up and running.
       scope.user.postMobileCommonsProfileUpdate(agentViewOip, msg);
 
@@ -234,7 +236,7 @@ router.post('/', (req, res) => {
     })
     .catch(err => {
       if (err.message === 'broadcast declined') {
-        const msg = controller.renderResponseMessage(scope, 'signup_broadcast_declined');
+        const msg = campaignBot.renderMessage(scope, 'signup_broadcast_declined');
         scope.user.postMobileCommonsProfileUpdate(agentViewOip, msg);
 
         return helpers.sendResponse(res, 200, msg);
