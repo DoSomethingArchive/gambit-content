@@ -119,23 +119,13 @@ class CampaignBotController {
    */
   createReportbackSubmission(req) {
     this.debug(req, 'createReportbackSubmission');
-    const scope = req;
 
-    return app.locals.db.reportback_submissions
-      .create({
-        campaign: req.campaign._id,
-        user: req.user._id,
-      })
-      .then(reportbackSubmission => {
-        this.debug(scope, `created reportbackSubmission:${reportbackSubmission._id.toString()}`);
-        scope.signup.draft_reportback_submission = reportbackSubmission._id;
-
-        return scope.signup.save();
-      })
+    return req.signup
+      .createDraftReportbackSubmission()
       .then(() => {
-        this.debug(scope, `updated signup:${scope.signup._id.toString()}`);
+        this.debug(req, `updated signup:${req.signup._id.toString()}`);
 
-        return this.collectReportbackProperty(scope, 'quantity', true);
+        return this.collectReportbackProperty(req, 'quantity', true);
       });
   }
 

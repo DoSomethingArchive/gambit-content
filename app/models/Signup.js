@@ -95,7 +95,7 @@ signupSchema.statics.lookupCurrent = function (user, campaign) {
   const model = this;
 
   return new Promise((resolve, reject) => {
-    logger.debug(`Signup.lookupCurrentForUserAndCampaign:${user._id}, ${campaign._id}`);
+    logger.debug(`Signup.lookupCurrent(${user._id}, ${campaign._id})`);
 
     return app.locals.clients.northstar
       .Signups.index({ user: user._id, campaigns: campaign._id })
@@ -151,6 +151,32 @@ signupSchema.statics.post = function (user, campaign, keyword) {
           .then(signup => resolve(signup))
           .catch(error => reject(error));
       })
+      .catch(err => reject(err));
+  });
+};
+
+/**
+ * Creates a new Reportback Submission model and saves it to Signup's draft_reportback_submission.
+ */
+signupSchema.methods.createDraftReportbackSubmission = function () {
+  const signup = this;
+
+  return new Promise((resolve, reject) => {
+    logger.debug('Signup.createDraftReportbackSubmission');
+
+    return app.locals.db.reportback_submissions
+      .create({
+        campaign: signup.campaign,
+        user: signup.user,
+      })
+      .then(reportbackSubmission => {
+        const submissionId = reportbackSubmission._id;
+        logger.debug(`Signup.createDraftReportbackSubmission created:${submissionId.toString()}`);
+        signup.draft_reportback_submission = submissionId;
+
+        return signup.save();
+      })
+      .then(updatedSignup => resolve(updatedSignup))
       .catch(err => reject(err));
   });
 };
