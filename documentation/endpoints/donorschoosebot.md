@@ -1,9 +1,9 @@
-# Chatbot
+# DonorsChooseBot
 
 Currently only implemented for use by a Mobile Commons mData POST request.
 
 ```
-POST /v1/chatbot
+POST /v1/donorschoosebot
 ```
 
 **Headers**
@@ -16,8 +16,7 @@ Name | Type | Description
 
 Name | Type | Description
 --- | --- | ---
-`broadcast` | `boolean` | If set, inspects User's sent message as either Yes or No response to Signup for whatever the `CAMPAIGNBOT_BROADCAST_CAMPAIGN` config var is set to.
-
+`start` | `boolean` | If set, DonorsChooseBot will initiate conversation and send first message to User.
 
 **Input**
 
@@ -27,18 +26,19 @@ Name | Type | Description
 --- | --- | ---
 `phone` | `string` | **Required.** Mobile number that sent incoming message.
 `args` | `string` | Incoming text sent.
-`mms_image_url` | `string` | Incoming image sent.
-`keyword` | `string` | [Mobile Commons keyword](https://github.com/DoSomething/gambit/wiki/Chatbot#mdata) that triggered the incoming mData POST.
 `profile_id` | `number` | Mobile Commons Profile ID
+`profile_first_name` | `string` | Mobile Commons Profile first name
+`profile_email` | `string` | Mobile Commons Profile email
+`profile_postal_code` | `string` | Mobile Commons Profile zip
+`profile_ss2016_donation_count` | `string` | Mobile Commons Custom Field to store number of donations. This parameter name can be changed via `DONORSCHOOSE_DONATION_FIELDNAME`
 
 <details>
 <summary>**Example Request**</summary>
 ````
-curl -X "POST" "http://localhost:5000/v1/chatbot" \
+curl -X "POST" "http://localhost:5000/v1/donorschoosebot?start=true" \
      -H "x-gambit-api-key: totallysecret" \
      -H "Content-Type: application/x-www-form-urlencoded; charset=utf-8" \
      --data-urlencode "phone=5555555511" \
-     --data-urlencode "keyword=slothieboi"
      --data-urlencode "profile_id=136122001" \
 ````
 </details>
@@ -49,8 +49,9 @@ curl -X "POST" "http://localhost:5000/v1/chatbot" \
 {
   "success": {
     "code": 200,
-    "message": "Picking up where you left off on Bumble Bands...\n\nSend your best pic of you and the 33 bumble bands you created."
+    "message": "First, text back your zip code to find a project near you to support."
   }
 }
+
 ````
 </details>

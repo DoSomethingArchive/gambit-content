@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 const Promise = require('bluebird');
 const gambitJunior = rootRequire('lib/junior');
 const logger = app.locals.logger;
+const stathat = app.locals.stathat;
 
 const campaignBotSchema = new mongoose.Schema({
 
@@ -24,6 +25,7 @@ const campaignBotSchema = new mongoose.Schema({
   msg_menu_signedup_external: String,
   msg_menu_signedup_gambit: String,
   msg_no_photo_sent: String,
+  msg_signup_broadcast_declined: String,
 
 });
 
@@ -51,6 +53,83 @@ campaignBotSchema.statics.lookupByID = function (id) {
       })
       .catch(error => reject(error));
   });
+};
+
+/**
+ * Returns rendered CampaignBot message for given Express req and msgType.
+ * @param {object} req - Express request
+ * @param {string} msgType - Type of bot message to send back
+ * @param {string} prefix - If set, prepended to the bot message text
+ * @return {string} - CampaignBot message with Liquid tags replaced with req properties
+ */
+campaignBotSchema.methods.renderMessage = function (req, msgType, prefix) {
+  const logMsg = `campaignbot: ${msgType}`;
+  logger.info(logMsg);
+  stathat(logMsg);
+
+  const botProperty = `msg_${msgType}`;
+  let msg = this[botProperty];
+  const campaign = req.campaign;
+  if (!campaign) {
+    logger.error('renderMessage req.campaign undefined');
+
+    return msg;
+  }
+
+  // Check if campaign has an override defined.
+  if (campaign[botProperty]) {
+    msg = campaign[botProperty];
+  }
+
+  if (!msg) {
+    return this.error(req, 'bot msgType not found');
+  }
+
+  if (prefix) {
+    msg = `${prefix}${msg}`;
+  }
+
+  msg = msg.replace(/{{br}}/gi, '\n');
+  msg = msg.replace(/{{title}}/gi, campaign.title);
+  msg = msg.replace(/{{tagline}}/i, campaign.tagline);
+  msg = msg.replace(/{{fact_problem}}/gi, campaign.fact_problem);
+  msg = msg.replace(/{{rb_noun}}/gi, campaign.rb_noun);
+  msg = msg.replace(/{{rb_verb}}/gi, campaign.rb_verb);
+  msg = msg.replace(/{{rb_confirmation_msg}}/i, campaign.msg_rb_confirmation);
+  msg = msg.replace(/{{cmd_reportback}}/i, process.env.GAMBIT_CMD_REPORTBACK);
+  msg = msg.replace(/{{cmd_member_support}}/i, process.env.GAMBIT_CMD_MEMBER_SUPPORT);
+
+  if (campaign.keywords.length) {
+    // Campaign could have multiple keywords, use the first by default.
+    let keyword = campaign.keywords[0].toUpperCase();
+    // If User signed up via keyword, use the keyword they used (vs the first defined above).
+    if (req.signup && req.signup.keyword) {
+      keyword = req.signup.keyword.toUpperCase();
+    }
+    msg = msg.replace(/{{keyword}}/i, keyword);
+  }
+
+  if (req.signup) {
+    let quantity = req.signup.total_quantity_submitted;
+    if (req.signup.draft_reportback_submission) {
+      quantity = req.signup.draft_reportback_submission.quantity;
+    }
+    msg = msg.replace(/{{quantity}}/gi, quantity);
+  }
+
+  const revisiting = req.keyword && req.signup && req.signup.draft_reportback_submission;
+  if (revisiting) {
+    // TODO: New bot property for continue draft message
+    const continueMsg = 'Picking up where you left off on';
+    msg = `${continueMsg} ${campaign.title}...\n\n${msg}`;
+  }
+
+  const senderPrefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
+  if (senderPrefix) {
+    msg = `${senderPrefix} ${msg}`;
+  }
+
+  return msg;
 };
 
 module.exports = function (connection) {

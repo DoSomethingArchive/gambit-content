@@ -1,6 +1,6 @@
 {
   "name": "gambit",
-  "version": "3.0.1",
+  "version": "3.1.0",
   "description": "Interface for interacting with DoSomething.org SMS experiences.",
   "license": "MIT",
   "repository": {
@@ -10,7 +10,7 @@
   "scripts": {
     "test": "npm run lint",
     "start": "node server",
-    "lint": "eslint --ext=.js server.js app/routes app/exceptions app/models app/controllers/CampaignBotController.js lib/gambit-junior.js"
+    "lint": "eslint --ext=.js server.js app/routes app/exceptions app/models app/controllers/CampaignBotController.js lib/gambit-junior.js lib/donorschoose.js lib/groups.js"
   },
   "eslintConfig": {
     "globals": {

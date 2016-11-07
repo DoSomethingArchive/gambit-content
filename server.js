@@ -50,6 +50,25 @@ app.locals.logger = new (winston.Logger)({
 if (!app.locals.logger) {
   process.exit(1);
 }
+const logger = app.locals.logger;
+
+/**
+ * Load stathat.
+ */
+const stathat = require('stathat');
+app.locals.stathat = function (statName) {
+  const key = process.env.STATHAT_EZ_KEY;
+  if (!key) {
+    logger.warn('STATHAT_EZ_KEY undefined');
+
+    return;
+  }
+  const appName = process.env.STATHAT_APP_NAME || 'gambit';
+  const stat = `${appName} - ${statName}`;
+
+  // Bump count of stat by 1.
+  stathat.trackEZCount(key, stat, 1, status => logger.verbose(`stathat ${stat}:${status}`));
+};
 
 if (!process.env.CAMPAIGNBOT_CAMPAIGNS) {
   app.locals.logger.error('process.env.CAMPAIGNBOT_CAMPAIGNS undefined');
@@ -68,8 +87,6 @@ mongoose.Promise = global.Promise;
 
 const conn = mongoose.createConnection(DB_URI);
 app.locals.db = loader.getModels(conn);
-
-const logger = app.locals.logger;
 
 /**
  * Load clients.
@@ -98,6 +115,7 @@ if (!app.locals.clients.phoenix) {
   logger.error('app.locals.clients.phoenix undefined');
   process.exit(1);
 }
+
 
 conn.on('connected', () => {
   logger.info(`conn.readyState:${conn.readyState}`);
@@ -139,26 +157,30 @@ conn.on('connected', () => {
    */
   app.locals.controllers = {};
 
-  const campaignBotID = process.env.CAMPAIGNBOT_ID || 41;
-  const loadCampaignBot = loader.loadBot('campaignbot', campaignBotID)
+  const campaignBotId = process.env.CAMPAIGNBOT_ID || 41;
+  const loadCampaignBot = loader.loadBot('campaignbot', campaignBotId)
     .then((bot) => {
+      app.locals.campaignBot = bot;
       const CampaignBotController = rootRequire('app/controllers/CampaignBotController');
       app.locals.controllers.campaignBot = new CampaignBotController(bot);
       logger.info('loaded app.locals.controllers.campaignBot');
 
       return app.locals.controllers.campaignBot;
     })
-    .catch(err => logger.error(err));
+    .catch(err => logger.error(err.message));
 
-  const donorsChooseBotID = process.env.DONORSCHOOSEBOT_ID || 31;
-  const loadDonorsChooseBot = loader.loadBot('donorschoosebot', donorsChooseBotID)
+  const donorsChooseBotId = process.env.DONORSCHOOSEBOT_ID || 31;
+  const loadDonorsChooseBot = loader.loadBot('donorschoosebot', donorsChooseBotId)
     .then((bot) => {
+      app.locals.donorsChooseBot = bot;
+      // TODO: Deprecate DonorsChooseBotController entirely once donorschoosebot endpoint is live.
       const DonorsChooseBotController = rootRequire('app/controllers/DonorsChooseBotController');
       app.locals.controllers.donorsChooseBot = new DonorsChooseBotController(bot);
       logger.info('loaded app.locals.controllers.donorsChooseBot');
 
       return app.locals.controllers.donorsChooseBot;
-    });
+    })
+    .catch(err => logger.error(err.message));
 
   /**
    * Load legacy configs.
@@ -192,7 +214,7 @@ conn.on('connected', () => {
       });
     })
     .catch((err) => {
-      logger.error(err);
+      logger.error(err.message);
       process.exit(1);
     });
 });
