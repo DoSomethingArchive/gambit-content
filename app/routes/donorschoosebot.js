@@ -9,6 +9,7 @@ const donorschoose = require('../../lib/donorschoose');
 const mobilecommons = require('../../lib/mobilecommons');
 const helpers = require('../../lib/helpers');
 const logger = app.locals.logger;
+const stathat = app.locals.stathat;
 
 function debug(req, message) {
   logger.debug(`donorschoosebot profile:${req.body.profile_id} ${message}`);
@@ -60,8 +61,9 @@ function sendResponse(req, res, code, msgType) {
  * it to update it with their email, zip, first name, and a custom field to keep donation count.
  */
 router.post('/', (req, res) => {
-  let incomingMessage = req.body.args;
+  stathat('route: v1/donorschoosebot');
 
+  let incomingMessage = req.body.args;
   const scope = req;
   // Initialize object to store profile data to save when posting Mobile Commons profile_update API.
   scope.profile_update = {};
@@ -189,6 +191,8 @@ router.post('/', (req, res) => {
     .then((tokenResponse) => {
       debug(req, `token.statusDescription:${tokenResponse.statusDescription}`);
       if (tokenResponse.statusDescription !== 'success') {
+        stathat('donorschoosebot: POST token failed');
+
         throw new Error('DonorsChoose API request for token failed.');
       }
 
@@ -208,6 +212,7 @@ router.post('/', (req, res) => {
       return donorschoose.post(donationsUri, data);
     })
     .then((donation) => {
+      stathat('donorschoosebot: POST donation success');
       info(req, `created donation_id:${donation.donationId}`);
 
       const data = {
@@ -239,11 +244,13 @@ router.post('/', (req, res) => {
     })
     .catch((err) => {
       if (err.message === 'no search results') {
+        stathat('donorschoosebot: no projects found');
         scope.oip = process.env.MOBILECOMMONS_OIP_DONORSCHOOSEBOT_ERROR;
 
         return sendResponse(scope, res, 200, 'search_no_results');
       }
 
+      stathat(`donorschoosebot: error ${err.message}`);
       error(req, err.message);
 
       return res.status(500).send(err.message);

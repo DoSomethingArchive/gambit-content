@@ -4,6 +4,8 @@ const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
 
 router.get('/', (req, res) => {
+  app.locals.stathat('route: v1/campaigns');
+
   const findClause = {};
   if (req.query.campaignbot) {
     const campaignConfigVar = process.env.CAMPAIGNBOT_CAMPAIGNS;
@@ -22,6 +24,7 @@ router.get('/', (req, res) => {
 });
 
 router.get('/:id', (req, res) => {
+  app.locals.stathat('route: v1/campaigns/{id}');
   app.locals.logger.debug(`get campaign ${req.params.id}`);
 
   return app.locals.db.campaigns

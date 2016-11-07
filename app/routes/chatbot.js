@@ -5,8 +5,8 @@
  */
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
-
 const logger = app.locals.logger;
+const stathat = app.locals.stathat;
 const Promise = require('bluebird');
 const helpers = require('../../lib/helpers');
 const NotFoundError = require('../exceptions/NotFoundError');
@@ -26,6 +26,8 @@ function isCommand(incomingMessage, commandType) {
  * Currently only supports Mobile Commons mData's.
  */
 router.post('/', (req, res) => {
+  stathat('route: v1/chatbot');
+
   const controller = app.locals.controllers.campaignBot;
   const campaignBot = app.locals.campaignBot;
 
@@ -57,7 +59,9 @@ router.post('/', (req, res) => {
   ];
   settings.forEach((configVar) => {
     if (!process.env[configVar]) {
-      logger.error(`undefined process.env.${configVar}`);
+      const msg = `undefined process.env.${configVar}`;
+      stathat(`error: ${msg}`);
+      logger.error(msg);
       configured = false;
     }
   });
@@ -67,6 +71,8 @@ router.post('/', (req, res) => {
   }
 
   if (!req.body.phone) {
+    stathat('error: undefined req.body.phone');
+
     return res.status(422).send({ error: 'phone is required.' });
   }
 
@@ -78,7 +84,7 @@ router.post('/', (req, res) => {
       .then(user => resolve(user))
       .catch((err) => {
         if (err && err.status === 404) {
-          logger.debug(`app.locals.db.users.lookup could not find mobile:${req.body.phone}`);
+          logger.info(`app.locals.db.users.lookup could not find mobile:${req.body.phone}`);
 
           const user = app.locals.db.users.post({
             mobile: req.body.phone,
@@ -94,7 +100,7 @@ router.post('/', (req, res) => {
 
   return loadUser
     .then((user) => {
-      logger.debug(`loaded user:${user._id}`);
+      logger.info(`loaded user:${user._id}`);
       scope.user = user;
 
       let campaign;

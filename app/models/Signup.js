@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 const Promise = require('bluebird');
 const NotFoundError = require('../exceptions/NotFoundError');
 const logger = app.locals.logger;
+const stathat = app.locals.stathat;
 
 const postSource = process.env.DS_API_POST_SOURCE || 'sms-mobilecommons';
 
@@ -65,6 +66,7 @@ function parseNorthstarSignup(northstarSignup) {
  */
 signupSchema.statics.lookupById = function (id) {
   const model = this;
+  const statName = 'GET signups/{id}';
 
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.lookupById:${id}`);
@@ -72,6 +74,7 @@ signupSchema.statics.lookupById = function (id) {
     return app.locals.clients.northstar
       .Signups.get(id)
       .then((northstarSignup) => {
+        stathat(`${statName} success`);
         logger.debug(`northstar.Signups.get:${id} success`);
         const data = parseNorthstarSignup(northstarSignup);
 
@@ -82,10 +85,14 @@ signupSchema.statics.lookupById = function (id) {
       })
       .catch(err => {
         if (err.status === 404) {
+          // Use error prefix here -- if we're looking up a Signup by Id and API can't find it,
+          // something's not right.
+          stathat(`error: ${statName} 404`);
           const msg = `Signup ${id} not found.`;
           const notFoundError = new NotFoundError(msg);
           return reject(notFoundError);
         }
+        stathat(`error: ${statName}`);
 
         return reject(err);
       });
@@ -99,6 +106,7 @@ signupSchema.statics.lookupById = function (id) {
  */
 signupSchema.statics.lookupCurrent = function (user, campaign) {
   const model = this;
+  const statName = 'GET signups';
 
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.lookupCurrent(${user._id}, ${campaign._id})`);
@@ -106,6 +114,8 @@ signupSchema.statics.lookupCurrent = function (user, campaign) {
     return app.locals.clients.northstar
       .Signups.index({ user: user._id, campaigns: campaign._id })
       .then((northstarSignups) => {
+        stathat(`${statName} success`);
+
         if (northstarSignups.length < 1) {
           return resolve(false);
         }
@@ -124,7 +134,11 @@ signupSchema.statics.lookupCurrent = function (user, campaign) {
           .then(signup => resolve(signup))
           .catch(error => reject(error));
       })
-      .catch(err => reject(err));
+      .catch((err) => {
+        stathat(`error: ${statName}`);
+
+        return reject(err);
+      });
   });
 };
 
@@ -136,9 +150,10 @@ signupSchema.statics.lookupCurrent = function (user, campaign) {
  */
 signupSchema.statics.post = function (user, campaign, keyword) {
   const model = this;
+  const statName = 'POST signups';
 
   return new Promise((resolve, reject) => {
-    logger.debug(`Signup.post (${user._id}, ${campaign._id}, ${keyword}`);
+    logger.debug(`Signup.post(${user._id}, ${campaign._id}, ${keyword})`);
 
     return app.locals.clients.phoenix.Campaigns
       .signup(campaign._id, {
@@ -146,7 +161,10 @@ signupSchema.statics.post = function (user, campaign, keyword) {
         uid: user.phoenix_id,
       })
       .then((signupID) => {
-        logger.debug(`Signup.post created signup:${signupID}`);
+        stathat(`${statName} success`);
+        stathat(`signup: ${keyword}`);
+        logger.info(`Signup.post created signup:${signupID}`);
+
         const data = {
           campaign: campaign._id,
           user: user._id,
@@ -158,7 +176,11 @@ signupSchema.statics.post = function (user, campaign, keyword) {
           .then(signup => resolve(signup))
           .catch(error => reject(error));
       })
-      .catch(err => reject(err));
+      .catch((err) => {
+        stathat(`error: ${statName}`);
+
+        return reject(err);
+      });
   });
 };
 
@@ -183,7 +205,11 @@ signupSchema.methods.createDraftReportbackSubmission = function () {
 
         return signup.save();
       })
-      .then(updatedSignup => resolve(updatedSignup))
+      .then((updatedSignup) => {
+        stathat('created draft_reportback_submission');
+
+        return resolve(updatedSignup);
+      })
       .catch(err => reject(err));
   });
 };
@@ -194,6 +220,7 @@ signupSchema.methods.createDraftReportbackSubmission = function () {
 signupSchema.methods.postDraftReportbackSubmission = function () {
   const signup = this;
   const dateSubmitted = Date.now();
+  const statName = 'POST reportbacks';
 
   return new Promise((resolve, reject) => {
     logger.debug('Signup.postDraftReportbackSubmission');
@@ -213,7 +240,9 @@ signupSchema.methods.postDraftReportbackSubmission = function () {
     return app.locals.clients.phoenix.Campaigns
       .reportback(signup.campaign, data)
       .then((reportbackId) => {
-        logger.debug(`phoenix.Campaigns.reportback:${reportbackId}`);
+        stathat(`${statName} success`);
+        logger.info(`phoenix.Campaigns.reportback:${reportbackId}`);
+
         signup.reportback = reportbackId;
         signup.total_quantity_submitted = Number(submission.quantity);
         signup.draft_reportback_submission = undefined;
@@ -232,6 +261,7 @@ signupSchema.methods.postDraftReportbackSubmission = function () {
         return resolve(signup);
       })
       .catch((err) => {
+        stathat(`error: ${statName}`);
         logger.error(err.message);
 
         submission.failed_at = dateSubmitted;

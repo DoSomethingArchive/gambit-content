@@ -20,6 +20,8 @@ function sendResponse(res, code, message) {
 }
 
 router.post('/', (req, res) => {
+  app.locals.stathat('route: v1/signups');
+
   if (!req.body.id) {
     return sendResponse(res, 422, 'Missing required id.');
   }
