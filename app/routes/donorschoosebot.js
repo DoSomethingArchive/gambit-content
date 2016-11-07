@@ -6,14 +6,21 @@
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
 const donorschoose = require('../../lib/donorschoose');
+const mobilecommons = require('../../lib/mobilecommons');
 const helpers = require('../../lib/helpers');
 const logger = app.locals.logger;
 
-/**
- * Setup.
- */
-const COUNT_FIELD = process.env.DONORSCHOOSE_DONATION_COUNT_FIELDNAME || 'ss2016_donation_count';
-const MAX_DONATIONS_ALLOWED = (process.env.DONORSCHOOSE_MAX_DONATIONS_ALLOWED || 5);
+function debug(req, message) {
+  logger.debug(`donorschoosebot profile:${req.body.profile_id} ${message}`);
+}
+
+function error(req, message) {
+  logger.error(`donorschoosebot profile:${req.body.profile_id} ${message}`);
+}
+
+function info(req, message) {
+  logger.info(`donorschoosebot profile:${req.body.profile_id} ${message}`);
+}
 
 /**
  * Sends response object and posts update to user's Mobile Commons Profile to send SMS message.
@@ -22,14 +29,19 @@ const MAX_DONATIONS_ALLOWED = (process.env.DONORSCHOOSE_MAX_DONATIONS_ALLOWED ||
  * @param {string} msgType - The type of DonorsChooseBot message to send
  * @param {object} profileUpdate - field values to update on current User's Mobile Commons Profile
  */
-function sendResponse(res, code, msgType, profileUpdate) {
-  logger.debug(`dcbot sendResponse:${msgType} profileUpdate:${JSON.stringify(profileUpdate)}`);
+function sendResponse(req, res, code, msgType) {
+  debug(req, `sendResponse:${msgType}`);
+  const scope = req;
+  let responseMessage = app.locals.donorsChooseBot.renderMessage(req, msgType);
+  const senderPrefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
+  if (senderPrefix) {
+    responseMessage = `${senderPrefix} ${responseMessage}`;
+  }
 
-  const property = `msg_${msgType}`;
-  const responseMessage = app.locals.donorsChooseBot[property];
-  // TODO: Post to Mobile Commons Profile
+  scope.profile_update.gambit_chatbot_response = responseMessage;
+  mobilecommons.profile_update(req.body.phone, scope.oip, scope.profile_update);
 
-  return helpers.sendResponse(res, 200, responseMessage);
+  return helpers.sendResponse(res, code, responseMessage);
 }
 
 /**
@@ -49,89 +61,120 @@ function sendResponse(res, code, msgType, profileUpdate) {
  */
 router.post('/', (req, res) => {
   let incomingMessage = req.body.args;
-  if (!incomingMessage) {
-    return helpers.sendResponse(res, 422, 'Missing required args.');
-  }
+
+  const scope = req;
+  // Initialize object to store profile data to save when posting Mobile Commons profile_update API.
+  scope.profile_update = {};
+
+  // Opt user into chat OIP by default.
+  scope.oip = process.env.MOBILECOMMONS_OIP_DONORSCHOOSEBOT;
+  const agentViewOip = process.env.MOBILECOMMONS_OIP_DONORSCHOOSEBOT_END;
 
   incomingMessage = helpers.getFirstWord(incomingMessage);
-  logger.debug(`dcbot incomingMessage:${incomingMessage}`);
+  debug(req, `incomingMessage:${incomingMessage}`);
 
-  const profileFieldName = `profile_${COUNT_FIELD}`;
+  const countField = process.env.DONORSCHOOSE_DONATION_COUNT_FIELDNAME || 'ss2016_donation_count';
+  const profileFieldName = `profile_${countField}`;
   const numDonations = req.body[profileFieldName] ? Number(req.body[profileFieldName]) : 0;
+  const maxDonationsAllowed = (process.env.DONORSCHOOSE_MAX_DONATIONS_ALLOWED || 5);
 
-  if (numDonations >= MAX_DONATIONS_ALLOWED) {
-    return sendResponse(res, 200, 'max_donations_reached');
+  if (numDonations >= maxDonationsAllowed) {
+    scope.oip = agentViewOip;
+
+    return sendResponse(scope, res, 200, 'max_donations_reached');
   }
 
   // If start param passed, initiate conversation, ignoring incomingMessage.
   const prompt = req.query.start;
 
   if (!req.body.profile_postal_code) {
+    debug(req, 'profile_postal_code undefined');
+
     if (prompt) {
-      return sendResponse(res, 200, 'ask_zip');
-    }
-    if (!helpers.isValidZip(incomingMessage)) {
-      return sendResponse(res, 200, 'invalid_zip');
+      return sendResponse(scope, res, 200, 'ask_zip');
     }
 
-    return sendResponse(res, 200, 'ask_first_name', { postal_code: incomingMessage });
+    const validate = incomingMessage && helpers.isValidZip(incomingMessage);
+    if (!validate) {
+      return sendResponse(scope, res, 200, 'invalid_zip');
+    }
+
+    scope.profile_update.postal_code = incomingMessage;
+
+    return sendResponse(scope, res, 200, 'ask_first_name');
   }
 
   if (!req.body.profile_first_name) {
+    debug(req, 'profile_first_name undefined');
+
     if (prompt) {
-      return sendResponse(res, 200, 'ask_first_name');
-    }
-    if (helpers.containsNaughtyWords(incomingMessage) || !helpers.hasLetters(incomingMessage)) {
-      return sendResponse(res, 200, 'invalid_first_name');
+      return sendResponse(scope, res, 200, 'ask_first_name');
     }
 
-    return sendResponse(res, 200, 'ask_email', { first_name: incomingMessage });
+    let validate = incomingMessage && helpers.hasLetters(incomingMessage);
+    validate = validate && !helpers.containsNaughtyWords(incomingMessage);
+    if (!validate) {
+      return sendResponse(scope, res, 200, 'invalid_first_name');
+    }
+
+    scope.profile_update.first_name = incomingMessage;
+
+    return sendResponse(scope, res, 200, 'ask_email');
   }
 
   if (!req.body.profile_email) {
+    debug(req, 'profile_email undefined');
+
     if (prompt) {
-      return sendResponse(res, 200, 'ask_email');
+      return sendResponse(scope, res, 200, 'ask_email');
     }
-    if (!helpers.isValidEmail(incomingMessage)) {
-      return sendResponse(res, 200, 'invalid_email');
+
+    const validate = incomingMessage && helpers.isValidEmail(incomingMessage);
+    if (!validate) {
+      return sendResponse(scope, res, 200, 'invalid_email');
     }
+
+    const email = incomingMessage.toLowerCase();
+    scope.profile_update.email = email;
+    // Save to body for later when we create a Donation document.
+    scope.body.profile_email = email;
   }
 
-  // We've made it this far, time to donate.
-  // TODO: When time to post to MC Profile, we'll need to save email if !req.body.profile_email.
-
+  // We've got all required profile fields -- time to donate.
+  const zip = req.body.profile_postal_code;
   const apiKey = process.env.DONORSCHOOSE_API_KEY;
   const apiPassword = process.env.DONORSCHOOSE_API_PASSWORD;
   const proposalsUri = `${process.env.DONORSCHOOSE_API_BASEURI}/common/json_feed.html`;
   const secureBaseUri = process.env.DONORSCHOOSE_API_SECURE_BASEURI;
   const donationsUri = `${secureBaseUri}/common/json_api.html?APIKey=${apiKey}`;
   const donationAmount = process.env.DONORSCHOOSE_DONATION_AMOUNT || 10;
-  const zip = req.body.profile_postal_code;
+  const sortBy = process.env.DONORSCHOOSE_PROPOSALS_SORTBY || 2;
+  const subjectCode = process.env.DONORSCHOOSE_PROPOSALS_SUBJECT_CODE || -4;
 
-  const query = {
-    // TODO: Fix -- This is throwing a 400 Bad error
-    // costToCompleteRange: `${donationAmount}+TO+10000`,
-    max: 1,
-    olderThan: process.env.DONORSCHOOSE_PROPOSALS_OLDERTHAN,
-    sortBy: process.env.DONORSCHOOSE_PROPOSALS_SORTBY || 2,
-    subject4: process.env.DONORSCHOOSE_PROPOSALS_SUBJECT || -4,
-    zip,
-  };
+  // Define query as a string, defining as an object causes costToCompleteRange to throw 400 error.
+  let query = `costToCompleteRange=${donationAmount}+TO+10000&max=1&zip=${zip}`;
+  query = `${query}&sortBy=${sortBy}&subject4=${subjectCode}`;
+
+  // If query doesn't return any results, check on DONORSCHOOSE_PROPOSALS_OLDERTHAN value stored.
+  // @see https://github.com/DoSomething/gambit/pull/545
+  if (process.env.DONORSCHOOSE_PROPOSALS_OLDERTHAN) {
+    query = `${query}&olderThan=${process.env.DONORSCHOOSE_PROPOSALS_OLDERTHAN}`;
+  }
 
   let selectedProposal;
 
   return donorschoose.get(proposalsUri, query)
     .then((response) => {
       if (response.proposals.length < 1) {
-        logger.error(`'No proposals found for zip ${zip}`);
-        // TODO: Inform User, either by throwing an error or adding a no projects found message.
+        error(req, `no search results for zip:${zip}`);
+        throw new Error('no search results');
       }
 
       return response.proposals[0];
     })
     .then((proposal) => {
       selectedProposal = donorschoose.decodeProposal(proposal);
-      logger.debug(`DonorsChoose API found selectedProposal:${selectedProposal.id}`);
+      debug(req, `found selectedProposal:${selectedProposal.id}`);
 
       // Submitting a Donation request first requires requesting a transaction token.
       // @see https://data.donorschoose.org/docs/transactions/
@@ -144,8 +187,7 @@ router.post('/', (req, res) => {
       return donorschoose.post(donationsUri, data);
     })
     .then((tokenResponse) => {
-      logger.debug(tokenResponse);
-      logger.debug(`DonorsChoose API token statusDescription:${tokenResponse.statusDescription}`);
+      debug(req, `token.statusDescription:${tokenResponse.statusDescription}`);
       if (tokenResponse.statusDescription !== 'success') {
         throw new Error('DonorsChoose API request for token failed.');
       }
@@ -159,19 +201,18 @@ router.post('/', (req, res) => {
         proposalId: selectedProposal.id,
         amount: donationAmount,
         email: donorEmail,
-        honoreeEmail: req.body.profile_email,
+        honoreeEmail: scope.body.profile_email,
         honoreeFirst: req.body.profile_first_name,
       };
 
       return donorschoose.post(donationsUri, data);
     })
     .then((donation) => {
-      logger.debug(donation);
-      logger.debug(`DonorsChoose API created donation_id:${donation.donationId}`);
+      info(req, `created donation_id:${donation.donationId}`);
 
       const data = {
         mobile: req.body.phone,
-        profile_email: req.body.profile_email,
+        profile_email: scope.body.profile_email,
         profile_first_name: req.body.profile_first_name,
         profile_postal_code: zip,
         donation_id: donation.donationId,
@@ -182,16 +223,31 @@ router.post('/', (req, res) => {
         school_name: selectedProposal.schoolName,
         school_city: selectedProposal.city,
         school_state: selectedProposal.state,
+        teacher_name: selectedProposal.teacherName,
+        proposal_description: selectedProposal.fulfillmentTrailer,
       };
 
       return app.locals.db.donorschoose_donations.create(data);
     })
     .then((donation) => {
-      logger.debug(`stored donorschoose_donation:${donation.donation_id}`);
+      info(req, `stored donorschoose_donation:${donation.donation_id}`);
+      scope.donation = donation;
+      scope.profile_update[countField] = numDonations + 1;
+      scope.oip = agentViewOip;
 
-      return res.status(200).send(donation);
+      return sendResponse(scope, res, 200, 'donation_confirmation');
     })
-    .catch(err => res.status(err.status).send(err.message));
+    .catch((err) => {
+      if (err.message === 'no search results') {
+        scope.oip = process.env.MOBILECOMMONS_OIP_DONORSCHOOSEBOT_ERROR;
+
+        return sendResponse(scope, res, 200, 'search_no_results');
+      }
+
+      error(req, err.message);
+
+      return res.status(500).send(err.message);
+    });
 });
 
 module.exports = router;

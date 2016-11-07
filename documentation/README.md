@@ -5,7 +5,14 @@
 
 Endpoint                                       | Functionality                                           
 ---------------------------------------------- | --------------------------------------------------------
-`POST /v1/chatbot` | [Chat](endpoints/chatbot.md#chat)
+`POST /v1/chatbot` | [CampaignBot chat](endpoints/chatbot.md)
+
+
+## DonorsChooseBot
+
+Endpoint                                       | Functionality                                           
+---------------------------------------------- | --------------------------------------------------------
+`POST /v1/donorschoosebot` | [DonorsChooseBot chat](endpoints/donorschoosebot.md)
 
 
 ## Campaigns
@@ -29,6 +36,4 @@ Endpoint                                       | Functionality
 
 Endpoint                                       | Functionality                                           
 ---------------------------------------------- | --------------------------------------------------------
-`POST /ds-routing/campaign-transition` | [Mobile Commons campaign transition](https://github.com/DoSomething/gambit/wiki/API#moco-campaign-transition)
-`POST /ds-routing/yes-no-gateway` | [Submit yes or no](https://github.com/DoSomething/gambit/wiki/API#yes-no)
 `POST /reportback/:campaignName` | [Reportback chat](https://github.com/DoSomething/gambit/wiki/API#reportback)
