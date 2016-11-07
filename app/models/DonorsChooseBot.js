@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 const Promise = require('bluebird');
 const gambitJunior = rootRequire('lib/junior');
 const logger = app.locals.logger;
+const stathat = app.locals.stathat;
 
 const donorsChooseBotSchema = new mongoose.Schema({
 
@@ -57,6 +58,10 @@ donorsChooseBotSchema.statics.lookupByID = function (id) {
  * Returns rendered DonorsChooseBot message for given Express req and given DonorsChooseBot msgType.
  */
 donorsChooseBotSchema.methods.renderMessage = function (req, msgType) {
+  const logMsg = `donorschoosebot: ${msgType}`;
+  logger.info(logMsg);
+  stathat(logMsg);
+
   const property = `msg_${msgType}`;
   let msg = this[property];
 

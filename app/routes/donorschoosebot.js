@@ -82,7 +82,6 @@ router.post('/', (req, res) => {
 
   if (numDonations >= maxDonationsAllowed) {
     scope.oip = agentViewOip;
-    stathat('donorschoosebot: max_donations_reached');
 
     return sendResponse(scope, res, 200, 'max_donations_reached');
   }
@@ -192,7 +191,7 @@ router.post('/', (req, res) => {
     .then((tokenResponse) => {
       debug(req, `token.statusDescription:${tokenResponse.statusDescription}`);
       if (tokenResponse.statusDescription !== 'success') {
-        stathat('error: donorschoosebot POST token');
+        stathat('donorschoosebot: POST token failed');
 
         throw new Error('DonorsChoose API request for token failed.');
       }
@@ -213,7 +212,7 @@ router.post('/', (req, res) => {
       return donorschoose.post(donationsUri, data);
     })
     .then((donation) => {
-      stathat('donorschoosebot POST donation success');
+      stathat('donorschoosebot: POST donation success');
       info(req, `created donation_id:${donation.donationId}`);
 
       const data = {
@@ -245,13 +244,13 @@ router.post('/', (req, res) => {
     })
     .catch((err) => {
       if (err.message === 'no search results') {
-        stathat('donorschoosebot no projects found');
+        stathat('donorschoosebot: no projects found');
         scope.oip = process.env.MOBILECOMMONS_OIP_DONORSCHOOSEBOT_ERROR;
 
         return sendResponse(scope, res, 200, 'search_no_results');
       }
 
-      stathat(`error: donorschoosebot API ${err.message}`);
+      stathat(`donorschoosebot: error ${err.message}`);
       error(req, err.message);
 
       return res.status(500).send(err.message);

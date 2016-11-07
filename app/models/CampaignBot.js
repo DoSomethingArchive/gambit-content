@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 const Promise = require('bluebird');
 const gambitJunior = rootRequire('lib/junior');
 const logger = app.locals.logger;
+const stathat = app.locals.stathat;
 
 const campaignBotSchema = new mongoose.Schema({
 
@@ -62,7 +63,9 @@ campaignBotSchema.statics.lookupByID = function (id) {
  * @return {string} - CampaignBot message with Liquid tags replaced with req properties
  */
 campaignBotSchema.methods.renderMessage = function (req, msgType, prefix) {
-  logger.debug(`renderMessage:${msgType}`);
+  const logMsg = `campaignbot: ${msgType}`;
+  logger.info(logMsg);
+  stathat(logMsg);
 
   const botProperty = `msg_${msgType}`;
   let msg = this[botProperty];
