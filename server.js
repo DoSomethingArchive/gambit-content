@@ -139,16 +139,17 @@ conn.on('connected', () => {
    */
   app.locals.controllers = {};
 
-  const campaignBotID = process.env.CAMPAIGNBOT_ID || 41;
-  const loadCampaignBot = loader.loadBot('campaignbot', campaignBotID)
+  const campaignBotId = process.env.CAMPAIGNBOT_ID || 41;
+  const loadCampaignBot = loader.loadBot('campaignbot', campaignBotId)
     .then((bot) => {
+      app.locals.campaignBot = bot;
       const CampaignBotController = rootRequire('app/controllers/CampaignBotController');
       app.locals.controllers.campaignBot = new CampaignBotController(bot);
       logger.info('loaded app.locals.controllers.campaignBot');
 
       return app.locals.controllers.campaignBot;
     })
-    .catch(err => logger.error(err));
+    .catch(err => logger.error(err.message));
 
   const donorsChooseBotId = process.env.DONORSCHOOSEBOT_ID || 31;
   const loadDonorsChooseBot = loader.loadBot('donorschoosebot', donorsChooseBotId)
@@ -160,7 +161,8 @@ conn.on('connected', () => {
       logger.info('loaded app.locals.controllers.donorsChooseBot');
 
       return app.locals.controllers.donorsChooseBot;
-    });
+    })
+    .catch(err => logger.error(err.message));
 
   /**
    * Load legacy configs.
@@ -194,7 +196,7 @@ conn.on('connected', () => {
       });
     })
     .catch((err) => {
-      logger.error(err);
+      logger.error(err.message);
       process.exit(1);
     });
 });

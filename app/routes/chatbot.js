@@ -12,12 +12,23 @@ const helpers = require('../../lib/helpers');
 const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
 
+function isCommand(incomingMessage, commandType) {
+  const firstWord = helpers.getFirstWordUppercase(incomingMessage);
+  const configName = `GAMBIT_CMD_${commandType.toUpperCase()}`;
+  const configValue = process.env[configName];
+  const result = firstWord === configValue.toUpperCase();
+
+  return result;
+}
+
 /**
  * Posts to chatbot route will find or create a Northstar User for the given req.body.phone.
  * Currently only supports Mobile Commons mData's.
  */
 router.post('/', (req, res) => {
   const controller = app.locals.controllers.campaignBot;
+  const campaignBot = app.locals.campaignBot;
+
   const scope = req;
   scope.oip = process.env.MOBILECOMMONS_OIP_CHATBOT;
   scope.incoming_message = req.body.args;
@@ -155,16 +166,16 @@ router.post('/', (req, res) => {
     })
     .then((currentSignup) => {
       if (currentSignup) {
-        logger.debug(`loadSignup found signup:${currentSignup._id}`);
+        logger.debug(`lookupCurrent found signup:${currentSignup._id}`);
 
         return currentSignup;
       }
-      logger.debug('loadSignup not find signup');
+      logger.debug('lookupCurrent not find signup');
 
       return app.locals.db.signups.post(scope.user, scope.campaign, scope.keyword);
     })
     .then((signup) => {
-      controller.debug(scope, `loaded signup:${signup._id.toString()}`);
+      logger.debug(`loaded signup:${signup._id.toString()}`);
       scope.signup = signup;
 
       if (!scope.signup) {
@@ -173,10 +184,10 @@ router.post('/', (req, res) => {
         return false;
       }
 
-      if (controller.isCommand(scope, 'member_support')) {
+      if (isCommand(scope.incoming_message, 'member_support')) {
         scope.cmd_member_support = true;
         scope.oip = agentViewOip;
-        return controller.renderResponseMessage(scope, 'member_support');
+        return campaignBot.renderMessage(scope, 'member_support');
       }
 
       if (scope.signup.draft_reportback_submission) {
@@ -184,27 +195,26 @@ router.post('/', (req, res) => {
         return controller.continueReportbackSubmission(scope);
       }
 
-      if (controller.isCommand(scope, 'reportback')) {
+      if (isCommand(scope.incoming_message, 'reportback')) {
         return controller.createReportbackSubmission(scope);
       }
 
       if (scope.signup.reportback) {
         if (scope.keyword || req.query.broadcast) {
-          return controller.renderResponseMessage(scope, 'menu_completed');
+          return campaignBot.renderMessage(scope, 'menu_completed');
         }
         // If we're this far, member didn't text back Reportback or Member Support commands.
-        return controller.renderResponseMessage(scope, 'invalid_cmd_completed');
+        return campaignBot.renderMessage(scope, 'invalid_cmd_completed');
       }
 
       if (scope.keyword || req.query.broadcast) {
-        return controller.renderResponseMessage(scope, 'menu_signedup_gambit');
+        return campaignBot.renderMessage(scope, 'menu_signedup_gambit');
       }
 
-      return controller.renderResponseMessage(scope, 'invalid_cmd_signedup');
+      return campaignBot.renderMessage(scope, 'invalid_cmd_signedup');
     })
     .then((msg) => {
       scope.response_message = msg;
-      controller.debug(scope, `chatbotResponseMessage:${msg}`);
       // Save to continue conversation with future mData requests that don't contain a keyword.
       scope.user.current_campaign = scope.campaign._id;
       return scope.user.save();
@@ -225,7 +235,7 @@ router.post('/', (req, res) => {
       // TODO: Send StatHat report to inform staff CampaignBot is running a closed Campaign.
       // We don't want to send an error back as response, but instead deliver success to Mobile
       // Commons and deliver the Campaign Closed message back to our User.
-      const msg = controller.renderResponseMessage(scope, 'campaign_closed');
+      const msg = campaignBot.renderMessage(scope, 'campaign_closed');
       // Send to Agent View for now until we get a Select Campaign menu up and running.
       scope.user.postMobileCommonsProfileUpdate(agentViewOip, msg);
 
@@ -234,7 +244,7 @@ router.post('/', (req, res) => {
     })
     .catch(err => {
       if (err.message === 'broadcast declined') {
-        const msg = controller.renderResponseMessage(scope, 'signup_broadcast_declined');
+        const msg = campaignBot.renderMessage(scope, 'signup_broadcast_declined');
         scope.user.postMobileCommonsProfileUpdate(agentViewOip, msg);
 
         return helpers.sendResponse(res, 200, msg);
