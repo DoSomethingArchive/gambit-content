@@ -60,8 +60,9 @@ function sendResponse(req, res, code, msgType) {
  * it to update it with their email, zip, first name, and a custom field to keep donation count.
  */
 router.post('/', (req, res) => {
-  let incomingMessage = req.body.args;
+  app.locals.stathat('route: v1/donorschoosebot');
 
+  let incomingMessage = req.body.args;
   const scope = req;
   // Initialize object to store profile data to save when posting Mobile Commons profile_update API.
   scope.profile_update = {};

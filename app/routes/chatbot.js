@@ -26,6 +26,8 @@ function isCommand(incomingMessage, commandType) {
  * Currently only supports Mobile Commons mData's.
  */
 router.post('/', (req, res) => {
+  app.locals.stathat('route: v1/chatbot');
+
   const controller = app.locals.controllers.campaignBot;
   const campaignBot = app.locals.campaignBot;
 

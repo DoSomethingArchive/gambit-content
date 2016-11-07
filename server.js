@@ -50,6 +50,25 @@ app.locals.logger = new (winston.Logger)({
 if (!app.locals.logger) {
   process.exit(1);
 }
+const logger = app.locals.logger;
+
+/**
+ * Load stathat.
+ */
+const stathat = require('stathat');
+app.locals.stathat = function (statName) {
+  const key = process.env.STATHAT_EZ_KEY;
+  if (!key) {
+    logger.warn('STATHAT_EZ_KEY undefined');
+
+    return;
+  }
+  const appName = process.env.STATHAT_APP_NAME || 'gambit';
+  const stat = `${appName} - ${statName}`;
+
+  // Bump count of stat by 1.
+  stathat.trackEZCount(key, stat, 1, status => logger.verbose(`stathat ${stat}:${status}`));
+};
 
 if (!process.env.CAMPAIGNBOT_CAMPAIGNS) {
   app.locals.logger.error('process.env.CAMPAIGNBOT_CAMPAIGNS undefined');
@@ -68,8 +87,6 @@ mongoose.Promise = global.Promise;
 
 const conn = mongoose.createConnection(DB_URI);
 app.locals.db = loader.getModels(conn);
-
-const logger = app.locals.logger;
 
 /**
  * Load clients.
@@ -98,6 +115,7 @@ if (!app.locals.clients.phoenix) {
   logger.error('app.locals.clients.phoenix undefined');
   process.exit(1);
 }
+
 
 conn.on('connected', () => {
   logger.info(`conn.readyState:${conn.readyState}`);
