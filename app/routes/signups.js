@@ -2,33 +2,22 @@
 
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
+const helpers = require('../../lib/helpers');
 const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
 const logger = app.locals.logger;
 
-function sendResponse(res, code, message) {
-  let type = 'success';
-  if (code > 200) {
-    type = 'error';
-    logger.error(message);
-  }
-
-  const response = {};
-  response[type] = { code, message };
-
-  return res.status(code).send(response);
-}
 
 router.post('/', (req, res) => {
   app.locals.stathat('route: v1/signups');
 
   if (!req.body.id) {
-    return sendResponse(res, 422, 'Missing required id.');
+    return helpers.sendResponse(res, 422, 'Missing required id.');
   }
   const signupId = req.body.id;
 
   if (!req.body.source) {
-    return sendResponse(res, 422, 'Missing required source.');
+    return helpers.sendResponse(res, 422, 'Missing required source.');
   }
   const source = req.body.source;
 
@@ -37,7 +26,7 @@ router.post('/', (req, res) => {
   if (source === process.env.DS_API_POST_SOURCE) {
     const msg = `CampaignBot only sends confirmation when source not equal to ${source}.`;
 
-    return sendResponse(res, 208, msg);
+    return helpers.sendResponse(res, 208, msg);
   }
 
   let currentSignup;
@@ -60,13 +49,12 @@ router.post('/', (req, res) => {
         throw new UnprocessibleEntityError('Missing required user.mobile.');
       }
 
-      // Render the chatbot message to send.
-      const controller = app.locals.controllers.campaignBot;
+      const campaignBot = app.locals.campaignBot;
       const scope = {
         user,
         campaign: app.locals.campaigns[currentSignup.campaign],
       };
-      chatbotMessage = controller.renderResponseMessage(scope, 'menu_signedup_external');
+      chatbotMessage = campaignBot.renderMessage(scope, 'menu_signedup_external');
 
       // Technically we don't want to ovewrite current_campaign until we know the Mobile Commons
       // message was delivered.. but responding to the message won't work correctly without
@@ -83,11 +71,11 @@ router.post('/', (req, res) => {
       // Mobile Commons Profile Update request succeeded.
       user.postMobileCommonsProfileUpdate(process.env.MOBILECOMMONS_OIP_CHATBOT, chatbotMessage);
 
-      return sendResponse(res, 200, chatbotMessage);
+      return helpers.sendResponse(res, 200, chatbotMessage);
     })
-    .catch(NotFoundError, err => sendResponse(res, 404, err.message))
-    .catch(UnprocessibleEntityError, err => sendResponse(res, 422, err.message))
-    .catch(err => sendResponse(res, 500, err.message));
+    .catch(NotFoundError, err => helpers.sendResponse(res, 404, err.message))
+    .catch(UnprocessibleEntityError, err => helpers.sendResponse(res, 422, err.message))
+    .catch(err => helpers.sendResponse(res, 500, err.message));
 });
 
 module.exports = router;
