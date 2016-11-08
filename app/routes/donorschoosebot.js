@@ -40,7 +40,8 @@ function sendResponse(req, res, code, msgType) {
   }
 
   scope.profile_update.gambit_chatbot_response = responseMessage;
-  mobilecommons.profile_update(req.body.phone, scope.oip, scope.profile_update);
+  const profile = req.body;
+  mobilecommons.profile_update(profile.profile_id, profile.phone, scope.oip, scope.profile_update);
 
   return helpers.sendResponse(res, code, responseMessage);
 }
@@ -191,7 +192,7 @@ router.post('/', (req, res) => {
     .then((tokenResponse) => {
       debug(req, `token.statusDescription:${tokenResponse.statusDescription}`);
       if (tokenResponse.statusDescription !== 'success') {
-        stathat('donorschoosebot: POST token failed');
+        stathat(`donorschoose: POST token ${tokenResponse.statusDescription}`);
 
         throw new Error('DonorsChoose API request for token failed.');
       }
@@ -212,7 +213,7 @@ router.post('/', (req, res) => {
       return donorschoose.post(donationsUri, data);
     })
     .then((donation) => {
-      stathat('donorschoosebot: POST donation success');
+      stathat('donorschoose: POST donation 200');
       info(req, `created donation_id:${donation.donationId}`);
 
       const data = {
@@ -244,13 +245,13 @@ router.post('/', (req, res) => {
     })
     .catch((err) => {
       if (err.message === 'no search results') {
-        stathat('donorschoosebot: no projects found');
+        stathat('donorschoose: no projects found');
         scope.oip = process.env.MOBILECOMMONS_OIP_DONORSCHOOSEBOT_ERROR;
 
         return sendResponse(scope, res, 200, 'search_no_results');
       }
 
-      stathat(`donorschoosebot: error ${err.message}`);
+      stathat(`donorschoose: error ${err.message}`);
       error(req, err.message);
 
       return res.status(500).send(err.message);
