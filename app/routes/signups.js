@@ -21,7 +21,7 @@ router.post('/', (req, res) => {
   }
   const source = req.body.source;
 
-  logger.info(`POST signup:${signupId} source:${source}`);
+  logger.info(`signups id:${signupId} source:${source}`);
 
   if (source === process.env.DS_API_POST_SOURCE) {
     const msg = `CampaignBot only sends confirmation when source not equal to ${source}.`;

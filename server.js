@@ -143,7 +143,7 @@ conn.on('connected', () => {
       return campaigns.forEach((campaign) => {
         const campaignID = campaign._id;
         app.locals.campaigns[campaignID] = campaign;
-        logger.debug(`loaded app.locals.campaigns[${campaignID}]`);
+        logger.info(`loaded app.locals.campaigns[${campaignID}]`);
 
         if (!campaign.mobilecommons_group_doing || !campaign.mobilecommons_group_completed) {
           campaign.createMobileCommonsGroups();
@@ -155,7 +155,7 @@ conn.on('connected', () => {
         campaign.keywords.forEach((campaignKeyword) => {
           const keyword = campaignKeyword.toLowerCase();
           app.locals.keywords[keyword] = campaignID;
-          logger.debug(`loaded app.locals.db.keywords[${keyword}]:${campaignID}`);
+          logger.info(`loaded app.locals.keywords[${keyword}]:${campaignID}`);
         });
       });
     })
