@@ -9,7 +9,6 @@ const Promise = require('bluebird');
 const helpers = rootRequire('lib/helpers');
 const mobilecommons = rootRequire('lib/mobilecommons');
 const logger = app.locals.logger;
-const stathat = app.locals.stathat;
 
 /**
  * Schema.
@@ -51,15 +50,15 @@ function parseNorthstarUser(northstarUser) {
  */
 userSchema.statics.lookup = function (type, id) {
   const model = this;
-  const statName = 'GET users';
+  const statName = 'northstar: GET users';
 
   return new Promise((resolve, reject) => {
-    logger.debug(`User.lookup type:${type} id:${id}`);
+    logger.debug(`User.lookup(${type}, ${id})`);
 
     return app.locals.clients.northstar.Users
       .get(type, id)
       .then((northstarUser) => {
-        stathat(`${statName} success`);
+        app.locals.stathat(`${statName} 200`);
         logger.debug('northstar.Users.lookup success');
         const data = parseNorthstarUser(northstarUser);
 
@@ -70,11 +69,7 @@ userSchema.statics.lookup = function (type, id) {
           .catch(error => reject(error));
       })
       .catch((error) => {
-        if (error && error.status === 404) {
-          stathat(`${statName} 404`);
-        } else {
-          stathat(`error: ${statName}`);
-        }
+        app.locals.stathatError(statName, error);
 
         return reject(error);
       });
@@ -86,7 +81,7 @@ userSchema.statics.lookup = function (type, id) {
  */
 userSchema.statics.post = function (data) {
   const model = this;
-  const statName = 'POST users';
+  const statName = 'northstar: POST users';
 
   const scope = data;
   scope.source = process.env.DS_API_USER_REGISTRATION_SOURCE || 'sms';
@@ -100,7 +95,7 @@ userSchema.statics.post = function (data) {
     return app.locals.clients.northstar.Users
       .create(scope)
       .then((northstarUser) => {
-        stathat(`${statName} success`);
+        app.locals.stathat(`${statName} 200`);
         logger.info(`northstar.Users created user:${northstarUser.id}`);
 
         return model
@@ -113,7 +108,7 @@ userSchema.statics.post = function (data) {
           .catch(error => reject(error));
       })
       .catch((error) => {
-        stathat(`error: ${statName}`);
+        app.locals.stathatError(statName, error);
 
         return reject(error);
       });
