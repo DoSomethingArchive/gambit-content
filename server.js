@@ -182,12 +182,9 @@ conn.on('connected', () => {
   const loadDonorsChooseBot = loader.loadBot('donorschoosebot', donorsChooseBotId)
     .then((bot) => {
       app.locals.donorsChooseBot = bot;
-      // TODO: Deprecate DonorsChooseBotController entirely once donorschoosebot endpoint is live.
-      const DonorsChooseBotController = rootRequire('app/controllers/DonorsChooseBotController');
-      app.locals.controllers.donorsChooseBot = new DonorsChooseBotController(bot);
-      logger.info('loaded app.locals.controllers.donorsChooseBot');
+      logger.info('loaded app.locals.donorsChooseBot');
 
-      return app.locals.controllers.donorsChooseBot;
+      return app.locals.donorsChooseBot;
     })
     .catch(err => logger.error(err.message));
 

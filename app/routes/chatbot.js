@@ -44,11 +44,6 @@ router.post('/', (req, res) => {
 
   logger.info(incomingLog);
 
-  const botType = req.query.bot_type;
-  if (botType === 'donorschoose' || botType === 'donorschoosebot') {
-    return app.locals.controllers.donorsChooseBot.chatbot(req, res);
-  }
-
   let configured = true;
   // Check for required config variables.
   const settings = [
