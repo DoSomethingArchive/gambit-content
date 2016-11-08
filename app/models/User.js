@@ -9,7 +9,6 @@ const Promise = require('bluebird');
 const helpers = rootRequire('lib/helpers');
 const mobilecommons = rootRequire('lib/mobilecommons');
 const logger = app.locals.logger;
-const stathat = app.locals.stathat;
 
 /**
  * Schema.
@@ -20,6 +19,7 @@ const userSchema = new mongoose.Schema({
   // TODO: Not sure we need this index
   mobile: { type: String, index: true },
   phoenix_id: Number,
+  mobilecommons_id: Number,
   email: String,
   role: String,
   first_name: String,
@@ -38,6 +38,7 @@ function parseNorthstarUser(northstarUser) {
     first_name: northstarUser.firstName,
     email: northstarUser.email,
     phoenix_id: northstarUser.drupalID,
+    mobilecommons_id: northstarUser.mobilecommonsID,
     role: northstarUser.role,
   };
 
@@ -49,15 +50,15 @@ function parseNorthstarUser(northstarUser) {
  */
 userSchema.statics.lookup = function (type, id) {
   const model = this;
-  const statName = 'GET users';
+  const statName = 'northstar: GET users';
 
   return new Promise((resolve, reject) => {
-    logger.debug(`User.lookup type:${type} id:${id}`);
+    logger.debug(`User.lookup(${type}, ${id})`);
 
     return app.locals.clients.northstar.Users
       .get(type, id)
       .then((northstarUser) => {
-        stathat(`${statName} success`);
+        app.locals.stathat(`${statName} 200`);
         logger.debug('northstar.Users.lookup success');
         const data = parseNorthstarUser(northstarUser);
 
@@ -68,11 +69,7 @@ userSchema.statics.lookup = function (type, id) {
           .catch(error => reject(error));
       })
       .catch((error) => {
-        if (error && error.status === 404) {
-          stathat(`${statName} 404`);
-        } else {
-          stathat(`error: ${statName}`);
-        }
+        app.locals.stathatError(statName, error);
 
         return reject(error);
       });
@@ -84,7 +81,7 @@ userSchema.statics.lookup = function (type, id) {
  */
 userSchema.statics.post = function (data) {
   const model = this;
-  const statName = 'POST users';
+  const statName = 'northstar: POST users';
 
   const scope = data;
   scope.source = process.env.DS_API_USER_REGISTRATION_SOURCE || 'sms';
@@ -98,7 +95,7 @@ userSchema.statics.post = function (data) {
     return app.locals.clients.northstar.Users
       .create(scope)
       .then((northstarUser) => {
-        stathat(`${statName} success`);
+        app.locals.stathat(`${statName} 200`);
         logger.info(`northstar.Users created user:${northstarUser.id}`);
 
         return model
@@ -111,7 +108,7 @@ userSchema.statics.post = function (data) {
           .catch(error => reject(error));
       })
       .catch((error) => {
-        stathat(`error: ${statName}`);
+        app.locals.stathatError(statName, error);
 
         return reject(error);
       });
@@ -120,17 +117,17 @@ userSchema.statics.post = function (data) {
 
 /**
  * Updates MC Profile gambit_chatbot_response Custom Field with given msgTxt to deliver over SMS.
- * @param {number} optInPathID - ID of the Mobile Commons Opt-in Path that will send a message
+ * @param {number} oip - Opt-in Path ID of the Mobile Commons Opt-in Path that will send a message
  * @param {string} msgText - text message content to send to User
  */
-userSchema.methods.postMobileCommonsProfileUpdate = function (optInPathID, msgTxt) {
+userSchema.methods.postMobileCommonsProfileUpdate = function (oip, msgTxt) {
   const data = {
     // The MC Opt-in Path Conversation needs to render gambit_chatbot_response value as Liquid tag.
     // @see https://github.com/DoSomething/gambit/wiki/Chatbot#mobile-commons
     gambit_chatbot_response: msgTxt,
   };
 
-  return mobilecommons.profile_update(this.mobile, optInPathID, data);
+  return mobilecommons.profile_update(this.mobilecommons_id, this.mobile, oip, data);
 };
 
 module.exports = function (connection) {

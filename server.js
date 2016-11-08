@@ -56,6 +56,7 @@ const logger = app.locals.logger;
  * Load stathat.
  */
 const stathat = require('stathat');
+
 app.locals.stathat = function (statName) {
   const key = process.env.STATHAT_EZ_KEY;
   if (!key) {
@@ -67,13 +68,21 @@ app.locals.stathat = function (statName) {
   const stat = `${appName} - ${statName}`;
 
   // Bump count of stat by 1.
-  stathat.trackEZCount(key, stat, 1, status => logger.verbose(`stathat ${stat}:${status}`));
+  stathat.trackEZCount(key, stat, 1, status => logger.verbose(`stathat:${stat} ${status}`));
 };
 
 if (!process.env.CAMPAIGNBOT_CAMPAIGNS) {
   app.locals.logger.error('process.env.CAMPAIGNBOT_CAMPAIGNS undefined');
   process.exit(1);
 }
+
+app.locals.stathatError = function (statName, error) {
+  if (error.status) {
+    app.locals.stathat(`${statName} ${error.status}`);
+  } else {
+    app.locals.stathat(`${statName} failed`);
+  }
+};
 
 const loader = require('./config/locals');
 
@@ -134,7 +143,7 @@ conn.on('connected', () => {
       return campaigns.forEach((campaign) => {
         const campaignID = campaign._id;
         app.locals.campaigns[campaignID] = campaign;
-        logger.debug(`loaded app.locals.campaigns[${campaignID}]`);
+        logger.info(`loaded app.locals.campaigns[${campaignID}]`);
 
         if (!campaign.mobilecommons_group_doing || !campaign.mobilecommons_group_completed) {
           campaign.createMobileCommonsGroups();
@@ -146,7 +155,7 @@ conn.on('connected', () => {
         campaign.keywords.forEach((campaignKeyword) => {
           const keyword = campaignKeyword.toLowerCase();
           app.locals.keywords[keyword] = campaignID;
-          logger.debug(`loaded app.locals.db.keywords[${keyword}]:${campaignID}`);
+          logger.info(`loaded app.locals.keywords[${keyword}]:${campaignID}`);
         });
       });
     })
