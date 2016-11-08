@@ -40,7 +40,8 @@ function sendResponse(req, res, code, msgType) {
   }
 
   scope.profile_update.gambit_chatbot_response = responseMessage;
-  mobilecommons.profile_update(req.body.phone, scope.oip, scope.profile_update);
+  const profile = req.body;
+  mobilecommons.profile_update(profile.profile_id, profile.phone, scope.oip, scope.profile_update);
 
   return helpers.sendResponse(res, code, responseMessage);
 }
