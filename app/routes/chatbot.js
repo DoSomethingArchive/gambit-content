@@ -42,7 +42,7 @@ router.post('/', (req, res) => {
     incomingLog = `${incomingLog} keyword:${scope.keyword}`;
   }
 
-  logger.debug(incomingLog);
+  logger.info(incomingLog);
 
   const botType = req.query.bot_type;
   if (botType === 'donorschoose' || botType === 'donorschoosebot') {
@@ -181,7 +181,7 @@ router.post('/', (req, res) => {
       return app.locals.db.signups.post(scope.user, scope.campaign, scope.keyword);
     })
     .then((signup) => {
-      logger.debug(`loaded signup:${signup._id.toString()}`);
+      logger.info(`loaded signup:${signup._id.toString()}`);
       scope.signup = signup;
 
       if (!scope.signup) {
