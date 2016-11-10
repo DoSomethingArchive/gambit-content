@@ -32,6 +32,8 @@ router.post('/', (req, res) => {
   const campaignBot = app.locals.campaignBot;
 
   const scope = req;
+  // Currently only support mobilecommons.
+  scope.client = 'mobilecommons';
   scope.oip = process.env.MOBILECOMMONS_OIP_CHATBOT;
   scope.incoming_message = req.body.args;
   scope.incoming_image_url = req.body.mms_image_url;

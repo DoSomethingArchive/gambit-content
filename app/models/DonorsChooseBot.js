@@ -72,6 +72,8 @@ donorsChooseBotSchema.methods.renderMessage = function (req, msgType) {
     msg = msg.replace('{{url}}', req.donation.proposal_url);
   }
 
+  app.locals.db.bot_requests.log(req, 'donorschoosebot', this._id, msgType, msg);
+
   return msg;
 };
 

@@ -29,8 +29,8 @@ router.post('/', (req, res) => {
     return helpers.sendResponse(res, 208, msg);
   }
 
-  let currentSignup;
-  let chatbotMessage;
+  const scope = req;
+  scope.client = 'external_signup';
 
   return app.locals.db.signups
     .lookupById(signupId)
@@ -40,7 +40,7 @@ router.post('/', (req, res) => {
         throw new UnprocessibleEntityError(msg);
       }
 
-      currentSignup = signup;
+      scope.signup = signup;
 
       return app.locals.db.users.lookup('id', signup.user);
     })
@@ -48,30 +48,30 @@ router.post('/', (req, res) => {
       if (!user.mobile) {
         throw new UnprocessibleEntityError('Missing required user.mobile.');
       }
+      scope.user = user;
+      scope.campaign = scope.signup.campaign;
 
       const campaignBot = app.locals.campaignBot;
-      const scope = {
-        user,
-        campaign: app.locals.campaigns[currentSignup.campaign],
-      };
-      chatbotMessage = campaignBot.renderMessage(scope, 'menu_signedup_external');
+      scope.response_message = campaignBot.renderMessage(scope, 'menu_signedup_external');
 
       // Technically we don't want to ovewrite current_campaign until we know the Mobile Commons
       // message was delivered.. but responding to the message won't work correctly without
       // ensuring the current_campaign is set for our signup campaign. The ol' chicken and egg.
       // Set current_campaign first and assume user isn't in the middle of a chatbot conversation
       // for a different campaign.
-      scope.user.current_campaign = currentSignup.campaign;
+      scope.user.current_campaign = scope.campaign;
 
       return scope.user.save();
     })
     .then((user) => {
       logger.debug(`updated user:${user._id} current_campaign:${user.current_campaign}`);
+
       // TODO: Promisify postMobileCommonsProfileUpdate and send success if we know the
       // Mobile Commons Profile Update request succeeded.
-      user.postMobileCommonsProfileUpdate(process.env.MOBILECOMMONS_OIP_CHATBOT, chatbotMessage);
+      const oip = process.env.MOBILECOMMONS_OIP_CHATBOT;
+      user.postMobileCommonsProfileUpdate(oip, scope.response_message);
 
-      return helpers.sendResponse(res, 200, chatbotMessage);
+      return helpers.sendResponse(res, 200, scope.response_message);
     })
     .catch(NotFoundError, err => helpers.sendResponse(res, 404, err.message))
     .catch(UnprocessibleEntityError, err => helpers.sendResponse(res, 422, err.message))

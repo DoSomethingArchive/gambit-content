@@ -99,14 +99,16 @@ campaignBotSchema.methods.renderMessage = function (req, msgType, prefix) {
   msg = msg.replace(/{{cmd_reportback}}/i, process.env.GAMBIT_CMD_REPORTBACK);
   msg = msg.replace(/{{cmd_member_support}}/i, process.env.GAMBIT_CMD_MEMBER_SUPPORT);
 
-  if (campaign.keywords.length) {
-    // Campaign could have multiple keywords, use the first by default.
-    let keyword = campaign.keywords[0].toUpperCase();
-    // If User signed up via keyword, use the keyword they used (vs the first defined above).
-    if (req.signup && req.signup.keyword) {
-      keyword = req.signup.keyword.toUpperCase();
+  if (campaign.keywords && campaign.keywords.length > 0) {
+    let keyword;
+    // If user signed up via keyword and there are multiple, use the keyword they signed up with.
+    const usedSignupKeyword = campaign.keywords.length > 1 && req.signup && req.signup.keyword;
+    if (usedSignupKeyword) {
+      keyword = req.signup.keyword;
+    } else {
+      keyword = campaign.keywords[0];
     }
-    msg = msg.replace(/{{keyword}}/i, keyword);
+    msg = msg.replace(/{{keyword}}/i, keyword.toUpperCase());
   }
 
   if (req.signup) {
@@ -128,6 +130,8 @@ campaignBotSchema.methods.renderMessage = function (req, msgType, prefix) {
   if (senderPrefix) {
     msg = `${senderPrefix} ${msg}`;
   }
+
+  app.locals.db.bot_requests.log(req, 'campaignbot', this._id, msgType, msg);
 
   return msg;
 };

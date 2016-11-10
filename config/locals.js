@@ -8,6 +8,7 @@ const logger = app.locals.logger;
 module.exports.getModels = function (conn) {
   const models = {};
   // Indexed by collection name:
+  models.bot_requests = rootRequire('app/models/BotRequest')(conn);
   models.campaigns = rootRequire('app/models/Campaign')(conn);
   models.campaignbots = rootRequire('app/models/CampaignBot')(conn);
   models.donorschoosebots = rootRequire('app/models/DonorsChooseBot')(conn);
