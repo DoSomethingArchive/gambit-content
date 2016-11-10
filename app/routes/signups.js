@@ -35,12 +35,17 @@ router.post('/', (req, res) => {
   return app.locals.db.signups
     .lookupById(signupId)
     .then((signup) => {
-      if (!app.locals.campaigns[signup.campaign]) {
+      scope.signup = signup;
+      scope.campaign = app.locals.campaigns[signup.campaign];
+
+      if (!scope.campaign) {
         const msg = `Campaign ${signup.campaign} is not running on CampaignBot.`;
         throw new UnprocessibleEntityError(msg);
       }
-
-      scope.signup = signup;
+      if (scope.campaign.status === 'closed') {
+        const msg = `Campaign ${signup.campaign} is closed on CampaignBot.`;
+        throw new UnprocessibleEntityError(msg);
+      }
 
       return app.locals.db.users.lookup('id', signup.user);
     })
@@ -49,7 +54,6 @@ router.post('/', (req, res) => {
         throw new UnprocessibleEntityError('Missing required user.mobile.');
       }
       scope.user = user;
-      scope.campaign = scope.signup.campaign;
 
       const campaignBot = app.locals.campaignBot;
       scope.response_message = campaignBot.renderMessage(scope, 'menu_signedup_external');
@@ -59,7 +63,7 @@ router.post('/', (req, res) => {
       // ensuring the current_campaign is set for our signup campaign. The ol' chicken and egg.
       // Set current_campaign first and assume user isn't in the middle of a chatbot conversation
       // for a different campaign.
-      scope.user.current_campaign = scope.campaign;
+      scope.user.current_campaign = scope.campaign._id;
 
       return scope.user.save();
     })

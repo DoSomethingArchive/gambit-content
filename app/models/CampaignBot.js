@@ -71,6 +71,7 @@ campaignBotSchema.methods.renderMessage = function (req, msgType, prefix) {
   let msg = this[botProperty];
   const campaign = req.campaign;
   if (!campaign) {
+    stathat('campaignbot: undefined campaign');
     logger.error('renderMessage req.campaign undefined');
 
     return msg;
