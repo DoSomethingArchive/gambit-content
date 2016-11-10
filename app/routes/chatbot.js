@@ -13,7 +13,11 @@ const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
 
 function isCommand(incomingMessage, commandType) {
-  const firstWord = helpers.getFirstWordUppercase(incomingMessage);
+  if (!incomingMessage) {
+    return false;
+  }
+
+  const firstWord = helpers.getFirstWord(incomingMessage).toUpperCase();
   const configName = `GAMBIT_CMD_${commandType.toUpperCase()}`;
   const configValue = process.env[configName];
   const result = firstWord === configValue.toUpperCase();
