@@ -13,7 +13,11 @@ const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
 
 function isCommand(incomingMessage, commandType) {
-  const firstWord = helpers.getFirstWordUppercase(incomingMessage);
+  if (!incomingMessage) {
+    return false;
+  }
+
+  const firstWord = helpers.getFirstWord(incomingMessage).toUpperCase();
   const configName = `GAMBIT_CMD_${commandType.toUpperCase()}`;
   const configValue = process.env[configName];
   const result = firstWord === configValue.toUpperCase();
@@ -32,6 +36,8 @@ router.post('/', (req, res) => {
   const campaignBot = app.locals.campaignBot;
 
   const scope = req;
+  // Currently only support mobilecommons.
+  scope.client = 'mobilecommons';
   scope.oip = process.env.MOBILECOMMONS_OIP_CHATBOT;
   scope.incoming_message = req.body.args;
   scope.incoming_image_url = req.body.mms_image_url;
@@ -43,11 +49,6 @@ router.post('/', (req, res) => {
   }
 
   logger.info(incomingLog);
-
-  const botType = req.query.bot_type;
-  if (botType === 'donorschoose' || botType === 'donorschoosebot') {
-    return app.locals.controllers.donorsChooseBot.chatbot(req, res);
-  }
 
   let configured = true;
   // Check for required config variables.

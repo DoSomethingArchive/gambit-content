@@ -29,7 +29,3 @@ router.use('/v1/campaigns', require('./campaigns'));
 router.use('/v1/chatbot', require('./chatbot'));
 router.use('/v1/donorschoosebot', require('./donorschoosebot'));
 router.use('/v1/signups', require('./signups'));
-
-// Legacy.
-// @see https://github.com/DoSomething/gambit/issues/706
-router.use('/reportback', rootRequire('legacy/reportback'));

@@ -182,39 +182,16 @@ conn.on('connected', () => {
   const loadDonorsChooseBot = loader.loadBot('donorschoosebot', donorsChooseBotId)
     .then((bot) => {
       app.locals.donorsChooseBot = bot;
-      // TODO: Deprecate DonorsChooseBotController entirely once donorschoosebot endpoint is live.
-      const DonorsChooseBotController = rootRequire('app/controllers/DonorsChooseBotController');
-      app.locals.controllers.donorsChooseBot = new DonorsChooseBotController(bot);
-      logger.info('loaded app.locals.controllers.donorsChooseBot');
+      logger.info('loaded app.locals.donorsChooseBot');
 
-      return app.locals.controllers.donorsChooseBot;
+      return app.locals.donorsChooseBot;
     })
     .catch(err => logger.error(err.message));
 
   /**
-   * Load legacy configs.
-   */
-  app.locals.configs = {};
-  const uriConfig = process.env.CONFIG_DB_URI || 'mongodb://localhost/config';
-  const connConfig = mongoose.createConnection(uriConfig);
-  const legacyConfigs = loader.loadLegacyConfigs(connConfig);
-
-  const legacyPhoenix = require('./legacy/lib/phoenix')();
-  const username = process.env.DS_PHOENIX_API_USERNAME;
-  const password = process.env.DS_PHOENIX_API_PASSWORD;
-  const legacyAuth = legacyPhoenix.userLogin(username, password, (err, response) => {
-    if (err) {
-      logger.error(err);
-    }
-    if (response && response.statusCode === 200) {
-      logger.info('Successfully logged in to %s Phoenix API.', process.env.NODE_ENV);
-    }
-  });
-
-  /**
    * Start server.
    */
-  Promise.all([loadCampaigns, loadCampaignBot, loadDonorsChooseBot, legacyConfigs, legacyAuth])
+  Promise.all([loadCampaigns, loadCampaignBot, loadDonorsChooseBot])
     .then(() => {
       const port = process.env.PORT || 5000;
 

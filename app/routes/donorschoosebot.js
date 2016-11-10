@@ -66,6 +66,8 @@ router.post('/', (req, res) => {
 
   let incomingMessage = req.body.args;
   const scope = req;
+  // Currently only support mobilecommons.
+  scope.client = 'mobilecommons';
   // Initialize object to store profile data to save when posting Mobile Commons profile_update API.
   scope.profile_update = {};
 

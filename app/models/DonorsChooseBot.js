@@ -16,14 +16,11 @@ const donorsChooseBotSchema = new mongoose.Schema({
   msg_ask_first_name: String,
   msg_ask_zip: String,
   msg_donation_confirmation: String,
-  msg_donation_success: String,
   msg_error_generic: String,
   msg_invalid_email: String,
   msg_invalid_first_name: String,
   msg_invalid_zip: String,
-  msg_project_link: String,
   msg_max_donations_reached: String,
-  msg_search_start: String,
   msg_search_no_results: String,
 
 });
@@ -74,6 +71,8 @@ donorsChooseBotSchema.methods.renderMessage = function (req, msgType) {
     msg = msg.replace('{{teacher_name}}', req.donation.teacher_name);
     msg = msg.replace('{{url}}', req.donation.proposal_url);
   }
+
+  app.locals.db.bot_requests.log(req, 'donorschoosebot', this._id, msgType, msg);
 
   return msg;
 };
