@@ -10,7 +10,7 @@
   "scripts": {
     "test": "npm run lint",
     "start": "node server",
-    "lint": "eslint --ext=.js server.js app lib/gambit-junior.js lib/donorschoose.js lib/groups.js lib/mobilecommons.js"
+    "lint": "eslint --ext=.js server.js app config lib"
   },
   "eslintConfig": {
     "globals": {
