@@ -69,10 +69,14 @@ campaignBotSchema.methods.renderMessage = function (req, msgType, prefix) {
 
   const botProperty = `msg_${msgType}`;
   let msg = this[botProperty];
+  const senderPrefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
   const campaign = req.campaign;
+  // A Broadcast Declined request won't contain a loaded campaign.
   if (!campaign) {
     logger.debug('renderMessage req.campaign undefined');
-
+    if (senderPrefix) {
+      msg = `${senderPrefix} ${msg}`;
+    }
     return msg;
   }
 
@@ -126,7 +130,6 @@ campaignBotSchema.methods.renderMessage = function (req, msgType, prefix) {
     msg = `${continueMsg} ${campaign.title}...\n\n${msg}`;
   }
 
-  const senderPrefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
   if (senderPrefix) {
     msg = `${senderPrefix} ${msg}`;
   }
