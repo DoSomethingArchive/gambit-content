@@ -63,17 +63,20 @@ campaignBotSchema.statics.lookupByID = function (id) {
  * @return {string} - CampaignBot message with Liquid tags replaced with req properties
  */
 campaignBotSchema.methods.renderMessage = function (req, msgType, prefix) {
-  const logMsg = `campaignbot: ${msgType}`;
+  const logMsg = `campaignbot:${msgType}`;
   logger.info(logMsg);
   stathat(logMsg);
 
   const botProperty = `msg_${msgType}`;
   let msg = this[botProperty];
+  const senderPrefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
   const campaign = req.campaign;
+  // A Broadcast Declined request won't contain a loaded campaign.
   if (!campaign) {
-    stathat('campaignbot: undefined campaign');
-    logger.error('renderMessage req.campaign undefined');
-
+    logger.debug('renderMessage req.campaign undefined');
+    if (senderPrefix) {
+      msg = `${senderPrefix} ${msg}`;
+    }
     return msg;
   }
 
@@ -127,7 +130,6 @@ campaignBotSchema.methods.renderMessage = function (req, msgType, prefix) {
     msg = `${continueMsg} ${campaign.title}...\n\n${msg}`;
   }
 
-  const senderPrefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
   if (senderPrefix) {
     msg = `${senderPrefix} ${msg}`;
   }

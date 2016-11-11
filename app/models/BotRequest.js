@@ -47,7 +47,9 @@ botRequestSchema.statics.log = function (req, botType, botId, msgType, msg) {
       'profile_id',
     ];
     properties.forEach((property) => {
-      data.body[property] = req.body[property];
+      if (req.body[property]) {
+        data.body[property] = req.body[property];
+      }
     });
   } else {
     data.body = req.body;

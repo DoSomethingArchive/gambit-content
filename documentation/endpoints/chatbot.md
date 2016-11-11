@@ -12,12 +12,6 @@ Name | Type | Description
 --- | --- | ---
 `x-gambit-api-key` | `string` | **Required.**
 
-**Parameters**
-
-Name | Type | Description
---- | --- | ---
-`broadcast` | `boolean` | If set, inspects User's sent message as either Yes or No response to Signup for whatever the `CAMPAIGNBOT_BROADCAST_CAMPAIGN` config var is set to.
-
 
 **Input**
 
@@ -30,6 +24,7 @@ Name | Type | Description
 `mms_image_url` | `string` | Incoming image sent.
 `keyword` | `string` | [Mobile Commons keyword](https://github.com/DoSomething/gambit/wiki/Chatbot#mdata) that triggered the incoming mData POST.
 `profile_id` | `number` | Mobile Commons Profile ID
+`broadcast_id` | `number` | Mobile Commons Broadcast ID, if User is responding to a Broadcast
 
 <details>
 <summary>**Example Request**</summary>
