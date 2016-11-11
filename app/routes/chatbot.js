@@ -13,6 +13,8 @@ const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
 
 function isCommand(incomingMessage, commandType) {
+  logger.debug(`isCommand:${commandType}`);
+
   if (!incomingMessage) {
     return false;
   }
@@ -108,6 +110,7 @@ router.post('/', (req, res) => {
       let campaignId;
 
       if (req.query.broadcast) {
+        logger.debug('broadcast');
         campaignId = process.env.CAMPAIGNBOT_BROADCAST_CAMPAIGN;
         campaign = app.locals.campaigns[campaignId];
 

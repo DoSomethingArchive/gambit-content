@@ -63,7 +63,7 @@ campaignBotSchema.statics.lookupByID = function (id) {
  * @return {string} - CampaignBot message with Liquid tags replaced with req properties
  */
 campaignBotSchema.methods.renderMessage = function (req, msgType, prefix) {
-  const logMsg = `campaignbot: ${msgType}`;
+  const logMsg = `campaignbot:${msgType}`;
   logger.info(logMsg);
   stathat(logMsg);
 
