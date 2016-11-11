@@ -32,7 +32,8 @@ function isCommand(incomingMessage, commandType) {
  * Currently only supports Mobile Commons mData's.
  */
 router.post('/', (req, res) => {
-  stathat('route: v1/chatbot');
+  const route = 'v1/chatbot';
+  stathat(`route: ${route}`);
 
   const controller = app.locals.controllers.campaignBot;
   const campaignBot = app.locals.campaignBot;
@@ -40,17 +41,29 @@ router.post('/', (req, res) => {
   const scope = req;
   // Currently only support mobilecommons.
   scope.client = 'mobilecommons';
+  // TODO: Define this in app.locals to DRY with routes/signups
   scope.oip = process.env.MOBILECOMMONS_OIP_CHATBOT;
   scope.incoming_message = req.body.args;
   scope.incoming_image_url = req.body.mms_image_url;
-  let incomingLog = `msg:${scope.incoming_message} img:${scope.incoming_image_url}`;
+
+  const logRequest = {
+    route,
+    profile_id: req.body.profile_id,
+    incoming_message: scope.incoming_message,
+    incoming_image_url: scope.incoming_image_url,
+  };
+
+  if (req.body.broadcast_id) {
+    scope.broadcast_id = req.body.broadcast_id;
+    logRequest.broadcast_id = scope.broadcast_id;
+  }
 
   if (req.body.keyword) {
     scope.keyword = req.body.keyword.toLowerCase();
-    incomingLog = `${incomingLog} keyword:${scope.keyword}`;
+    logRequest.keyword = scope.keyword;
   }
 
-  logger.info(incomingLog);
+  logger.info(logRequest);
 
   let configured = true;
   // Check for required config variables.
@@ -109,8 +122,7 @@ router.post('/', (req, res) => {
       let campaign;
       let campaignId;
 
-      if (req.query.broadcast) {
-        logger.debug('broadcast');
+      if (scope.broadcast_id) {
         campaignId = process.env.CAMPAIGNBOT_BROADCAST_CAMPAIGN;
         campaign = app.locals.campaigns[campaignId];
 
@@ -210,14 +222,14 @@ router.post('/', (req, res) => {
       }
 
       if (scope.signup.reportback) {
-        if (scope.keyword || req.query.broadcast) {
+        if (scope.keyword || scope.broadcast_id) {
           return campaignBot.renderMessage(scope, 'menu_completed');
         }
         // If we're this far, member didn't text back Reportback or Member Support commands.
         return campaignBot.renderMessage(scope, 'invalid_cmd_completed');
       }
 
-      if (scope.keyword || req.query.broadcast) {
+      if (scope.keyword || scope.broadcast_id) {
         return campaignBot.renderMessage(scope, 'menu_signedup_gambit');
       }
 
