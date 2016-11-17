@@ -94,7 +94,7 @@ campaignSchema.statics.lookupByIDs = function (campaignIDs) {
 campaignSchema.methods.findOrCreateMessagingGroups = function () {
   const campaignId = this._id;
   const campaignRunId = this.current_run;
-  logger.info(`Setting messaging groups for campaign ${campaignId} run ${campaignRunId}`);
+  logger.info(`Setting messaging groups: campaign ${campaignId} run ${campaignRunId}`);
 
   return MessagingGroups.findOrCreateGroup(campaignId, campaignRunId)
     .then((groups) => {
