@@ -6,6 +6,7 @@
 const mongoose = require('mongoose');
 const logger = app.locals.logger;
 const gambitGroups = require('../../lib/groups');
+const Promise = require('bluebird');
 
 const campaignSchema = new mongoose.Schema({
 
@@ -91,51 +92,56 @@ campaignSchema.statics.lookupByIDs = function (campaignIDs) {
  * Create Doing/Completed Mobile Commons Groups to support Mobile Commons broadcasting.
  * @see https://github.com/DoSomething/gambit/issues/673
  */
-campaignSchema.methods.createMobileCommonsGroups = function () {
+campaignSchema.methods.findOrCreateMessagingGroups = function () {
   const campaignId = this._id;
   const campaignRunId = this.current_run;
+  logger.info(`Setting messaging groups for campaign ${campaignId} run ${campaignRunId}`);
 
-  function parseApiRes(res) {
-    if (!res._id) {
-      return false;
-    }
+  function saveApiResponse(record, response) {
+    return new Promise((resolve, reject) => {
+      const campaign = record;
+      if (!response._id) {
+        return reject('No _id in Messaging Groups response');
+      }
 
-    const env = process.env.NODE_ENV;
-    if (!res.mobilecommons_groups[env]) {
-      return false;
-    }
+      const env = process.env.NODE_ENV;
+      if (!response.mobilecommons_groups[env]) {
+        return reject('No mobilecommons_groups[env] in Messaging Groups response');
+      }
 
-    return {
-      doing: res.mobilecommons_groups[env].doing,
-      completed: res.mobilecommons_groups[env].completed,
-    };
+      campaign.mobilecommons_group_doing = response.mobilecommons_groups[env].doing;
+      campaign.mobilecommons_group_completed = response.mobilecommons_groups[env].completed;
+
+      return campaign.save()
+        .then(() => resolve(true))
+        .catch(error => reject(error));
+    });
   }
 
-  gambitGroups.findGroup(campaignId, campaignRunId).then((res) => {
-    // If a group was found, save the data.
-    const parsedRes = parseApiRes(res);
-    if (parsedRes) {
-      this.mobilecommons_group_doing = parsedRes.doing;
-      this.mobilecommons_group_completed = parsedRes.completed;
-      return undefined;
-    }
 
-    return gambitGroups.createGroup(campaignId, campaignRunId);
-  })
-  .then((res) => {
-    if (!res) {
-      return;
-    }
+  gambitGroups.findGroup(campaignId, campaignRunId)
+    .then(response => saveApiResponse(this, response))
+    .then((found) => {
+      if (found) {
+        logger.info(`Messaging Groups are found for campaign ${campaignId} run ${campaignRunId}: ${this.mobilecommons_group_doing} /${this.mobilecommons_group_completed}`);
+        return null;
+      }
 
-    const parsedRes = parseApiRes(res);
-    if (parsedRes) {
-      this.mobilecommons_group_doing = parsedRes.doing;
-      this.mobilecommons_group_completed = parsedRes.completed;
-    }
-  })
-  .then(() => {
-    this.save();
-  });
+      // Groups, not found, create new.
+      return gambitGroups.createGroup(campaignId, campaignRunId)
+        .then(response => saveApiResponse(this, response));
+    })
+    .then((created) => {
+      if (created) {
+        logger.info(`Messaging Groups are created for campaign ${campaignId} run ${campaignRunId}: ${this.mobilecommons_group_doing}/${this.mobilecommons_group_completed}`);
+      } else if (created === false) {
+        // Null is ignored as it is return value for already existing groups .
+        throw new Error(`Can't create Messaging Groups for campaign ${campaignId} run ${campaignRunId}`);
+      }
+    })
+    .catch((error) => {
+      logger.error(`Messaging groups findOrCreateMessagingGroups caught an error: ${error}`);
+    });
 };
 
 /**
