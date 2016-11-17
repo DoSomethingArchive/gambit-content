@@ -5,8 +5,7 @@
  */
 const mongoose = require('mongoose');
 const logger = app.locals.logger;
-const gambitGroups = require('../../lib/groups');
-const Promise = require('bluebird');
+const MessagingGroups = require('../../lib/groups');
 
 const campaignSchema = new mongoose.Schema({
 
@@ -97,50 +96,14 @@ campaignSchema.methods.findOrCreateMessagingGroups = function () {
   const campaignRunId = this.current_run;
   logger.info(`Setting messaging groups for campaign ${campaignId} run ${campaignRunId}`);
 
-  function saveApiResponse(record, response) {
-    return new Promise((resolve, reject) => {
-      const campaign = record;
-      if (!response._id) {
-        return reject('No _id in Messaging Groups response');
-      }
-
-      const env = process.env.NODE_ENV;
-      if (!response.mobilecommons_groups[env]) {
-        return reject('No mobilecommons_groups[env] in Messaging Groups response');
-      }
-
-      campaign.mobilecommons_group_doing = response.mobilecommons_groups[env].doing;
-      campaign.mobilecommons_group_completed = response.mobilecommons_groups[env].completed;
-
-      return campaign.save()
-        .then(() => resolve(true))
-        .catch(error => reject(error));
-    });
-  }
-
-
-  gambitGroups.findGroup(campaignId, campaignRunId)
-    .then(response => saveApiResponse(this, response))
-    .then((found) => {
-      if (found) {
-        logger.info(`Messaging Groups are found for campaign ${campaignId} run ${campaignRunId}: ${this.mobilecommons_group_doing} /${this.mobilecommons_group_completed}`);
-        return null;
-      }
-
-      // Groups, not found, create new.
-      return gambitGroups.createGroup(campaignId, campaignRunId)
-        .then(response => saveApiResponse(this, response));
-    })
-    .then((created) => {
-      if (created) {
-        logger.info(`Messaging Groups are created for campaign ${campaignId} run ${campaignRunId}: ${this.mobilecommons_group_doing}/${this.mobilecommons_group_completed}`);
-      } else if (created === false) {
-        // Null is ignored as it is return value for already existing groups .
-        throw new Error(`Can't create Messaging Groups for campaign ${campaignId} run ${campaignRunId}`);
-      }
+  return MessagingGroups.findOrCreateGroup(campaignId, campaignRunId)
+    .then((groups) => {
+      this.mobilecommons_group_doing = groups.doing;
+      this.mobilecommons_group_completed = groups.completed;
+      return this.save();
     })
     .catch((error) => {
-      logger.error(`Messaging groups findOrCreateMessagingGroups caught an error: ${error}`);
+      logger.error(`findOrCreateMessagingGroups() caught an error: ${error.message}`);
     });
 };
 
