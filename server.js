@@ -146,7 +146,7 @@ conn.on('connected', () => {
         logger.info(`loaded app.locals.campaigns[${campaignID}]`);
 
         if (!campaign.mobilecommons_group_doing || !campaign.mobilecommons_group_completed) {
-          campaign.createMobileCommonsGroups();
+          campaign.findOrCreateMessagingGroups();
         }
 
         if (campaign.keywords.length < 1) {
