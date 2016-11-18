@@ -9,7 +9,6 @@ const logger = app.locals.logger;
 
 
 router.post('/', (req, res) => {
-  throw new NotFoundError('DID IT WORK?');
   app.locals.stathat('route: v1/signups');
 
   if (!req.body.id) {
