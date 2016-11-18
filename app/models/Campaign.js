@@ -5,7 +5,7 @@
  */
 const mongoose = require('mongoose');
 const logger = app.locals.logger;
-const gambitGroups = require('../../lib/groups');
+const MessagingGroups = require('../../lib/groups');
 
 const campaignSchema = new mongoose.Schema({
 
@@ -91,51 +91,20 @@ campaignSchema.statics.lookupByIDs = function (campaignIDs) {
  * Create Doing/Completed Mobile Commons Groups to support Mobile Commons broadcasting.
  * @see https://github.com/DoSomething/gambit/issues/673
  */
-campaignSchema.methods.createMobileCommonsGroups = function () {
+campaignSchema.methods.findOrCreateMessagingGroups = function () {
   const campaignId = this._id;
   const campaignRunId = this.current_run;
+  logger.info(`Setting messaging groups: campaign ${campaignId} run ${campaignRunId}`);
 
-  function parseApiRes(res) {
-    if (!res._id) {
-      return false;
-    }
-
-    const env = process.env.NODE_ENV;
-    if (!res.mobilecommons_groups[env]) {
-      return false;
-    }
-
-    return {
-      doing: res.mobilecommons_groups[env].doing,
-      completed: res.mobilecommons_groups[env].completed,
-    };
-  }
-
-  gambitGroups.findGroup(campaignId, campaignRunId).then((res) => {
-    // If a group was found, save the data.
-    const parsedRes = parseApiRes(res);
-    if (parsedRes) {
-      this.mobilecommons_group_doing = parsedRes.doing;
-      this.mobilecommons_group_completed = parsedRes.completed;
-      return undefined;
-    }
-
-    return gambitGroups.createGroup(campaignId, campaignRunId);
-  })
-  .then((res) => {
-    if (!res) {
-      return;
-    }
-
-    const parsedRes = parseApiRes(res);
-    if (parsedRes) {
-      this.mobilecommons_group_doing = parsedRes.doing;
-      this.mobilecommons_group_completed = parsedRes.completed;
-    }
-  })
-  .then(() => {
-    this.save();
-  });
+  return MessagingGroups.findOrCreateGroup(campaignId, campaignRunId)
+    .then((groups) => {
+      this.mobilecommons_group_doing = groups.doing;
+      this.mobilecommons_group_completed = groups.completed;
+      return this.save();
+    })
+    .catch((error) => {
+      logger.error(`findOrCreateMessagingGroups() caught an error: ${error.message}`);
+    });
 };
 
 /**
