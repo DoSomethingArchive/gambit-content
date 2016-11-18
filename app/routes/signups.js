@@ -5,7 +5,7 @@ const router = express.Router(); // eslint-disable-line new-cap
 const helpers = require('../../lib/helpers');
 const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
-const Promise = require('bluebird'); // jshint ignore:line
+const Promise = require('bluebird'); // eslint-disable-line no-unused-vars
 const logger = app.locals.logger;
 
 
