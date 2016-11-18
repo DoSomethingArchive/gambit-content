@@ -5,6 +5,8 @@ const router = express.Router(); // eslint-disable-line new-cap
 const helpers = require('../../lib/helpers');
 const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
+// Requiring Blurbird overrides native promises,
+// which we need for our exception handling logic in this endpoint.
 const Promise = require('bluebird'); // eslint-disable-line no-unused-vars
 const logger = app.locals.logger;
 
