@@ -5,6 +5,7 @@ const router = express.Router(); // eslint-disable-line new-cap
 const helpers = require('../../lib/helpers');
 const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
+const Promise = require('bluebird');
 const logger = app.locals.logger;
 
 
@@ -77,13 +78,9 @@ router.post('/', (req, res) => {
 
       return helpers.sendResponse(res, 200, scope.response_message);
     })
-    .catch(err => {
-      switch (err.name) {
-        case 'NotFoundError': helpers.sendResponse(res, 404, err.message); break;
-        case 'UnprocessibleEntityError': helpers.sendResponse(res, 422, err.message); break;
-        default: helpers.sendResponse(res, 500, err.message);
-      }
-    });
+    .catch(NotFoundError, (err) => helpers.sendResponse(res, 404, err.message))
+    .catch(UnprocessibleEntityError, (err) => helpers.sendResponse(res, 422, err.message))
+    .catch((err) => helpers.sendResponse(res, 500, err.message));
 });
 
 module.exports = router;
