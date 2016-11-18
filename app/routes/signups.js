@@ -9,6 +9,7 @@ const logger = app.locals.logger;
 
 
 router.post('/', (req, res) => {
+  throw new NotFoundError('DID IT WORK?');
   app.locals.stathat('route: v1/signups');
 
   if (!req.body.id) {
@@ -77,10 +78,13 @@ router.post('/', (req, res) => {
 
       return helpers.sendResponse(res, 200, scope.response_message);
     })
-    .catch(NotFoundError, err => helpers.sendResponse(res, 404, err.message))
-    .catch(UnprocessibleEntityError, err => helpers.sendResponse(res, 422, err.message))
-    .catch(err => helpers.sendResponse(res, 500, err.message));
+    .catch(err => {
+      switch (err.name) {
+        case 'NotFoundError': helpers.sendResponse(res, 404, err.message); break;
+        case 'UnprocessibleEntityError': helpers.sendResponse(res, 422, err.message); break;
+        default: helpers.sendResponse(res, 500, err.message);
+      }
+    });
 });
 
 module.exports = router;
-
