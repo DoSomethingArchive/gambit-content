@@ -45,7 +45,7 @@
     "stathat": "0.0.8",
     "superagent": "^2.3.0",
     "winston": "0.8.x",
-    "winston-mongodb": "0.5.x",
+    "winston-mongodb": "2.0.0",
     "xml2json": "^0.10.0"
   },
   "devDependencies": {
