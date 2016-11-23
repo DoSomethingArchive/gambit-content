@@ -6,7 +6,7 @@ services:
     links:
       - mongo
     environment:
-      - MONGO_URI=mongodb://mongo_1:27017/gambit
+      - DB_URI=mongodb://mongo_1:27017/gambit
     volumes:
       - ./:/app
 
