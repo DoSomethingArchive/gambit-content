@@ -1,0 +1,16 @@
+version: "2"
+
+services:
+  app:
+    build: ./
+    links:
+      - mongo
+    environment:
+      - MONGO_URI=mongodb://mongo_1:27017/gambit
+    volumes:
+      - ./:/app
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
