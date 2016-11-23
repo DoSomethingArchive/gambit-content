@@ -22,7 +22,6 @@ const errorHandler = require('errorhandler');
 app.use(errorHandler());
 
 const DB_URI = process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder';
-
 /**
  * Load logger.
  */
@@ -40,11 +39,11 @@ app.locals.logger = new (winston.Logger)({
   },
   transports: [
     new winston.transports.Console({ prettyPrint: true, colorize: true, level: WINSTON_LEVEL }),
-    new winston.transports.MongoDB({ dbUri: DB_URI, level: WINSTON_LEVEL }),
+    new winston.transports.MongoDB({ db: DB_URI, level: WINSTON_LEVEL }),
   ],
   exceptionHandlers: [
     new winston.transports.Console({ prettyPrint: true, colorize: true }),
-    new winston.transports.MongoDB({ dbUri: DB_URI }),
+    new winston.transports.MongoDB({ db: DB_URI }),
   ],
 });
 if (!app.locals.logger) {
