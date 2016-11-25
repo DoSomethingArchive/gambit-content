@@ -124,6 +124,7 @@ if (!app.locals.clients.phoenix) {
   process.exit(1);
 }
 
+app.locals.rabbit = require('./lib/rabbit');
 
 conn.on('connected', () => {
   logger.info(`conn.readyState:${conn.readyState}`);
