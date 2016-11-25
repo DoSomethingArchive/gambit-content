@@ -6,7 +6,7 @@
 const logger = app.locals.logger;
 const campaignBot = app.locals.campaignBot;
 const helpers = rootRequire('lib/helpers');
-const rabbit = app.locals.rabbit;
+const rabbit = rootRequire('lib/rabbit');
 
 /**
  * CampaignBotController.
@@ -119,13 +119,6 @@ class CampaignBotController {
   createReportbackSubmission(req) {
     this.debug(req, 'createReportbackSubmission');
 
-    rabbit.produce('activity events', {
-      type: 'signup',
-      user: req.user,
-      campaignId: req.campaign._id,
-      campaignRunId: req.campaign.current_run,
-    });
-
     return req.signup
       .createDraftReportbackSubmission()
       .then(() => {
@@ -189,7 +182,7 @@ class CampaignBotController {
 
     rabbit.produce('activity events', {
       type: 'reportback',
-      user: req.user,
+      userId: req.user._id,
       campaignId: req.campaign._id,
       campaignRunId: req.campaign.current_run,
     });

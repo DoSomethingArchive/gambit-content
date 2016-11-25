@@ -7,6 +7,7 @@ const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
 const logger = app.locals.logger;
 const stathat = app.locals.stathat;
+const rabbit = require('../../lib/rabbit');
 const Promise = require('bluebird');
 const helpers = require('../../lib/helpers');
 const NotFoundError = require('../exceptions/NotFoundError');
@@ -230,6 +231,13 @@ router.post('/', (req, res) => {
       }
 
       if (scope.keyword || scope.broadcast_id) {
+        rabbit.produce('activity events', {
+          type: 'signup',
+          userId: req.user._id,
+          campaignId: req.campaign._id,
+          campaignRunId: req.campaign.current_run,
+        });
+
         return campaignBot.renderMessage(scope, 'menu_signedup_gambit');
       }
 
