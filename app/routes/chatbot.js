@@ -226,7 +226,7 @@ router.post('/', (req, res) => {
           type: 'reportback',
           userId: scope.user._id,
           campaignId: scope.campaign._id,
-          campaignRunId: scope.campaign.current_run
+          campaignRunId: scope.campaign.current_run,
         });
 
         return controller.createReportbackSubmission(scope);
@@ -245,7 +245,7 @@ router.post('/', (req, res) => {
           type: 'signup',
           userId: scope.user._id,
           campaignId: scope.campaign._id,
-          campaignRunId: scope.campaign.current_run
+          campaignRunId: scope.campaign.current_run,
         });
 
         return campaignBot.renderMessage(scope, 'menu_signedup_gambit');
