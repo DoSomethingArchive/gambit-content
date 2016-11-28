@@ -50,16 +50,16 @@ function sendResponse(req, res, code, msgType) {
  * This route was built for the Science Sleuth SMS Game on Mobile Commons, where the final game OIP
  * triggers an mData that posts here, to donate to DonorsChoose project on behalf of the player.
  *
- * DonorsChooseBot asks for the sender's zip code, first name, and email to post a donation to the
- * DonorsChoose API, donating to the first project it finds closest to the sender's zip code.
+ * DonorsChooseBot asks for the sender's first name, and email to post a donation to the
+ * DonorsChoose API, donating to the first project it finds.
  *
- * If the Mobile Commons Profile doesn't have a value saved for zip, first name, or email, we send
+ * If the Mobile Commons Profile doesn't have a value saved for first name, or email, we send
  * a message back to the User prompting for it (and a 200 response back to Mobile Commons, since we
  * know how to respond the sender's message and have posted to their profile to respond by SMS).
  *
  * DonorsChooseBot was the predecessor to CampaignBot - we didn't have models or DS API integration.
  * We use the incoming Mobile Commons Profile to retreive required info for the sender, and post to
- * it to update it with their email, zip, first name, and a custom field to keep donation count.
+ * it to update it with their email, first name, and a custom field to keep donation count.
  */
 router.post('/', (req, res) => {
   stathat('route: v1/donorschoosebot');
@@ -91,23 +91,6 @@ router.post('/', (req, res) => {
 
   // If start param passed, initiate conversation, ignoring incomingMessage.
   const prompt = req.query.start;
-
-  if (!req.body.profile_postal_code) {
-    debug(req, 'profile_postal_code undefined');
-
-    if (prompt) {
-      return sendResponse(scope, res, 200, 'ask_zip');
-    }
-
-    const validate = incomingMessage && helpers.isValidZip(incomingMessage);
-    if (!validate) {
-      return sendResponse(scope, res, 200, 'invalid_zip');
-    }
-
-    scope.profile_update.postal_code = incomingMessage;
-
-    return sendResponse(scope, res, 200, 'ask_first_name');
-  }
 
   if (!req.body.profile_first_name) {
     debug(req, 'profile_first_name undefined');
@@ -146,7 +129,6 @@ router.post('/', (req, res) => {
   }
 
   // We've got all required profile fields -- time to donate.
-  const zip = req.body.profile_postal_code;
   const apiKey = process.env.DONORSCHOOSE_API_KEY;
   const apiPassword = process.env.DONORSCHOOSE_API_PASSWORD;
   const proposalsUri = `${process.env.DONORSCHOOSE_API_BASEURI}/common/json_feed.html`;
@@ -157,7 +139,7 @@ router.post('/', (req, res) => {
   const subjectCode = process.env.DONORSCHOOSE_PROPOSALS_SUBJECT_CODE || -4;
 
   // Define query as a string, defining as an object causes costToCompleteRange to throw 400 error.
-  let query = `costToCompleteRange=${donationAmount}+TO+10000&max=1&zip=${zip}`;
+  let query = `costToCompleteRange=${donationAmount}+TO+10000&max=1`;
   query = `${query}&sortBy=${sortBy}&subject4=${subjectCode}`;
 
   // If query doesn't return any results, check on DONORSCHOOSE_PROPOSALS_OLDERTHAN value stored.
@@ -171,7 +153,7 @@ router.post('/', (req, res) => {
   return donorschoose.get(proposalsUri, query)
     .then((response) => {
       if (response.proposals.length < 1) {
-        error(req, `no search results for zip:${zip}`);
+        error(req, `no search results`);
         throw new Error('no search results');
       }
 
@@ -222,7 +204,6 @@ router.post('/', (req, res) => {
         mobile: req.body.phone,
         profile_email: scope.body.profile_email,
         profile_first_name: req.body.profile_first_name,
-        profile_postal_code: zip,
         donation_id: donation.donationId,
         donation_amount: donationAmount,
         proposal_id: selectedProposal.id,
