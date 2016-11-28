@@ -143,7 +143,6 @@ signupSchema.statics.lookupCurrent = function (user, campaign) {
  * @param {User} user - User model.
  * @param {Campaign} campaign - Campaign model.
  * @param {string} keyword - Keyword used to trigger Campaign Signup.
- * @param {int} broadcastId - The broadcast id used to trigger Campaign Signup.
  */
 signupSchema.statics.post = function (user, campaign, keyword) {
   const model = this;
@@ -165,7 +164,6 @@ signupSchema.statics.post = function (user, campaign, keyword) {
         const data = {
           campaign: campaign._id,
           user: user._id,
-          broadcast_id: broadcastId,
           keyword,
         };
 
