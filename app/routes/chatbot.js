@@ -208,7 +208,7 @@ router.post('/', (req, res) => {
 
       if (scope.broadcast_id) {
         scope.signup.broadcast_id = scope.broadcast_id;
-        scope.signup.save();
+        scope.signup.save().catch((err) => logger.error('Error saving broadcast id', err.message));
       }
 
       if (isCommand(scope.incoming_message, 'member_support')) {
