@@ -206,6 +206,11 @@ router.post('/', (req, res) => {
         return false;
       }
 
+      if (scope.broadcast_id) {
+        scope.signup.broadcast_id = scope.broadcast_id;
+        scope.signup.save().catch((err) => logger.error('Error saving broadcast id', err.message));
+      }
+
       if (isCommand(scope.incoming_message, 'member_support')) {
         scope.cmd_member_support = true;
         scope.oip = agentViewOip;

@@ -38,7 +38,7 @@ const signupSchema = new mongoose.Schema({
   // We'll want to update this number from DS API once we're querying for
   // any existing or updates to Reportbacks for this Signup.
   total_quantity_submitted: Number,
-
+  broadcast_id: Number,
 });
 
 function parseNorthstarSignup(northstarSignup) {
