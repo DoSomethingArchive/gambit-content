@@ -16,15 +16,15 @@ router.post('/reminder', (req, res) => {
     return;
   }
 
+  if (!app.locals.campaigns[campaignId]) {
+    return res.json({ error: 'No campaign set in Gambit for the given campaign id.' });
+  }
+
   app.locals.clients.northstar.Users
   .get('id', northstarUserId)
   .then((nsUser) => { // eslint-disable-line consistent-return
     const mobile = nsUser.mobile;
     if (!mobile) return res.json({ error: 'No mobile number for NS user.' });
-
-    if (!app.locals.campaigns[campaignId]) {
-      return res.json({ error: 'No campaign set in Gambit for the given campaign id.' });
-    }
 
     const reminderParam = `msg_relative_reminder_${reminderType}`;
     const reminderMessage = app.locals.campaigns[campaignId][reminderParam];
