@@ -13,5 +13,5 @@ Returns either an `error` or `success` object.
 Name | Type | Description
 --- | --- | ---
 `northstarUserId` | `string` | Northstar User Id to send notification for.
-`campaignId` | `string&#124;int` | The campaign ID this notification is for.
+`campaignId` | `string|int` | The campaign ID this notification is for.
 `reminderType` | `string` | The reminder type. This can be `signup` or `reportback`.
