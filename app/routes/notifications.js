@@ -18,8 +18,8 @@ router.post('/reminder', (req, res) => {
 
   app.locals.clients.northstar.Users
   .get('id', northstarUserId)
-  .then(nsUser => nsUser.mobile)
-  .then((mobile) => { // eslint-disable-line consistent-return
+  .then((nsUser) => { // eslint-disable-line consistent-return
+    const mobile = nsUser.mobile;
     if (!mobile) return res.json({ error: 'No mobile number for NS user.' });
 
     const reminderParam = `msg_relative_reminder_${reminderType}`;
