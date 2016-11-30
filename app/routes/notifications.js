@@ -22,7 +22,8 @@ router.post('/reminder', (req, res) => {
   .then((mobile) => { // eslint-disable-line consistent-return
     if (!mobile) return res.json({ error: 'No mobile number for NS user.' });
 
-    const reminderMessage = app.locals.campaigns[campaignId][`msg_relative_reminder_${reminderType}`];
+    const reminderParam = `msg_relative_reminder_${reminderType}`;
+    const reminderMessage = app.locals.campaigns[campaignId][reminderParam];
     if (!reminderMessage) return res.json({ error: 'No reminder set for campaign.' });
 
     mobilecommons.send_message(mobile, reminderMessage);
