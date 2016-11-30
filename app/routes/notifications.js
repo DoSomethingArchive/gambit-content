@@ -31,7 +31,7 @@ router.post('/reminder', (req, res) => {
     res.json({ success: true });
   })
   .catch((err) => {
-    logger.error('Error sending reminder message', err);
+    logger.error('Error sending reminder message', err.message);
   });
 });
 
