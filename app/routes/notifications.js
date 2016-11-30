@@ -11,22 +11,22 @@ router.post('/reminder', (req, res) => {
   const campaignId = req.body.campaignId;
 
   if (!northstarUserId || !campaignId) {
-    res.json({error: 'Missing parameters'});
+    res.json({ error: 'Missing parameters' });
     return;
   }
 
   app.locals.clients.northstar.Users
   .get('id', northstarUserId)
   .then(nsUser => nsUser.mobile)
-  .then((mobile) => {
-    if (!mobile) return res.json({error: 'No mobile number for NS user.'});
+  .then((mobile) => { // eslint-disable-line consistent-return
+    if (!mobile) return res.json({ error: 'No mobile number for NS user.' });
 
     const reminderMessage = app.locals.campaigns[campaignId].msg_relative_reminder;
-    if (!reminderMessage) return res.json({error: 'No reminder set for campaign.'});
+    if (!reminderMessage) return res.json({ error: 'No reminder set for campaign.' });
 
     mobilecommons.send_message(mobile, reminderMessage);
-    res.json({success: true});
     stathat('Sent relative reminder');
+    res.json({ success: true });
   })
   .catch((err) => {
     logger.error('Error sending reminder message', err);
