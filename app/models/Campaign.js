@@ -127,7 +127,6 @@ campaignSchema.methods.formatApiResponse = function () {
     mobilecommons_group_doing: this.mobilecommons_group_doing,
     mobilecommons_group_completed: this.mobilecommons_group_completed,
     keywords: this.keywords,
-    msg_relative_reminder: this.msg_relative_reminder || '',
   };
 
   return data;
