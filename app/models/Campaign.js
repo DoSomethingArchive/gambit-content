@@ -34,6 +34,7 @@ const campaignSchema = new mongoose.Schema({
   msg_menu_signedup_external: String,
   msg_menu_signedup_gambit: String,
   msg_no_photo_sent: String,
+  msg_relative_reminder: String,
 
   // Mobile Commons Specific Fields.
   mobilecommons_group_doing: Number,
@@ -126,6 +127,7 @@ campaignSchema.methods.formatApiResponse = function () {
     mobilecommons_group_doing: this.mobilecommons_group_doing,
     mobilecommons_group_completed: this.mobilecommons_group_completed,
     keywords: this.keywords,
+    msg_relative_reminder: this.msg_relative_reminder || '',
   };
 
   return data;
