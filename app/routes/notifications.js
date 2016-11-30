@@ -17,7 +17,8 @@ router.post('/reminder', (req, res) => {
   }
 
   if (!app.locals.campaigns[campaignId]) {
-    return res.json({ error: 'No campaign set in Gambit for the given campaign id.' });
+    res.json({ error: 'No campaign set in Gambit for the given campaign id.' });
+    return;
   }
 
   app.locals.clients.northstar.Users
