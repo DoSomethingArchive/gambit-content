@@ -9,8 +9,9 @@ const stathat = app.locals.stathat;
 router.post('/reminder', (req, res) => {
   const northstarUserId = req.body.northstarUserId;
   const campaignId = req.body.campaignId;
+  const reminderType = req.body.reminderType;
 
-  if (!northstarUserId || !campaignId) {
+  if (!northstarUserId || !campaignId || !reminderType) {
     res.json({ error: 'Missing parameters' });
     return;
   }
@@ -21,7 +22,7 @@ router.post('/reminder', (req, res) => {
   .then((mobile) => { // eslint-disable-line consistent-return
     if (!mobile) return res.json({ error: 'No mobile number for NS user.' });
 
-    const reminderMessage = app.locals.campaigns[campaignId].msg_relative_reminder;
+    const reminderMessage = app.locals.campaigns[campaignId][`msg_relative_reminder_${reminderType}`];
     if (!reminderMessage) return res.json({ error: 'No reminder set for campaign.' });
 
     mobilecommons.send_message(mobile, reminderMessage);
