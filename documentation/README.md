@@ -30,6 +30,12 @@ Endpoint                                       | Functionality
 `POST /v1/signups` | [Post existing signup](endpoints/signups.md)
 
 
+## Notifications
+
+Endpoint                                       | Functionality                                           
+---------------------------------------------- | --------------------------------------------------------
+`POST /v1/notifications/reminder` | [Post relative reminder](endpoints/notifications.md)
+
 ## Legacy
 
 > :memo: We're looking to deprecate these, so don't get too attached!

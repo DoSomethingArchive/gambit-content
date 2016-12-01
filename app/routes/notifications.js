@@ -33,6 +33,7 @@ router.post('/reminder', (req, res) => {
 
     mobilecommons.send_message(mobile, reminderMessage);
     stathat('Sent relative reminder');
+
     return res.json({ success: true });
   })
   .catch((err) => {
