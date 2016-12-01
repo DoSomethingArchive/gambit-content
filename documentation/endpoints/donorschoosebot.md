@@ -29,7 +29,6 @@ Name | Type | Description
 `profile_id` | `number` | Mobile Commons Profile ID
 `profile_first_name` | `string` | Mobile Commons Profile first name
 `profile_email` | `string` | Mobile Commons Profile email
-`profile_postal_code` | `string` | Mobile Commons Profile zip
 `profile_ss2016_donation_count` | `string` | Mobile Commons Custom Field to store number of donations. This parameter name can be changed via `DONORSCHOOSE_DONATION_FIELDNAME`
 
 <details>
