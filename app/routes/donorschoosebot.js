@@ -153,7 +153,7 @@ router.post('/', (req, res) => {
   return donorschoose.get(proposalsUri, query)
     .then((response) => {
       if (response.proposals.length < 1) {
-        error(req, `no search results`);
+        error(req, 'no search results');
         throw new Error('no search results');
       }
 
