@@ -23,7 +23,7 @@ router.post('/reminder', (req, res) => {
 
   app.locals.clients.northstar.Users
   .get('id', northstarUserId)
-  .then((nsUser) => { // eslint-disable-line consistent-return
+  .then((nsUser) => {
     const mobile = nsUser.mobile;
     if (!mobile) return res.json({ error: 'No mobile number for NS user.' });
 
@@ -33,7 +33,8 @@ router.post('/reminder', (req, res) => {
 
     mobilecommons.send_message(mobile, reminderMessage);
     stathat('Sent relative reminder');
-    res.json({ success: true });
+
+    return res.json({ success: true });
   })
   .catch((err) => {
     logger.error('Error sending reminder message', err.message);
