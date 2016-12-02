@@ -3,7 +3,6 @@
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
 const helpers = require('../../lib/helpers');
-
 const mobilecommons = rootRequire('lib/mobilecommons');
 const logger = app.locals.logger;
 const stathat = app.locals.stathat;
