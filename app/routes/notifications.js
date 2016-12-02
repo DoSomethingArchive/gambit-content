@@ -29,7 +29,7 @@ router.post('/reminder', (req, res) => {
 
   // Check allowed reminder types.
   if (allowedReminderTypes.indexOf(reminderType) === -1) {
-    const msg = `Reminder type should be one of: ${allowedReminderTypes.join(', ')}, got: ${reminderType}`;
+    const msg = `Reminder type should be one of: ${allowedReminderTypes}, got: ${reminderType}`;
     return helpers.sendResponse(res, 422, msg);
   }
 
@@ -41,16 +41,16 @@ router.post('/reminder', (req, res) => {
   }
 
   // Check that campaign suports requested reminder type.
-  const reminderMessage = campaign[reminderCampaignField]
+  const reminderMessage = campaign[reminderCampaignField];
   if (!reminderMessage) {
     const msg = `Campaign ${campaignID} does not support reminders for '${reminderType}'`;
     return helpers.sendResponse(res, 422, msg);
   }
 
-  app.locals.clients.northstar.Users.get('mobile', mobile)
+  return app.locals.clients.northstar.Users.get('mobile', mobile)
   .then((user) => {
     mobilecommons.send_message(mobile, reminderMessage);
-    const msg = `Sent reminder for ${campaignID} ${reminderType} to ${mobile}`;
+    const msg = `Sent reminder for ${campaignID} ${reminderType} to ${user.mobile}`;
     logger.info(msg);
     stathat('Sent relative reminder');
     return res.json({ success: true });
