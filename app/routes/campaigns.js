@@ -82,7 +82,7 @@ router.post('/:id/message', (req, res) => {
     const msg = `Sent text for ${campaignId} ${type} to ${user.mobile}`;
     logger.info(msg);
     stathat('Sent campaign message');
-    return res.json({ success: true });
+    return helpers.sendResponse(res, 200, msg);
   })
   .catch((err) => {
     if (err.response) {
