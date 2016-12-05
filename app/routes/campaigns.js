@@ -81,7 +81,7 @@ router.post('/:id/message', (req, res) => {
     mobilecommons.send_message(mobile, messageBody);
     const msg = `Sent text for ${campaignId} ${type} to ${user.mobile}`;
     logger.info(msg);
-    stathat('Sent relative text');
+    stathat('Sent campaign message');
     return res.json({ success: true });
   })
   .catch((err) => {
