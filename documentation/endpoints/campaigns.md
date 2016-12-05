@@ -35,8 +35,7 @@ Returns either an `error` or `success` object.
 Name | Type | Description
 --- | --- | ---
 `phone` | `string` | **Required.** Mobile number to send the campaign message.
-`type`  | `string` | **Required.** The campaign message type.\
-        |          | Supported types are: `scheduled_relative_to_signup_date`, `scheduled_relative_to_reportback_date`
+`type`  | `string` | <div>**Required.** The campaign message type.</div><div>Supported types are: `scheduled_relative_to_signup_date`, `scheduled_relative_to_reportback_date`</div>
 
 
 <details>
