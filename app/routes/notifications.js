@@ -12,7 +12,7 @@ const allowedReminderTypes = ['signup', 'reportback'];
 router.post('/reminder', (req, res) => {
   // Check required parameters.
   const mobile = req.body.mobile;
-  const campaignID = req.body.campaign_id;
+  const campaignID = req.body.campaign;
   const reminderType = req.body.reminder_type;
 
   if (!mobile) {
