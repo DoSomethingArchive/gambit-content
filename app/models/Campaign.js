@@ -37,8 +37,8 @@ const campaignSchema = new mongoose.Schema({
 
   // Exposed messages.
   messages: {
-    signup: String,
-    reportback: String,
+    relative_to_signup: String,
+    relative_to_reportback: String,
   },
 
   // Mobile Commons Specific Fields.
