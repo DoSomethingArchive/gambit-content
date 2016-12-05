@@ -41,18 +41,18 @@ Name | Type | Description
 
 <details>
 <summary>**Example Request**</summary>
-````
+```
 curl http://localhost:5000/v1/campaigns/4944/message \
      -H "x-gambit-api-key: totallysecret" \
      -H "Accept: application/json" \
      -H "Content-Type: application/json" \
      -d '{"phone": "5555555511", "type": "scheduled_relative_to_signup_date"}'
-````
+```
 </details>
 
 <details>
 <summary>**Example Response**</summary>
-````
+```
 {"success":{"code":200,"message":"Sent text for 46 scheduled_relative_to_signup_date to 5555555511"}}
-````
+```
 </details>
