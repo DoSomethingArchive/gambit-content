@@ -11,20 +11,19 @@ const allowedReminderTypes = ['signup', 'reportback'];
 
 router.post('/reminder', (req, res) => {
   // Check required parameters.
-  if (!req.body.mobile) {
-    return helpers.sendResponse(res, 422, 'Missing required mobile parameter.');
-  }
-  if (!req.body.campaign_id) {
-    return helpers.sendResponse(res, 422, 'Missing required campaign id parameter.');
-  }
-  if (!req.body.reminder_type) {
-    return helpers.sendResponse(res, 422, 'Missing required reminder type parameter.');
-  }
-
   const mobile = req.body.mobile;
   const campaignID = req.body.campaign_id;
   const reminderType = req.body.reminder_type;
-  const reminderCampaignField = `msg_relative_reminder_${reminderType}`;
+
+  if (!mobile) {
+    return helpers.sendResponse(res, 422, 'Missing required mobile parameter.');
+  }
+  if (!campaignID) {
+    return helpers.sendResponse(res, 422, 'Missing required campaign id parameter.');
+  }
+  if (!reminderType) {
+    return helpers.sendResponse(res, 422, 'Missing required reminder type parameter.');
+  }
 
   // Check allowed reminder types.
   if (allowedReminderTypes.indexOf(reminderType) === -1) {
@@ -40,6 +39,7 @@ router.post('/reminder', (req, res) => {
   }
 
   // Check that campaign suports requested reminder type.
+  const reminderCampaignField = `msg_relative_reminder_${reminderType}`;
   const reminderMessage = campaign[reminderCampaignField];
   if (!reminderMessage) {
     const msg = `Campaign ${campaignID} does not support reminders for '${reminderType}'`;
