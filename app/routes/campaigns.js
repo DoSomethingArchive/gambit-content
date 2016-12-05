@@ -49,14 +49,14 @@ router.get('/:id', (req, res) => {
 router.post('/:id/message', (req, res) => {
   // Check required parameters.
   const campaignId = req.params.id;
-  const mobile = req.body.mobile;
+  const phone = req.body.phone;
   const type = req.body.type;
 
-  if (!mobile) {
-    return helpers.sendResponse(res, 422, 'Missing required mobile parameter.');
-  }
   if (!campaignId) {
-    return helpers.sendResponse(res, 422, 'Missing required campaign parameter.');
+    return helpers.sendResponse(res, 422, 'Missing required campaign id.');
+  }
+  if (!phone) {
+    return helpers.sendResponse(res, 422, 'Missing required phone parameter.');
   }
   if (!type) {
     return helpers.sendResponse(res, 422, 'Missing required message type parameter.');
@@ -76,9 +76,9 @@ router.post('/:id/message', (req, res) => {
     return helpers.sendResponse(res, 422, msg);
   }
 
-  return app.locals.clients.northstar.Users.get('mobile', mobile)
+  return app.locals.clients.northstar.Users.get('mobile', phone)
   .then((user) => {
-    mobilecommons.send_message(mobile, messageBody);
+    mobilecommons.send_message(phone, messageBody);
     const msg = `Sent text for ${campaignId} ${type} to ${user.mobile}`;
     logger.info(msg);
     stathat('Sent campaign message');
@@ -88,7 +88,7 @@ router.post('/:id/message', (req, res) => {
     if (err.response) {
       logger.error(err.response.error);
     }
-    const msg = `Error sending text to user #${mobile}: ${err.message}`;
+    const msg = `Error sending text to user #${phone}: ${err.message}`;
     return helpers.sendResponse(res, 500, msg);
   });
 });
