@@ -7,27 +7,27 @@ const mobilecommons = rootRequire('lib/mobilecommons');
 const logger = app.locals.logger;
 const stathat = app.locals.stathat;
 
-const allowedReminderTypes = ['signup', 'reportback'];
+const allowedTypes = ['signup', 'reportback'];
 
 router.post('/reminder', (req, res) => {
   // Check required parameters.
   const mobile = req.body.mobile;
   const campaignID = req.body.campaign;
-  const reminderType = req.body.reminder_type;
+  const type = req.body.type;
 
   if (!mobile) {
     return helpers.sendResponse(res, 422, 'Missing required mobile parameter.');
   }
   if (!campaignID) {
-    return helpers.sendResponse(res, 422, 'Missing required campaign id parameter.');
+    return helpers.sendResponse(res, 422, 'Missing required campaign parameter.');
   }
-  if (!reminderType) {
-    return helpers.sendResponse(res, 422, 'Missing required reminder type parameter.');
+  if (!type) {
+    return helpers.sendResponse(res, 422, 'Missing required message type parameter.');
   }
 
-  // Check allowed reminder types.
-  if (allowedReminderTypes.indexOf(reminderType) === -1) {
-    const msg = `Reminder type should be one of: ${allowedReminderTypes}, got: ${reminderType}`;
+  // Check allowed message types.
+  if (allowedTypes.indexOf(type) === -1) {
+    const msg = `Reminder type should be one of: ${allowedTypes}, got: ${type}`;
     return helpers.sendResponse(res, 422, msg);
   }
 
@@ -38,27 +38,26 @@ router.post('/reminder', (req, res) => {
     return helpers.sendResponse(res, 422, msg);
   }
 
-  // Check that campaign suports requested reminder type.
-  const reminderCampaignField = `msg_relative_reminder_${reminderType}`;
-  const reminderMessage = campaign[reminderCampaignField];
-  if (!reminderMessage) {
-    const msg = `Campaign ${campaignID} does not support reminders for '${reminderType}'`;
+  // Check that campaign suports requested message type.
+  const messageBody = campaign.messages[type];
+  if (!messageBody) {
+    const msg = `Campaign ${campaignID} does not support reminders for '${type}'`;
     return helpers.sendResponse(res, 422, msg);
   }
 
   return app.locals.clients.northstar.Users.get('mobile', mobile)
   .then((user) => {
-    mobilecommons.send_message(mobile, reminderMessage);
-    const msg = `Sent reminder for ${campaignID} ${reminderType} to ${user.mobile}`;
+    mobilecommons.send_message(mobile, messageBody);
+    const msg = `Sent text for ${campaignID} ${type} to ${user.mobile}`;
     logger.info(msg);
-    stathat('Sent relative reminder');
+    stathat('Sent relative text');
     return res.json({ success: true });
   })
   .catch((err) => {
     if (err.response) {
       logger.error(err.response.error);
     }
-    const msg = `Error sending reminder to user #${mobile}: ${err.message}`;
+    const msg = `Error sending text to user #${mobile}: ${err.message}`;
     return helpers.sendResponse(res, 500, msg);
   });
 });
