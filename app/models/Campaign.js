@@ -34,8 +34,12 @@ const campaignSchema = new mongoose.Schema({
   msg_menu_signedup_external: String,
   msg_menu_signedup_gambit: String,
   msg_no_photo_sent: String,
-  msg_relative_reminder_signup: String,
-  msg_relative_reminder_reportback: String,
+
+  // Exposed messages.
+  messages: {
+    scheduled_relative_to_signup_date: String,
+    scheduled_relative_to_reportback_date: String,
+  },
 
   // Mobile Commons Specific Fields.
   mobilecommons_group_doing: Number,
