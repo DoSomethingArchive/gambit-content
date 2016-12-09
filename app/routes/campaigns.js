@@ -72,7 +72,7 @@ router.post('/:id/message', (req, res) => {
   // Check that campaign suports requested message type.
   const messageBody = campaign.messages[type];
   if (!messageBody) {
-    const msg = `Campaign ${campaignId} does not support reminders for '${type}'`;
+    const msg = `Campaign ${campaignId} does not support '${type}' messages`;
     return helpers.sendResponse(res, 422, msg);
   }
 
