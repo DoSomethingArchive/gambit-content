@@ -127,11 +127,17 @@ router.post('/', (req, res) => {
           return app.locals.db.broadcasts
             .findById(scope.broadcast_id)
             .then((broadcast) => {
-              logger.debug(`loaded broadcast:${broadcast._id}`);
+              if (!broadcast) {
+                // TODO: If this happens, store user/broadcast somewhere to recover lost opportunity
+                // to respond.
+                const err = new Error('broadcast undefined');
+                return reject(err);
+              }
 
+              logger.info(`loaded broadcast:${broadcast._id}`);
               campaignId = broadcast.campaign;
               campaign = app.locals.campaigns[campaignId];
-              logger.debug(`loaded campaign:${campaign._id}`);
+              logger.info(`loaded campaign:${campaign._id}`);
 
               if (!campaign) {
                 const err = new Error('broadcast campaign undefined');
