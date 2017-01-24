@@ -9,6 +9,7 @@ const logger = app.locals.logger;
 const stathat = app.locals.stathat;
 const Promise = require('bluebird');
 const helpers = require('../../lib/helpers');
+const mobilecommons = require('../../lib/mobilecommons');
 const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
 
@@ -151,7 +152,7 @@ router.post('/', (req, res) => {
                 return reject(err);
               }
 
-              scope.broadcast_type = broadcast.type;
+              scope.broadcast = broadcast;
               const saidNo = !(req.incoming_message && helpers.isYesResponse(req.incoming_message));
               if (saidNo) {
                 const err = new Error('broadcast declined');
@@ -291,8 +292,19 @@ router.post('/', (req, res) => {
     })
     .catch(err => {
       if (err.message === 'broadcast declined') {
-        const msg = campaignBot.renderMessage(scope, 'signup_broadcast_declined');
-        scope.user.postMobileCommonsProfileUpdate(agentViewOip, msg);
+        const msg = scope.broadcast.messages.signup_prompt_declined;
+        if (!msg) {
+          const logMsg = 'undefined broadcast.messages.signup_prompt_declined';
+          logger.error(logMsg);
+          stathat(`error: ${logMsg}`);
+
+          // TODO: Log the NO response somewhere?
+          // Don't send an error code to Mobile Commons, which would trigger error message to User.
+          return helpers.sendResponse(res, 200, logMsg);
+        }
+
+        // Send broadcast declined using Mobile Commons Send Message API:
+        mobilecommons.send_message(scope.user.mobile, msg);
 
         return helpers.sendResponse(res, 200, msg);
       }

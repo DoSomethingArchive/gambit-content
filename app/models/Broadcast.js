@@ -11,8 +11,11 @@ const mongoose = require('mongoose');
 const broadcastSchema = new mongoose.Schema({
 
   _id: { type: Number, index: true },
-  type: { type: String, enum: ['signup', 'reminder'] },
+  type: { type: String, enum: ['signup_prompt'] },
   campaign: Number,
+  messages: {
+    signup_prompt_declined: String,
+  },
 
 });
 
