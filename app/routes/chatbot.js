@@ -138,12 +138,12 @@ router.post('/', (req, res) => {
               logger.info(`loaded broadcast:${broadcast._id}`);
               campaignId = broadcast.campaign;
               campaign = app.locals.campaigns[campaignId];
-              logger.info(`loaded campaign:${campaign._id}`);
-
               if (!campaign) {
                 const err = new Error('broadcast campaign undefined');
                 return reject(err);
               }
+
+              logger.info(`loaded campaign:${campaign._id}`);
 
               if (campaign.status === 'closed') {
                 // TODO: Include this message to the CampaignClosedError.
