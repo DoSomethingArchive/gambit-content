@@ -296,11 +296,12 @@ router.post('/', (req, res) => {
           logger.error(logMsg);
           stathat(`error: ${logMsg}`);
 
-          // TODO: Log the NO response to BotRequest model.
           // Don't send an error code to Mobile Commons, which would trigger error message to User.
           return helpers.sendResponse(res, 200, logMsg);
         }
 
+        // Log the no response:
+        app.locals.db.bot_requests.log(req, 'broadcast', null, 'prompt_declined', msg);
         // Send broadcast declined using Mobile Commons Send Message API:
         mobilecommons.send_message(scope.user.mobile, msg);
 
