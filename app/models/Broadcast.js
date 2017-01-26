@@ -14,7 +14,7 @@ const broadcastSchema = new mongoose.Schema({
   type: { type: String, enum: ['signup_prompt'] },
   campaign: Number,
   messages: {
-    signup_prompt_declined: String,
+    prompt_declined: String,
   },
 
 });

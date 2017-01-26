@@ -128,10 +128,8 @@ router.post('/', (req, res) => {
           return app.locals.db.broadcasts
             .findById(scope.broadcast_id)
             .then((broadcast) => {
-              if (!broadcast) {
-                // TODO: If this happens, store user/broadcast somewhere to recover lost opportunity
-                // to respond.
-                const err = new Error('broadcast undefined');
+              if (!broadcast._id) {
+                const err = new NotFoundError('broadcast undefined');
                 return reject(err);
               }
 
@@ -292,13 +290,13 @@ router.post('/', (req, res) => {
     })
     .catch(err => {
       if (err.message === 'broadcast declined') {
-        const msg = scope.broadcast.messages.signup_prompt_declined;
+        const msg = scope.broadcast.messages.prompt_declined;
         if (!msg) {
-          const logMsg = 'undefined broadcast.messages.signup_prompt_declined';
+          const logMsg = 'undefined broadcast.messages.prompt_declined';
           logger.error(logMsg);
           stathat(`error: ${logMsg}`);
 
-          // TODO: Log the NO response somewhere?
+          // TODO: Log the NO response to BotRequest model.
           // Don't send an error code to Mobile Commons, which would trigger error message to User.
           return helpers.sendResponse(res, 200, logMsg);
         }
