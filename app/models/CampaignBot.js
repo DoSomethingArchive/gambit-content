@@ -25,7 +25,6 @@ const campaignBotSchema = new mongoose.Schema({
   msg_menu_signedup_external: String,
   msg_menu_signedup_gambit: String,
   msg_no_photo_sent: String,
-  msg_signup_broadcast_declined: String,
 
 });
 
