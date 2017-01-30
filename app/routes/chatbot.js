@@ -13,6 +13,10 @@ const mobilecommons = require('../../lib/mobilecommons');
 const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
 
+const RabbitConnection = rootRequire('lib/rabbit');
+const rabbit = new RabbitConnection();
+rabbit.connect();
+
 function isCommand(incomingMessage, commandType) {
   logger.debug(`isCommand:${commandType}`);
 
@@ -242,6 +246,13 @@ router.post('/', (req, res) => {
       }
 
       if (isCommand(scope.incoming_message, 'reportback')) {
+        rabbit.produce('activity events', {
+          type: 'reportback',
+          userId: scope.user._id,
+          campaignId: scope.campaign._id,
+          campaignRunId: scope.campaign.current_run,
+        });
+
         return controller.createReportbackSubmission(scope);
       }
 
@@ -254,6 +265,13 @@ router.post('/', (req, res) => {
       }
 
       if (scope.keyword || scope.broadcast_id) {
+        rabbit.produce('activity events', {
+          type: 'signup',
+          userId: scope.user._id,
+          campaignId: scope.campaign._id,
+          campaignRunId: scope.campaign.current_run,
+        });
+
         return campaignBot.renderMessage(scope, 'menu_signedup_gambit');
       }
 

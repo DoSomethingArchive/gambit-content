@@ -124,7 +124,6 @@ if (!app.locals.clients.phoenix) {
   process.exit(1);
 }
 
-
 conn.on('connected', () => {
   logger.info(`conn.readyState:${conn.readyState}`);
 

@@ -7,11 +7,21 @@ services:
       - "5000:5000"
     links:
       - mongo
+      - rabbitmq
     environment:
       - PORT=5000
       - DB_URI=mongodb://mongo_1:27017/gambit
+      - RABBIT_URI=amqp://rabbitmq_1:5672/dosomething
     volumes:
       - ./:/app
+      - /app/node_modules
+
+  rabbitmq:
+    image: rabbitmq:latest
+    ports:
+      - "5672:5672"
+    environment:
+      RABBITMQ_DEFAULT_VHOST: 'dosomething'
 
   mongo:
     image: mongo:latest
