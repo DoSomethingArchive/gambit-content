@@ -70,16 +70,8 @@ campaignBotSchema.methods.renderMessage = function (req, msgType, prefix) {
   let msg = this[botProperty];
   const senderPrefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
   const campaign = req.campaign;
-  // A Broadcast Declined request won't contain a loaded campaign.
-  if (!campaign) {
-    logger.debug('renderMessage req.campaign undefined');
-    if (senderPrefix) {
-      msg = `${senderPrefix} ${msg}`;
-    }
-    return msg;
-  }
 
-  // Check if campaign has an override defined.
+  // TODO: db.campaigns.findById to check for override.
   if (campaign[botProperty]) {
     msg = campaign[botProperty];
   }
@@ -95,13 +87,14 @@ campaignBotSchema.methods.renderMessage = function (req, msgType, prefix) {
   msg = msg.replace(/{{br}}/gi, '\n');
   msg = msg.replace(/{{title}}/gi, campaign.title);
   msg = msg.replace(/{{tagline}}/i, campaign.tagline);
-  msg = msg.replace(/{{fact_problem}}/gi, campaign.fact_problem);
-  msg = msg.replace(/{{rb_noun}}/gi, campaign.rb_noun);
-  msg = msg.replace(/{{rb_verb}}/gi, campaign.rb_verb);
-  msg = msg.replace(/{{rb_confirmation_msg}}/i, campaign.msg_rb_confirmation);
+  msg = msg.replace(/{{fact_problem}}/gi, campaign.facts.problem);
+  msg = msg.replace(/{{rb_noun}}/gi, campaign.reportbackInfo.noun);
+  msg = msg.replace(/{{rb_verb}}/gi, campaign.reportbackInfo.verb);
+  msg = msg.replace(/{{rb_confirmation_msg}}/i, campaign.reportbackInfo.confirmationMessage);
   msg = msg.replace(/{{cmd_reportback}}/i, process.env.GAMBIT_CMD_REPORTBACK);
   msg = msg.replace(/{{cmd_member_support}}/i, process.env.GAMBIT_CMD_MEMBER_SUPPORT);
 
+  // TODO: Check campaign model, not Phoenix Campaign object.
   if (campaign.keywords && campaign.keywords.length > 0) {
     let keyword;
     // If user signed up via keyword and there are multiple, use the keyword they signed up with.

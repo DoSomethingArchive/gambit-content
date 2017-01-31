@@ -159,16 +159,16 @@ class CampaignBotController {
    * @return {string}
    */
   loggerPrefix(req) {
-    let userID = null;
+    let userId = null;
     if (req.user) {
-      userID = req.user._id;
+      userId = req.user._id;
     }
-    let campaignID = null;
+    let campaignId = null;
     if (req.campaign) {
-      campaignID = req.campaign._id;
+      campaignId = req.campaign.id;
     }
 
-    return `campaignBot.campaign:${campaignID} user:${userID}`;
+    return `campaignBot.campaign:${campaignId} user:${userId}`;
   }
 
   /**
