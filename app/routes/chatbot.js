@@ -13,9 +13,17 @@ const mobilecommons = require('../../lib/mobilecommons');
 const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
 
+/**
+ * Fetches Campaign object from DS API for given id.
+ */
 function fetchCampaign(id) {
   return new Promise((resolve, reject) => {
     logger.debug(`fetchCampaign:${id}`);
+
+    if (!id) {
+      const err = new NotFoundError('Campaign id undefined');
+      return reject(err);
+    }
 
     return app.locals.clients.phoenix.Campaigns
       .get(id)
@@ -24,6 +32,9 @@ function fetchCampaign(id) {
   });
 }
 
+/**
+ * Determines if given incomingMessage matches given Gambit command type.
+ */
 function isCommand(incomingMessage, commandType) {
   logger.debug(`isCommand:${commandType}`);
 
@@ -170,7 +181,8 @@ router.post('/', (req, res) => {
               }
 
               return resolve(campaign);
-            });
+            })
+            .catch(err => reject(err));
         }
 
         if (scope.keyword) {
@@ -195,7 +207,8 @@ router.post('/', (req, res) => {
               }
 
               return resolve(campaign);
-            });
+            })
+            .catch(err => reject(err));
         }
 
         // If we've made it this far, check for User's current_campaign.
