@@ -39,6 +39,7 @@ router.post('/', (req, res) => {
     .lookupById(signupId)
     .then((signup) => {
       scope.signup = signup;
+      // TODO: Use findById instead of app.locals.campaigns.
       scope.campaign = app.locals.campaigns[signup.campaign];
 
       if (!scope.campaign) {
