@@ -13,6 +13,28 @@ const mobilecommons = require('../../lib/mobilecommons');
 const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
 
+/**
+ * Fetches Campaign object from DS API for given id.
+ */
+function fetchCampaign(id) {
+  return new Promise((resolve, reject) => {
+    logger.debug(`fetchCampaign:${id}`);
+
+    if (!id) {
+      const err = new NotFoundError('Campaign id undefined');
+      return reject(err);
+    }
+
+    return app.locals.clients.phoenix.Campaigns
+      .get(id)
+      .then(campaign => resolve(campaign))
+      .catch(err => reject(err));
+  });
+}
+
+/**
+ * Determines if given incomingMessage matches given Gambit command type.
+ */
 function isCommand(incomingMessage, commandType) {
   logger.debug(`isCommand:${commandType}`);
 
@@ -116,8 +138,8 @@ router.post('/', (req, res) => {
 
   const loadCampaign = new Promise((resolve, reject) => {
     logger.log('loadCampaign');
-    let campaign;
     let campaignId;
+    let currentBroadcast;
 
     return loadUser
       .then((user) => {
@@ -132,25 +154,26 @@ router.post('/', (req, res) => {
                 const err = new NotFoundError('broadcast undefined');
                 return reject(err);
               }
-
-              logger.info(`loaded broadcast:${broadcast._id}`);
-              campaignId = broadcast.campaign;
-              campaign = app.locals.campaigns[campaignId];
-              if (!campaign) {
+              currentBroadcast = broadcast;
+              logger.info(`loaded broadcast:${currentBroadcast._id}`);
+              return fetchCampaign(currentBroadcast.campaign);
+            })
+            .then((campaign) => {
+              if (!campaign.id) {
                 const err = new Error('broadcast campaign undefined');
                 return reject(err);
               }
 
-              logger.info(`loaded campaign:${campaign._id}`);
+              logger.info(`loaded campaign:${campaign.id}`);
 
               if (campaign.status === 'closed') {
                 // TODO: Include this message to the CampaignClosedError.
-                const msg = `Broadcast Campaign ${campaignId} is closed.`;
+                const msg = `Broadcast Campaign ${campaign.id} is closed.`;
                 const err = new UnprocessibleEntityError(msg);
                 return reject(err);
               }
 
-              scope.broadcast = broadcast;
+              scope.broadcast = currentBroadcast;
               const saidNo = !(req.incoming_message && helpers.isYesResponse(req.incoming_message));
               if (saidNo) {
                 const err = new Error('broadcast declined');
@@ -158,49 +181,56 @@ router.post('/', (req, res) => {
               }
 
               return resolve(campaign);
-            });
+            })
+            .catch(err => reject(err));
         }
 
         if (scope.keyword) {
           logger.debug(`load campaign for keyword:${scope.keyword}`);
           campaignId = app.locals.keywords[scope.keyword];
-          campaign = app.locals.campaigns[campaignId];
 
-          if (!campaign) {
-            const msg = `Campaign not found for keyword '${scope.keyword}'.`;
-            const err = new NotFoundError(msg);
-            return reject(err);
-          }
+          return fetchCampaign(campaignId)
+            .then((campaign) => {
+              if (!campaign.id) {
+                const msg = `Campaign not found for keyword '${scope.keyword}'.`;
+                const err = new NotFoundError(msg);
+                return reject(err);
+              }
 
-          if (campaign.status === 'closed') {
-            // Store campaign to render in closed message.
-            scope.campaign = campaign;
-            // TODO: Include this message to the CampaignClosedError.
-            const msg = `Keyword received for closed campaign ${campaignId}.`;
-            const err = new UnprocessibleEntityError(msg);
-            return reject(err);
-          }
+              if (campaign.status === 'closed') {
+                // Store campaign to render in closed message.
+                scope.campaign = campaign;
+                // TODO: Include this message to the CampaignClosedError.
+                const msg = `Keyword received for closed campaign ${campaignId}.`;
+                const err = new UnprocessibleEntityError(msg);
+                return reject(err);
+              }
 
-          return resolve(campaign);
+              return resolve(campaign);
+            })
+            .catch(err => reject(err));
         }
 
-        campaign = app.locals.campaigns[user.current_campaign];
+        // If we've made it this far, check for User's current_campaign.
         logger.debug(`user.current_campaign:${user.current_campaign}`);
+        return fetchCampaign(user.current_campaign)
+          .then((campaign) => {
+            if (!campaign.id) {
+              // TODO: Send to non-existent start menu to select a campaign.
+              const msg = `User ${user._id} current_campaign ${user.current_campaign} not found.`;
+              const err = new NotFoundError(msg);
 
-        if (!campaign) {
-          // TODO: Send to non-existent start menu to select a campaign.
-          const msg = `User ${user._id} current_campaign ${campaignId} not found in CampaignBot.`;
-          const err = new NotFoundError(msg);
-          return reject(err);
-        }
+              return reject(err);
+            }
 
-        return resolve(campaign);
+            return resolve(campaign);
+          });
       });
   });
 
   return loadCampaign
     .then((campaign) => {
-      logger.log(`loaded campaign:${campaign._id}`);
+      logger.log(`loaded campaign:${campaign.id}`);
       scope.campaign = campaign;
 
       return app.locals.db.signups.lookupCurrent(scope.user, scope.campaign);
@@ -262,11 +292,11 @@ router.post('/', (req, res) => {
     .then((msg) => {
       scope.response_message = msg;
       // Save to continue conversation with future mData requests that don't contain a keyword.
-      scope.user.current_campaign = scope.campaign._id;
+      scope.user.current_campaign = scope.campaign.id;
       return scope.user.save();
     })
     .then(() => {
-      logger.debug(`saved user.current_campaign:${scope.campaign._id}`);
+      logger.debug(`saved user.current_campaign:${scope.campaign.id}`);
       scope.user.postMobileCommonsProfileUpdate(scope.oip, scope.response_message);
 
       return helpers.sendResponse(res, 200, scope.response_message);

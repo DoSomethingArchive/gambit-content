@@ -63,6 +63,8 @@ router.post('/:id/message', (req, res) => {
   }
 
   // Check that campaign is active.
+  // TODO: Refactor this to no longer use app.locals.campaigns -- would need to query Phoenix API
+  // to check for Campaign Status.
   const campaign = app.locals.campaigns[campaignId];
   if (!campaign || campaign.status !== 'active') {
     const msg = `Campaign ${campaignId} is not running on CampaignBot`;

@@ -24,10 +24,7 @@ const signupSchema = new mongoose.Schema({
     index: true,
     ref: 'users',
   },
-  campaign: {
-    type: Number,
-    ref: 'campaigns',
-  },
+  campaign: Number,
   keyword: String,
   draft_reportback_submission: {
     type: mongoose.Schema.Types.ObjectId,
@@ -98,17 +95,17 @@ signupSchema.statics.lookupById = function (id) {
 /**
  * Gets current Signup for given User / Campaign from DS API, stores if found. Returns false if not.
  * @param {User} user - User model.
- * @param {Campaign} campaign - Campaign model.
+ * @param {Campaign} campaign - Phoenix Campaign object.
  */
 signupSchema.statics.lookupCurrent = function (user, campaign) {
   const model = this;
   const statName = 'northstar: GET signups';
 
   return new Promise((resolve, reject) => {
-    logger.debug(`Signup.lookupCurrent(${user._id}, ${campaign._id})`);
+    logger.debug(`Signup.lookupCurrent(${user._id}, ${campaign.id})`);
 
     return app.locals.clients.northstar
-      .Signups.index({ user: user._id, campaigns: campaign._id })
+      .Signups.index({ user: user._id, campaigns: campaign.id })
       .then((northstarSignups) => {
         app.locals.stathat(`${statName} 200`);
 
@@ -141,7 +138,7 @@ signupSchema.statics.lookupCurrent = function (user, campaign) {
 /**
  * Posts Signup to DS API.
  * @param {User} user - User model.
- * @param {Campaign} campaign - Campaign model.
+ * @param {Campaign} campaign - Phoenix Campaign object.
  * @param {string} keyword - Keyword used to trigger Campaign Signup.
  */
 signupSchema.statics.post = function (user, campaign, keyword) {
@@ -149,25 +146,25 @@ signupSchema.statics.post = function (user, campaign, keyword) {
   const statName = 'phoenix: POST signups';
 
   return new Promise((resolve, reject) => {
-    logger.debug(`Signup.post(${user._id}, ${campaign._id}, ${keyword})`);
+    logger.debug(`Signup.post(${user._id}, ${campaign.id}, ${keyword})`);
 
     return app.locals.clients.phoenix.Campaigns
-      .signup(campaign._id, {
+      .signup(campaign.id, {
         source: postSource,
         uid: user.phoenix_id,
       })
-      .then((signupID) => {
+      .then((signupId) => {
         app.locals.stathat(`${statName} 200`);
         app.locals.stathat(`signup: ${keyword}`);
-        logger.info(`Signup.post created signup:${signupID}`);
+        logger.info(`Signup.post created signup:${signupId}`);
 
         const data = {
-          campaign: campaign._id,
+          campaign: campaign.id,
           user: user._id,
           keyword,
         };
 
-        return model.findOneAndUpdate({ _id: signupID }, data, { upsert: true, new: true })
+        return model.findOneAndUpdate({ _id: signupId }, data, { upsert: true, new: true })
           .exec()
           .then(signup => resolve(signup))
           .catch(error => reject(error));
@@ -215,12 +212,12 @@ signupSchema.methods.createDraftReportbackSubmission = function () {
  */
 signupSchema.methods.postDraftReportbackSubmission = function () {
   const signup = this;
+  logger.debug(`Signup.postDraftReportbackSubmission signup:${JSON.stringify(signup)}`);
+
   const dateSubmitted = Date.now();
   const statName = 'phoenix: POST reportbacks';
 
   return new Promise((resolve, reject) => {
-    logger.debug('Signup.postDraftReportbackSubmission');
-
     const submission = signup.draft_reportback_submission;
     const data = {
       source: postSource,
@@ -232,6 +229,7 @@ signupSchema.methods.postDraftReportbackSubmission = function () {
     if (submission.why_participated) {
       data.why_participated = submission.why_participated;
     }
+    logger.debug(`Signup.postDraftReportbackSubmission data:${JSON.stringify(data)}`);
 
     return app.locals.clients.phoenix.Campaigns
       .reportback(signup.campaign, data)
