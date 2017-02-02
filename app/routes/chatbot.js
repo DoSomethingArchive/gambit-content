@@ -191,7 +191,7 @@ router.post('/', (req, res) => {
 
           return fetchCampaign(campaignId)
             .then((campaign) => {
-              if (!campaign) {
+              if (!campaign.id) {
                 const msg = `Campaign not found for keyword '${scope.keyword}'.`;
                 const err = new NotFoundError(msg);
                 return reject(err);
@@ -215,7 +215,7 @@ router.post('/', (req, res) => {
         logger.debug(`user.current_campaign:${user.current_campaign}`);
         return fetchCampaign(user.current_campaign)
           .then((campaign) => {
-            if (!campaign) {
+            if (!campaign.id) {
               // TODO: Send to non-existent start menu to select a campaign.
               const msg = `User ${user._id} current_campaign ${user.current_campaign} not found.`;
               const err = new NotFoundError(msg);
