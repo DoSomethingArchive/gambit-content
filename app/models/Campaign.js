@@ -109,13 +109,28 @@ campaignSchema.methods.findOrCreateMessagingGroups = function () {
 campaignSchema.methods.formatApiResponse = function () {
   const data = {
     id: this._id,
-    title: this.title,
     campaignbot: helpers.isCampaignBotCampaign(this._id),
     current_run: this.current_run,
     mobilecommons_group_doing: this.mobilecommons_group_doing,
     mobilecommons_group_completed: this.mobilecommons_group_completed,
     keywords: this.keywords,
+    messages: this.messages,
+    overrides: {},
   };
+
+  const overrides = [
+    'msg_ask_caption',
+    'msg_ask_photo',
+    'msg_ask_quantity',
+    'msg_ask_why_participated',
+    'msg_invalid_quantity',
+    'msg_member_support',
+    'msg_menu_completed',
+    'msg_menu_signedup_external',
+    'msg_menu_signedup_gambit',
+    'msg_no_photo_sent',
+  ];
+  overrides.forEach(property => (data.overrides[property] = this[property]));
 
   return data;
 };
