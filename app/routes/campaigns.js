@@ -54,7 +54,7 @@ router.get('/:id', (req, res) => {
 });
 
 /**
- * Sends SMS message to given phone number with the given Campaign and its message type .
+ * Sends SMS message to given phone number with the given Campaign and its message type.
  */
 router.post('/:id/message', (req, res) => {
   // Check required parameters.
