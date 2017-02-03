@@ -8,6 +8,9 @@ const mobilecommons = rootRequire('lib/mobilecommons');
 const logger = app.locals.logger;
 const stathat = app.locals.stathat;
 
+/**
+ * GET index of campaigns.
+ */
 router.get('/', (req, res) => {
   stathat('route: v1/campaigns');
 
@@ -25,27 +28,34 @@ router.get('/', (req, res) => {
       const data = campaigns.map(campaign => campaign.formatApiResponse());
       res.send({ data });
     })
-    .catch(error => res.send(error));
+    .catch(error => helpers.sendResponse(res, 500, error.message));
 });
 
+/**
+ * GET single campaign.
+ */
 router.get('/:id', (req, res) => {
   stathat('route: v1/campaigns/{id}');
-  logger.debug(`get campaign ${req.params.id}`);
+  const campaignId = req.params.id;
+  logger.debug(`get campaign ${campaignId}`);
 
   return app.locals.db.campaigns
-    .findById(req.params.id)
+    .findById(campaignId)
     .exec()
     .then(campaign => {
       if (!campaign) {
-        return res.sendStatus(404);
+        return helpers.sendResponse(res, 404, `Campaign ${campaignId} found`);
       }
       const data = campaign.formatApiResponse();
 
       return res.send({ data });
     })
-    .catch(error => res.send(error));
+    .catch(error => helpers.sendResponse(res, 500, error.message));
 });
 
+/**
+ * Sends SMS message to given phone number with the given Campaign and its message type.
+ */
 router.post('/:id/message', (req, res) => {
   // Check required parameters.
   const campaignId = req.params.id;
