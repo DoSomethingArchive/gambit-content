@@ -320,7 +320,8 @@ router.post('/', (req, res) => {
     })
     .catch(err => {
       if (err.message === 'broadcast declined') {
-        const msg = scope.broadcast.declinedMessage;
+        logger.info('broadcast declined');
+        let msg = scope.broadcast.declinedMessage;
         if (!msg) {
           const logMsg = 'undefined broadcast.declinedMessage';
           logger.error(logMsg);
@@ -328,6 +329,15 @@ router.post('/', (req, res) => {
 
           // Don't send an error code to Mobile Commons, which would trigger error message to User.
           return helpers.sendResponse(res, 200, logMsg);
+        }
+        const senderPrefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
+        if (senderPrefix) {
+          logger.debug(`sendPrefix: ${senderPrefix}`);
+          try {
+            msg = `${senderPrefix} ${msg}`;
+          } catch (error) {
+            logger.error(error.message);
+          }
         }
 
         // Log the no response:
