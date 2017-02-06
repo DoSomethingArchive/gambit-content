@@ -320,9 +320,9 @@ router.post('/', (req, res) => {
     })
     .catch(err => {
       if (err.message === 'broadcast declined') {
-        const msg = scope.broadcast.msgDeclined;
+        const msg = scope.broadcast.declinedMessage;
         if (!msg) {
-          const logMsg = 'undefined broadcast.msgDeclined';
+          const logMsg = 'undefined broadcast.declinedMessage';
           logger.error(logMsg);
           stathat(`error: ${logMsg}`);
 
