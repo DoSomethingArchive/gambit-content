@@ -9,6 +9,7 @@ const logger = app.locals.logger;
 const stathat = app.locals.stathat;
 const Promise = require('bluebird');
 const helpers = require('../../lib/helpers');
+const contentful = require('../../lib/contentful');
 const mobilecommons = require('../../lib/mobilecommons');
 const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
@@ -147,16 +148,15 @@ router.post('/', (req, res) => {
         scope.user = user;
 
         if (scope.broadcast_id) {
-          return app.locals.db.broadcasts
-            .findById(scope.broadcast_id)
+          return contentful.fetchBroadcast(scope.broadcast_id)
             .then((broadcast) => {
-              if (!broadcast._id) {
-                const err = new NotFoundError('broadcast undefined');
+              if (!broadcast) {
+                const err = new NotFoundError(`broadcast ${scope.broadcast_id} not found`);
                 return reject(err);
               }
               currentBroadcast = broadcast;
-              logger.info(`loaded broadcast:${currentBroadcast._id}`);
-              return fetchCampaign(currentBroadcast.campaign);
+              logger.info(`loaded broadcast:${scope.broadcast_id}`);
+              return fetchCampaign(currentBroadcast.campaignId);
             })
             .then((campaign) => {
               if (!campaign.id) {
@@ -320,14 +320,24 @@ router.post('/', (req, res) => {
     })
     .catch(err => {
       if (err.message === 'broadcast declined') {
-        const msg = scope.broadcast.messages.prompt_declined;
+        logger.info('broadcast declined');
+        let msg = scope.broadcast.declinedMessage;
         if (!msg) {
-          const logMsg = 'undefined broadcast.messages.prompt_declined';
+          const logMsg = 'undefined broadcast.declinedMessage';
           logger.error(logMsg);
           stathat(`error: ${logMsg}`);
 
           // Don't send an error code to Mobile Commons, which would trigger error message to User.
           return helpers.sendResponse(res, 200, logMsg);
+        }
+        const senderPrefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
+        if (senderPrefix) {
+          logger.debug(`sendPrefix: ${senderPrefix}`);
+          try {
+            msg = `${senderPrefix} ${msg}`;
+          } catch (error) {
+            logger.error(error.message);
+          }
         }
 
         // Log the no response:
