@@ -154,6 +154,7 @@ router.post('/', (req, res) => {
                 const err = new NotFoundError(`broadcast ${scope.broadcast_id} not found`);
                 return reject(err);
               }
+              logger.debug(`found broadcast:${JSON.stringify(broadcast)}`);
               currentBroadcast = broadcast;
               logger.info(`loaded broadcast:${scope.broadcast_id}`);
               return fetchCampaign(currentBroadcast.campaignId);
@@ -186,10 +187,16 @@ router.post('/', (req, res) => {
         }
 
         if (scope.keyword) {
-          logger.debug(`load campaign for keyword:${scope.keyword}`);
-          campaignId = app.locals.keywords[scope.keyword];
+          return contentful.fetchKeyword(scope.keyword)
+            .then((keyword) => {
+              if (!keyword) {
+                const err = new NotFoundError(`keyword ${scope.keyword} not found`);
+                return reject(err);
+              }
+              logger.debug(`found keyword:${JSON.stringify(keyword)}`);
 
-          return fetchCampaign(campaignId)
+              return fetchCampaign(keyword.campaignId);
+            })
             .then((campaign) => {
               if (!campaign.id) {
                 const msg = `Campaign not found for keyword '${scope.keyword}'.`;
