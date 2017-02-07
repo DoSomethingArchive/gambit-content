@@ -113,7 +113,6 @@ campaignSchema.methods.formatApiResponse = function () {
     current_run: this.current_run,
     mobilecommons_group_doing: this.mobilecommons_group_doing,
     mobilecommons_group_completed: this.mobilecommons_group_completed,
-    keywords: this.keywords,
     messages: this.messages,
     overrides: {},
   };
