@@ -11,7 +11,6 @@ const MessagingGroups = require('../../lib/groups');
 const campaignSchema = new mongoose.Schema({
 
   _id: { type: Number, index: true },
-  keywords: [String],
 
   // Properties cached from DS API.
   title: String,
