@@ -29,7 +29,12 @@ function fetchCampaign(id) {
     return app.locals.clients.phoenix.Campaigns
       .get(id)
       .then(campaign => resolve(campaign))
-      .catch(err => reject(err));
+      .catch((err) => {
+        const phoenixError = err;
+        phoenixError.message = `Phoenix: ${err.message}`;
+
+        return reject(phoenixError);
+      });
   });
 }
 
