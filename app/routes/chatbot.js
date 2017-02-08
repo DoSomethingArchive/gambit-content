@@ -200,6 +200,13 @@ router.post('/', (req, res) => {
               }
               logger.debug(`found keyword:${JSON.stringify(keyword)}`);
 
+              if (keyword.environment !== process.env.NODE_ENV) {
+                let msg = `mData misconfiguration: ${keyword.environment} keyword sent to`;
+                msg = `${msg} ${process.env.NODE_ENV}`;
+                const err = new Error(msg);
+                return reject(err);
+              }
+
               return fetchCampaign(keyword.campaignId);
             })
             .then((campaign) => {
