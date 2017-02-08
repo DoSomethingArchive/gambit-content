@@ -11,7 +11,6 @@ const MessagingGroups = require('../../lib/groups');
 const campaignSchema = new mongoose.Schema({
 
   _id: { type: Number, index: true },
-  keywords: [String],
 
   // Properties cached from DS API.
   title: String,
@@ -113,7 +112,6 @@ campaignSchema.methods.formatApiResponse = function () {
     current_run: this.current_run,
     mobilecommons_group_doing: this.mobilecommons_group_doing,
     mobilecommons_group_completed: this.mobilecommons_group_completed,
-    keywords: this.keywords,
     messages: this.messages,
     overrides: {},
   };

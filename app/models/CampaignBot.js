@@ -75,7 +75,7 @@ campaignBotSchema.methods.renderMessage = function (req, msgType, prefix) {
   let msg = this[botProperty];
   // TODO: Use db.campaigns.findById to check for overrides/keywords instead of app.locals.campaigns
   const campaignDoc = app.locals.campaigns[campaign.id];
-  if (campaignDoc[botProperty]) {
+  if (campaignDoc && campaignDoc[botProperty]) {
     msg = campaignDoc[botProperty];
   }
 
@@ -97,14 +97,14 @@ campaignBotSchema.methods.renderMessage = function (req, msgType, prefix) {
   msg = msg.replace(/{{cmd_reportback}}/i, process.env.GAMBIT_CMD_REPORTBACK);
   msg = msg.replace(/{{cmd_member_support}}/i, process.env.GAMBIT_CMD_MEMBER_SUPPORT);
 
-  if (campaignDoc.keywords && campaignDoc.keywords.length > 0) {
-    let keyword;
-    // If user signed up via keyword and there are multiple, use the keyword they signed up with.
-    const usedSignupKeyword = campaignDoc.keywords.length > 1 && req.signup && req.signup.keyword;
-    if (usedSignupKeyword) {
+  if (msg.indexOf('{{keyword}}') !== -1) {
+    // TODO: Hack for now, we'll need to set up a MENU keyword in Mobile Commons to select Cmapaign.
+    let keyword = 'menu';
+    if (req.signup && req.signup.keyword) {
       keyword = req.signup.keyword;
     } else {
-      keyword = campaignDoc.keywords[0];
+      // TODO: When Signup was external there's no keyword. Query Contentful to find 1st keyword...
+      // or stick with the MENU to select campaign instead of directly texting Campaign keyword.
     }
     msg = msg.replace(/{{keyword}}/i, keyword.toUpperCase());
   }

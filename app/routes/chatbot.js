@@ -29,7 +29,12 @@ function fetchCampaign(id) {
     return app.locals.clients.phoenix.Campaigns
       .get(id)
       .then(campaign => resolve(campaign))
-      .catch(err => reject(err));
+      .catch((err) => {
+        const phoenixError = err;
+        phoenixError.message = `Phoenix: ${err.message}`;
+
+        return reject(phoenixError);
+      });
   });
 }
 
@@ -139,7 +144,6 @@ router.post('/', (req, res) => {
 
   const loadCampaign = new Promise((resolve, reject) => {
     logger.log('loadCampaign');
-    let campaignId;
     let currentBroadcast;
 
     return loadUser
@@ -154,6 +158,7 @@ router.post('/', (req, res) => {
                 const err = new NotFoundError(`broadcast ${scope.broadcast_id} not found`);
                 return reject(err);
               }
+              logger.debug(`found broadcast:${JSON.stringify(broadcast)}`);
               currentBroadcast = broadcast;
               logger.info(`loaded broadcast:${scope.broadcast_id}`);
               return fetchCampaign(currentBroadcast.campaignId);
@@ -186,10 +191,23 @@ router.post('/', (req, res) => {
         }
 
         if (scope.keyword) {
-          logger.debug(`load campaign for keyword:${scope.keyword}`);
-          campaignId = app.locals.keywords[scope.keyword];
+          return contentful.fetchKeyword(scope.keyword)
+            .then((keyword) => {
+              if (!keyword) {
+                const err = new NotFoundError(`keyword ${scope.keyword} not found`);
+                return reject(err);
+              }
+              logger.debug(`found keyword:${JSON.stringify(keyword)}`);
 
-          return fetchCampaign(campaignId)
+              if (keyword.environment !== process.env.NODE_ENV) {
+                let msg = `mData misconfiguration: ${keyword.environment} keyword sent to`;
+                msg = `${msg} ${process.env.NODE_ENV}`;
+                const err = new Error(msg);
+                return reject(err);
+              }
+
+              return fetchCampaign(keyword.campaignId);
+            })
             .then((campaign) => {
               if (!campaign.id) {
                 const msg = `Campaign not found for keyword '${scope.keyword}'.`;
@@ -201,7 +219,7 @@ router.post('/', (req, res) => {
                 // Store campaign to render in closed message.
                 scope.campaign = campaign;
                 // TODO: Include this message to the CampaignClosedError.
-                const msg = `Keyword received for closed campaign ${campaignId}.`;
+                const msg = `Keyword received for closed campaign ${campaign.id}.`;
                 const err = new UnprocessibleEntityError(msg);
                 return reject(err);
               }
@@ -308,9 +326,7 @@ router.post('/', (req, res) => {
     })
     .catch(UnprocessibleEntityError, (err) => {
       logger.error(err.message);
-      // TODO: Send StatHat report to inform staff CampaignBot is running a closed Campaign.
-      // We don't want to send an error back as response, but instead deliver success to Mobile
-      // Commons and deliver the Campaign Closed message back to our User.
+      stathat('campaign closed');
       const msg = campaignBot.renderMessage(scope, 'campaign_closed');
       // Send to Agent View for now until we get a Select Campaign menu up and running.
       scope.user.postMobileCommonsProfileUpdate(agentViewOip, msg);
@@ -349,6 +365,7 @@ router.post('/', (req, res) => {
       }
 
       logger.error(err.message);
+      stathat(err.message);
 
       return helpers.sendResponse(res, 500, err.message);
     });

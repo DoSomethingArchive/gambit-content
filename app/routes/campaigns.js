@@ -2,11 +2,31 @@
 
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
-
+const Promise = require('bluebird');
+const contentful = require('../../lib/contentful');
 const helpers = require('../../lib/helpers');
 const mobilecommons = rootRequire('lib/mobilecommons');
 const logger = app.locals.logger;
 const stathat = app.locals.stathat;
+
+/**
+ * Queries Contentful to add keywords property to given campaign object.
+ */
+function formatCampaignDoc(campaignDoc) {
+  const campaign = campaignDoc.formatApiResponse();
+
+  return new Promise((resolve, reject) => {
+    logger.debug(`fetchKeywordsForCampaign:${JSON.stringify(campaign)}`);
+
+    return contentful.fetchKeywordsForCampaignId(campaign.id)
+      .then((keywords) => {
+        campaign.keywords = keywords;
+
+        return resolve(campaign);
+      })
+      .catch(error => reject(error));
+  });
+}
 
 /**
  * GET index of campaigns.
@@ -24,10 +44,8 @@ router.get('/', (req, res) => {
   return app.locals.db.campaigns
     .find(findClause)
     .exec()
-    .then((campaigns) => {
-      const data = campaigns.map(campaign => campaign.formatApiResponse());
-      res.send({ data });
-    })
+    .then(campaignDocs => Promise.map(campaignDocs, formatCampaignDoc))
+    .then(data => res.send({ data }))
     .catch(error => helpers.sendResponse(res, 500, error.message));
 });
 
@@ -42,14 +60,14 @@ router.get('/:id', (req, res) => {
   return app.locals.db.campaigns
     .findById(campaignId)
     .exec()
-    .then(campaign => {
-      if (!campaign) {
-        return helpers.sendResponse(res, 404, `Campaign ${campaignId} found`);
+    .then(campaignDoc => {
+      if (!campaignDoc) {
+        return helpers.sendResponse(res, 404, `Campaign ${campaignId} not found`);
       }
-      const data = campaign.formatApiResponse();
 
-      return res.send({ data });
+      return formatCampaignDoc(campaignDoc);
     })
+    .then(data => res.send({ data }))
     .catch(error => helpers.sendResponse(res, 500, error.message));
 });
 

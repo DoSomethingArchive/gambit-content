@@ -132,8 +132,6 @@ conn.on('connected', () => {
    * Load campaigns.
    */
   app.locals.campaigns = {};
-  app.locals.keywords = {};
-
   const loadCampaigns = app.locals.db.campaigns
     .lookupByIDs(process.env.CAMPAIGNBOT_CAMPAIGNS)
     .then((campaigns) => {
@@ -145,16 +143,6 @@ conn.on('connected', () => {
         // as its used by the campaigns/:id/message route.
         app.locals.campaigns[campaignId] = campaign;
         logger.info(`loaded app.locals.campaigns[${campaignId}]`);
-
-        if (campaign.keywords.length < 1) {
-          logger.warn(`no keywords defined for campaign:${campaignId}`);
-        }
-
-        campaign.keywords.forEach((campaignKeyword) => {
-          const keyword = campaignKeyword.toLowerCase();
-          app.locals.keywords[keyword] = campaignId;
-          logger.info(`loaded app.locals.keywords[${keyword}]:${campaignId}`);
-        });
 
         if (!campaign.mobilecommons_group_doing || !campaign.mobilecommons_group_completed) {
           campaign.findOrCreateMessagingGroups();
