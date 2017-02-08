@@ -44,7 +44,7 @@ router.get('/', (req, res) => {
   return app.locals.db.campaigns
     .find(findClause)
     .exec()
-    .then((campaignDocs) => Promise.map(campaignDocs, formatCampaignDoc))
+    .then(campaignDocs => Promise.map(campaignDocs, formatCampaignDoc))
     .then(data => res.send({ data }))
     .catch(error => helpers.sendResponse(res, 500, error.message));
 });
@@ -67,7 +67,7 @@ router.get('/:id', (req, res) => {
 
       return formatCampaignDoc(campaignDoc);
     })
-    .then((data) => res.send({ data }))
+    .then(data => res.send({ data }))
     .catch(error => helpers.sendResponse(res, 500, error.message));
 });
 
