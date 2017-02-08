@@ -97,16 +97,16 @@ campaignBotSchema.methods.renderMessage = function (req, msgType, prefix) {
   msg = msg.replace(/{{cmd_reportback}}/i, process.env.GAMBIT_CMD_REPORTBACK);
   msg = msg.replace(/{{cmd_member_support}}/i, process.env.GAMBIT_CMD_MEMBER_SUPPORT);
 
-  if (campaignDoc && campaignDoc.keywords && campaignDoc.keywords.length > 0) {
-    let keyword;
-    // If user signed up via keyword and there are multiple, use the keyword they signed up with.
-    const usedSignupKeyword = campaignDoc.keywords.length > 1 && req.signup && req.signup.keyword;
-    if (usedSignupKeyword) {
+  if (msg.indexOf('{{keyword}}') !== -1) {
+    // TODO: Hack for now, we'll need to set up a MENU keyword in Mobile Commons to select Cmapaign.
+    let keyword = 'menu';
+    if (req.signup && req.signup.keyword) {
       keyword = req.signup.keyword;
     } else {
-      keyword = campaignDoc.keywords[0];
+      // TODO: When Signup was external there's no keyword. Query Contentful to find 1st keyword...
+      // or stick with the MENU to select campaign instead of directly texting Campaign keyword.
     }
-    msg = msg.replace(/{{keyword}}/i, keyword.toUpperCase());
+    msg = msg.replace(/{{keyword}}/gi, keyword.toUpperCase());
   }
 
   if (req.signup) {
