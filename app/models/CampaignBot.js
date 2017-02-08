@@ -106,7 +106,7 @@ campaignBotSchema.methods.renderMessage = function (req, msgType, prefix) {
       // TODO: When Signup was external there's no keyword. Query Contentful to find 1st keyword...
       // or stick with the MENU to select campaign instead of directly texting Campaign keyword.
     }
-    msg = msg.replace(/{{keyword}}/gi, keyword.toUpperCase());
+    msg = msg.replace(/{{keyword}}/i, keyword.toUpperCase());
   }
 
   if (req.signup) {
