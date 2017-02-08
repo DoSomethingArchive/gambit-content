@@ -144,7 +144,6 @@ router.post('/', (req, res) => {
 
   const loadCampaign = new Promise((resolve, reject) => {
     logger.log('loadCampaign');
-    let campaignId;
     let currentBroadcast;
 
     return loadUser
@@ -220,7 +219,7 @@ router.post('/', (req, res) => {
                 // Store campaign to render in closed message.
                 scope.campaign = campaign;
                 // TODO: Include this message to the CampaignClosedError.
-                const msg = `Keyword received for closed campaign ${campaignId}.`;
+                const msg = `Keyword received for closed campaign ${campaign.id}.`;
                 const err = new UnprocessibleEntityError(msg);
                 return reject(err);
               }
@@ -327,9 +326,7 @@ router.post('/', (req, res) => {
     })
     .catch(UnprocessibleEntityError, (err) => {
       logger.error(err.message);
-      // TODO: Send StatHat report to inform staff CampaignBot is running a closed Campaign.
-      // We don't want to send an error back as response, but instead deliver success to Mobile
-      // Commons and deliver the Campaign Closed message back to our User.
+      stathat('campaign closed');
       const msg = campaignBot.renderMessage(scope, 'campaign_closed');
       // Send to Agent View for now until we get a Select Campaign menu up and running.
       scope.user.postMobileCommonsProfileUpdate(agentViewOip, msg);
@@ -368,6 +365,7 @@ router.post('/', (req, res) => {
       }
 
       logger.error(err.message);
+      stathat(err.message);
 
       return helpers.sendResponse(res, 500, err.message);
     });
