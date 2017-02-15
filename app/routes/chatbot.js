@@ -161,7 +161,7 @@ router.post('/', (req, res) => {
               logger.debug(`found broadcast:${JSON.stringify(broadcast)}`);
               currentBroadcast = broadcast;
               logger.info(`loaded broadcast:${scope.broadcast_id}`);
-              return fetchCampaign(currentBroadcast.campaignId);
+              return fetchCampaign(currentBroadcast.fields.campaignId);
             })
             .then((campaign) => {
               if (!campaign.id) {
@@ -197,16 +197,16 @@ router.post('/', (req, res) => {
                 const err = new NotFoundError(`keyword ${scope.keyword} not found`);
                 return reject(err);
               }
-              logger.debug(`found keyword:${JSON.stringify(keyword)}`);
+              logger.debug(`found keyword:${JSON.stringify(keyword.fields)}`);
 
-              if (keyword.environment !== process.env.NODE_ENV) {
+              if (keyword.fields.environment !== process.env.NODE_ENV) {
                 let msg = `mData misconfiguration: ${keyword.environment} keyword sent to`;
                 msg = `${msg} ${process.env.NODE_ENV}`;
                 const err = new Error(msg);
                 return reject(err);
               }
 
-              return fetchCampaign(keyword.campaignId);
+              return fetchCampaign(keyword.fields.campaign.fields.campaignId);
             })
             .then((campaign) => {
               if (!campaign.id) {
@@ -337,7 +337,7 @@ router.post('/', (req, res) => {
     .catch(err => {
       if (err.message === 'broadcast declined') {
         logger.info('broadcast declined');
-        let msg = scope.broadcast.declinedMessage;
+        let msg = scope.broadcast.fields.declinedMessage;
         if (!msg) {
           const logMsg = 'undefined broadcast.declinedMessage';
           logger.error(logMsg);
