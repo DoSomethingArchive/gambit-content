@@ -161,7 +161,7 @@ router.post('/', (req, res) => {
               logger.debug(`found broadcast:${JSON.stringify(broadcast)}`);
               currentBroadcast = broadcast;
               logger.info(`loaded broadcast:${scope.broadcast_id}`);
-              return fetchCampaign(currentBroadcast.fields.campaignId);
+              return fetchCampaign(currentBroadcast.fields.campaign.fields.campaignId);
             })
             .then((campaign) => {
               if (!campaign.id) {
