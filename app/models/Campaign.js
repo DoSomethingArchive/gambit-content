@@ -5,23 +5,18 @@
  */
 const mongoose = require('mongoose');
 const logger = app.locals.logger;
+const helpers = require('../../lib/helpers');
 const MessagingGroups = require('../../lib/groups');
 
 const campaignSchema = new mongoose.Schema({
 
   _id: { type: Number, index: true },
-  keywords: [String],
 
   // Properties cached from DS API.
   title: String,
   current_run: Number,
-  fact_problem: String,
-  msg_rb_confirmation: String,
-  rb_noun: String,
-  rb_verb: String,
-  status: { type: String, enum: ['active', 'closed'] },
-  tagline: String,
-  type: String,
+  // TODO: Deprecate this. Keep for now as its used by the campaigns/:id/message route.
+  status: String,
 
   // Properties to override CampaignBot content.
   msg_ask_caption: String,
@@ -49,19 +44,13 @@ const campaignSchema = new mongoose.Schema({
 
 function parsePhoenixCampaign(phoenixCampaign) {
   const data = {
-    status: phoenixCampaign.status,
-    tagline: phoenixCampaign.tagline,
     title: phoenixCampaign.title,
+    status: phoenixCampaign.status,
     current_run: phoenixCampaign.currentCampaignRun.id,
-    fact_problem: phoenixCampaign.facts.problem,
-    msg_rb_confirmation: phoenixCampaign.reportbackInfo.confirmationMessage,
-    rb_noun: phoenixCampaign.reportbackInfo.noun,
-    rb_verb: phoenixCampaign.reportbackInfo.verb,
   };
 
   return data;
 }
-
 
 /**
  * Get given Campaigns from DS API then store.
@@ -117,22 +106,29 @@ campaignSchema.methods.findOrCreateMessagingGroups = function () {
  * Returns formatted Campaign object to return in campaigns endpoint.
  */
 campaignSchema.methods.formatApiResponse = function () {
-  let campaignBotCampaign = false;
-  if (app.locals.campaigns[this._id]) {
-    campaignBotCampaign = true;
-  }
-
-  // TODO: Add all other properties.
   const data = {
     id: this._id,
-    title: this.title,
-    campaignbot: campaignBotCampaign,
-    status: this.status,
+    campaignbot: helpers.isCampaignBotCampaign(this._id),
     current_run: this.current_run,
     mobilecommons_group_doing: this.mobilecommons_group_doing,
     mobilecommons_group_completed: this.mobilecommons_group_completed,
-    keywords: this.keywords,
+    messages: this.messages,
+    overrides: {},
   };
+
+  const overrides = [
+    'msg_ask_caption',
+    'msg_ask_photo',
+    'msg_ask_quantity',
+    'msg_ask_why_participated',
+    'msg_invalid_quantity',
+    'msg_member_support',
+    'msg_menu_completed',
+    'msg_menu_signedup_external',
+    'msg_menu_signedup_gambit',
+    'msg_no_photo_sent',
+  ];
+  overrides.forEach(property => (data.overrides[property] = this[property]));
 
   return data;
 };

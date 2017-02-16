@@ -2,12 +2,35 @@
 
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
-
+const Promise = require('bluebird');
+const contentful = require('../../lib/contentful');
 const helpers = require('../../lib/helpers');
 const mobilecommons = rootRequire('lib/mobilecommons');
 const logger = app.locals.logger;
 const stathat = app.locals.stathat;
 
+/**
+ * Queries Contentful to add keywords property to given campaign object.
+ */
+function formatCampaignDoc(campaignDoc) {
+  const campaign = campaignDoc.formatApiResponse();
+
+  return new Promise((resolve, reject) => {
+    logger.debug(`fetchKeywordsForCampaign:${JSON.stringify(campaign)}`);
+
+    return contentful.fetchKeywordsForCampaignId(campaign.id)
+      .then((keywords) => {
+        campaign.keywords = keywords;
+
+        return resolve(campaign);
+      })
+      .catch(error => reject(error));
+  });
+}
+
+/**
+ * GET index of campaigns.
+ */
 router.get('/', (req, res) => {
   stathat('route: v1/campaigns');
 
@@ -21,31 +44,36 @@ router.get('/', (req, res) => {
   return app.locals.db.campaigns
     .find(findClause)
     .exec()
-    .then((campaigns) => {
-      const data = campaigns.map(campaign => campaign.formatApiResponse());
-      res.send({ data });
-    })
-    .catch(error => res.send(error));
+    .then(campaignDocs => Promise.map(campaignDocs, formatCampaignDoc))
+    .then(data => res.send({ data }))
+    .catch(error => helpers.sendResponse(res, 500, error.message));
 });
 
+/**
+ * GET single campaign.
+ */
 router.get('/:id', (req, res) => {
   stathat('route: v1/campaigns/{id}');
-  logger.debug(`get campaign ${req.params.id}`);
+  const campaignId = req.params.id;
+  logger.debug(`get campaign ${campaignId}`);
 
   return app.locals.db.campaigns
-    .findById(req.params.id)
+    .findById(campaignId)
     .exec()
-    .then(campaign => {
-      if (!campaign) {
-        return res.sendStatus(404);
+    .then(campaignDoc => {
+      if (!campaignDoc) {
+        return helpers.sendResponse(res, 404, `Campaign ${campaignId} not found`);
       }
-      const data = campaign.formatApiResponse();
 
-      return res.send({ data });
+      return formatCampaignDoc(campaignDoc);
     })
-    .catch(error => res.send(error));
+    .then(data => res.send({ data }))
+    .catch(error => helpers.sendResponse(res, 500, error.message));
 });
 
+/**
+ * Sends SMS message to given phone number with the given Campaign and its message type.
+ */
 router.post('/:id/message', (req, res) => {
   // Check required parameters.
   const campaignId = req.params.id;
@@ -63,6 +91,8 @@ router.post('/:id/message', (req, res) => {
   }
 
   // Check that campaign is active.
+  // TODO: Refactor this to no longer use app.locals.campaigns -- would need to query Phoenix API
+  // to check for Campaign Status.
   const campaign = app.locals.campaigns[campaignId];
   if (!campaign || campaign.status !== 'active') {
     const msg = `Campaign ${campaignId} is not running on CampaignBot`;

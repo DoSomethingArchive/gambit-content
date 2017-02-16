@@ -11,10 +11,6 @@ node_modules
 
 .wercker
 
-# test coverage
-.coveralls.yml
-coverage
-
 # config
 **/config/*.json
 .pull_config.conf

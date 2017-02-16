@@ -66,26 +66,21 @@ campaignBotSchema.methods.renderMessage = function (req, msgType, prefix) {
   logger.info(logMsg);
   stathat(logMsg);
 
-  const botProperty = `msg_${msgType}`;
-  let msg = this[botProperty];
-  const senderPrefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
   const campaign = req.campaign;
-  // A Broadcast Declined request won't contain a loaded campaign.
-  if (!campaign) {
-    logger.debug('renderMessage req.campaign undefined');
-    if (senderPrefix) {
-      msg = `${senderPrefix} ${msg}`;
-    }
-    return msg;
+  if (!campaign.id) {
+    throw new Error('req.campaign undefined');
   }
 
-  // Check if campaign has an override defined.
-  if (campaign[botProperty]) {
-    msg = campaign[botProperty];
+  const botProperty = `msg_${msgType}`;
+  let msg = this[botProperty];
+  // TODO: Use db.campaigns.findById to check for overrides/keywords instead of app.locals.campaigns
+  const campaignDoc = app.locals.campaigns[campaign.id];
+  if (campaignDoc && campaignDoc[botProperty]) {
+    msg = campaignDoc[botProperty];
   }
 
   if (!msg) {
-    return this.error(req, 'bot msgType not found');
+    throw new Error(`bot msgType:${msgType} not found`);
   }
 
   if (prefix) {
@@ -95,21 +90,21 @@ campaignBotSchema.methods.renderMessage = function (req, msgType, prefix) {
   msg = msg.replace(/{{br}}/gi, '\n');
   msg = msg.replace(/{{title}}/gi, campaign.title);
   msg = msg.replace(/{{tagline}}/i, campaign.tagline);
-  msg = msg.replace(/{{fact_problem}}/gi, campaign.fact_problem);
-  msg = msg.replace(/{{rb_noun}}/gi, campaign.rb_noun);
-  msg = msg.replace(/{{rb_verb}}/gi, campaign.rb_verb);
-  msg = msg.replace(/{{rb_confirmation_msg}}/i, campaign.msg_rb_confirmation);
+  msg = msg.replace(/{{fact_problem}}/gi, campaign.facts.problem);
+  msg = msg.replace(/{{rb_noun}}/gi, campaign.reportbackInfo.noun);
+  msg = msg.replace(/{{rb_verb}}/gi, campaign.reportbackInfo.verb);
+  msg = msg.replace(/{{rb_confirmation_msg}}/i, campaign.reportbackInfo.confirmationMessage);
   msg = msg.replace(/{{cmd_reportback}}/i, process.env.GAMBIT_CMD_REPORTBACK);
   msg = msg.replace(/{{cmd_member_support}}/i, process.env.GAMBIT_CMD_MEMBER_SUPPORT);
 
-  if (campaign.keywords && campaign.keywords.length > 0) {
-    let keyword;
-    // If user signed up via keyword and there are multiple, use the keyword they signed up with.
-    const usedSignupKeyword = campaign.keywords.length > 1 && req.signup && req.signup.keyword;
-    if (usedSignupKeyword) {
+  if (msg.indexOf('{{keyword}}') !== -1) {
+    // TODO: Hack for now, we'll need to set up a MENU keyword in Mobile Commons to select Cmapaign.
+    let keyword = 'menu';
+    if (req.signup && req.signup.keyword) {
       keyword = req.signup.keyword;
     } else {
-      keyword = campaign.keywords[0];
+      // TODO: When Signup was external there's no keyword. Query Contentful to find 1st keyword...
+      // or stick with the MENU to select campaign instead of directly texting Campaign keyword.
     }
     msg = msg.replace(/{{keyword}}/i, keyword.toUpperCase());
   }
@@ -129,6 +124,7 @@ campaignBotSchema.methods.renderMessage = function (req, msgType, prefix) {
     msg = `${continueMsg} ${campaign.title}...\n\n${msg}`;
   }
 
+  const senderPrefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
   if (senderPrefix) {
     msg = `${senderPrefix} ${msg}`;
   }

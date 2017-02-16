@@ -132,33 +132,24 @@ conn.on('connected', () => {
    * Load campaigns.
    */
   app.locals.campaigns = {};
-  app.locals.keywords = {};
-
   const loadCampaigns = app.locals.db.campaigns
     .lookupByIDs(process.env.CAMPAIGNBOT_CAMPAIGNS)
     .then((campaigns) => {
       logger.debug(`app.locals.db.campaigns.lookupByIDs found ${campaigns.length} campaigns`);
 
       return campaigns.forEach((campaign) => {
-        const campaignID = campaign._id;
-        app.locals.campaigns[campaignID] = campaign;
-        logger.info(`loaded app.locals.campaigns[${campaignID}]`);
+        const campaignId = campaign._id;
+        // Eventually looking to deprecate app.locals.campaigns, leaving for now
+        // as its used by the campaigns/:id/message route.
+        app.locals.campaigns[campaignId] = campaign;
+        logger.info(`loaded app.locals.campaigns[${campaignId}]`);
 
         if (!campaign.mobilecommons_group_doing || !campaign.mobilecommons_group_completed) {
           campaign.findOrCreateMessagingGroups();
         }
-
-        if (campaign.keywords.length < 1) {
-          logger.warn(`no keywords defined for campaign:${campaignID}`);
-        }
-        campaign.keywords.forEach((campaignKeyword) => {
-          const keyword = campaignKeyword.toLowerCase();
-          app.locals.keywords[keyword] = campaignID;
-          logger.info(`loaded app.locals.keywords[${keyword}]:${campaignID}`);
-        });
       });
     })
-    .catch(err => logger.error(err));
+    .catch(err => logger.error(err.message));
 
   /**
    * Load controllers.
