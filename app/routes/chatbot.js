@@ -11,32 +11,9 @@ const Promise = require('bluebird');
 const helpers = require('../../lib/helpers');
 const contentful = require('../../lib/contentful');
 const mobilecommons = require('../../lib/mobilecommons');
+const phoenix = require('../../lib/phoenix');
 const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
-
-/**
- * Fetches Campaign object from DS API for given id.
- */
-function fetchCampaign(id) {
-  return new Promise((resolve, reject) => {
-    logger.debug(`fetchCampaign:${id}`);
-
-    if (!id) {
-      const err = new NotFoundError('Campaign id undefined');
-      return reject(err);
-    }
-
-    return app.locals.clients.phoenix.Campaigns
-      .get(id)
-      .then(campaign => resolve(campaign))
-      .catch((err) => {
-        const phoenixError = err;
-        phoenixError.message = `Phoenix: ${err.message}`;
-
-        return reject(phoenixError);
-      });
-  });
-}
 
 /**
  * Determines if given incomingMessage matches given Gambit command type.
@@ -161,7 +138,7 @@ router.post('/', (req, res) => {
               logger.debug(`found broadcast:${JSON.stringify(broadcast)}`);
               currentBroadcast = broadcast;
               logger.info(`loaded broadcast:${scope.broadcast_id}`);
-              return fetchCampaign(currentBroadcast.fields.campaign.fields.campaignId);
+              return phoenix.fetchCampaign(currentBroadcast.fields.campaign.fields.campaignId);
             })
             .then((campaign) => {
               if (!campaign.id) {
@@ -206,7 +183,7 @@ router.post('/', (req, res) => {
                 return reject(err);
               }
 
-              return fetchCampaign(keyword.fields.campaign.fields.campaignId);
+              return phoenix.fetchCampaign(keyword.fields.campaign.fields.campaignId);
             })
             .then((campaign) => {
               if (!campaign.id) {
@@ -231,7 +208,7 @@ router.post('/', (req, res) => {
 
         // If we've made it this far, check for User's current_campaign.
         logger.debug(`user.current_campaign:${user.current_campaign}`);
-        return fetchCampaign(user.current_campaign)
+        return phoenix.fetchCampaign(user.current_campaign)
           .then((campaign) => {
             if (!campaign.id) {
               // TODO: Send to non-existent start menu to select a campaign.
