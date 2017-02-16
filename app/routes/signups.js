@@ -44,12 +44,12 @@ router.post('/', (req, res) => {
       return phoenix.fetchCampaign(signup.campaign);
     })
     .then((phoenixCampaign) => {
-      if (!phoenixCampaign) {
-        const msg = `Campaign ${scope.signup.campaign} is not running on CampaignBot.`;
+      if (!helpers.isCampaignBotCampaign(phoenixCampaign.id)) {
+        const msg = `Campaign ${phoenixCampaign.id} is not running on CampaignBot.`;
         throw new UnprocessibleEntityError(msg);
       }
       if (phoenixCampaign.status === 'closed') {
-        const msg = `Campaign ${scope.signup.campaign} is closed on CampaignBot.`;
+        const msg = `Campaign ${phoenixCampaign.id} is closed.`;
         throw new UnprocessibleEntityError(msg);
       }
       scope.campaign = phoenixCampaign;
