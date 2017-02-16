@@ -2,10 +2,11 @@
 
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
+const phoenix = require('../../lib/phoenix');
 const helpers = require('../../lib/helpers');
 const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
-// Requiring Blurbird overrides native promises,
+// Requiring Bluebird overrides native promises,
 // which we need for our exception handling logic in this endpoint.
 const Promise = require('bluebird'); // eslint-disable-line no-unused-vars
 const logger = app.locals.logger;
@@ -39,19 +40,21 @@ router.post('/', (req, res) => {
     .lookupById(signupId)
     .then((signup) => {
       scope.signup = signup;
-      // TODO: Use findById instead of app.locals.campaigns.
-      scope.campaign = app.locals.campaigns[signup.campaign];
 
-      if (!scope.campaign) {
-        const msg = `Campaign ${signup.campaign} is not running on CampaignBot.`;
+      return phoenix.fetchCampaign(signup.campaign);
+    })
+    .then((phoenixCampaign) => {
+      if (!phoenixCampaign) {
+        const msg = `Campaign ${scope.signup.campaign} is not running on CampaignBot.`;
         throw new UnprocessibleEntityError(msg);
       }
-      if (scope.campaign.status === 'closed') {
-        const msg = `Campaign ${signup.campaign} is closed on CampaignBot.`;
+      if (phoenixCampaign.status === 'closed') {
+        const msg = `Campaign ${scope.signup.campaign} is closed on CampaignBot.`;
         throw new UnprocessibleEntityError(msg);
       }
+      scope.campaign = phoenixCampaign;
 
-      return app.locals.db.users.lookup('id', signup.user);
+      return app.locals.db.users.lookup('id', scope.signup.user);
     })
     .then((user) => {
       if (!user.mobile) {
