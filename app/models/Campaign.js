@@ -56,15 +56,15 @@ function parsePhoenixCampaign(phoenixCampaign) {
 /**
  * Get given Campaigns from DS API then store.
  */
-campaignSchema.statics.lookupByIDs = function (campaignIDs) {
+campaignSchema.statics.lookupByIds = function (campaignIds) {
   const model = this;
 
   return new Promise((resolve, reject) => {
-    logger.debug(`Campaign.lookupByIDs:${campaignIDs}`);
+    logger.debug(`Campaign.lookupByIds:${campaignIds}`);
 
     const promises = [];
 
-    return phoenix.Campaigns.index({ ids: campaignIDs })
+    return phoenix.Campaigns.index({ ids: campaignIds })
       .then((phoenixCampaigns) => {
         phoenixCampaigns.forEach((phoenixCampaign) => {
           const data = parsePhoenixCampaign(phoenixCampaign);

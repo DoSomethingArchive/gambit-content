@@ -104,9 +104,9 @@ conn.on('connected', () => {
    */
   app.locals.campaigns = {};
   const loadCampaigns = app.locals.db.campaigns
-    .lookupByIDs(process.env.CAMPAIGNBOT_CAMPAIGNS)
+    .lookupByIds(process.env.CAMPAIGNBOT_CAMPAIGNS)
     .then((campaigns) => {
-      logger.debug(`app.locals.db.campaigns.lookupByIDs found ${campaigns.length} campaigns`);
+      logger.debug(`app.locals.db.campaigns.lookupByIds found ${campaigns.length} campaigns`);
 
       return campaigns.forEach((campaign) => {
         const campaignId = campaign._id;

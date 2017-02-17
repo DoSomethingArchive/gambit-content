@@ -60,12 +60,12 @@ userSchema.statics.lookup = function (type, id) {
       .then((northstarUser) => {
         app.locals.stathat(`${statName} 200`);
         logger.debug('northstar.Users.lookup success');
-        const data = parseNorthstarUser(northstarUser);
-        const query = { _id: data._id };
+        const userData = parseNorthstarUser(northstarUser);
+        const query = { _id: userData._id };
 
-        return model.findOneAndUpdate(query, data, helpers.upsertOptions()).exec();
+        return model.findOneAndUpdate(query, userData, helpers.upsertOptions()).exec();
       })
-      .then(user => resolve(user))
+      .then(userDoc => resolve(userDoc))
       .catch((error) => {
         app.locals.stathatError(statName, error);
 
@@ -95,11 +95,11 @@ userSchema.statics.post = function (data) {
         app.locals.stathat(`${statName} 200`);
         logger.info(`northstar.Users created user:${northstarUser.id}`);
         const query = { _id: northstarUser.id };
-        const postData = parseNorthstarUser(northstarUser);
+        const userData = parseNorthstarUser(northstarUser);
 
-        return model.findOneAndUpdate(query, postData, helpers.upsertOptions()).exec();
+        return model.findOneAndUpdate(query, userData, helpers.upsertOptions()).exec();
       })
-      .then(user => resolve(user))
+      .then(userDoc => resolve(userDoc))
       .catch((error) => {
         app.locals.stathatError(statName, error);
 
