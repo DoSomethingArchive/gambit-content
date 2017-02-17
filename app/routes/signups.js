@@ -41,7 +41,7 @@ router.post('/', (req, res) => {
     .then((signup) => {
       scope.signup = signup;
 
-      return phoenix.fetchCampaign(signup.campaign);
+      return phoenix.Campaigns.get(signup.campaign);
     })
     .then((phoenixCampaign) => {
       if (!helpers.isCampaignBotCampaign(phoenixCampaign.id)) {
