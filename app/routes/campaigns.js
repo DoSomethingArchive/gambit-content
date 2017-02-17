@@ -6,19 +6,26 @@ const Promise = require('bluebird');
 const contentful = require('../../lib/contentful');
 const helpers = require('../../lib/helpers');
 const mobilecommons = rootRequire('lib/mobilecommons');
+const phoenix = require('../../lib/phoenix');
 const logger = app.locals.logger;
 const stathat = app.locals.stathat;
 
 /**
- * Queries Contentful to add keywords property to given campaign object.
+ * Queries Phoenix and Contentful to add external properties to given campaign model.
  */
-function formatCampaignDoc(campaignDoc) {
+function fetchCampaign(campaignDoc) {
   const campaign = campaignDoc.formatApiResponse();
 
   return new Promise((resolve, reject) => {
-    logger.debug(`fetchKeywordsForCampaign:${JSON.stringify(campaign)}`);
+    logger.debug(`fetchCampaign:${campaign.id}`);
 
-    return contentful.fetchKeywordsForCampaignId(campaign.id)
+    return phoenix.Campaigns.get(campaign.id)
+      .then((phoenixCampaign) => {
+        campaign.title = phoenixCampaign.title;
+        campaign.status = phoenixCampaign.status;
+
+        return contentful.fetchKeywordsForCampaignId(campaign.id);
+      })
       .then((keywords) => {
         campaign.keywords = keywords;
 
@@ -44,7 +51,7 @@ router.get('/', (req, res) => {
   return app.locals.db.campaigns
     .find(findClause)
     .exec()
-    .then(campaignDocs => Promise.map(campaignDocs, formatCampaignDoc))
+    .then(campaignDocs => Promise.map(campaignDocs, fetchCampaign))
     .then(data => res.send({ data }))
     .catch(error => helpers.sendResponse(res, 500, error.message));
 });
@@ -65,7 +72,7 @@ router.get('/:id', (req, res) => {
         return helpers.sendResponse(res, 404, `Campaign ${campaignId} not found`);
       }
 
-      return formatCampaignDoc(campaignDoc);
+      return fetchCampaign(campaignDoc);
     })
     .then(data => res.send({ data }))
     .catch(error => helpers.sendResponse(res, 500, error.message));
