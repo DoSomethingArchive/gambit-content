@@ -46,12 +46,6 @@ function parseNorthstarUser(northstarUser) {
   return data;
 }
 
-// Used in calls to findOneAndUpdate.
-const findOptions = {
-  upsert: true,
-  new: true,
-};
-
 /**
  * Query DS API for given User type/id and store.
  */
@@ -69,7 +63,7 @@ userSchema.statics.lookup = function (type, id) {
         const data = parseNorthstarUser(northstarUser);
         const query = { _id: data._id };
 
-        return model.findOneAndUpdate(query, data, findOptions).exec();
+        return model.findOneAndUpdate(query, data, helpers.upsertOptions()).exec();
       })
       .then(user => resolve(user))
       .catch((error) => {
@@ -101,8 +95,9 @@ userSchema.statics.post = function (data) {
         app.locals.stathat(`${statName} 200`);
         logger.info(`northstar.Users created user:${northstarUser.id}`);
         const query = { _id: northstarUser.id };
+        const postData = parseNorthstarUser(northstarUser);
 
-        return model.findOneAndUpdate(query, parseNorthstarUser(northstarUser), findOptions).exec();
+        return model.findOneAndUpdate(query, postData, helpers.upsertOptions()).exec();
       })
       .then(user => resolve(user))
       .catch((error) => {

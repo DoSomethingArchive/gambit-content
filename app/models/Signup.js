@@ -6,6 +6,7 @@
 const mongoose = require('mongoose');
 const Promise = require('bluebird');
 const NotFoundError = require('../exceptions/NotFoundError');
+const helpers = require('../../lib/helpers');
 const northstar = require('../../lib/northstar');
 const phoenix = require('../../lib/phoenix');
 const logger = app.locals.logger;
@@ -76,11 +77,9 @@ signupSchema.statics.lookupById = function (id) {
         logger.debug(`northstar.Signups.get:${id} success`);
         const data = parseNorthstarSignup(northstarSignup);
 
-        return model.findOneAndUpdate({ _id: id }, data, { upsert: true, new: true })
-          .exec()
-          .then(signup => resolve(signup))
-          .catch(error => reject(error));
+        return model.findOneAndUpdate({ _id: id }, data, helpers.upsertOptions()).exec();
       })
+      .then(signupDoc => resolve(signupDoc))
       .catch(err => {
         app.locals.stathatError(statName, err);
         if (err.status === 404) {
@@ -121,13 +120,12 @@ signupSchema.statics.lookupCurrent = function (user, campaign) {
 
         const data = parseNorthstarSignup(currentSignup);
 
-        return model.findOneAndUpdate({ _id: data._id }, data, { upsert: true, new: true })
+        return model.findOneAndUpdate({ _id: data._id }, data, helpers.upsertOptions())
           .populate('user')
           .populate('draft_reportback_submission')
-          .exec()
-          .then(signup => resolve(signup))
-          .catch(error => reject(error));
+          .exec();
       })
+      .then(signupDoc => resolve(signupDoc))
       .catch((err) => {
         app.locals.stathatError(statName, err);
 
@@ -165,11 +163,9 @@ signupSchema.statics.post = function (user, campaign, keyword) {
           keyword,
         };
 
-        return model.findOneAndUpdate({ _id: signupId }, data, { upsert: true, new: true })
-          .exec()
-          .then(signup => resolve(signup))
-          .catch(error => reject(error));
+        return model.findOneAndUpdate({ _id: signupId }, data, helpers.upsertOptions()).exec();
       })
+      .then(signupDoc => resolve(signupDoc))
       .catch((err) => {
         app.locals.stathatError(statName, err);
 
