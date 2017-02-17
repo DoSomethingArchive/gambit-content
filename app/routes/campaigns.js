@@ -3,22 +3,32 @@
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
 const Promise = require('bluebird');
+const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
+
 const contentful = require('../../lib/contentful');
 const helpers = require('../../lib/helpers');
 const mobilecommons = rootRequire('lib/mobilecommons');
+const northstar = require('../../lib/northstar');
+const phoenix = require('../../lib/phoenix');
 const logger = app.locals.logger;
 const stathat = app.locals.stathat;
 
 /**
- * Queries Contentful to add keywords property to given campaign object.
+ * Queries Phoenix and Contentful to add external properties to given campaign model.
  */
-function formatCampaignDoc(campaignDoc) {
+function fetchCampaign(campaignDoc) {
   const campaign = campaignDoc.formatApiResponse();
 
   return new Promise((resolve, reject) => {
-    logger.debug(`fetchKeywordsForCampaign:${JSON.stringify(campaign)}`);
+    logger.debug(`fetchCampaign:${campaign.id}`);
 
-    return contentful.fetchKeywordsForCampaignId(campaign.id)
+    return phoenix.Campaigns.get(campaign.id)
+      .then((phoenixCampaign) => {
+        campaign.title = phoenixCampaign.title;
+        campaign.status = phoenixCampaign.status;
+
+        return contentful.fetchKeywordsForCampaignId(campaign.id);
+      })
       .then((keywords) => {
         campaign.keywords = keywords;
 
@@ -44,7 +54,7 @@ router.get('/', (req, res) => {
   return app.locals.db.campaigns
     .find(findClause)
     .exec()
-    .then(campaignDocs => Promise.map(campaignDocs, formatCampaignDoc))
+    .then(campaignDocs => Promise.map(campaignDocs, fetchCampaign))
     .then(data => res.send({ data }))
     .catch(error => helpers.sendResponse(res, 500, error.message));
 });
@@ -65,7 +75,7 @@ router.get('/:id', (req, res) => {
         return helpers.sendResponse(res, 404, `Campaign ${campaignId} not found`);
       }
 
-      return formatCampaignDoc(campaignDoc);
+      return fetchCampaign(campaignDoc);
     })
     .then(data => res.send({ data }))
     .catch(error => helpers.sendResponse(res, 500, error.message));
@@ -90,37 +100,62 @@ router.post('/:id/message', (req, res) => {
     return helpers.sendResponse(res, 422, 'Missing required message type parameter.');
   }
 
-  // Check that campaign is active.
-  // TODO: Refactor this to no longer use app.locals.campaigns -- would need to query Phoenix API
-  // to check for Campaign Status.
-  const campaign = app.locals.campaigns[campaignId];
-  if (!campaign || campaign.status !== 'active') {
+  if (!helpers.isCampaignBotCampaign(campaignId)) {
     const msg = `Campaign ${campaignId} is not running on CampaignBot`;
     return helpers.sendResponse(res, 422, msg);
   }
 
-  // Check that campaign suports requested message type.
-  const messageBody = campaign.messages[type];
-  if (!messageBody) {
-    const msg = `Campaign ${campaignId} does not support '${type}' messages`;
-    return helpers.sendResponse(res, 422, msg);
-  }
+  let messageBody;
 
-  return app.locals.clients.northstar.Users.get('mobile', phone)
-  .then((user) => {
-    mobilecommons.send_message(phone, messageBody);
-    const msg = `Sent text for ${campaignId} ${type} to ${user.mobile}`;
-    logger.info(msg);
-    stathat('Sent campaign message');
-    return helpers.sendResponse(res, 200, msg);
-  })
-  .catch((err) => {
-    if (err.response) {
-      logger.error(err.response.error);
-    }
-    const msg = `Error sending text to user #${phone}: ${err.message}`;
-    return helpers.sendResponse(res, 500, msg);
-  });
+  return app.locals.db.campaigns.findById(campaignId)
+    .then((campaignDoc) => {
+      logger.debug(`found campaign:${campaignId}`);
+
+      // Check that campaign suports requested message type.
+      messageBody = campaignDoc.messages[type];
+      if (!messageBody) {
+        const msg = `Campaign ${campaignId} does not support '${type}' messages.`;
+        logger.error(msg);
+        const err = new UnprocessibleEntityError(msg);
+        throw err;
+      }
+
+      return phoenix.Campaigns.get(campaignId);
+    })
+    .then((phoenixCampaign) => {
+      logger.debug(`phoenix.Campaigns.get found campaign:${campaignId}`);
+      if (phoenixCampaign.status === 'closed') {
+        const msg = `Campaign ${campaignId} is closed.`;
+        throw new UnprocessibleEntityError(msg);
+      }
+
+      return northstar.Users.get('mobile', phone);
+    })
+    .then((user) => {
+      logger.debug(`northstar.Users.get found user:${user.id}`);
+
+      mobilecommons.send_message(phone, messageBody);
+      const msg = `Sent text for ${campaignId} ${type} to ${user.mobile}`;
+      logger.info(msg);
+      stathat('Sent campaign message');
+
+      return helpers.sendResponse(res, 200, msg);
+    })
+    // TODO: Catch UnprocessibleEntityError. Commenting this code out because it is
+    // throwing a "Class constructors cannot be invoked without 'new'"" error
+    // .catch(UnprocessibleEntityError, (err) => {
+    //   logger.error(err.message);
+
+    //   return helpers.sendResponse(res, 422, err.message);
+    // })
+    .catch((err) => {
+      if (err.response) {
+        logger.error(err.response.error);
+      }
+      const msg = `Error sending text to user #${phone}: ${err.message}`;
+
+      return helpers.sendResponse(res, 500, msg);
+    });
 });
 
 module.exports = router;
