@@ -6,6 +6,7 @@
 const mongoose = require('mongoose');
 const Promise = require('bluebird');
 const NotFoundError = require('../exceptions/NotFoundError');
+const phoenix = require('../../lib/phoenix');
 const logger = app.locals.logger;
 
 const postSource = process.env.DS_API_POST_SOURCE || 'sms-mobilecommons';
@@ -147,12 +148,12 @@ signupSchema.statics.post = function (user, campaign, keyword) {
 
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.post(${user._id}, ${campaign.id}, ${keyword})`);
+    const postData = {
+      source: postSource,
+      uid: user.phoenix_id,
+    };
 
-    return app.locals.clients.phoenix.Campaigns
-      .signup(campaign.id, {
-        source: postSource,
-        uid: user.phoenix_id,
-      })
+    return phoenix.Campaigns.signup(campaign.id, postData)
       .then((signupId) => {
         app.locals.stathat(`${statName} 200`);
         app.locals.stathat(`signup: ${keyword}`);
@@ -231,8 +232,7 @@ signupSchema.methods.postDraftReportbackSubmission = function () {
     }
     logger.debug(`Signup.postDraftReportbackSubmission data:${JSON.stringify(data)}`);
 
-    return app.locals.clients.phoenix.Campaigns
-      .reportback(signup.campaign, data)
+    return phoenix.Campaigns.reportback(signup.campaign, data)
       .then((reportbackId) => {
         app.locals.stathat(`${statName} 200`);
         logger.info(`phoenix.Campaigns.reportback:${reportbackId}`);

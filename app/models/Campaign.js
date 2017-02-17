@@ -6,6 +6,7 @@
 const mongoose = require('mongoose');
 const logger = app.locals.logger;
 const helpers = require('../../lib/helpers');
+const phoenix = require('../../lib/phoenix');
 const MessagingGroups = require('../../lib/groups');
 
 const campaignSchema = new mongoose.Schema({
@@ -63,8 +64,7 @@ campaignSchema.statics.lookupByIDs = function (campaignIDs) {
 
     const promises = [];
 
-    return app.locals.clients.phoenix.Campaigns
-      .index({ ids: campaignIDs })
+    return phoenix.Campaigns.index({ ids: campaignIDs })
       .then((phoenixCampaigns) => {
         phoenixCampaigns.forEach((phoenixCampaign) => {
           const data = parsePhoenixCampaign(phoenixCampaign);

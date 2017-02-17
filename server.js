@@ -112,19 +112,6 @@ if (!app.locals.clients.northstar) {
   process.exit(1);
 }
 
-const PhoenixClient = require('@dosomething/phoenix-js');
-app.locals.clients.phoenix = new PhoenixClient({
-  baseURI: process.env.DS_PHOENIX_API_BASEURI,
-  username: process.env.DS_PHOENIX_API_USERNAME,
-  password: process.env.DS_PHOENIX_API_PASSWORD,
-});
-
-if (!app.locals.clients.phoenix) {
-  logger.error('app.locals.clients.phoenix undefined');
-  process.exit(1);
-}
-
-
 conn.on('connected', () => {
   logger.info(`conn.readyState:${conn.readyState}`);
 
