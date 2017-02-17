@@ -8,6 +8,7 @@ const Promise = require('bluebird');
 
 const helpers = rootRequire('lib/helpers');
 const mobilecommons = rootRequire('lib/mobilecommons');
+const northstar = require('../../lib/northstar');
 const logger = app.locals.logger;
 
 /**
@@ -45,6 +46,12 @@ function parseNorthstarUser(northstarUser) {
   return data;
 }
 
+// Used in calls to findOneAndUpdate.
+const findOptions = {
+  upsert: true,
+  new: true,
+};
+
 /**
  * Query DS API for given User type/id and store.
  */
@@ -55,19 +62,16 @@ userSchema.statics.lookup = function (type, id) {
   return new Promise((resolve, reject) => {
     logger.debug(`User.lookup(${type}, ${id})`);
 
-    return app.locals.clients.northstar.Users
-      .get(type, id)
+    return northstar.Users.get(type, id)
       .then((northstarUser) => {
         app.locals.stathat(`${statName} 200`);
         logger.debug('northstar.Users.lookup success');
         const data = parseNorthstarUser(northstarUser);
+        const query = { _id: data._id };
 
-        return model
-          .findOneAndUpdate({ _id: data._id }, data, { upsert: true, new: true })
-          .exec()
-          .then(user => resolve(user))
-          .catch(error => reject(error));
+        return model.findOneAndUpdate(query, data, findOptions).exec();
       })
+      .then(user => resolve(user))
       .catch((error) => {
         app.locals.stathatError(statName, error);
 
@@ -92,21 +96,15 @@ userSchema.statics.post = function (data) {
   return new Promise((resolve, reject) => {
     logger.debug('User.post');
 
-    return app.locals.clients.northstar.Users
-      .create(scope)
+    return northstar.Users.create(scope)
       .then((northstarUser) => {
         app.locals.stathat(`${statName} 200`);
         logger.info(`northstar.Users created user:${northstarUser.id}`);
+        const query = { _id: northstarUser.id };
 
-        return model
-          .findOneAndUpdate({ _id: northstarUser.id }, parseNorthstarUser(northstarUser), {
-            upsert: true,
-            new: true,
-          })
-          .exec()
-          .then(user => resolve(user))
-          .catch(error => reject(error));
+        return model.findOneAndUpdate(query, parseNorthstarUser(northstarUser), findOptions).exec();
       })
+      .then(user => resolve(user))
       .catch((error) => {
         app.locals.stathatError(statName, error);
 

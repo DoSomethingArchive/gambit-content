@@ -6,6 +6,7 @@
 const mongoose = require('mongoose');
 const Promise = require('bluebird');
 const NotFoundError = require('../exceptions/NotFoundError');
+const northstar = require('../../lib/northstar');
 const phoenix = require('../../lib/phoenix');
 const logger = app.locals.logger;
 
@@ -37,6 +38,7 @@ const signupSchema = new mongoose.Schema({
   // any existing or updates to Reportbacks for this Signup.
   total_quantity_submitted: Number,
   broadcast_id: Number,
+
 });
 
 function parseNorthstarSignup(northstarSignup) {
@@ -68,8 +70,7 @@ signupSchema.statics.lookupById = function (id) {
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.lookupById:${id}`);
 
-    return app.locals.clients.northstar
-      .Signups.get(id)
+    return northstar.Signups.get(id)
       .then((northstarSignup) => {
         app.locals.stathat(`${statName} 200`);
         logger.debug(`northstar.Signups.get:${id} success`);
@@ -105,8 +106,7 @@ signupSchema.statics.lookupCurrent = function (user, campaign) {
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.lookupCurrent(${user._id}, ${campaign.id})`);
 
-    return app.locals.clients.northstar
-      .Signups.index({ user: user._id, campaigns: campaign.id })
+    return northstar.Signups.index({ user: user._id, campaigns: campaign.id })
       .then((northstarSignups) => {
         app.locals.stathat(`${statName} 200`);
 

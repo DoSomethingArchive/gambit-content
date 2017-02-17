@@ -96,22 +96,6 @@ mongoose.Promise = global.Promise;
 const conn = mongoose.createConnection(DB_URI);
 app.locals.db = loader.getModels(conn);
 
-/**
- * Load clients.
- */
-app.locals.clients = {};
-
-const NorthstarClient = require('@dosomething/northstar-js');
-app.locals.clients.northstar = new NorthstarClient({
-  baseURI: process.env.DS_NORTHSTAR_API_BASEURI,
-  apiKey: process.env.DS_NORTHSTAR_API_KEY,
-});
-
-if (!app.locals.clients.northstar) {
-  logger.error('app.locals.clients.northstar undefined');
-  process.exit(1);
-}
-
 conn.on('connected', () => {
   logger.info(`conn.readyState:${conn.readyState}`);
 
