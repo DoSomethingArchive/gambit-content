@@ -110,11 +110,21 @@ router.post('/:id/message', (req, res) => {
   const loadUserAndCampaign = new Promise((resolve, reject) => {
     logger.debug('loadUserAndCampaign');
 
-    return app.locals.db.campaigns.findById(campaignId)
-      .then((campaignDoc) => {
-        logger.debug(`found campaignId:${campaignId}`);
+    // TODO: Check if campaignId entry has given type set before sending the default entry.
+    const defaultCampaignId = 'default';
 
-        messageBody = campaignDoc.messages[type];
+    return contentful.fetchCampaign(defaultCampaignId)
+      .then((contentfulCampaign) => {
+        logger.debug(`found contentfulCampaign:${defaultCampaignId}`);
+
+        let fieldName;
+        if (type === 'scheduled_relative_to_signup_date') {
+          fieldName = 'scheduledRelativeToSignupDateMessage';
+        } else if (type === 'scheduled_relative_to_reportback_date') {
+          fieldName = 'scheduledRelativeToReportbackDateMessage';
+        }
+
+        messageBody = contentfulCampaign.fields[fieldName];
         if (!messageBody) {
           const msg = `Campaign ${campaignId} does not support '${type}' messages.`;
           logger.error(msg);
@@ -132,7 +142,9 @@ router.post('/:id/message', (req, res) => {
           const err = new UnprocessibleEntityError(msg);
           return reject(err);
         }
+        messageBody = helpers.replacePhoenixCampaignVars(messageBody, phoenixCampaign);
 
+        // TODO: Why do we need to lookup Northstar User? We send message back to phone number.
         return northstar.Users.get('mobile', phone);
       })
       .then(user => resolve(user))

@@ -6,6 +6,7 @@
 const mongoose = require('mongoose');
 const Promise = require('bluebird');
 const gambitJunior = rootRequire('lib/junior');
+const helpers = require('../../lib/helpers');
 const logger = app.locals.logger;
 const stathat = app.locals.stathat;
 
@@ -87,15 +88,7 @@ campaignBotSchema.methods.renderMessage = function (req, msgType, prefix) {
     msg = `${prefix}${msg}`;
   }
 
-  msg = msg.replace(/{{br}}/gi, '\n');
-  msg = msg.replace(/{{title}}/gi, campaign.title);
-  msg = msg.replace(/{{tagline}}/i, campaign.tagline);
-  msg = msg.replace(/{{fact_problem}}/gi, campaign.facts.problem);
-  msg = msg.replace(/{{rb_noun}}/gi, campaign.reportbackInfo.noun);
-  msg = msg.replace(/{{rb_verb}}/gi, campaign.reportbackInfo.verb);
-  msg = msg.replace(/{{rb_confirmation_msg}}/i, campaign.reportbackInfo.confirmationMessage);
-  msg = msg.replace(/{{cmd_reportback}}/i, process.env.GAMBIT_CMD_REPORTBACK);
-  msg = msg.replace(/{{cmd_member_support}}/i, process.env.GAMBIT_CMD_MEMBER_SUPPORT);
+  msg = helpers.replacePhoenixCampaignVars(msg, campaign);
 
   if (msg.indexOf('{{keyword}}') !== -1) {
     // TODO: Hack for now, we'll need to set up a MENU keyword in Mobile Commons to select Cmapaign.
