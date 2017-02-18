@@ -104,6 +104,7 @@ router.post('/:id/message', (req, res) => {
     return helpers.sendResponse(res, 422, msg);
   }
 
+  let messageBody;
   const loadCampaignMessage = new Promise((resolve, reject) => {
     logger.debug(`loadCampaignMessage campaign:${campaignId} msgType:${type}`);
 
@@ -124,13 +125,19 @@ router.post('/:id/message', (req, res) => {
   });
 
   return loadCampaignMessage
-    .then((messageBody) => {
-      mobilecommons.send_message(phone, messageBody);
-      const msg = `Sent text for ${campaignId} ${type} to ${phone}`;
-      logger.info(msg);
-      stathat('Sent campaign message');
+    .then((message) => {
+      messageBody = message;
+      const senderPrefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
+      if (senderPrefix) {
+        messageBody = `${senderPrefix} ${messageBody}`;
+      }
 
-      return helpers.sendResponse(res, 200, msg);
+      mobilecommons.send_message(phone, messageBody);
+      const msg = `Sent message:${type} for campaign:${campaignId} to phone:${phone}`;
+      logger.info(msg);
+      stathat(`Sent campaign message:${type}`);
+
+      return helpers.sendResponse(res, 200, messageBody);
     })
     .catch(UnprocessibleEntityError, (err) => {
       logger.error(err.message);
@@ -141,7 +148,7 @@ router.post('/:id/message', (req, res) => {
       if (err.response) {
         logger.error(err.response.error);
       }
-      const msg = `Error sending text to user #${phone}: ${err.message}`;
+      const msg = `Error sending text to phone:${phone}: ${err.message}`;
 
       return helpers.sendResponse(res, 500, msg);
     });
