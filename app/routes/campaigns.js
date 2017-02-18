@@ -107,30 +107,39 @@ router.post('/:id/message', (req, res) => {
 
   let messageBody;
 
-  return app.locals.db.campaigns.findById(campaignId)
-    .then((campaignDoc) => {
-      logger.debug(`found campaign:${campaignId}`);
+  const loadUserAndCampaign = new Promise((resolve, reject) => {
+    logger.debug('loadUserAndCampaign');
 
-      // Check that campaign suports requested message type.
-      messageBody = campaignDoc.messages[type];
-      if (!messageBody) {
-        const msg = `Campaign ${campaignId} does not support '${type}' messages.`;
-        logger.error(msg);
-        const err = new UnprocessibleEntityError(msg);
-        throw err;
-      }
+    return app.locals.db.campaigns.findById(campaignId)
+      .then((campaignDoc) => {
+        logger.debug(`found campaignId:${campaignId}`);
 
-      return phoenix.Campaigns.get(campaignId);
-    })
-    .then((phoenixCampaign) => {
-      logger.debug(`phoenix.Campaigns.get found campaign:${campaignId}`);
-      if (phoenixCampaign.status === 'closed') {
-        const msg = `Campaign ${campaignId} is closed.`;
-        throw new UnprocessibleEntityError(msg);
-      }
+        messageBody = campaignDoc.messages[type];
+        if (!messageBody) {
+          const msg = `Campaign ${campaignId} does not support '${type}' messages.`;
+          logger.error(msg);
+          const err = new UnprocessibleEntityError(msg);
+          return reject(err);
+        }
 
-      return northstar.Users.get('mobile', phone);
-    })
+        return phoenix.Campaigns.get(campaignId);
+      })
+      .then((phoenixCampaign) => {
+        logger.debug(`phoenix.Campaigns.get found campaign:${campaignId}`);
+
+        if (phoenixCampaign.status === 'closed') {
+          const msg = `Campaign ${campaignId} is closed.`;
+          const err = new UnprocessibleEntityError(msg);
+          return reject(err);
+        }
+
+        return northstar.Users.get('mobile', phone);
+      })
+      .then(user => resolve(user))
+      .catch(err => reject(err));
+  });
+
+  return loadUserAndCampaign
     .then((user) => {
       logger.debug(`northstar.Users.get found user:${user.id}`);
 
@@ -141,13 +150,11 @@ router.post('/:id/message', (req, res) => {
 
       return helpers.sendResponse(res, 200, msg);
     })
-    // TODO: Catch UnprocessibleEntityError. Commenting this code out because it is
-    // throwing a "Class constructors cannot be invoked without 'new'"" error
-    // .catch(UnprocessibleEntityError, (err) => {
-    //   logger.error(err.message);
+    .catch(UnprocessibleEntityError, (err) => {
+      logger.error(err.message);
 
-    //   return helpers.sendResponse(res, 422, err.message);
-    // })
+      return helpers.sendResponse(res, 422, err.message);
+    })
     .catch((err) => {
       if (err.response) {
         logger.error(err.response.error);
