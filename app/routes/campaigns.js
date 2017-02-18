@@ -117,7 +117,7 @@ router.post('/:id/message', (req, res) => {
           return reject(err);
         }
 
-        return contentful.fetchMessageForPhoenixCampaign(phoenixCampaign, type);
+        return contentful.renderMessageForPhoenixCampaign(phoenixCampaign, type);
       })
       .then(message => resolve(message))
       .catch(err => reject(err));
