@@ -31,12 +31,6 @@ const campaignSchema = new mongoose.Schema({
   msg_menu_signedup_gambit: String,
   msg_no_photo_sent: String,
 
-  // Exposed messages.
-  messages: {
-    scheduled_relative_to_signup_date: String,
-    scheduled_relative_to_reportback_date: String,
-  },
-
   // Mobile Commons Specific Fields.
   mobilecommons_group_doing: Number,
   mobilecommons_group_completed: Number,
@@ -112,7 +106,6 @@ campaignSchema.methods.formatApiResponse = function () {
     current_run: this.current_run,
     mobilecommons_group_doing: this.mobilecommons_group_doing,
     mobilecommons_group_completed: this.mobilecommons_group_completed,
-    messages: this.messages,
     overrides: {},
   };
 
