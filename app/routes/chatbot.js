@@ -315,14 +315,14 @@ router.post('/', (req, res) => {
       return scope.user.save();
     })
     .then(() => {
-      // TODO: Bring back to life
-      // app.locals.db.bot_requests.log(req, 'campaignbot', this._id, msgType, msg);
-
       logger.debug(`saved user.current_campaign:${scope.campaign.id}`);
       scope.user.postMobileCommonsProfileUpdate(scope.oip, scope.response_message);
 
-      return helpers.sendResponse(res, 200, scope.response_message);
+      helpers.sendResponse(res, 200, scope.response_message);
+      return app.locals.db.bot_requests
+        .log(req, 'campaignbot', campaignBot.id, scope.msg_type, scope.response_message);
     })
+    .then(botRequest => logger.debug(`created botRequest:${botRequest._id}`))
     .catch(NotFoundError, (err) => {
       logger.error(err.message);
 
