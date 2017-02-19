@@ -88,43 +88,28 @@ campaignBotSchema.methods.renderMessage = function (req, msgType, prefix) {
     msg = `${prefix}${msg}`;
   }
 
-  msg = helpers.replacePhoenixCampaignVars(msg, campaign);
-
-  if (msg.indexOf('{{keyword}}') !== -1) {
-    // TODO: Hack for now, we'll need to set up a MENU keyword in Mobile Commons to select Cmapaign.
-    let keyword = 'menu';
-    if (req.signup && req.signup.keyword) {
-      keyword = req.signup.keyword;
-    } else {
-      // TODO: When Signup was external there's no keyword. Query Contentful to find 1st keyword...
-      // or stick with the MENU to select campaign instead of directly texting Campaign keyword.
-    }
-    msg = msg.replace(/{{keyword}}/i, keyword.toUpperCase());
+  if (!req.signup) {
+    return helpers.replacePhoenixCampaignVars(msg, campaign);
   }
 
-  if (req.signup) {
-    let quantity = req.signup.total_quantity_submitted;
-    if (req.signup.draft_reportback_submission) {
-      quantity = req.signup.draft_reportback_submission.quantity;
-    }
-    msg = msg.replace(/{{quantity}}/gi, quantity);
-  }
+  return helpers.replacePhoenixCampaignVars(msg, campaign, req.signup.keyword)
+    .then((renderedMessage) => {
+      let scope = renderedMessage;
+      let quantity = req.signup.total_quantity_submitted;
+      if (req.signup.draft_reportback_submission) {
+        quantity = req.signup.draft_reportback_submission.quantity;
+      }
+      scope = scope.replace(/{{quantity}}/gi, quantity);
+      const revisiting = req.keyword && req.signup.draft_reportback_submission;
+      if (revisiting) {
+        // TODO: New bot property for continue draft message
+        const continueMsg = 'Picking up where you left off on';
+        scope = `${continueMsg} ${campaign.title}...\n\n${scope}`;
+      }
 
-  const revisiting = req.keyword && req.signup && req.signup.draft_reportback_submission;
-  if (revisiting) {
-    // TODO: New bot property for continue draft message
-    const continueMsg = 'Picking up where you left off on';
-    msg = `${continueMsg} ${campaign.title}...\n\n${msg}`;
-  }
-
-  const senderPrefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
-  if (senderPrefix) {
-    msg = `${senderPrefix} ${msg}`;
-  }
-
-  app.locals.db.bot_requests.log(req, 'campaignbot', this._id, msgType, msg);
-
-  return msg;
+      return scope;
+    })
+    .catch(err => err);
 };
 
 module.exports = function (connection) {

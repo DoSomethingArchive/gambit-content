@@ -258,7 +258,7 @@ router.post('/', (req, res) => {
       if (isCommand(scope.incoming_message, 'member_support')) {
         scope.cmd_member_support = true;
         scope.oip = agentViewOip;
-        return campaignBot.renderMessage(scope, 'member_support');
+        return 'member_support';
       }
 
       if (scope.signup.draft_reportback_submission) {
@@ -272,25 +272,48 @@ router.post('/', (req, res) => {
 
       if (scope.signup.reportback) {
         if (scope.keyword || scope.broadcast_id) {
-          return campaignBot.renderMessage(scope, 'menu_completed');
+          return 'menu_completed';
         }
         // If we're this far, member didn't text back Reportback or Member Support commands.
-        return campaignBot.renderMessage(scope, 'invalid_cmd_completed');
+        return 'invalid_cmd_completed';
       }
 
       if (scope.keyword || scope.broadcast_id) {
-        return campaignBot.renderMessage(scope, 'menu_signedup_gambit');
+        return 'menu_signedup_gambit';
       }
 
-      return campaignBot.renderMessage(scope, 'invalid_cmd_signedup');
+      return 'invalid_cmd_signedup';
+    })
+    .then((msgType) => {
+      logger.debug(`send msgType:${msgType}`);
+
+      let scopeMsgType = msgType;
+      let prefix = 'Sorry, I didn\'t understand that.\n\n';
+
+      if (scopeMsgType === 'invalid_caption') {
+        scopeMsgType = 'ask_caption';
+      } else if (scopeMsgType === 'invalid_why_participated') {
+        scopeMsgType = 'ask_why_participated';
+      } else {
+        prefix = null;
+      }
+
+      return campaignBot.renderMessage(scope, scopeMsgType, prefix);
     })
     .then((msg) => {
       scope.response_message = msg;
+      const senderPrefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
+      if (senderPrefix) {
+        scope.response_message = `${senderPrefix} ${scope.response_message}`;
+      }
       // Save to continue conversation with future mData requests that don't contain a keyword.
       scope.user.current_campaign = scope.campaign.id;
       return scope.user.save();
     })
     .then(() => {
+      // TODO: Bring back to life
+      // app.locals.db.bot_requests.log(req, 'campaignbot', this._id, msgType, msg);
+
       logger.debug(`saved user.current_campaign:${scope.campaign.id}`);
       scope.user.postMobileCommonsProfileUpdate(scope.oip, scope.response_message);
 
