@@ -285,20 +285,24 @@ router.post('/', (req, res) => {
       return 'invalid_cmd_signedup';
     })
     .then((msgType) => {
-      logger.debug(`send msgType:${msgType}`);
+      // This is hacky, CampaignBotController.postReportback returns error that isn't caught.
+      // TODO: Clean this up when ready to take on https://github.com/DoSomething/gambit/issues/744.
+      if (msgType instanceof Error) {
+        throw new Error(msgType.message);
+      }
 
-      let scopeMsgType = msgType;
+      scope.msg_type = msgType;
       let prefix = 'Sorry, I didn\'t understand that.\n\n';
 
-      if (scopeMsgType === 'invalid_caption') {
-        scopeMsgType = 'ask_caption';
-      } else if (scopeMsgType === 'invalid_why_participated') {
-        scopeMsgType = 'ask_why_participated';
+      if (scope.msg_type === 'invalid_caption') {
+        scope.msg_type = 'ask_caption';
+      } else if (scope.msg_type === 'invalid_why_participated') {
+        scope.msg_type = 'ask_why_participated';
       } else {
         prefix = null;
       }
 
-      return campaignBot.renderMessage(scope, scopeMsgType, prefix);
+      return campaignBot.renderMessage(scope, scope.msg_type, prefix);
     })
     .then((msg) => {
       scope.response_message = msg;
@@ -364,7 +368,6 @@ router.post('/', (req, res) => {
         return helpers.sendResponse(res, 200, msg);
       }
 
-      logger.error(err.message);
       stathat(err.message);
 
       return helpers.sendResponse(res, 500, err.message);

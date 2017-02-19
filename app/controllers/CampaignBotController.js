@@ -134,13 +134,6 @@ class CampaignBotController {
   }
 
   /**
-   * Wrapper function for logger.error(error)
-   */
-  error(req, err) {
-    logger.error(`${this.loggerPrefix(req)} ${err}:${err.stack}`);
-  }
-
-  /**
    * Returns whether current user has submitted a Reportback for the current campaign.
    * @param {object} req
    * @return {bool}
@@ -181,7 +174,12 @@ class CampaignBotController {
     return req.signup
       .postDraftReportbackSubmission()
       .then(() => 'menu_completed')
-      .catch(err => this.error(req, `postReportback ${err}`));
+      .catch((err) => {
+        const scope = err;
+        scope.message = `postReportback error:${err.message}`;
+
+        return scope;
+      });
   }
 
 }
