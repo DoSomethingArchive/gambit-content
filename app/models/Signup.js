@@ -251,9 +251,6 @@ signupSchema.methods.postDraftReportbackSubmission = function () {
         return resolve(signup);
       })
       .catch((err) => {
-        app.locals.stathatError(statName, err);
-        logger.error(err.message);
-
         submission.failed_at = dateSubmitted;
         submission.save();
 

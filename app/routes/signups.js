@@ -62,15 +62,14 @@ router.post('/', (req, res) => {
       }
       scope.user = user;
 
-      const campaignBot = app.locals.campaignBot;
-      scope.response_message = campaignBot.renderMessage(scope, 'menu_signedup_external');
-
-      // Technically we don't want to ovewrite current_campaign until we know the Mobile Commons
-      // message was delivered.. but responding to the message won't work correctly without
-      // ensuring the current_campaign is set for our signup campaign. The ol' chicken and egg.
+      return app.locals.campaignBot.renderMessage(scope, 'menu_signedup_external');
+    })
+    .then((messageBody) => {
+      scope.response_message = messageBody;
       // Set current_campaign first and assume user isn't in the middle of a chatbot conversation
       // for a different campaign.
-      scope.user.current_campaign = scope.campaign._id;
+      // TODO: Refactor to set current_campaign upon user.postMobileCommonsProfileUpdate success.
+      scope.user.current_campaign = scope.campaign.id;
 
       return scope.user.save();
     })

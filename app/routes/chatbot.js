@@ -258,7 +258,7 @@ router.post('/', (req, res) => {
       if (isCommand(scope.incoming_message, 'member_support')) {
         scope.cmd_member_support = true;
         scope.oip = agentViewOip;
-        return campaignBot.renderMessage(scope, 'member_support');
+        return 'member_support';
       }
 
       if (scope.signup.draft_reportback_submission) {
@@ -272,20 +272,44 @@ router.post('/', (req, res) => {
 
       if (scope.signup.reportback) {
         if (scope.keyword || scope.broadcast_id) {
-          return campaignBot.renderMessage(scope, 'menu_completed');
+          return 'menu_completed';
         }
         // If we're this far, member didn't text back Reportback or Member Support commands.
-        return campaignBot.renderMessage(scope, 'invalid_cmd_completed');
+        return 'invalid_cmd_completed';
       }
 
       if (scope.keyword || scope.broadcast_id) {
-        return campaignBot.renderMessage(scope, 'menu_signedup_gambit');
+        return 'menu_signedup_gambit';
       }
 
-      return campaignBot.renderMessage(scope, 'invalid_cmd_signedup');
+      return 'invalid_cmd_signedup';
+    })
+    .then((msgType) => {
+      // This is hacky, CampaignBotController.postReportback returns error that isn't caught.
+      // TODO: Clean this up when ready to take on https://github.com/DoSomething/gambit/issues/744.
+      if (msgType instanceof Error) {
+        throw new Error(msgType.message);
+      }
+
+      scope.msg_type = msgType;
+      let prefix = 'Sorry, I didn\'t understand that.\n\n';
+
+      if (scope.msg_type === 'invalid_caption') {
+        scope.msg_type = 'ask_caption';
+      } else if (scope.msg_type === 'invalid_why_participated') {
+        scope.msg_type = 'ask_why_participated';
+      } else {
+        prefix = null;
+      }
+
+      return campaignBot.renderMessage(scope, scope.msg_type, prefix);
     })
     .then((msg) => {
       scope.response_message = msg;
+      const senderPrefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
+      if (senderPrefix) {
+        scope.response_message = `${senderPrefix} ${scope.response_message}`;
+      }
       // Save to continue conversation with future mData requests that don't contain a keyword.
       scope.user.current_campaign = scope.campaign.id;
       return scope.user.save();
@@ -294,8 +318,11 @@ router.post('/', (req, res) => {
       logger.debug(`saved user.current_campaign:${scope.campaign.id}`);
       scope.user.postMobileCommonsProfileUpdate(scope.oip, scope.response_message);
 
-      return helpers.sendResponse(res, 200, scope.response_message);
+      helpers.sendResponse(res, 200, scope.response_message);
+      return app.locals.db.bot_requests
+        .log(req, 'campaignbot', campaignBot.id, scope.msg_type, scope.response_message);
     })
+    .then(botRequest => logger.debug(`created botRequest:${botRequest._id}`))
     .catch(NotFoundError, (err) => {
       logger.error(err.message);
 
@@ -341,7 +368,6 @@ router.post('/', (req, res) => {
         return helpers.sendResponse(res, 200, msg);
       }
 
-      logger.error(err.message);
       stathat(err.message);
 
       return helpers.sendResponse(res, 500, err.message);

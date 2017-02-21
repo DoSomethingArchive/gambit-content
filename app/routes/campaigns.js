@@ -8,7 +8,6 @@ const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError
 const contentful = require('../../lib/contentful');
 const helpers = require('../../lib/helpers');
 const mobilecommons = rootRequire('lib/mobilecommons');
-const northstar = require('../../lib/northstar');
 const phoenix = require('../../lib/phoenix');
 const logger = app.locals.logger;
 const stathat = app.locals.stathat;
@@ -106,24 +105,10 @@ router.post('/:id/message', (req, res) => {
   }
 
   let messageBody;
+  const loadCampaignMessage = new Promise((resolve, reject) => {
+    logger.debug(`loadCampaignMessage campaign:${campaignId} msgType:${type}`);
 
-  const loadUserAndCampaign = new Promise((resolve, reject) => {
-    logger.debug('loadUserAndCampaign');
-
-    return app.locals.db.campaigns.findById(campaignId)
-      .then((campaignDoc) => {
-        logger.debug(`found campaignId:${campaignId}`);
-
-        messageBody = campaignDoc.messages[type];
-        if (!messageBody) {
-          const msg = `Campaign ${campaignId} does not support '${type}' messages.`;
-          logger.error(msg);
-          const err = new UnprocessibleEntityError(msg);
-          return reject(err);
-        }
-
-        return phoenix.Campaigns.get(campaignId);
-      })
+    return phoenix.Campaigns.get(campaignId)
       .then((phoenixCampaign) => {
         logger.debug(`phoenix.Campaigns.get found campaign:${campaignId}`);
 
@@ -133,22 +118,26 @@ router.post('/:id/message', (req, res) => {
           return reject(err);
         }
 
-        return northstar.Users.get('mobile', phone);
+        return contentful.renderMessageForPhoenixCampaign(phoenixCampaign, type);
       })
-      .then(user => resolve(user))
+      .then(message => resolve(message))
       .catch(err => reject(err));
   });
 
-  return loadUserAndCampaign
-    .then((user) => {
-      logger.debug(`northstar.Users.get found user:${user.id}`);
+  return loadCampaignMessage
+    .then((message) => {
+      messageBody = message;
+      const senderPrefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
+      if (senderPrefix) {
+        messageBody = `${senderPrefix} ${messageBody}`;
+      }
 
       mobilecommons.send_message(phone, messageBody);
-      const msg = `Sent text for ${campaignId} ${type} to ${user.mobile}`;
+      const msg = `Sent message:${type} for campaign:${campaignId} to phone:${phone}`;
       logger.info(msg);
-      stathat('Sent campaign message');
+      stathat(`Sent campaign message:${type}`);
 
-      return helpers.sendResponse(res, 200, msg);
+      return helpers.sendResponse(res, 200, messageBody);
     })
     .catch(UnprocessibleEntityError, (err) => {
       logger.error(err.message);
@@ -159,7 +148,7 @@ router.post('/:id/message', (req, res) => {
       if (err.response) {
         logger.error(err.response.error);
       }
-      const msg = `Error sending text to user #${phone}: ${err.message}`;
+      const msg = `Error sending text to phone:${phone}: ${err.message}`;
 
       return helpers.sendResponse(res, 500, msg);
     });
