@@ -328,12 +328,16 @@ router.post('/', (req, res) => {
     .catch(UnprocessibleEntityError, (err) => {
       logger.error(err.message);
       stathat('campaign closed');
-      // TODO: This will fail -- campaignBot.renderMessage returns a Promise now.
-      scope.response_message = campaignBot.renderMessage(scope, 'campaign_closed');
-      // Send to Agent View for now until we get a Select Campaign menu up and running.
-      scope.user.postMobileCommonsProfileUpdate(agentViewOip, scope.response_message);
 
-      return helpers.sendResponse(res, 200, scope.response_message);
+      return campaignBot.renderMessage(scope, 'campaign_closed')
+        .then((responseMessage) => {
+          scope.response_message = helpers.addSenderPrefix(responseMessage);
+          // Send to Agent View for now until we get a Select Campaign menu up and running.
+          scope.user.postMobileCommonsProfileUpdate(agentViewOip, scope.response_message);
+
+          return helpers.sendResponse(res, 200, scope.response_message);
+        })
+        .catch(renderError => helpers.sendResponse(res, 500, renderError.message));
     })
     .catch(err => {
       if (err.message === 'broadcast declined') {
