@@ -305,13 +305,10 @@ router.post('/', (req, res) => {
       return campaignBot.renderMessage(scope, scope.msg_type, prefix);
     })
     .then((msg) => {
-      scope.response_message = msg;
-      const senderPrefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
-      if (senderPrefix) {
-        scope.response_message = `${senderPrefix} ${scope.response_message}`;
-      }
+      scope.response_message = helpers.addSenderPrefix(msg);
       // Save to continue conversation with future mData requests that don't contain a keyword.
       scope.user.current_campaign = scope.campaign.id;
+
       return scope.user.save();
     })
     .then(() => {
@@ -331,18 +328,18 @@ router.post('/', (req, res) => {
     .catch(UnprocessibleEntityError, (err) => {
       logger.error(err.message);
       stathat('campaign closed');
-      const msg = campaignBot.renderMessage(scope, 'campaign_closed');
+      // TODO: This will fail -- campaignBot.renderMessage returns a Promise now.
+      scope.response_message = campaignBot.renderMessage(scope, 'campaign_closed');
       // Send to Agent View for now until we get a Select Campaign menu up and running.
-      scope.user.postMobileCommonsProfileUpdate(agentViewOip, msg);
+      scope.user.postMobileCommonsProfileUpdate(agentViewOip, scope.response_message);
 
-      // Send 200 back -- we're handling closed campaign by responding with campaign_closed message.
-      return helpers.sendResponse(res, 200, msg);
+      return helpers.sendResponse(res, 200, scope.response_message);
     })
     .catch(err => {
       if (err.message === 'broadcast declined') {
         logger.info('broadcast declined');
-        let msg = scope.broadcast.fields.declinedMessage;
-        if (!msg) {
+        scope.response_message = scope.broadcast.fields.declinedMessage;
+        if (!scope.response_message) {
           const logMsg = 'undefined broadcast.declinedMessage';
           logger.error(logMsg);
           stathat(`error: ${logMsg}`);
@@ -350,16 +347,7 @@ router.post('/', (req, res) => {
           // Don't send an error code to Mobile Commons, which would trigger error message to User.
           return helpers.sendResponse(res, 200, logMsg);
         }
-        const senderPrefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
-        if (senderPrefix) {
-          logger.debug(`sendPrefix: ${senderPrefix}`);
-          try {
-            msg = `${senderPrefix} ${msg}`;
-          } catch (error) {
-            logger.error(error.message);
-          }
-        }
-
+        const msg = helpers.addSenderPrefix(scope.response_message);
         // Log the no response:
         app.locals.db.bot_requests.log(req, 'broadcast', null, 'prompt_declined', msg);
         // Send broadcast declined using Mobile Commons Send Message API:
