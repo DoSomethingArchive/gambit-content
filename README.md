@@ -1,24 +1,26 @@
-* :speech_balloon: :calling:
-* [docs](https://github.com/DoSomething/gambit/wiki)
+# Gambit
+Gambit is the internal DoSomething.org API used to send/receive messages to and from Mobile Commons, enabling DoSomething Members to complete Campaigns over SMS. Gambit is built using [Express](http://expressjs.com/) and [MongoDB](https://www.mongodb.com).
 
-# Setup
-## Entire Gambit System w/ Docker
-All Gambit services & required dependencies can be setup locally with docker compose. See the [gambit-services](https://github.com/DoSomething/gambit-services) repo.
+### Getting Started
 
-## Standalone w/ Docker
-In order to setup this app & required dependencies, simply
+Install Node, MongoDB, and the Heroku toolbelt. 
+
+Next, fork and clone this repository. To run Gambit locally:
+* `sudo mongod`
+* `heroku local` from your Gambit directory
+
+#### Docker
+
+Gambit can also be installed via Docker:
 
 1. `git clone`
 2. `docker-compose up`
 
-### Docker setup under the hood
 All apps are executed by `Foreman` to handle process management & mimic Heroku.
 `Nodemon` will autoreload the server when a file changes.
 The compose file defines env variables for connection details & network mapping.
 
-## Standalone without Docker
-1. Run an instance of RabbitMQ, MongoDB. Two options,
-  * Install these tools locally & run them
-  * Run the docker container with just backend tooling configured.
-2. Edit .env with correct service URI's, most likely in for the form of service://localhost:<port>.
-3. `npm start` (requires Foreman from the Heroku Toolbelt)
+### License
+&copy;2017 DoSomething.org. Gambit is free software, and may be redistributed under the terms specified
+in the [LICENSE](https://github.com/DoSomething/gambit/blob/dev/LICENSE) file. The name and logo for
+DoSomething.org are trademarks of Do Something, Inc and may not be used without permission.
