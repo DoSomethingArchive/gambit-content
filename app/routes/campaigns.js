@@ -126,12 +126,7 @@ router.post('/:id/message', (req, res) => {
 
   return loadCampaignMessage
     .then((message) => {
-      messageBody = message;
-      const senderPrefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
-      if (senderPrefix) {
-        messageBody = `${senderPrefix} ${messageBody}`;
-      }
-
+      messageBody = helpers.addSenderPrefix(message);
       mobilecommons.send_message(phone, messageBody);
       const msg = `Sent message:${type} for campaign:${campaignId} to phone:${phone}`;
       logger.info(msg);

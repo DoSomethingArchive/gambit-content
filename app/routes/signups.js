@@ -65,7 +65,7 @@ router.post('/', (req, res) => {
       return app.locals.campaignBot.renderMessage(scope, 'menu_signedup_external');
     })
     .then((messageBody) => {
-      scope.response_message = messageBody;
+      scope.response_message = helpers.addSenderPrefix(messageBody);
       // Set current_campaign first and assume user isn't in the middle of a chatbot conversation
       // for a different campaign.
       // TODO: Refactor to set current_campaign upon user.postMobileCommonsProfileUpdate success.
