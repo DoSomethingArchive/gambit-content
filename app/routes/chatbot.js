@@ -292,20 +292,19 @@ router.post('/', (req, res) => {
       }
 
       scope.msg_type = msgType;
-      let prefix = 'Sorry, I didn\'t understand that.\n\n';
+      scope.msg_prefix = 'Sorry, I didn\'t understand that.\n\n';
 
       if (scope.msg_type === 'invalid_caption') {
         scope.msg_type = 'ask_caption';
       } else if (scope.msg_type === 'invalid_why_participated') {
         scope.msg_type = 'ask_why_participated';
       } else {
-        prefix = null;
+        scope.msg_prefix = null;
       }
-
-      return campaignBot.renderMessage(scope, scope.msg_type, prefix);
+      return contentful.renderMessageForPhoenixCampaign(scope.campaign, scope.msg_type);
     })
     .then((msg) => {
-      scope.response_message = helpers.addSenderPrefix(msg);
+      scope.response_message = helpers.addSenderPrefix(`${scope.msg_prefix}${msg}`);
       // Save to continue conversation with future mData requests that don't contain a keyword.
       scope.user.current_campaign = scope.campaign.id;
 
