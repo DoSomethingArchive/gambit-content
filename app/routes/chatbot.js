@@ -328,7 +328,7 @@ router.post('/', (req, res) => {
       logger.error(err.message);
       stathat('campaign closed');
 
-      return campaignBot.renderMessage(scope, 'campaign_closed')
+      return contentful.renderMessageForPhoenixCampaign(scope.campaign, 'campaign_closed')
         .then((responseMessage) => {
           scope.response_message = helpers.addSenderPrefix(responseMessage);
           // Send to Agent View for now until we get a Select Campaign menu up and running.
