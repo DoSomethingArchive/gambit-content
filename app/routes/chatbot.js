@@ -292,6 +292,7 @@ router.post('/', (req, res) => {
       }
 
       scope.msg_type = msgType;
+      // TODO: Add config variable for invalid text input copy.
       scope.msg_prefix = 'Sorry, I didn\'t understand that.\n\n';
 
       if (scope.msg_type === 'invalid_caption') {
@@ -299,18 +300,31 @@ router.post('/', (req, res) => {
       } else if (scope.msg_type === 'invalid_why_participated') {
         scope.msg_type = 'ask_why_participated';
       } else {
-        scope.msg_prefix = null;
+        scope.msg_prefix = '';
       }
       return contentful.renderMessageForPhoenixCampaign(scope.campaign, scope.msg_type);
     })
-    .then((msg) => {
-      scope.response_message = helpers.addSenderPrefix(`${scope.msg_prefix}${msg}`);
+    .then((renderedMessage) => {
+      scope.response_message = `${scope.msg_prefix} ${renderedMessage}`;
+      let quantity = req.signup.total_quantity_submitted;
+      if (req.signup.draft_reportback_submission) {
+        quantity = req.signup.draft_reportback_submission.quantity;
+      }
+      scope.response_message = scope.response_message.replace(/{{quantity}}/gi, quantity);
+      const revisiting = req.keyword && req.signup.draft_reportback_submission;
+      if (revisiting) {
+        // TODO: Add config variable for continue draft message copy.
+        const continueMsg = 'Picking up where you left off on';
+        const campaignTitle = scope.campaign.title;
+        scope.response_message = `${continueMsg} ${campaignTitle}...\n\n${scope.response_message}`;
+      }
       // Save to continue conversation with future mData requests that don't contain a keyword.
       scope.user.current_campaign = scope.campaign.id;
 
       return scope.user.save();
     })
     .then(() => {
+      scope.response_message = helpers.addSenderPrefix(scope.response_message);
       logger.debug(`saved user.current_campaign:${scope.campaign.id}`);
       scope.user.postMobileCommonsProfileUpdate(scope.oip, scope.response_message);
 
