@@ -8,6 +8,8 @@ const router = express.Router(); // eslint-disable-line new-cap
 const logger = app.locals.logger;
 const stathat = app.locals.stathat;
 const Promise = require('bluebird');
+const CampaignBotController = require('../controllers/CampaignBotController');
+const controller = new CampaignBotController();
 const helpers = require('../../lib/helpers');
 const contentful = require('../../lib/contentful');
 const mobilecommons = require('../../lib/mobilecommons');
@@ -40,9 +42,6 @@ function isCommand(incomingMessage, commandType) {
 router.post('/', (req, res) => {
   const route = 'v1/chatbot';
   stathat(`route: ${route}`);
-
-  const controller = app.locals.controllers.campaignBot;
-  const campaignBot = app.locals.campaignBot;
 
   const scope = req;
   // Currently only support mobilecommons.
@@ -330,7 +329,7 @@ router.post('/', (req, res) => {
 
       helpers.sendResponse(res, 200, scope.response_message);
       return app.locals.db.bot_requests
-        .log(req, 'campaignbot', campaignBot.id, scope.msg_type, scope.response_message);
+        .log(req, 'campaignbot', null, scope.msg_type, scope.response_message);
     })
     .then(botRequest => logger.debug(`created botRequest:${botRequest._id}`))
     .catch(NotFoundError, (err) => {
