@@ -3,6 +3,7 @@
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
 const Promise = require('bluebird');
+const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
 
 const contentful = require('../../lib/contentful');
@@ -64,20 +65,39 @@ router.get('/', (req, res) => {
 router.get('/:id', (req, res) => {
   stathat('route: v1/campaigns/{id}');
   const campaignId = req.params.id;
-  logger.debug(`get campaign ${campaignId}`);
 
-  return app.locals.db.campaigns
-    .findById(campaignId)
-    .exec()
-    .then(campaignDoc => {
-      if (!campaignDoc) {
-        return helpers.sendResponse(res, 404, `Campaign ${campaignId} not found`);
-      }
+  const findCampaignDoc = new Promise((resolve, reject) => {
+    logger.debug(`findCampaignDoc:${campaignId}`);
 
-      return fetchCampaign(campaignDoc);
-    })
+    if (isNaN(campaignId)) {
+      const msg = `Invalid Campaign id ${campaignId}.`;
+      const err = new UnprocessibleEntityError(msg);
+
+      return reject(err);
+    }
+
+    return app.locals.db.campaigns.findById(campaignId)
+      .exec()
+      .then((campaignDoc) => {
+        if (!campaignDoc) {
+          const msg = `Could not find campaigns document for id ${campaignId}.`;
+          const err = new NotFoundError(msg);
+
+          return reject(err);
+        }
+
+        return resolve(campaignDoc);
+      })
+      .catch(err => reject(err));
+  });
+
+  return findCampaignDoc.then(campaignDoc => fetchCampaign(campaignDoc))
     .then(data => res.send({ data }))
-    .catch(error => helpers.sendResponse(res, 500, error.message));
+    // TODO: Refactor helpers.sendResponse to accept an error and know the codes based on custom
+    // error class, to DRY.
+    .catch(NotFoundError, err => helpers.sendResponse(res, 404, err.message))
+    .catch(UnprocessibleEntityError, err => helpers.sendResponse(res, 422, err.message))
+    .catch(err => helpers.sendResponse(res, 500, err.message));
 });
 
 /**
