@@ -2,6 +2,7 @@
 
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
+const contentful = require('../../lib/contentful');
 const phoenix = require('../../lib/phoenix');
 const helpers = require('../../lib/helpers');
 const NotFoundError = require('../exceptions/NotFoundError');
@@ -62,7 +63,7 @@ router.post('/', (req, res) => {
       }
       scope.user = user;
 
-      return app.locals.campaignBot.renderMessage(scope, 'menu_signedup_external');
+      return contentful.renderMessageForPhoenixCampaign(scope.campaign, 'menu_signedup_external');
     })
     .then((messageBody) => {
       scope.response_message = helpers.addSenderPrefix(messageBody);
