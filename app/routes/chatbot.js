@@ -8,35 +8,14 @@ const router = express.Router(); // eslint-disable-line new-cap
 const logger = app.locals.logger;
 const stathat = app.locals.stathat;
 const Promise = require('bluebird');
+const CampaignBotController = require('../controllers/CampaignBotController');
+const controller = new CampaignBotController();
 const helpers = require('../../lib/helpers');
 const contentful = require('../../lib/contentful');
 const mobilecommons = require('../../lib/mobilecommons');
+const phoenix = require('../../lib/phoenix');
 const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
-
-/**
- * Fetches Campaign object from DS API for given id.
- */
-function fetchCampaign(id) {
-  return new Promise((resolve, reject) => {
-    logger.debug(`fetchCampaign:${id}`);
-
-    if (!id) {
-      const err = new NotFoundError('Campaign id undefined');
-      return reject(err);
-    }
-
-    return app.locals.clients.phoenix.Campaigns
-      .get(id)
-      .then(campaign => resolve(campaign))
-      .catch((err) => {
-        const phoenixError = err;
-        phoenixError.message = `Phoenix: ${err.message}`;
-
-        return reject(phoenixError);
-      });
-  });
-}
 
 /**
  * Determines if given incomingMessage matches given Gambit command type.
@@ -63,9 +42,6 @@ function isCommand(incomingMessage, commandType) {
 router.post('/', (req, res) => {
   const route = 'v1/chatbot';
   stathat(`route: ${route}`);
-
-  const controller = app.locals.controllers.campaignBot;
-  const campaignBot = app.locals.campaignBot;
 
   const scope = req;
   // Currently only support mobilecommons.
@@ -161,7 +137,7 @@ router.post('/', (req, res) => {
               logger.debug(`found broadcast:${JSON.stringify(broadcast)}`);
               currentBroadcast = broadcast;
               logger.info(`loaded broadcast:${scope.broadcast_id}`);
-              return fetchCampaign(currentBroadcast.fields.campaign.fields.campaignId);
+              return phoenix.Campaigns.get(currentBroadcast.fields.campaign.fields.campaignId);
             })
             .then((campaign) => {
               if (!campaign.id) {
@@ -206,7 +182,7 @@ router.post('/', (req, res) => {
                 return reject(err);
               }
 
-              return fetchCampaign(keyword.fields.campaign.fields.campaignId);
+              return phoenix.Campaigns.get(keyword.fields.campaign.fields.campaignId);
             })
             .then((campaign) => {
               if (!campaign.id) {
@@ -231,7 +207,7 @@ router.post('/', (req, res) => {
 
         // If we've made it this far, check for User's current_campaign.
         logger.debug(`user.current_campaign:${user.current_campaign}`);
-        return fetchCampaign(user.current_campaign)
+        return phoenix.Campaigns.get(user.current_campaign)
           .then((campaign) => {
             if (!campaign.id) {
               // TODO: Send to non-existent start menu to select a campaign.
@@ -281,7 +257,7 @@ router.post('/', (req, res) => {
       if (isCommand(scope.incoming_message, 'member_support')) {
         scope.cmd_member_support = true;
         scope.oip = agentViewOip;
-        return campaignBot.renderMessage(scope, 'member_support');
+        return 'member_support';
       }
 
       if (scope.signup.draft_reportback_submission) {
@@ -295,30 +271,67 @@ router.post('/', (req, res) => {
 
       if (scope.signup.reportback) {
         if (scope.keyword || scope.broadcast_id) {
-          return campaignBot.renderMessage(scope, 'menu_completed');
+          return 'menu_completed';
         }
         // If we're this far, member didn't text back Reportback or Member Support commands.
-        return campaignBot.renderMessage(scope, 'invalid_cmd_completed');
+        return 'invalid_cmd_completed';
       }
 
       if (scope.keyword || scope.broadcast_id) {
-        return campaignBot.renderMessage(scope, 'menu_signedup_gambit');
+        return 'menu_signedup_gambit';
       }
 
-      return campaignBot.renderMessage(scope, 'invalid_cmd_signedup');
+      return 'invalid_cmd_signedup';
     })
-    .then((msg) => {
-      scope.response_message = msg;
+    .then((msgType) => {
+      // This is hacky, CampaignBotController.postReportback returns error that isn't caught.
+      // TODO: Clean this up when ready to take on https://github.com/DoSomething/gambit/issues/744.
+      if (msgType instanceof Error) {
+        throw new Error(msgType.message);
+      }
+
+      scope.msg_type = msgType;
+      // TODO: Add config variable for invalid text input copy.
+      scope.msg_prefix = 'Sorry, I didn\'t understand that.\n\n';
+
+      if (scope.msg_type === 'invalid_caption') {
+        scope.msg_type = 'ask_caption';
+      } else if (scope.msg_type === 'invalid_why_participated') {
+        scope.msg_type = 'ask_why_participated';
+      } else {
+        scope.msg_prefix = '';
+      }
+      return contentful.renderMessageForPhoenixCampaign(scope.campaign, scope.msg_type);
+    })
+    .then((renderedMessage) => {
+      scope.response_message = `${scope.msg_prefix} ${renderedMessage}`;
+      let quantity = req.signup.total_quantity_submitted;
+      if (req.signup.draft_reportback_submission) {
+        quantity = req.signup.draft_reportback_submission.quantity;
+      }
+      scope.response_message = scope.response_message.replace(/{{quantity}}/gi, quantity);
+      const revisiting = req.keyword && req.signup.draft_reportback_submission;
+      if (revisiting) {
+        // TODO: Add config variable for continue draft message copy.
+        const continueMsg = 'Picking up where you left off on';
+        const campaignTitle = scope.campaign.title;
+        scope.response_message = `${continueMsg} ${campaignTitle}...\n\n${scope.response_message}`;
+      }
       // Save to continue conversation with future mData requests that don't contain a keyword.
       scope.user.current_campaign = scope.campaign.id;
+
       return scope.user.save();
     })
     .then(() => {
+      scope.response_message = helpers.addSenderPrefix(scope.response_message);
       logger.debug(`saved user.current_campaign:${scope.campaign.id}`);
       scope.user.postMobileCommonsProfileUpdate(scope.oip, scope.response_message);
 
-      return helpers.sendResponse(res, 200, scope.response_message);
+      helpers.sendResponse(res, 200, scope.response_message);
+      return app.locals.db.bot_requests
+        .log(req, 'campaignbot', null, scope.msg_type, scope.response_message);
     })
+    .then(botRequest => logger.debug(`created botRequest:${botRequest._id}`))
     .catch(NotFoundError, (err) => {
       logger.error(err.message);
 
@@ -327,18 +340,22 @@ router.post('/', (req, res) => {
     .catch(UnprocessibleEntityError, (err) => {
       logger.error(err.message);
       stathat('campaign closed');
-      const msg = campaignBot.renderMessage(scope, 'campaign_closed');
-      // Send to Agent View for now until we get a Select Campaign menu up and running.
-      scope.user.postMobileCommonsProfileUpdate(agentViewOip, msg);
 
-      // Send 200 back -- we're handling closed campaign by responding with campaign_closed message.
-      return helpers.sendResponse(res, 200, msg);
+      return contentful.renderMessageForPhoenixCampaign(scope.campaign, 'campaign_closed')
+        .then((responseMessage) => {
+          scope.response_message = helpers.addSenderPrefix(responseMessage);
+          // Send to Agent View for now until we get a Select Campaign menu up and running.
+          scope.user.postMobileCommonsProfileUpdate(agentViewOip, scope.response_message);
+
+          return helpers.sendResponse(res, 200, scope.response_message);
+        })
+        .catch(renderError => helpers.sendResponse(res, 500, renderError.message));
     })
     .catch(err => {
       if (err.message === 'broadcast declined') {
         logger.info('broadcast declined');
-        let msg = scope.broadcast.fields.declinedMessage;
-        if (!msg) {
+        scope.response_message = scope.broadcast.fields.declinedMessage;
+        if (!scope.response_message) {
           const logMsg = 'undefined broadcast.declinedMessage';
           logger.error(logMsg);
           stathat(`error: ${logMsg}`);
@@ -346,16 +363,7 @@ router.post('/', (req, res) => {
           // Don't send an error code to Mobile Commons, which would trigger error message to User.
           return helpers.sendResponse(res, 200, logMsg);
         }
-        const senderPrefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
-        if (senderPrefix) {
-          logger.debug(`sendPrefix: ${senderPrefix}`);
-          try {
-            msg = `${senderPrefix} ${msg}`;
-          } catch (error) {
-            logger.error(error.message);
-          }
-        }
-
+        const msg = helpers.addSenderPrefix(scope.response_message);
         // Log the no response:
         app.locals.db.bot_requests.log(req, 'broadcast', null, 'prompt_declined', msg);
         // Send broadcast declined using Mobile Commons Send Message API:
@@ -364,7 +372,6 @@ router.post('/', (req, res) => {
         return helpers.sendResponse(res, 200, msg);
       }
 
-      logger.error(err.message);
       stathat(err.message);
 
       return helpers.sendResponse(res, 500, err.message);

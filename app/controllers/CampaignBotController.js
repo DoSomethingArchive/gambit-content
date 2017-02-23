@@ -4,7 +4,6 @@
  * Imports.
  */
 const logger = app.locals.logger;
-const campaignBot = app.locals.campaignBot;
 const helpers = rootRequire('lib/helpers');
 
 /**
@@ -24,9 +23,10 @@ class CampaignBotController {
    */
   collectReportbackProperty(req, property, ask) {
     this.debug(req, `collectReportbackProperty:${property}`);
+    const msgType = `ask_${property}`;
 
     if (ask || req.keyword) {
-      return campaignBot.renderMessage(req, `ask_${property}`);
+      return msgType;
     }
 
     // Begin validation.
@@ -35,23 +35,22 @@ class CampaignBotController {
     // TODO: Improve quantity check by looking for commas: @see gambit issue#608
     // Search string for numbers to accept values like "Around 100" or "60 bumble bands"
     const validQuantity = Number(input) && !helpers.hasLetters(input);
-    const validTextProperty = input.length > 3 && helpers.hasLetters(input);
+    const validTextProperty = input && input.length > 3 && helpers.hasLetters(input);
 
     if (property === 'quantity') {
       if (!validQuantity) {
-        return campaignBot.renderMessage(req, 'invalid_quantity');
+        return 'invalid_quantity';
       }
       input = Number(input);
     } else if (property === 'photo') {
       input = req.incoming_image_url;
       if (!input) {
-        return campaignBot.renderMessage(req, 'no_photo_sent');
+        return 'no_photo_sent';
       }
     } else if (!validTextProperty) {
       logger.debug(`invalid ${property} sent`);
-      const prefix = 'Sorry, I didn\'t understand that.\n\n';
 
-      return campaignBot.renderMessage(req, `ask_${property}`, prefix);
+      return `invalid_${property}`;
     }
 
     const submission = req.signup.draft_reportback_submission;
@@ -63,12 +62,12 @@ class CampaignBotController {
         this.debug(req, `saved ${property}:${input}`);
 
         if (property === 'quantity') {
-          return campaignBot.renderMessage(req, 'ask_photo');
+          return 'ask_photo';
         } else if (property === 'photo') {
-          return campaignBot.renderMessage(req, 'ask_caption');
+          return 'ask_caption';
         } else if (property === 'caption') {
           if (!this.hasReportedBack(req)) {
-            return campaignBot.renderMessage(req, 'ask_why_participated');
+            return 'ask_why_participated';
           }
         }
 
@@ -135,13 +134,6 @@ class CampaignBotController {
   }
 
   /**
-   * Wrapper function for logger.error(error)
-   */
-  error(req, err) {
-    logger.error(`${this.loggerPrefix(req)} ${err}:${err.stack}`);
-  }
-
-  /**
    * Returns whether current user has submitted a Reportback for the current campaign.
    * @param {object} req
    * @return {bool}
@@ -181,8 +173,13 @@ class CampaignBotController {
 
     return req.signup
       .postDraftReportbackSubmission()
-      .then(() => campaignBot.renderMessage(req, 'menu_completed'))
-      .catch(err => this.error(req, `postReportback ${err}`));
+      .then(() => 'menu_completed')
+      .catch((err) => {
+        const scope = err;
+        scope.message = `postReportback error:${err.message}`;
+
+        return scope;
+      });
   }
 
 }

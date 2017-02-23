@@ -10,7 +10,6 @@ module.exports.getModels = function (conn) {
 
   models.bot_requests = rootRequire('app/models/BotRequest')(conn);
   models.campaigns = rootRequire('app/models/Campaign')(conn);
-  models.campaignbots = rootRequire('app/models/CampaignBot')(conn);
   models.donorschoosebots = rootRequire('app/models/DonorsChooseBot')(conn);
   models.donorschoose_donations = rootRequire('app/models/DonorsChooseDonation')(conn);
   models.reportback_submissions = rootRequire('app/models/ReportbackSubmission')(conn);

@@ -6,6 +6,7 @@
 const mongoose = require('mongoose');
 const logger = app.locals.logger;
 const helpers = require('../../lib/helpers');
+const phoenix = require('../../lib/phoenix');
 const MessagingGroups = require('../../lib/groups');
 
 const campaignSchema = new mongoose.Schema({
@@ -30,12 +31,6 @@ const campaignSchema = new mongoose.Schema({
   msg_menu_signedup_gambit: String,
   msg_no_photo_sent: String,
 
-  // Exposed messages.
-  messages: {
-    scheduled_relative_to_signup_date: String,
-    scheduled_relative_to_reportback_date: String,
-  },
-
   // Mobile Commons Specific Fields.
   mobilecommons_group_doing: Number,
   mobilecommons_group_completed: Number,
@@ -55,16 +50,15 @@ function parsePhoenixCampaign(phoenixCampaign) {
 /**
  * Get given Campaigns from DS API then store.
  */
-campaignSchema.statics.lookupByIDs = function (campaignIDs) {
+campaignSchema.statics.lookupByIds = function (campaignIds) {
   const model = this;
 
   return new Promise((resolve, reject) => {
-    logger.debug(`Campaign.lookupByIDs:${campaignIDs}`);
+    logger.debug(`Campaign.lookupByIds:${campaignIds}`);
 
     const promises = [];
 
-    return app.locals.clients.phoenix.Campaigns
-      .index({ ids: campaignIDs })
+    return phoenix.Campaigns.index({ ids: campaignIds })
       .then((phoenixCampaigns) => {
         phoenixCampaigns.forEach((phoenixCampaign) => {
           const data = parsePhoenixCampaign(phoenixCampaign);
@@ -112,7 +106,6 @@ campaignSchema.methods.formatApiResponse = function () {
     current_run: this.current_run,
     mobilecommons_group_doing: this.mobilecommons_group_doing,
     mobilecommons_group_completed: this.mobilecommons_group_completed,
-    messages: this.messages,
     overrides: {},
   };
 

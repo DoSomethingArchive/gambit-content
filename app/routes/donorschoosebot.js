@@ -25,25 +25,20 @@ function info(req, message) {
 
 /**
  * Sends response object and posts update to user's Mobile Commons Profile to send SMS message.
+ * @param {object} req - Express request
  * @param {object} res - Express response
  * @param {number} code - Response HTTP code to send
  * @param {string} msgType - The type of DonorsChooseBot message to send
- * @param {object} profileUpdate - field values to update on current User's Mobile Commons Profile
  */
 function sendResponse(req, res, code, msgType) {
   debug(req, `sendResponse:${msgType}`);
   const scope = req;
-  let responseMessage = app.locals.donorsChooseBot.renderMessage(req, msgType);
-  const senderPrefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
-  if (senderPrefix) {
-    responseMessage = `${senderPrefix} ${responseMessage}`;
-  }
-
-  scope.profile_update.gambit_chatbot_response = responseMessage;
+  const responseMessage = app.locals.donorsChooseBot.renderMessage(req, msgType);
+  scope.profile_update.gambit_chatbot_response = helpers.addSenderPrefix(responseMessage);
   const profile = req.body;
   mobilecommons.profile_update(profile.profile_id, profile.phone, scope.oip, scope.profile_update);
 
-  return helpers.sendResponse(res, code, responseMessage);
+  return helpers.sendResponse(res, code, scope.profile_update.gambit_chatbot_response);
 }
 
 /**

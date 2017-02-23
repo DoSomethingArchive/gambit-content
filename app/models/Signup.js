@@ -6,6 +6,9 @@
 const mongoose = require('mongoose');
 const Promise = require('bluebird');
 const NotFoundError = require('../exceptions/NotFoundError');
+const helpers = require('../../lib/helpers');
+const northstar = require('../../lib/northstar');
+const phoenix = require('../../lib/phoenix');
 const logger = app.locals.logger;
 
 const postSource = process.env.DS_API_POST_SOURCE || 'sms-mobilecommons';
@@ -36,6 +39,7 @@ const signupSchema = new mongoose.Schema({
   // any existing or updates to Reportbacks for this Signup.
   total_quantity_submitted: Number,
   broadcast_id: Number,
+
 });
 
 function parseNorthstarSignup(northstarSignup) {
@@ -67,18 +71,15 @@ signupSchema.statics.lookupById = function (id) {
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.lookupById:${id}`);
 
-    return app.locals.clients.northstar
-      .Signups.get(id)
+    return northstar.Signups.get(id)
       .then((northstarSignup) => {
         app.locals.stathat(`${statName} 200`);
         logger.debug(`northstar.Signups.get:${id} success`);
         const data = parseNorthstarSignup(northstarSignup);
 
-        return model.findOneAndUpdate({ _id: id }, data, { upsert: true, new: true })
-          .exec()
-          .then(signup => resolve(signup))
-          .catch(error => reject(error));
+        return model.findOneAndUpdate({ _id: id }, data, helpers.upsertOptions()).exec();
       })
+      .then(signupDoc => resolve(signupDoc))
       .catch(err => {
         app.locals.stathatError(statName, err);
         if (err.status === 404) {
@@ -104,8 +105,7 @@ signupSchema.statics.lookupCurrent = function (user, campaign) {
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.lookupCurrent(${user._id}, ${campaign.id})`);
 
-    return app.locals.clients.northstar
-      .Signups.index({ user: user._id, campaigns: campaign.id })
+    return northstar.Signups.index({ user: user._id, campaigns: campaign.id })
       .then((northstarSignups) => {
         app.locals.stathat(`${statName} 200`);
 
@@ -120,13 +120,12 @@ signupSchema.statics.lookupCurrent = function (user, campaign) {
 
         const data = parseNorthstarSignup(currentSignup);
 
-        return model.findOneAndUpdate({ _id: data._id }, data, { upsert: true, new: true })
+        return model.findOneAndUpdate({ _id: data._id }, data, helpers.upsertOptions())
           .populate('user')
           .populate('draft_reportback_submission')
-          .exec()
-          .then(signup => resolve(signup))
-          .catch(error => reject(error));
+          .exec();
       })
+      .then(signupDoc => resolve(signupDoc))
       .catch((err) => {
         app.locals.stathatError(statName, err);
 
@@ -147,12 +146,12 @@ signupSchema.statics.post = function (user, campaign, keyword) {
 
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.post(${user._id}, ${campaign.id}, ${keyword})`);
+    const postData = {
+      source: postSource,
+      uid: user.phoenix_id,
+    };
 
-    return app.locals.clients.phoenix.Campaigns
-      .signup(campaign.id, {
-        source: postSource,
-        uid: user.phoenix_id,
-      })
+    return phoenix.Campaigns.signup(campaign.id, postData)
       .then((signupId) => {
         app.locals.stathat(`${statName} 200`);
         app.locals.stathat(`signup: ${keyword}`);
@@ -164,11 +163,9 @@ signupSchema.statics.post = function (user, campaign, keyword) {
           keyword,
         };
 
-        return model.findOneAndUpdate({ _id: signupId }, data, { upsert: true, new: true })
-          .exec()
-          .then(signup => resolve(signup))
-          .catch(error => reject(error));
+        return model.findOneAndUpdate({ _id: signupId }, data, helpers.upsertOptions()).exec();
       })
+      .then(signupDoc => resolve(signupDoc))
       .catch((err) => {
         app.locals.stathatError(statName, err);
 
@@ -231,8 +228,7 @@ signupSchema.methods.postDraftReportbackSubmission = function () {
     }
     logger.debug(`Signup.postDraftReportbackSubmission data:${JSON.stringify(data)}`);
 
-    return app.locals.clients.phoenix.Campaigns
-      .reportback(signup.campaign, data)
+    return phoenix.Campaigns.reportback(signup.campaign, data)
       .then((reportbackId) => {
         app.locals.stathat(`${statName} 200`);
         logger.info(`phoenix.Campaigns.reportback:${reportbackId}`);
@@ -255,9 +251,6 @@ signupSchema.methods.postDraftReportbackSubmission = function () {
         return resolve(signup);
       })
       .catch((err) => {
-        app.locals.stathatError(statName, err);
-        logger.error(err.message);
-
         submission.failed_at = dateSubmitted;
         submission.save();
 

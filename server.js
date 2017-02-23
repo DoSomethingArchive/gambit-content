@@ -96,35 +96,6 @@ mongoose.Promise = global.Promise;
 const conn = mongoose.createConnection(DB_URI);
 app.locals.db = loader.getModels(conn);
 
-/**
- * Load clients.
- */
-app.locals.clients = {};
-
-const NorthstarClient = require('@dosomething/northstar-js');
-app.locals.clients.northstar = new NorthstarClient({
-  baseURI: process.env.DS_NORTHSTAR_API_BASEURI,
-  apiKey: process.env.DS_NORTHSTAR_API_KEY,
-});
-
-if (!app.locals.clients.northstar) {
-  logger.error('app.locals.clients.northstar undefined');
-  process.exit(1);
-}
-
-const PhoenixClient = require('@dosomething/phoenix-js');
-app.locals.clients.phoenix = new PhoenixClient({
-  baseURI: process.env.DS_PHOENIX_API_BASEURI,
-  username: process.env.DS_PHOENIX_API_USERNAME,
-  password: process.env.DS_PHOENIX_API_PASSWORD,
-});
-
-if (!app.locals.clients.phoenix) {
-  logger.error('app.locals.clients.phoenix undefined');
-  process.exit(1);
-}
-
-
 conn.on('connected', () => {
   logger.info(`conn.readyState:${conn.readyState}`);
 
@@ -133,9 +104,9 @@ conn.on('connected', () => {
    */
   app.locals.campaigns = {};
   const loadCampaigns = app.locals.db.campaigns
-    .lookupByIDs(process.env.CAMPAIGNBOT_CAMPAIGNS)
+    .lookupByIds(process.env.CAMPAIGNBOT_CAMPAIGNS)
     .then((campaigns) => {
-      logger.debug(`app.locals.db.campaigns.lookupByIDs found ${campaigns.length} campaigns`);
+      logger.debug(`app.locals.db.campaigns.lookupByIds found ${campaigns.length} campaigns`);
 
       return campaigns.forEach((campaign) => {
         const campaignId = campaign._id;
@@ -155,19 +126,6 @@ conn.on('connected', () => {
    * Load controllers.
    */
   app.locals.controllers = {};
-
-  const campaignBotId = process.env.CAMPAIGNBOT_ID || 41;
-  const loadCampaignBot = loader.loadBot('campaignbot', campaignBotId)
-    .then((bot) => {
-      app.locals.campaignBot = bot;
-      const CampaignBotController = rootRequire('app/controllers/CampaignBotController');
-      app.locals.controllers.campaignBot = new CampaignBotController(bot);
-      logger.info('loaded app.locals.controllers.campaignBot');
-
-      return app.locals.controllers.campaignBot;
-    })
-    .catch(err => logger.error(err.message));
-
   const donorsChooseBotId = process.env.DONORSCHOOSEBOT_ID || 31;
   const loadDonorsChooseBot = loader.loadBot('donorschoosebot', donorsChooseBotId)
     .then((bot) => {
@@ -181,7 +139,7 @@ conn.on('connected', () => {
   /**
    * Start server.
    */
-  Promise.all([loadCampaigns, loadCampaignBot, loadDonorsChooseBot])
+  Promise.all([loadCampaigns, loadDonorsChooseBot])
     .then(() => {
       const port = process.env.PORT || 5000;
 

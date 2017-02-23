@@ -2,10 +2,12 @@
 
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
+const contentful = require('../../lib/contentful');
+const phoenix = require('../../lib/phoenix');
 const helpers = require('../../lib/helpers');
 const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
-// Requiring Blurbird overrides native promises,
+// Requiring Bluebird overrides native promises,
 // which we need for our exception handling logic in this endpoint.
 const Promise = require('bluebird'); // eslint-disable-line no-unused-vars
 const logger = app.locals.logger;
@@ -39,19 +41,21 @@ router.post('/', (req, res) => {
     .lookupById(signupId)
     .then((signup) => {
       scope.signup = signup;
-      // TODO: Use findById instead of app.locals.campaigns.
-      scope.campaign = app.locals.campaigns[signup.campaign];
 
-      if (!scope.campaign) {
-        const msg = `Campaign ${signup.campaign} is not running on CampaignBot.`;
+      return phoenix.Campaigns.get(signup.campaign);
+    })
+    .then((phoenixCampaign) => {
+      if (!helpers.isCampaignBotCampaign(phoenixCampaign.id)) {
+        const msg = `Campaign ${phoenixCampaign.id} is not running on CampaignBot.`;
         throw new UnprocessibleEntityError(msg);
       }
-      if (scope.campaign.status === 'closed') {
-        const msg = `Campaign ${signup.campaign} is closed on CampaignBot.`;
+      if (phoenixCampaign.status === 'closed') {
+        const msg = `Campaign ${phoenixCampaign.id} is closed.`;
         throw new UnprocessibleEntityError(msg);
       }
+      scope.campaign = phoenixCampaign;
 
-      return app.locals.db.users.lookup('id', signup.user);
+      return app.locals.db.users.lookup('id', scope.signup.user);
     })
     .then((user) => {
       if (!user.mobile) {
@@ -59,15 +63,14 @@ router.post('/', (req, res) => {
       }
       scope.user = user;
 
-      const campaignBot = app.locals.campaignBot;
-      scope.response_message = campaignBot.renderMessage(scope, 'menu_signedup_external');
-
-      // Technically we don't want to ovewrite current_campaign until we know the Mobile Commons
-      // message was delivered.. but responding to the message won't work correctly without
-      // ensuring the current_campaign is set for our signup campaign. The ol' chicken and egg.
+      return contentful.renderMessageForPhoenixCampaign(scope.campaign, 'menu_signedup_external');
+    })
+    .then((messageBody) => {
+      scope.response_message = helpers.addSenderPrefix(messageBody);
       // Set current_campaign first and assume user isn't in the middle of a chatbot conversation
       // for a different campaign.
-      scope.user.current_campaign = scope.campaign._id;
+      // TODO: Refactor to set current_campaign upon user.postMobileCommonsProfileUpdate success.
+      scope.user.current_campaign = scope.campaign.id;
 
       return scope.user.save();
     })
