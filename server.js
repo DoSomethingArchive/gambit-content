@@ -126,19 +126,6 @@ conn.on('connected', () => {
    * Load controllers.
    */
   app.locals.controllers = {};
-
-  const campaignBotId = process.env.CAMPAIGNBOT_ID || 41;
-  const loadCampaignBot = loader.loadBot('campaignbot', campaignBotId)
-    .then((bot) => {
-      app.locals.campaignBot = bot;
-      const CampaignBotController = rootRequire('app/controllers/CampaignBotController');
-      app.locals.controllers.campaignBot = new CampaignBotController(bot);
-      logger.info('loaded app.locals.controllers.campaignBot');
-
-      return app.locals.controllers.campaignBot;
-    })
-    .catch(err => logger.error(err.message));
-
   const donorsChooseBotId = process.env.DONORSCHOOSEBOT_ID || 31;
   const loadDonorsChooseBot = loader.loadBot('donorschoosebot', donorsChooseBotId)
     .then((bot) => {
@@ -152,7 +139,7 @@ conn.on('connected', () => {
   /**
    * Start server.
    */
-  Promise.all([loadCampaigns, loadCampaignBot, loadDonorsChooseBot])
+  Promise.all([loadCampaigns, loadDonorsChooseBot])
     .then(() => {
       const port = process.env.PORT || 5000;
 

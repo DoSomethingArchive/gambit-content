@@ -8,6 +8,8 @@ const router = express.Router(); // eslint-disable-line new-cap
 const logger = app.locals.logger;
 const stathat = app.locals.stathat;
 const Promise = require('bluebird');
+const CampaignBotController = require('../controllers/CampaignBotController');
+const controller = new CampaignBotController();
 const helpers = require('../../lib/helpers');
 const contentful = require('../../lib/contentful');
 const mobilecommons = require('../../lib/mobilecommons');
@@ -40,9 +42,6 @@ function isCommand(incomingMessage, commandType) {
 router.post('/', (req, res) => {
   const route = 'v1/chatbot';
   stathat(`route: ${route}`);
-
-  const controller = app.locals.controllers.campaignBot;
-  const campaignBot = app.locals.campaignBot;
 
   const scope = req;
   // Currently only support mobilecommons.
@@ -292,32 +291,45 @@ router.post('/', (req, res) => {
       }
 
       scope.msg_type = msgType;
-      let prefix = 'Sorry, I didn\'t understand that.\n\n';
+      // TODO: Add config variable for invalid text input copy.
+      scope.msg_prefix = 'Sorry, I didn\'t understand that.\n\n';
 
       if (scope.msg_type === 'invalid_caption') {
         scope.msg_type = 'ask_caption';
       } else if (scope.msg_type === 'invalid_why_participated') {
         scope.msg_type = 'ask_why_participated';
       } else {
-        prefix = null;
+        scope.msg_prefix = '';
       }
-
-      return campaignBot.renderMessage(scope, scope.msg_type, prefix);
+      return contentful.renderMessageForPhoenixCampaign(scope.campaign, scope.msg_type);
     })
-    .then((msg) => {
-      scope.response_message = helpers.addSenderPrefix(msg);
+    .then((renderedMessage) => {
+      scope.response_message = `${scope.msg_prefix} ${renderedMessage}`;
+      let quantity = req.signup.total_quantity_submitted;
+      if (req.signup.draft_reportback_submission) {
+        quantity = req.signup.draft_reportback_submission.quantity;
+      }
+      scope.response_message = scope.response_message.replace(/{{quantity}}/gi, quantity);
+      const revisiting = req.keyword && req.signup.draft_reportback_submission;
+      if (revisiting) {
+        // TODO: Add config variable for continue draft message copy.
+        const continueMsg = 'Picking up where you left off on';
+        const campaignTitle = scope.campaign.title;
+        scope.response_message = `${continueMsg} ${campaignTitle}...\n\n${scope.response_message}`;
+      }
       // Save to continue conversation with future mData requests that don't contain a keyword.
       scope.user.current_campaign = scope.campaign.id;
 
       return scope.user.save();
     })
     .then(() => {
+      scope.response_message = helpers.addSenderPrefix(scope.response_message);
       logger.debug(`saved user.current_campaign:${scope.campaign.id}`);
       scope.user.postMobileCommonsProfileUpdate(scope.oip, scope.response_message);
 
       helpers.sendResponse(res, 200, scope.response_message);
       return app.locals.db.bot_requests
-        .log(req, 'campaignbot', campaignBot.id, scope.msg_type, scope.response_message);
+        .log(req, 'campaignbot', null, scope.msg_type, scope.response_message);
     })
     .then(botRequest => logger.debug(`created botRequest:${botRequest._id}`))
     .catch(NotFoundError, (err) => {
@@ -329,7 +341,7 @@ router.post('/', (req, res) => {
       logger.error(err.message);
       stathat('campaign closed');
 
-      return campaignBot.renderMessage(scope, 'campaign_closed')
+      return contentful.renderMessageForPhoenixCampaign(scope.campaign, 'campaign_closed')
         .then((responseMessage) => {
           scope.response_message = helpers.addSenderPrefix(responseMessage);
           // Send to Agent View for now until we get a Select Campaign menu up and running.
