@@ -35,8 +35,12 @@ function fetchCampaign(campaignDoc) {
         return contentful.fetchCampaign(campaign.id);
       })
       .then((contentfulCampaign) => {
-        campaign.overrides = contentfulCampaign.fields;
-        delete campaign.overrides.campaignId;
+        if (contentfulCampaign) {
+          campaign.overrides = contentfulCampaign.fields;
+          delete campaign.overrides.campaignId;
+        } else {
+          campaign.overrides = {};
+        }
 
         return resolve(campaign);
       })
