@@ -137,7 +137,9 @@ router.post('/', (req, res) => {
               logger.debug(`found broadcast:${JSON.stringify(broadcast)}`);
               currentBroadcast = broadcast;
               logger.info(`loaded broadcast:${scope.broadcast_id}`);
-              return phoenix.Campaigns.get(currentBroadcast.fields.campaign.fields.campaignId);
+              const campaignId = currentBroadcast.fields.campaign.fields.campaignId;
+
+              return phoenix.client.Campaigns.get(campaignId);
             })
             .then((campaign) => {
               if (!campaign.id) {
@@ -175,7 +177,7 @@ router.post('/', (req, res) => {
                 return reject(err);
               }
 
-              return phoenix.Campaigns.get(keyword.fields.campaign.fields.campaignId);
+              return phoenix.client.Campaigns.get(keyword.fields.campaign.fields.campaignId);
             })
             .then((campaign) => {
               if (!campaign.id) {
@@ -192,7 +194,7 @@ router.post('/', (req, res) => {
 
         // If we've made it this far, check for User's current_campaign.
         logger.debug(`user.current_campaign:${user.current_campaign}`);
-        return phoenix.Campaigns.get(user.current_campaign)
+        return phoenix.client.Campaigns.get(user.current_campaign)
           .then((campaign) => {
             if (!campaign.id) {
               // TODO: Send to non-existent start menu to select a campaign.

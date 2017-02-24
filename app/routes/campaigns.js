@@ -23,7 +23,7 @@ function fetchCampaign(campaignDoc) {
   return new Promise((resolve, reject) => {
     logger.debug(`fetchCampaign:${campaign.id}`);
 
-    return phoenix.Campaigns.get(campaign.id)
+    return phoenix.client.Campaigns.get(campaign.id)
       .then((phoenixCampaign) => {
         campaign.title = phoenixCampaign.title;
         campaign.status = phoenixCampaign.status;
@@ -139,9 +139,9 @@ router.post('/:id/message', (req, res) => {
   const loadCampaignMessage = new Promise((resolve, reject) => {
     logger.debug(`loadCampaignMessage campaign:${campaignId} msgType:${type}`);
 
-    return phoenix.Campaigns.get(campaignId)
+    return phoenix.client.Campaigns.get(campaignId)
       .then((phoenixCampaign) => {
-        logger.debug(`phoenix.Campaigns.get found campaign:${campaignId}`);
+        logger.debug(`phoenix.client.Campaigns.get found campaign:${campaignId}`);
 
         if (phoenixCampaign.status === 'closed') {
           const err = new CampaignClosedError(phoenixCampaign);
