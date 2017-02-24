@@ -3,6 +3,7 @@
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
 const Promise = require('bluebird');
+const CampaignClosedError = require('../exceptions/CampaignClosedError');
 const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
 
@@ -143,8 +144,7 @@ router.post('/:id/message', (req, res) => {
         logger.debug(`phoenix.Campaigns.get found campaign:${campaignId}`);
 
         if (phoenixCampaign.status === 'closed') {
-          const msg = `Campaign ${campaignId} is closed.`;
-          const err = new UnprocessibleEntityError(msg);
+          const err = new CampaignClosedError(phoenixCampaign);
           return reject(err);
         }
 
