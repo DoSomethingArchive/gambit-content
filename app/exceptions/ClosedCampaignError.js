@@ -1,6 +1,6 @@
 'use strict';
 
-class CampaignClosedError extends Error {
+class ClosedCampaignError extends Error {
 
   constructor(phoenixCampaign) {
     super();
@@ -9,4 +9,4 @@ class CampaignClosedError extends Error {
 
 }
 
-module.exports = CampaignClosedError;
+module.exports = ClosedCampaignError;

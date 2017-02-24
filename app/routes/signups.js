@@ -5,7 +5,7 @@ const router = express.Router(); // eslint-disable-line new-cap
 const contentful = require('../../lib/contentful');
 const phoenix = require('../../lib/phoenix');
 const helpers = require('../../lib/helpers');
-const CampaignClosedError = require('../exceptions/CampaignClosedError');
+const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
 const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
 // Requiring Bluebird overrides native promises,
@@ -51,7 +51,7 @@ router.post('/', (req, res) => {
         throw new UnprocessibleEntityError(msg);
       }
       if (phoenix.isClosedCampaign(phoenixCampaign)) {
-        throw new CampaignClosedError(phoenixCampaign);
+        throw new ClosedCampaignError(phoenixCampaign);
       }
       scope.campaign = phoenixCampaign;
 
@@ -85,7 +85,7 @@ router.post('/', (req, res) => {
       return helpers.sendResponse(res, 200, scope.response_message);
     })
     .catch(NotFoundError, err => helpers.sendResponse(res, 404, err.message))
-    .catch(CampaignClosedError, err => helpers.sendResponse(res, 422, err.message))
+    .catch(ClosedCampaignError, err => helpers.sendResponse(res, 422, err.message))
     .catch(UnprocessibleEntityError, err => helpers.sendResponse(res, 422, err.message))
     .catch(err => helpers.sendResponse(res, 500, err.message));
 });

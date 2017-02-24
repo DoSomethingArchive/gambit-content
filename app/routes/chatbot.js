@@ -14,7 +14,7 @@ const helpers = require('../../lib/helpers');
 const contentful = require('../../lib/contentful');
 const mobilecommons = require('../../lib/mobilecommons');
 const phoenix = require('../../lib/phoenix');
-const CampaignClosedError = require('../exceptions/CampaignClosedError');
+const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
 const NotFoundError = require('../exceptions/NotFoundError');
 
 /**
@@ -213,7 +213,7 @@ router.post('/', (req, res) => {
     .then((campaign) => {
       scope.campaign = campaign;
       if (phoenix.isClosedCampaign(campaign)) {
-        throw new CampaignClosedError(campaign);
+        throw new ClosedCampaignError(campaign);
       }
 
       return app.locals.db.signups.lookupCurrent(scope.user, scope.campaign);
@@ -326,7 +326,7 @@ router.post('/', (req, res) => {
 
       return helpers.sendResponse(res, 404, err.message);
     })
-    .catch(CampaignClosedError, (err) => {
+    .catch(ClosedCampaignError, (err) => {
       logger.warn(err.message);
       stathat('campaign closed');
 
