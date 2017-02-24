@@ -212,7 +212,7 @@ router.post('/', (req, res) => {
   return loadCampaign
     .then((campaign) => {
       scope.campaign = campaign;
-      if (campaign.status === 'closed') {
+      if (phoenix.isClosedCampaign(campaign)) {
         throw new CampaignClosedError(campaign);
       }
 

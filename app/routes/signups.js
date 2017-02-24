@@ -50,7 +50,7 @@ router.post('/', (req, res) => {
         const msg = `Campaign ${phoenixCampaign.id} is not running on CampaignBot.`;
         throw new UnprocessibleEntityError(msg);
       }
-      if (phoenixCampaign.status === 'closed') {
+      if (phoenix.isClosedCampaign(phoenixCampaign)) {
         throw new CampaignClosedError(phoenixCampaign);
       }
       scope.campaign = phoenixCampaign;

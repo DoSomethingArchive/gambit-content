@@ -143,7 +143,7 @@ router.post('/:id/message', (req, res) => {
       .then((phoenixCampaign) => {
         logger.debug(`phoenix.client.Campaigns.get found campaign:${campaignId}`);
 
-        if (phoenixCampaign.status === 'closed') {
+        if (phoenix.isClosedCampaign(phoenixCampaign)) {
           const err = new CampaignClosedError(phoenixCampaign);
           return reject(err);
         }
