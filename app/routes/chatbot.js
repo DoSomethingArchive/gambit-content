@@ -14,8 +14,8 @@ const helpers = require('../../lib/helpers');
 const contentful = require('../../lib/contentful');
 const mobilecommons = require('../../lib/mobilecommons');
 const phoenix = require('../../lib/phoenix');
+const CampaignClosedError = require('../exceptions/CampaignClosedError');
 const NotFoundError = require('../exceptions/NotFoundError');
-const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
 
 /**
  * Determines if given incomingMessage matches given Gambit command type.
@@ -147,13 +147,6 @@ router.post('/', (req, res) => {
 
               logger.info(`loaded campaign:${campaign.id}`);
 
-              if (campaign.status === 'closed') {
-                // TODO: Include this message to the CampaignClosedError.
-                const msg = `Broadcast Campaign ${campaign.id} is closed.`;
-                const err = new UnprocessibleEntityError(msg);
-                return reject(err);
-              }
-
               scope.broadcast = currentBroadcast;
               const saidNo = !(req.incoming_message && helpers.isYesResponse(req.incoming_message));
               if (saidNo) {
@@ -190,15 +183,7 @@ router.post('/', (req, res) => {
                 const err = new NotFoundError(msg);
                 return reject(err);
               }
-
-              if (campaign.status === 'closed') {
-                // Store campaign to render in closed message.
-                scope.campaign = campaign;
-                // TODO: Include this message to the CampaignClosedError.
-                const msg = `Keyword received for closed campaign ${campaign.id}.`;
-                const err = new UnprocessibleEntityError(msg);
-                return reject(err);
-              }
+              logger.debug(`found campaign:${campaign.id}`);
 
               return resolve(campaign);
             })
@@ -224,8 +209,10 @@ router.post('/', (req, res) => {
 
   return loadCampaign
     .then((campaign) => {
-      logger.log(`loaded campaign:${campaign.id}`);
       scope.campaign = campaign;
+      if (campaign.status === 'closed') {
+        throw new CampaignClosedError(campaign);
+      }
 
       return app.locals.db.signups.lookupCurrent(scope.user, scope.campaign);
     })
@@ -337,8 +324,8 @@ router.post('/', (req, res) => {
 
       return helpers.sendResponse(res, 404, err.message);
     })
-    .catch(UnprocessibleEntityError, (err) => {
-      logger.error(err.message);
+    .catch(CampaignClosedError, (err) => {
+      logger.warn(err.message);
       stathat('campaign closed');
 
       return contentful.renderMessageForPhoenixCampaign(scope.campaign, 'campaign_closed')
