@@ -57,7 +57,14 @@ function fetchCampaign(id) {
 
         return resolve(campaign);
       })
-      .catch(error => reject(error));
+      .catch(error => {
+        if (error.message === 'Not Found') {
+          const notFoundError = new NotFoundError(`Campaign ${id} not found`);
+          return reject(notFoundError);
+        }
+
+        return reject(error);
+      });
   });
 }
 
@@ -81,31 +88,7 @@ router.get('/:id', (req, res) => {
   stathat('route: v1/campaigns/{id}');
   const campaignId = req.params.id;
 
-  const findCampaignDoc = new Promise((resolve, reject) => {
-    logger.debug(`findCampaignDoc:${campaignId}`);
-
-    if (isNaN(campaignId)) {
-      const msg = `Invalid Campaign id ${campaignId}.`;
-      const err = new UnprocessibleEntityError(msg);
-
-      return reject(err);
-    }
-    return app.locals.db.campaigns.findById(campaignId)
-      .exec()
-      .then((campaignDoc) => {
-        if (!campaignDoc) {
-          const msg = `Could not find campaigns document for id ${campaignId}.`;
-          const err = new NotFoundError(msg);
-
-          return reject(err);
-        }
-
-        return resolve(campaignDoc);
-      })
-      .catch(err => reject(err));
-  });
-
-  return findCampaignDoc.then(campaignDoc => fetchCampaign(campaignDoc))
+  return fetchCampaign(campaignId)
     .then(data => res.send({ data }))
     // TODO: Refactor helpers.sendResponse to accept an error and know the codes based on custom
     // error class, to DRY.
