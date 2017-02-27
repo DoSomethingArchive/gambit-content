@@ -3,6 +3,7 @@
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
 const Promise = require('bluebird');
+const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
 const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
 
@@ -22,7 +23,7 @@ function fetchCampaign(campaignDoc) {
   return new Promise((resolve, reject) => {
     logger.debug(`fetchCampaign:${campaign.id}`);
 
-    return phoenix.Campaigns.get(campaign.id)
+    return phoenix.client.Campaigns.get(campaign.id)
       .then((phoenixCampaign) => {
         campaign.title = phoenixCampaign.title;
         campaign.status = phoenixCampaign.status;
@@ -31,6 +32,16 @@ function fetchCampaign(campaignDoc) {
       })
       .then((keywords) => {
         campaign.keywords = keywords;
+
+        return contentful.fetchCampaign(campaign.id);
+      })
+      .then((contentfulCampaign) => {
+        if (contentfulCampaign) {
+          campaign.overrides = contentfulCampaign.fields;
+          delete campaign.overrides.campaignId;
+        } else {
+          campaign.overrides = {};
+        }
 
         return resolve(campaign);
       })
@@ -128,13 +139,12 @@ router.post('/:id/message', (req, res) => {
   const loadCampaignMessage = new Promise((resolve, reject) => {
     logger.debug(`loadCampaignMessage campaign:${campaignId} msgType:${type}`);
 
-    return phoenix.Campaigns.get(campaignId)
+    return phoenix.client.Campaigns.get(campaignId)
       .then((phoenixCampaign) => {
-        logger.debug(`phoenix.Campaigns.get found campaign:${campaignId}`);
+        logger.debug(`phoenix.client.Campaigns.get found campaign:${campaignId}`);
 
-        if (phoenixCampaign.status === 'closed') {
-          const msg = `Campaign ${campaignId} is closed.`;
-          const err = new UnprocessibleEntityError(msg);
+        if (phoenix.isClosedCampaign(phoenixCampaign)) {
+          const err = new ClosedCampaignError(phoenixCampaign);
           return reject(err);
         }
 

@@ -14,8 +14,8 @@ const helpers = require('../../lib/helpers');
 const contentful = require('../../lib/contentful');
 const mobilecommons = require('../../lib/mobilecommons');
 const phoenix = require('../../lib/phoenix');
+const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
 const NotFoundError = require('../exceptions/NotFoundError');
-const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
 
 /**
  * Determines if given incomingMessage matches given Gambit command type.
@@ -137,7 +137,9 @@ router.post('/', (req, res) => {
               logger.debug(`found broadcast:${JSON.stringify(broadcast)}`);
               currentBroadcast = broadcast;
               logger.info(`loaded broadcast:${scope.broadcast_id}`);
-              return phoenix.Campaigns.get(currentBroadcast.fields.campaign.fields.campaignId);
+              const campaignId = currentBroadcast.fields.campaign.fields.campaignId;
+
+              return phoenix.client.Campaigns.get(campaignId);
             })
             .then((campaign) => {
               if (!campaign.id) {
@@ -146,13 +148,6 @@ router.post('/', (req, res) => {
               }
 
               logger.info(`loaded campaign:${campaign.id}`);
-
-              if (campaign.status === 'closed') {
-                // TODO: Include this message to the CampaignClosedError.
-                const msg = `Broadcast Campaign ${campaign.id} is closed.`;
-                const err = new UnprocessibleEntityError(msg);
-                return reject(err);
-              }
 
               scope.broadcast = currentBroadcast;
               const saidNo = !(req.incoming_message && helpers.isYesResponse(req.incoming_message));
@@ -182,7 +177,7 @@ router.post('/', (req, res) => {
                 return reject(err);
               }
 
-              return phoenix.Campaigns.get(keyword.fields.campaign.fields.campaignId);
+              return phoenix.client.Campaigns.get(keyword.fields.campaign.fields.campaignId);
             })
             .then((campaign) => {
               if (!campaign.id) {
@@ -190,15 +185,7 @@ router.post('/', (req, res) => {
                 const err = new NotFoundError(msg);
                 return reject(err);
               }
-
-              if (campaign.status === 'closed') {
-                // Store campaign to render in closed message.
-                scope.campaign = campaign;
-                // TODO: Include this message to the CampaignClosedError.
-                const msg = `Keyword received for closed campaign ${campaign.id}.`;
-                const err = new UnprocessibleEntityError(msg);
-                return reject(err);
-              }
+              logger.debug(`found campaign:${campaign.id}`);
 
               return resolve(campaign);
             })
@@ -207,7 +194,7 @@ router.post('/', (req, res) => {
 
         // If we've made it this far, check for User's current_campaign.
         logger.debug(`user.current_campaign:${user.current_campaign}`);
-        return phoenix.Campaigns.get(user.current_campaign)
+        return phoenix.client.Campaigns.get(user.current_campaign)
           .then((campaign) => {
             if (!campaign.id) {
               // TODO: Send to non-existent start menu to select a campaign.
@@ -224,8 +211,10 @@ router.post('/', (req, res) => {
 
   return loadCampaign
     .then((campaign) => {
-      logger.log(`loaded campaign:${campaign.id}`);
       scope.campaign = campaign;
+      if (phoenix.isClosedCampaign(campaign)) {
+        throw new ClosedCampaignError(campaign);
+      }
 
       return app.locals.db.signups.lookupCurrent(scope.user, scope.campaign);
     })
@@ -337,8 +326,8 @@ router.post('/', (req, res) => {
 
       return helpers.sendResponse(res, 404, err.message);
     })
-    .catch(UnprocessibleEntityError, (err) => {
-      logger.error(err.message);
+    .catch(ClosedCampaignError, (err) => {
+      logger.warn(err.message);
       stathat('campaign closed');
 
       return contentful.renderMessageForPhoenixCampaign(scope.campaign, 'campaign_closed')

@@ -12,26 +12,7 @@ const MessagingGroups = require('../../lib/groups');
 const campaignSchema = new mongoose.Schema({
 
   _id: { type: Number, index: true },
-
-  // Properties cached from DS API.
-  title: String,
   current_run: Number,
-  // TODO: Deprecate this. Keep for now as its used by the campaigns/:id/message route.
-  status: String,
-
-  // Properties to override CampaignBot content.
-  msg_ask_caption: String,
-  msg_ask_photo: String,
-  msg_ask_quantity: String,
-  msg_ask_why_participated: String,
-  msg_invalid_quantity: String,
-  msg_member_support: String,
-  msg_menu_completed: String,
-  msg_menu_signedup_external: String,
-  msg_menu_signedup_gambit: String,
-  msg_no_photo_sent: String,
-
-  // Mobile Commons Specific Fields.
   mobilecommons_group_doing: Number,
   mobilecommons_group_completed: Number,
 
@@ -39,8 +20,6 @@ const campaignSchema = new mongoose.Schema({
 
 function parsePhoenixCampaign(phoenixCampaign) {
   const data = {
-    title: phoenixCampaign.title,
-    status: phoenixCampaign.status,
     current_run: phoenixCampaign.currentCampaignRun.id,
   };
 
@@ -58,7 +37,7 @@ campaignSchema.statics.lookupByIds = function (campaignIds) {
 
     const promises = [];
 
-    return phoenix.Campaigns.index({ ids: campaignIds })
+    return phoenix.client.Campaigns.index({ ids: campaignIds })
       .then((phoenixCampaigns) => {
         phoenixCampaigns.forEach((phoenixCampaign) => {
           const data = parsePhoenixCampaign(phoenixCampaign);
@@ -106,22 +85,7 @@ campaignSchema.methods.formatApiResponse = function () {
     current_run: this.current_run,
     mobilecommons_group_doing: this.mobilecommons_group_doing,
     mobilecommons_group_completed: this.mobilecommons_group_completed,
-    overrides: {},
   };
-
-  const overrides = [
-    'msg_ask_caption',
-    'msg_ask_photo',
-    'msg_ask_quantity',
-    'msg_ask_why_participated',
-    'msg_invalid_quantity',
-    'msg_member_support',
-    'msg_menu_completed',
-    'msg_menu_signedup_external',
-    'msg_menu_signedup_gambit',
-    'msg_no_photo_sent',
-  ];
-  overrides.forEach(property => (data.overrides[property] = this[property]));
 
   return data;
 };
