@@ -17,23 +17,23 @@ const stathat = app.locals.stathat;
 /**
  * Queries Phoenix and Contentful to add external properties to given campaign model.
  */
-function fetchCampaign(campaignDoc) {
-  const campaign = campaignDoc.formatApiResponse();
+function fetchCampaign(id) {
+  const campaign = { id };
 
   return new Promise((resolve, reject) => {
-    logger.debug(`fetchCampaign:${campaign.id}`);
+    logger.debug(`fetchCampaign:${id}`);
 
-    return phoenix.client.Campaigns.get(campaign.id)
+    return phoenix.client.Campaigns.get(id)
       .then((phoenixCampaign) => {
         campaign.title = phoenixCampaign.title;
         campaign.status = phoenixCampaign.status;
 
-        return contentful.fetchKeywordsForCampaignId(campaign.id);
+        return contentful.fetchKeywordsForCampaignId(id);
       })
       .then((keywords) => {
         campaign.keywords = keywords;
 
-        return contentful.fetchCampaign(campaign.id);
+        return contentful.fetchCampaign(id);
       })
       .then((contentfulCampaign) => {
         if (contentfulCampaign) {
@@ -42,6 +42,18 @@ function fetchCampaign(campaignDoc) {
         } else {
           campaign.overrides = {};
         }
+
+        return app.locals.db.campaigns.findById(id).exec();
+      })
+      .then((campaignDoc) => {
+        if (!campaignDoc) {
+          logger.warn(`Could not find campaigns document for id ${id}.`);
+          return resolve(campaign);
+        }
+
+        campaign.current_run = campaignDoc.current_run;
+        campaign.mobilecommons_group_doing = campaignDoc.mobilecommons_group_doing;
+        campaign.mobilecommons_group_completed = campaignDoc.mobilecommons_group_completed;
 
         return resolve(campaign);
       })
@@ -53,19 +65,11 @@ function fetchCampaign(campaignDoc) {
  * GET index of campaigns.
  */
 router.get('/', (req, res) => {
+  logger.debug('get campaigns');
   stathat('route: v1/campaigns');
 
-  const findClause = {};
-  if (req.query.campaignbot) {
-    const campaignConfigVar = process.env.CAMPAIGNBOT_CAMPAIGNS;
-    const campaignIDs = campaignConfigVar.split(',').map(id => Number(id));
-    findClause._id = { $in: campaignIDs };
-  }
-
-  return app.locals.db.campaigns
-    .find(findClause)
-    .exec()
-    .then(campaignDocs => Promise.map(campaignDocs, fetchCampaign))
+  return contentful.fetchCampaignIdsWithKeywords()
+    .then(campaignIds => Promise.map(campaignIds, fetchCampaign))
     .then(data => res.send({ data }))
     .catch(error => helpers.sendResponse(res, 500, error.message));
 });
@@ -86,7 +90,6 @@ router.get('/:id', (req, res) => {
 
       return reject(err);
     }
-
     return app.locals.db.campaigns.findById(campaignId)
       .exec()
       .then((campaignDoc) => {
