@@ -151,7 +151,7 @@ signupSchema.statics.post = function (user, campaign, keyword) {
       uid: user.phoenix_id,
     };
 
-    return phoenix.Campaigns.signup(campaign.id, postData)
+    return phoenix.client.Campaigns.signup(campaign.id, postData)
       .then((signupId) => {
         app.locals.stathat(`${statName} 200`);
         app.locals.stathat(`signup: ${keyword}`);
@@ -228,10 +228,10 @@ signupSchema.methods.postDraftReportbackSubmission = function () {
     }
     logger.debug(`Signup.postDraftReportbackSubmission data:${JSON.stringify(data)}`);
 
-    return phoenix.Campaigns.reportback(signup.campaign, data)
+    return phoenix.client.Campaigns.reportback(signup.campaign, data)
       .then((reportbackId) => {
         app.locals.stathat(`${statName} 200`);
-        logger.info(`phoenix.Campaigns.reportback:${reportbackId}`);
+        logger.info(`phoenix.client.Campaigns.reportback:${reportbackId}`);
 
         signup.reportback = reportbackId;
         signup.total_quantity_submitted = Number(submission.quantity);

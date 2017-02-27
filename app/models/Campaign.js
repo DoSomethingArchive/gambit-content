@@ -37,7 +37,7 @@ campaignSchema.statics.lookupByIds = function (campaignIds) {
 
     const promises = [];
 
-    return phoenix.Campaigns.index({ ids: campaignIds })
+    return phoenix.client.Campaigns.index({ ids: campaignIds })
       .then((phoenixCampaigns) => {
         phoenixCampaigns.forEach((phoenixCampaign) => {
           const data = parsePhoenixCampaign(phoenixCampaign);
