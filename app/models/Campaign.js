@@ -5,7 +5,6 @@
  */
 const mongoose = require('mongoose');
 const logger = app.locals.logger;
-const helpers = require('../../lib/helpers');
 const phoenix = require('../../lib/phoenix');
 const MessagingGroups = require('../../lib/groups');
 
@@ -81,7 +80,6 @@ campaignSchema.methods.findOrCreateMessagingGroups = function () {
 campaignSchema.methods.formatApiResponse = function () {
   const data = {
     id: this._id,
-    campaignbot: helpers.isCampaignBotCampaign(this._id),
     current_run: this.current_run,
     mobilecommons_group_doing: this.mobilecommons_group_doing,
     mobilecommons_group_completed: this.mobilecommons_group_completed,
