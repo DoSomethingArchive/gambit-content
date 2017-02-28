@@ -12,6 +12,9 @@ const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError
 // which we need for our exception handling logic in this endpoint.
 const Promise = require('bluebird'); // eslint-disable-line no-unused-vars
 const logger = app.locals.logger;
+// Models.
+const Signup = require('../models/Signup');
+const User = require('../models/User');
 
 
 router.post('/', (req, res) => {
@@ -38,8 +41,7 @@ router.post('/', (req, res) => {
   const scope = req;
   scope.client = 'external_signup';
 
-  return app.locals.db.signups
-    .lookupById(signupId)
+  return Signup.lookupById(signupId)
     .then((signup) => {
       scope.signup = signup;
 
@@ -59,7 +61,7 @@ router.post('/', (req, res) => {
         throw new UnprocessibleEntityError(msg);
       }
 
-      return app.locals.db.users.lookup('id', scope.signup.user);
+      return User.lookup('id', scope.signup.user);
     })
     .then((user) => {
       if (!user.mobile) {

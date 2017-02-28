@@ -3,6 +3,7 @@
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
 const Promise = require('bluebird');
+const Campaign = require('../exceptions/NotFoundError');
 const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
 const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
@@ -43,7 +44,7 @@ function fetchCampaign(id) {
           campaign.overrides = {};
         }
 
-        return app.locals.db.campaigns.findById(id).exec();
+        return Campaign.findById(id).exec();
       })
       .then((campaignDoc) => {
         if (!campaignDoc) {

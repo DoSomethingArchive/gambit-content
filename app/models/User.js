@@ -123,6 +123,4 @@ userSchema.methods.postMobileCommonsProfileUpdate = function (oip, msgTxt) {
   return mobilecommons.profile_update(this.mobilecommons_id, this.mobile, oip, data);
 };
 
-module.exports = function (connection) {
-  return connection.model('users', userSchema);
-};
+module.exports = mongoose.model('users', userSchema);

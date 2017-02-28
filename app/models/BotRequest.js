@@ -68,6 +68,4 @@ botRequestSchema.statics.log = function (req, botType, botId, msgType, msg) {
   return this.create(data);
 };
 
-module.exports = function (connection) {
-  return connection.model('bot_requests', botRequestSchema);
-};
+module.exports = mongoose.model('bot_requests', botRequestSchema);
