@@ -116,25 +116,30 @@ router.post('/:id/message', (req, res) => {
     return helpers.sendResponse(res, 422, 'Missing required message type parameter.');
   }
 
-  if (!helpers.isCampaignBotCampaign(campaignId)) {
-    const msg = `Campaign ${campaignId} is not running on CampaignBot`;
-    return helpers.sendResponse(res, 422, msg);
-  }
-
   let messageBody;
   const loadCampaignMessage = new Promise((resolve, reject) => {
     logger.debug(`loadCampaignMessage campaign:${campaignId} msgType:${type}`);
+    let campaign;
 
     return phoenix.client.Campaigns.get(campaignId)
       .then((phoenixCampaign) => {
         logger.debug(`phoenix.client.Campaigns.get found campaign:${campaignId}`);
-
         if (phoenix.isClosedCampaign(phoenixCampaign)) {
           const err = new ClosedCampaignError(phoenixCampaign);
           return reject(err);
         }
+        campaign = phoenixCampaign;
 
-        return contentful.renderMessageForPhoenixCampaign(phoenixCampaign, type);
+        return contentful.fetchKeywordsForCampaignId(campaignId);
+      })
+      .then((keywords) => {
+        if (keywords.length === 0) {
+          const msg = `Campaign ${campaignId} does not have any Gambit keywords.`;
+          const err = new UnprocessibleEntityError(msg);
+          return reject(err);
+        }
+
+        return contentful.renderMessageForPhoenixCampaign(campaign, type);
       })
       .then(message => resolve(message))
       .catch(err => reject(err));
