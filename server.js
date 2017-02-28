@@ -102,19 +102,13 @@ conn.on('connected', () => {
   /**
    * Load campaigns.
    */
-  app.locals.campaigns = {};
   const loadCampaigns = app.locals.db.campaigns
     .lookupByIds(process.env.CAMPAIGNBOT_CAMPAIGNS)
     .then((campaigns) => {
       logger.debug(`app.locals.db.campaigns.lookupByIds found ${campaigns.length} campaigns`);
 
       return campaigns.forEach((campaign) => {
-        const campaignId = campaign._id;
-        // Eventually looking to deprecate app.locals.campaigns, leaving for now
-        // as its used by the campaigns/:id/message route.
-        app.locals.campaigns[campaignId] = campaign;
-        logger.info(`loaded app.locals.campaigns[${campaignId}]`);
-
+        logger.info(`Checking messaging groups for Campaign ${campaign._id}`);
         if (!campaign.mobilecommons_group_doing || !campaign.mobilecommons_group_completed) {
           campaign.findOrCreateMessagingGroups();
         }
