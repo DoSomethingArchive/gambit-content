@@ -19,6 +19,4 @@ const schema = new mongoose.Schema({
 
 });
 
-module.exports = function (connection) {
-  return connection.model('reportback_submissions', schema);
-};
+module.exports = mongoose.model('reportback_submissions', schema);

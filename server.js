@@ -83,29 +83,20 @@ app.locals.stathatError = function (statName, error) {
   }
 };
 
-const loader = require('./config/locals');
-
 require('./app/routes');
 
-/**
- * Load models.
- */
 const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
-
-const conn = mongoose.createConnection(DB_URI);
-app.locals.db = loader.getModels(conn);
-
+mongoose.connect(DB_URI);
+const conn = mongoose.connection;
 conn.on('connected', () => {
   logger.info(`conn.readyState:${conn.readyState}`);
 
-  /**
-   * Load campaigns.
-   */
-  const loadCampaigns = app.locals.db.campaigns
-    .lookupByIds(process.env.CAMPAIGNBOT_CAMPAIGNS)
+  // Load Campaign Messaging Groups.
+  const Campaign = require('./app/models/Campaign');
+  const loadCampaigns = Campaign.lookupByIds(process.env.CAMPAIGNBOT_CAMPAIGNS)
     .then((campaigns) => {
-      logger.debug(`app.locals.db.campaigns.lookupByIds found ${campaigns.length} campaigns`);
+      logger.debug(`Campaign.lookupByIds found ${campaigns.length} campaigns`);
 
       return campaigns.forEach((campaign) => {
         logger.info(`Checking messaging groups for Campaign ${campaign._id}`);
@@ -116,24 +107,8 @@ conn.on('connected', () => {
     })
     .catch(err => logger.error(err.message));
 
-  /**
-   * Load controllers.
-   */
-  app.locals.controllers = {};
-  const donorsChooseBotId = process.env.DONORSCHOOSEBOT_ID || 31;
-  const loadDonorsChooseBot = loader.loadBot('donorschoosebot', donorsChooseBotId)
-    .then((bot) => {
-      app.locals.donorsChooseBot = bot;
-      logger.info('loaded app.locals.donorsChooseBot');
-
-      return app.locals.donorsChooseBot;
-    })
-    .catch(err => logger.error(err.message));
-
-  /**
-   * Start server.
-   */
-  Promise.all([loadCampaigns, loadDonorsChooseBot])
+  // Start server.
+  Promise.all([loadCampaigns])
     .then(() => {
       const port = process.env.PORT || 5000;
 

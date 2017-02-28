@@ -16,6 +16,11 @@ const mobilecommons = require('../../lib/mobilecommons');
 const phoenix = require('../../lib/phoenix');
 const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
 const NotFoundError = require('../exceptions/NotFoundError');
+// Models.
+const BotRequest = require('../models/BotRequest');
+const Signup = require('../models/Signup');
+const User = require('../models/User');
+
 
 /**
  * Determines if given incomingMessage matches given Gambit command type.
@@ -101,14 +106,13 @@ router.post('/', (req, res) => {
   const loadUser = new Promise((resolve, reject) => {
     logger.log('loadUser');
 
-    return app.locals.db.users
-      .lookup('mobile', req.body.phone)
+    return User.lookup('mobile', req.body.phone)
       .then(user => resolve(user))
       .catch((err) => {
         if (err && err.status === 404) {
-          logger.info(`app.locals.db.users.lookup could not find mobile:${req.body.phone}`);
+          logger.info(`User.lookup could not find mobile:${req.body.phone}`);
 
-          const user = app.locals.db.users.post({
+          const user = User.post({
             mobile: req.body.phone,
             mobilecommons_id: req.profile_id,
           });
@@ -216,17 +220,17 @@ router.post('/', (req, res) => {
         throw new ClosedCampaignError(campaign);
       }
 
-      return app.locals.db.signups.lookupCurrent(scope.user, scope.campaign);
+      return Signup.lookupCurrent(scope.user, scope.campaign);
     })
     .then((currentSignup) => {
       if (currentSignup) {
-        logger.debug(`lookupCurrent found signup:${currentSignup._id}`);
+        logger.debug(`Signup.lookupCurrent found signup:${currentSignup._id}`);
 
         return currentSignup;
       }
-      logger.debug('lookupCurrent not find signup');
+      logger.debug('Signup.lookupCurrent not find signup');
 
-      return app.locals.db.signups.post(scope.user, scope.campaign, scope.keyword);
+      return Signup.post(scope.user, scope.campaign, scope.keyword);
     })
     .then((signup) => {
       logger.info(`loaded signup:${signup._id.toString()}`);
@@ -315,10 +319,9 @@ router.post('/', (req, res) => {
       scope.response_message = helpers.addSenderPrefix(scope.response_message);
       logger.debug(`saved user.current_campaign:${scope.campaign.id}`);
       scope.user.postMobileCommonsProfileUpdate(scope.oip, scope.response_message);
-
       helpers.sendResponse(res, 200, scope.response_message);
-      return app.locals.db.bot_requests
-        .log(req, 'campaignbot', null, scope.msg_type, scope.response_message);
+
+      return BotRequest.log(req, 'campaignbot', null, scope.msg_type, scope.response_message);
     })
     .then(botRequest => logger.debug(`created botRequest:${botRequest._id}`))
     .catch(NotFoundError, (err) => {
@@ -354,7 +357,7 @@ router.post('/', (req, res) => {
         }
         const msg = helpers.addSenderPrefix(scope.response_message);
         // Log the no response:
-        app.locals.db.bot_requests.log(req, 'broadcast', null, 'prompt_declined', msg);
+        BotRequest.log(req, 'broadcast', null, 'prompt_declined', msg);
         // Send broadcast declined using Mobile Commons Send Message API:
         mobilecommons.send_message(scope.user.mobile, msg);
 

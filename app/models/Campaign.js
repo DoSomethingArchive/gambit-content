@@ -88,6 +88,4 @@ campaignSchema.methods.formatApiResponse = function () {
   return data;
 };
 
-module.exports = function (connection) {
-  return connection.model('campaigns', campaignSchema);
-};
+module.exports = mongoose.model('campaigns', campaignSchema);
