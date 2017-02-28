@@ -46,14 +46,18 @@ router.post('/', (req, res) => {
       return phoenix.client.Campaigns.get(signup.campaign);
     })
     .then((phoenixCampaign) => {
-      if (!helpers.isCampaignBotCampaign(phoenixCampaign.id)) {
-        const msg = `Campaign ${phoenixCampaign.id} is not running on CampaignBot.`;
-        throw new UnprocessibleEntityError(msg);
-      }
       if (phoenix.isClosedCampaign(phoenixCampaign)) {
         throw new ClosedCampaignError(phoenixCampaign);
       }
       scope.campaign = phoenixCampaign;
+
+      return contentful.fetchKeywordsForCampaignId(phoenixCampaign.id);
+    })
+    .then((keywords) => {
+      if (keywords.length === 0) {
+        const msg = `Campaign ${scope.campaign.id} does not have any Gambit keywords.`;
+        throw new UnprocessibleEntityError(msg);
+      }
 
       return app.locals.db.users.lookup('id', scope.signup.user);
     })
