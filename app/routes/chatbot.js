@@ -320,6 +320,7 @@ router.post('/', (req, res) => {
       logger.debug(`saved user.current_campaign:${scope.campaign.id}`);
       scope.user.postMobileCommonsProfileUpdate(scope.oip, scope.response_message);
       helpers.sendResponse(res, 200, scope.response_message);
+      stathat(`campaignbot:${scope.msg_type}`);
 
       return BotRequest.log(req, 'campaignbot', null, scope.msg_type, scope.response_message);
     })
