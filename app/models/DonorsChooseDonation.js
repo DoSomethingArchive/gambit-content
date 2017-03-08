@@ -29,6 +29,4 @@ const schema = new mongoose.Schema({
 
 });
 
-module.exports = function (connection) {
-  return connection.model('donorschoose_donation', schema);
-};
+module.exports = mongoose.model('donorschoose_donation', schema);

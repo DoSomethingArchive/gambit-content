@@ -12,6 +12,9 @@ const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError
 // which we need for our exception handling logic in this endpoint.
 const Promise = require('bluebird'); // eslint-disable-line no-unused-vars
 const logger = app.locals.logger;
+// Models.
+const Signup = require('../models/Signup');
+const User = require('../models/User');
 
 
 router.post('/', (req, res) => {
@@ -38,24 +41,27 @@ router.post('/', (req, res) => {
   const scope = req;
   scope.client = 'external_signup';
 
-  return app.locals.db.signups
-    .lookupById(signupId)
+  return Signup.lookupById(signupId)
     .then((signup) => {
       scope.signup = signup;
 
       return phoenix.client.Campaigns.get(signup.campaign);
     })
     .then((phoenixCampaign) => {
-      if (!helpers.isCampaignBotCampaign(phoenixCampaign.id)) {
-        const msg = `Campaign ${phoenixCampaign.id} is not running on CampaignBot.`;
-        throw new UnprocessibleEntityError(msg);
-      }
       if (phoenix.isClosedCampaign(phoenixCampaign)) {
         throw new ClosedCampaignError(phoenixCampaign);
       }
       scope.campaign = phoenixCampaign;
 
-      return app.locals.db.users.lookup('id', scope.signup.user);
+      return contentful.fetchKeywordsForCampaignId(phoenixCampaign.id);
+    })
+    .then((keywords) => {
+      if (keywords.length === 0) {
+        const msg = `Campaign ${scope.campaign.id} does not have any Gambit keywords.`;
+        throw new UnprocessibleEntityError(msg);
+      }
+
+      return User.lookup('id', scope.signup.user);
     })
     .then((user) => {
       if (!user.mobile) {

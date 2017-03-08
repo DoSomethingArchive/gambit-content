@@ -65,6 +65,7 @@ app.locals.stathat = function (statName) {
   }
   const appName = process.env.STATHAT_APP_NAME || 'gambit';
   const stat = `${appName} - ${statName}`;
+  logger.debug(`stathat: ${stat}`);
 
   // Bump count of stat by 1.
   stathat.trackEZCount(key, stat, 1, status => logger.verbose(`stathat:${stat} ${status}`));
@@ -83,38 +84,23 @@ app.locals.stathatError = function (statName, error) {
   }
 };
 
-const loader = require('./config/locals');
-
 require('./app/routes');
 
-/**
- * Load models.
- */
 const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
-
-const conn = mongoose.createConnection(DB_URI);
-app.locals.db = loader.getModels(conn);
-
+mongoose.connect(DB_URI);
+const conn = mongoose.connection;
 conn.on('connected', () => {
   logger.info(`conn.readyState:${conn.readyState}`);
 
-  /**
-   * Load campaigns.
-   */
-  app.locals.campaigns = {};
-  const loadCampaigns = app.locals.db.campaigns
-    .lookupByIds(process.env.CAMPAIGNBOT_CAMPAIGNS)
+  // Load Campaign Messaging Groups.
+  const Campaign = require('./app/models/Campaign');
+  const loadCampaigns = Campaign.lookupByIds(process.env.CAMPAIGNBOT_CAMPAIGNS)
     .then((campaigns) => {
-      logger.debug(`app.locals.db.campaigns.lookupByIds found ${campaigns.length} campaigns`);
+      logger.debug(`Campaign.lookupByIds found ${campaigns.length} campaigns`);
 
       return campaigns.forEach((campaign) => {
-        const campaignId = campaign._id;
-        // Eventually looking to deprecate app.locals.campaigns, leaving for now
-        // as its used by the campaigns/:id/message route.
-        app.locals.campaigns[campaignId] = campaign;
-        logger.info(`loaded app.locals.campaigns[${campaignId}]`);
-
+        logger.info(`Checking messaging groups for Campaign ${campaign._id}`);
         if (!campaign.mobilecommons_group_doing || !campaign.mobilecommons_group_completed) {
           campaign.findOrCreateMessagingGroups();
         }
@@ -122,24 +108,8 @@ conn.on('connected', () => {
     })
     .catch(err => logger.error(err.message));
 
-  /**
-   * Load controllers.
-   */
-  app.locals.controllers = {};
-  const donorsChooseBotId = process.env.DONORSCHOOSEBOT_ID || 31;
-  const loadDonorsChooseBot = loader.loadBot('donorschoosebot', donorsChooseBotId)
-    .then((bot) => {
-      app.locals.donorsChooseBot = bot;
-      logger.info('loaded app.locals.donorsChooseBot');
-
-      return app.locals.donorsChooseBot;
-    })
-    .catch(err => logger.error(err.message));
-
-  /**
-   * Start server.
-   */
-  Promise.all([loadCampaigns, loadDonorsChooseBot])
+  // Start server.
+  Promise.all([loadCampaigns])
     .then(() => {
       const port = process.env.PORT || 5000;
 

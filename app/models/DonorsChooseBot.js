@@ -6,6 +6,7 @@
 const mongoose = require('mongoose');
 const Promise = require('bluebird');
 const gambitJunior = rootRequire('lib/junior');
+const BotRequest = require('./BotRequest');
 const logger = app.locals.logger;
 const stathat = app.locals.stathat;
 
@@ -72,11 +73,9 @@ donorsChooseBotSchema.methods.renderMessage = function (req, msgType) {
     msg = msg.replace('{{url}}', req.donation.proposal_url);
   }
 
-  app.locals.db.bot_requests.log(req, 'donorschoosebot', this._id, msgType, msg);
+  BotRequest.log(req, 'donorschoosebot', this._id, msgType, msg);
 
   return msg;
 };
 
-module.exports = function (connection) {
-  return connection.model('donorschoosebots', donorsChooseBotSchema);
-};
+module.exports = mongoose.model('donorschoosebots', donorsChooseBotSchema);

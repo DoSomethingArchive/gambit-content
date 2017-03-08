@@ -3,6 +3,7 @@
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
 const Promise = require('bluebird');
+const Campaign = require('../exceptions/NotFoundError');
 const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
 const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
@@ -17,23 +18,23 @@ const stathat = app.locals.stathat;
 /**
  * Queries Phoenix and Contentful to add external properties to given campaign model.
  */
-function fetchCampaign(campaignDoc) {
-  const campaign = campaignDoc.formatApiResponse();
+function fetchCampaign(id) {
+  const campaign = { id };
 
   return new Promise((resolve, reject) => {
-    logger.debug(`fetchCampaign:${campaign.id}`);
+    logger.debug(`fetchCampaign:${id}`);
 
-    return phoenix.client.Campaigns.get(campaign.id)
+    return phoenix.client.Campaigns.get(id)
       .then((phoenixCampaign) => {
         campaign.title = phoenixCampaign.title;
         campaign.status = phoenixCampaign.status;
 
-        return contentful.fetchKeywordsForCampaignId(campaign.id);
+        return contentful.fetchKeywordsForCampaignId(id);
       })
       .then((keywords) => {
         campaign.keywords = keywords;
 
-        return contentful.fetchCampaign(campaign.id);
+        return contentful.fetchCampaign(id);
       })
       .then((contentfulCampaign) => {
         if (contentfulCampaign) {
@@ -43,9 +44,28 @@ function fetchCampaign(campaignDoc) {
           campaign.overrides = {};
         }
 
+        return Campaign.findById(id).exec();
+      })
+      .then((campaignDoc) => {
+        if (!campaignDoc) {
+          logger.warn(`Could not find campaigns document for id ${id}.`);
+          return resolve(campaign);
+        }
+
+        campaign.current_run = campaignDoc.current_run;
+        campaign.mobilecommons_group_doing = campaignDoc.mobilecommons_group_doing;
+        campaign.mobilecommons_group_completed = campaignDoc.mobilecommons_group_completed;
+
         return resolve(campaign);
       })
-      .catch(error => reject(error));
+      .catch(error => {
+        if (error.message === 'Not Found') {
+          const notFoundError = new NotFoundError(`Campaign ${id} not found`);
+          return reject(notFoundError);
+        }
+
+        return reject(error);
+      });
   });
 }
 
@@ -53,19 +73,11 @@ function fetchCampaign(campaignDoc) {
  * GET index of campaigns.
  */
 router.get('/', (req, res) => {
+  logger.debug('get campaigns');
   stathat('route: v1/campaigns');
 
-  const findClause = {};
-  if (req.query.campaignbot) {
-    const campaignConfigVar = process.env.CAMPAIGNBOT_CAMPAIGNS;
-    const campaignIDs = campaignConfigVar.split(',').map(id => Number(id));
-    findClause._id = { $in: campaignIDs };
-  }
-
-  return app.locals.db.campaigns
-    .find(findClause)
-    .exec()
-    .then(campaignDocs => Promise.map(campaignDocs, fetchCampaign))
+  return contentful.fetchCampaignIdsWithKeywords()
+    .then(campaignIds => Promise.map(campaignIds, fetchCampaign))
     .then(data => res.send({ data }))
     .catch(error => helpers.sendResponse(res, 500, error.message));
 });
@@ -77,32 +89,7 @@ router.get('/:id', (req, res) => {
   stathat('route: v1/campaigns/{id}');
   const campaignId = req.params.id;
 
-  const findCampaignDoc = new Promise((resolve, reject) => {
-    logger.debug(`findCampaignDoc:${campaignId}`);
-
-    if (isNaN(campaignId)) {
-      const msg = `Invalid Campaign id ${campaignId}.`;
-      const err = new UnprocessibleEntityError(msg);
-
-      return reject(err);
-    }
-
-    return app.locals.db.campaigns.findById(campaignId)
-      .exec()
-      .then((campaignDoc) => {
-        if (!campaignDoc) {
-          const msg = `Could not find campaigns document for id ${campaignId}.`;
-          const err = new NotFoundError(msg);
-
-          return reject(err);
-        }
-
-        return resolve(campaignDoc);
-      })
-      .catch(err => reject(err));
-  });
-
-  return findCampaignDoc.then(campaignDoc => fetchCampaign(campaignDoc))
+  return fetchCampaign(campaignId)
     .then(data => res.send({ data }))
     // TODO: Refactor helpers.sendResponse to accept an error and know the codes based on custom
     // error class, to DRY.
@@ -130,25 +117,30 @@ router.post('/:id/message', (req, res) => {
     return helpers.sendResponse(res, 422, 'Missing required message type parameter.');
   }
 
-  if (!helpers.isCampaignBotCampaign(campaignId)) {
-    const msg = `Campaign ${campaignId} is not running on CampaignBot`;
-    return helpers.sendResponse(res, 422, msg);
-  }
-
   let messageBody;
   const loadCampaignMessage = new Promise((resolve, reject) => {
     logger.debug(`loadCampaignMessage campaign:${campaignId} msgType:${type}`);
+    let campaign;
 
     return phoenix.client.Campaigns.get(campaignId)
       .then((phoenixCampaign) => {
         logger.debug(`phoenix.client.Campaigns.get found campaign:${campaignId}`);
-
         if (phoenix.isClosedCampaign(phoenixCampaign)) {
           const err = new ClosedCampaignError(phoenixCampaign);
           return reject(err);
         }
+        campaign = phoenixCampaign;
 
-        return contentful.renderMessageForPhoenixCampaign(phoenixCampaign, type);
+        return contentful.fetchKeywordsForCampaignId(campaignId);
+      })
+      .then((keywords) => {
+        if (keywords.length === 0) {
+          const msg = `Campaign ${campaignId} does not have any Gambit keywords.`;
+          const err = new UnprocessibleEntityError(msg);
+          return reject(err);
+        }
+
+        return contentful.renderMessageForPhoenixCampaign(campaign, type);
       })
       .then(message => resolve(message))
       .catch(err => reject(err));

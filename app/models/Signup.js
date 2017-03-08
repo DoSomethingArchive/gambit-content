@@ -5,6 +5,7 @@
  */
 const mongoose = require('mongoose');
 const Promise = require('bluebird');
+const ReportbackSubmission = require('./ReportbackSubmission');
 const NotFoundError = require('../exceptions/NotFoundError');
 const helpers = require('../../lib/helpers');
 const northstar = require('../../lib/northstar');
@@ -154,7 +155,9 @@ signupSchema.statics.post = function (user, campaign, keyword) {
     return phoenix.client.Campaigns.signup(campaign.id, postData)
       .then((signupId) => {
         app.locals.stathat(`${statName} 200`);
-        app.locals.stathat(`signup: ${keyword}`);
+        if (keyword) {
+          app.locals.stathat(`signup: ${keyword}`);
+        }
         logger.info(`Signup.post created signup:${signupId}`);
 
         const data = {
@@ -183,7 +186,7 @@ signupSchema.methods.createDraftReportbackSubmission = function () {
   return new Promise((resolve, reject) => {
     logger.debug('Signup.createDraftReportbackSubmission');
 
-    return app.locals.db.reportback_submissions
+    return ReportbackSubmission
       .create({
         campaign: signup.campaign,
         user: signup.user,
@@ -259,6 +262,4 @@ signupSchema.methods.postDraftReportbackSubmission = function () {
   });
 };
 
-module.exports = function (connection) {
-  return connection.model('signups', signupSchema);
-};
+module.exports = mongoose.model('signups', signupSchema);

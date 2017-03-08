@@ -10,6 +10,7 @@ const mobilecommons = require('../../lib/mobilecommons');
 const helpers = require('../../lib/helpers');
 const logger = app.locals.logger;
 const stathat = app.locals.stathat;
+const DonorsChooseDonation = require('../models/DonorsChooseDonation');
 
 function debug(req, message) {
   logger.debug(`donorschoosebot profile:${req.body.profile_id} ${message}`);
@@ -230,7 +231,7 @@ router.post('/', (req, res) => {
         proposal_description: selectedProposal.fulfillmentTrailer,
       };
 
-      return app.locals.db.donorschoose_donations.create(data);
+      return DonorsChooseDonation.create(data);
     })
     .then((donation) => {
       info(req, `stored donorschoose_donation:${donation.donation_id}`);
