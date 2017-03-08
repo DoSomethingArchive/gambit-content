@@ -155,7 +155,9 @@ signupSchema.statics.post = function (user, campaign, keyword) {
     return phoenix.client.Campaigns.signup(campaign.id, postData)
       .then((signupId) => {
         app.locals.stathat(`${statName} 200`);
-        app.locals.stathat(`signup: ${keyword}`);
+        if (keyword) {
+          app.locals.stathat(`signup: ${keyword}`);
+        }
         logger.info(`Signup.post created signup:${signupId}`);
 
         const data = {
