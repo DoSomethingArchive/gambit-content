@@ -3,7 +3,7 @@
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
 const Promise = require('bluebird');
-const Campaign = require('../exceptions/NotFoundError');
+const Campaign = require('../models/Campaign');
 const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
 const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
