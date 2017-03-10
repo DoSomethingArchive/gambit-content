@@ -39,7 +39,7 @@
     "stathat": "0.0.8",
     "superagent": "^2.3.0",
     "winston": "0.8.x",
-    "winston-mongodb": "2.0.0"
+    "winston-mongodb": "^2.0.0"
   },
   "devDependencies": {
     "@dosomething/eslint-config": "^1.1.1",
