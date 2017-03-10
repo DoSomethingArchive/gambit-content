@@ -19,7 +19,7 @@
     }
   },
   "engines": {
-    "node": ">=4.4.x"
+    "node": ">=6.10.x"
   },
   "dependencies": {
     "@dosomething/northstar-js": "git://github.com/DoSomething/northstar-js.git",
