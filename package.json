@@ -1,6 +1,6 @@
 {
   "name": "gambit",
-  "version": "3.4.4",
+  "version": "3.4.5",
   "description": "A DoSomething.org chatbot",
   "license": "MIT",
   "repository": {
@@ -32,14 +32,14 @@
     "express": "^4.10.2",
     "html-entities": "^1.1.1",
     "mongoose": "~4.6.1",
-    "newrelic": "^1.28.3",
+    "newrelic": "^1.0.0",
     "node-request-retry": "^1.0.0",
     "path": "~0.4.9",
     "request": "2.34.x",
     "stathat": "0.0.8",
     "superagent": "^2.3.0",
     "winston": "0.8.x",
-    "winston-mongodb": "2.0.0"
+    "winston-mongodb": "^2.0.0"
   },
   "devDependencies": {
     "@dosomething/eslint-config": "^1.1.1",
