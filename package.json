@@ -1,6 +1,6 @@
 {
   "name": "gambit",
-  "version": "3.4.6",
+  "version": "3.4.7",
   "description": "A DoSomething.org chatbot",
   "license": "MIT",
   "repository": {
@@ -19,7 +19,7 @@
     }
   },
   "engines": {
-    "node": ">=4.4.x"
+    "node": ">=6.10.x"
   },
   "dependencies": {
     "@dosomething/northstar-js": "git://github.com/DoSomething/northstar-js.git",
