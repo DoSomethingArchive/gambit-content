@@ -16,9 +16,10 @@ const logger = app.locals.logger;
 const stathat = app.locals.stathat;
 
 /**
- * Queries Phoenix and Contentful to add external properties to given campaign model.
+ * Queries Phoenix, Contentful, and Mongo to render an object for a given Campaign id.
+ * If renderMessages is set to true, includes all rendered messages as a messages property.
  */
-function fetchCampaign(id) {
+function fetchCampaign(id, renderMessages) {
   const campaign = { id };
 
   return new Promise((resolve, reject) => {
@@ -28,11 +29,17 @@ function fetchCampaign(id) {
       .then((phoenixCampaign) => {
         campaign.title = phoenixCampaign.title;
         campaign.status = phoenixCampaign.status;
+        if (renderMessages === true) {
+          return contentful.renderAllMessagesForPhoenixCampaign(phoenixCampaign);
+        }
 
-        return contentful.renderAllMessagesForPhoenixCampaign(phoenixCampaign);
+        return false;
       })
       .then((renderedMessages) => {
-        campaign.messages = renderedMessages;
+        if (renderedMessages) {
+          campaign.messages = renderedMessages;
+        }
+
         return contentful.fetchKeywordsForCampaignId(id);
       })
       .then((keywords) => {
@@ -83,7 +90,7 @@ router.get('/:id', (req, res) => {
   stathat('route: v1/campaigns/{id}');
   const campaignId = req.params.id;
 
-  return fetchCampaign(campaignId)
+  return fetchCampaign(campaignId, true)
     .then(data => res.send({ data }))
     // TODO: Refactor helpers.sendResponse to accept an error and know the codes based on custom
     // error class, to DRY.
