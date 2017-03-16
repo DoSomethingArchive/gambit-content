@@ -29,20 +29,14 @@ function fetchCampaign(id) {
         campaign.title = phoenixCampaign.title;
         campaign.status = phoenixCampaign.status;
 
+        return contentful.renderAllMessagesForPhoenixCampaign(phoenixCampaign);
+      })
+      .then((renderedMessages) => {
+        campaign.messages = renderedMessages;
         return contentful.fetchKeywordsForCampaignId(id);
       })
       .then((keywords) => {
         campaign.keywords = keywords;
-
-        return contentful.fetchCampaign(id);
-      })
-      .then((contentfulCampaign) => {
-        if (contentfulCampaign) {
-          campaign.overrides = contentfulCampaign.fields;
-          delete campaign.overrides.campaignId;
-        } else {
-          campaign.overrides = {};
-        }
 
         return Campaign.findById(id).exec();
       })
