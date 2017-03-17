@@ -213,7 +213,7 @@ Name | Type | Description
 <details><summary>**Example Request**</summary><p>
 
 ```
-curl http://localhost:5000/v1/campaigns/4944/message \
+curl http://localhost:5000/v1/campaigns/2900/message \
      -H "x-gambit-api-key: totallysecret" \
      -H "Accept: application/json" \
      -H "Content-Type: application/json" \
@@ -225,7 +225,12 @@ curl http://localhost:5000/v1/campaigns/4944/message \
 <details><summary>**Example Response**</summary><p>
 
 ```
-{"success":{"code":200,"message":"Sent text for 46 scheduled_relative_to_signup_date to 5555555511"}}
+{
+  "success": {
+    "code": 200,
+    "message": "@dev: Have you completed Get Lucky yet?  \n\nIf you have created some fortune tellers, take a pic to prove it and text back LUCKYBOT"
+  }
+}
 ```
 
 </p></details>
