@@ -32,20 +32,21 @@ Name | Type | Description
 `profile_postal_code` | `string` | Mobile Commons Profile zip
 `profile_ss2016_donation_count` | `string` | Mobile Commons Custom Field to store number of donations. This parameter name can be changed via `DONORSCHOOSE_DONATION_FIELDNAME`
 
-<details>
-<summary>**Example Request**</summary>
-````
+<details><summary>**Example Request**</summary><p>
+
+```
 curl -X "POST" "http://localhost:5000/v1/donorschoosebot?start=true" \
      -H "x-gambit-api-key: totallysecret" \
      -H "Content-Type: application/x-www-form-urlencoded; charset=utf-8" \
      --data-urlencode "phone=5555555511" \
      --data-urlencode "profile_id=136122001" \
-````
-</details>
+```
 
-<details>
-<summary>**Example Response**</summary>
-````
+</p></details>
+
+<details><summary>**Example Response**</summary><p>
+
+```
 {
   "success": {
     "code": 200,
@@ -53,5 +54,6 @@ curl -X "POST" "http://localhost:5000/v1/donorschoosebot?start=true" \
   }
 }
 
-````
-</details>
+```
+
+</p></details>
