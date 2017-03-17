@@ -103,7 +103,7 @@ router.get('/:id', (req, res) => {
       const uri = `https://app.contentful.com/spaces/${spaceId}/entries/${contentfulId}`;
       response.contentfulUri = uri;
 
-      return res.send({ response });
+      return res.send({ data: response });
     })
     // TODO: Refactor helpers.sendResponse to accept an error and know the codes based on custom
     // error class, to DRY.
