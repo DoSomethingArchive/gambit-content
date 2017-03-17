@@ -8,17 +8,19 @@ GET /v1/campaigns
 
 Returns index of Campaigns with published keywords.
 
-<details>
-<summary>**Example Request**</summary>
+<details><summary>**Example Request**</summary><p>
+
 ```
 curl http://localhost:5000/v1/campaigns \
-     -H "Accept: application/json" \
-     -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
 ```
-</details>
-<details>
-<summary>**Example Response**</summary>
-````
+
+</p></details>
+
+<details><summary>**Example Response**</summary><p>
+
+```
 {
   "data": [
     {
@@ -69,8 +71,9 @@ curl http://localhost:5000/v1/campaigns \
     }
   ]
 }
-````
-</details>
+```
+
+</p></details>
 
 ## Retrieve a Campaign
 
@@ -88,16 +91,17 @@ given Campaign ID, or the default Campaign
 * `raw` -- string, the copy stored in Contentful to use for this message type
 * `rendered` -- string, the rendered copy to be delivered to the end user
 
-<details>
-<summary>**Example Request**</summary>
+<details><summary>**Example Request**</summary><p>
+
 ```
 curl http://localhost:5000/v1/campaigns/7483 \
      -H "Accept: application/json" \
      -H "Content-Type: application/json" \
 ```
-</details>
-<details>
-<summary>**Example Response**</summary>
+
+</p></details>
+<details><summary>**Example Response**</summary><p>
+
 ```
 {
   "data": {
@@ -187,8 +191,9 @@ curl http://localhost:5000/v1/campaigns/7483 \
     ]
   }
 }
-````
-</details>
+```
+
+</p></details>
 
 ## Send a campaign message
 
@@ -205,9 +210,8 @@ Name | Type | Description
 `phone` | `string` | **Required.** Mobile number to send the campaign message.
 `type`  | `string` | <div>**Required.** The campaign message type.</div><div>Supported types are: `scheduled_relative_to_signup_date`, `scheduled_relative_to_reportback_date`</div>
 
+<details><summary>**Example Request**</summary><p>
 
-<details>
-<summary>**Example Request**</summary>
 ```
 curl http://localhost:5000/v1/campaigns/4944/message \
      -H "x-gambit-api-key: totallysecret" \
@@ -215,11 +219,13 @@ curl http://localhost:5000/v1/campaigns/4944/message \
      -H "Content-Type: application/json" \
      -d '{"phone": "5555555511", "type": "scheduled_relative_to_signup_date"}'
 ```
-</details>
 
-<details>
-<summary>**Example Response**</summary>
+</p></details>
+
+<details><summary>**Example Response**</summary><p>
+
 ```
 {"success":{"code":200,"message":"Sent text for 46 scheduled_relative_to_signup_date to 5555555511"}}
 ```
-</details>
+
+</p></details>
