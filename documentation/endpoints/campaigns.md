@@ -188,7 +188,8 @@ curl http://localhost:5000/v1/campaigns/7483 \
       {
         "keyword": "RINSEBOT"
       }
-    ]
+    ],
+    "contentfulUri": "https://app.contentful.com/spaces/pupp3tSl0Th/entries/3tUIp8oqTemqaSOKqGwIe6"
   }
 }
 ```

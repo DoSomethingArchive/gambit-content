@@ -89,9 +89,22 @@ router.get('/', (req, res) => {
 router.get('/:id', (req, res) => {
   stathat('route: v1/campaigns/{id}');
   const campaignId = req.params.id;
+  let response;
 
   return fetchCampaign(campaignId, true)
-    .then(data => res.send({ data }))
+    .then((data) => {
+      response = data;
+
+      return contentful.fetchCampaign(campaignId);
+    })
+    .then((contentfulCampaign) => {
+      const spaceId = process.env.CONTENTFUL_SPACE_ID;
+      const contentfulId = contentfulCampaign.sys.id;
+      const uri = `https://app.contentful.com/spaces/${spaceId}/entries/${contentfulId}`;
+      response.contentfulUri = uri;
+
+      return res.send({ response });
+    })
     // TODO: Refactor helpers.sendResponse to accept an error and know the codes based on custom
     // error class, to DRY.
     .catch(NotFoundError, err => helpers.sendResponse(res, 404, err.message))
