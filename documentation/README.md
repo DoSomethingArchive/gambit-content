@@ -29,12 +29,3 @@ Endpoint                                       | Functionality
 Endpoint                                       | Functionality                                           
 ---------------------------------------------- | --------------------------------------------------------
 `POST /v1/signups` | [Post existing signup](endpoints/signups.md)
-
-
-## Legacy
-
-> :memo: We're looking to deprecate these, so don't get too attached!
-
-Endpoint                                       | Functionality                                           
----------------------------------------------- | --------------------------------------------------------
-`POST /reportback/:campaignName` | [Reportback chat](https://github.com/DoSomething/gambit/wiki/API#reportback)

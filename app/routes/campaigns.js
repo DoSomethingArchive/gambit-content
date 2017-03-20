@@ -16,9 +16,10 @@ const logger = app.locals.logger;
 const stathat = app.locals.stathat;
 
 /**
- * Queries Phoenix and Contentful to add external properties to given campaign model.
+ * Queries Phoenix, Contentful, and Mongo to render an object for a given Campaign id.
+ * If renderMessages is set to true, includes all rendered messages as a messages property.
  */
-function fetchCampaign(id) {
+function fetchCampaign(id, renderMessages) {
   const campaign = { id };
 
   return new Promise((resolve, reject) => {
@@ -28,21 +29,21 @@ function fetchCampaign(id) {
       .then((phoenixCampaign) => {
         campaign.title = phoenixCampaign.title;
         campaign.status = phoenixCampaign.status;
+        if (renderMessages === true) {
+          return contentful.renderAllMessagesForPhoenixCampaign(phoenixCampaign);
+        }
+
+        return false;
+      })
+      .then((renderedMessages) => {
+        if (renderedMessages) {
+          campaign.messages = renderedMessages;
+        }
 
         return contentful.fetchKeywordsForCampaignId(id);
       })
       .then((keywords) => {
         campaign.keywords = keywords;
-
-        return contentful.fetchCampaign(id);
-      })
-      .then((contentfulCampaign) => {
-        if (contentfulCampaign) {
-          campaign.overrides = contentfulCampaign.fields;
-          delete campaign.overrides.campaignId;
-        } else {
-          campaign.overrides = {};
-        }
 
         return Campaign.findById(id).exec();
       })
@@ -88,9 +89,22 @@ router.get('/', (req, res) => {
 router.get('/:id', (req, res) => {
   stathat('route: v1/campaigns/{id}');
   const campaignId = req.params.id;
+  let response;
 
-  return fetchCampaign(campaignId)
-    .then(data => res.send({ data }))
+  return fetchCampaign(campaignId, true)
+    .then((data) => {
+      response = data;
+
+      return contentful.fetchCampaign(campaignId);
+    })
+    .then((contentfulCampaign) => {
+      const spaceId = process.env.CONTENTFUL_SPACE_ID;
+      const contentfulId = contentfulCampaign.sys.id;
+      const uri = `https://app.contentful.com/spaces/${spaceId}/entries/${contentfulId}`;
+      response.contentfulUri = uri;
+
+      return res.send({ data: response });
+    })
     // TODO: Refactor helpers.sendResponse to accept an error and know the codes based on custom
     // error class, to DRY.
     .catch(NotFoundError, err => helpers.sendResponse(res, 404, err.message))
