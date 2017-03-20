@@ -66,10 +66,12 @@ userSchema.statics.lookup = function (type, id) {
         return model.findOneAndUpdate(query, userData, helpers.upsertOptions()).exec();
       })
       .then(userDoc => resolve(userDoc))
-      .catch((error) => {
-        app.locals.stathatError(statName, error);
+      .catch((err) => {
+        app.locals.stathatError(statName, err);
+        const scope = err;
+        scope.message = `User.lookup error:${err.message}`;
 
-        return reject(error);
+        return reject(scope);
       });
   });
 };
@@ -81,16 +83,16 @@ userSchema.statics.post = function (data) {
   const model = this;
   const statName = 'northstar: POST users';
 
-  const scope = data;
-  scope.source = process.env.DS_API_USER_REGISTRATION_SOURCE || 'sms';
-  scope.password = helpers.generatePassword(data.mobile);
+  const createUser = data;
+  createUser.source = process.env.DS_API_USER_REGISTRATION_SOURCE || 'sms';
+  createUser.password = helpers.generatePassword(data.mobile);
   const emailDomain = process.env.DS_API_DEFAULT_USER_EMAIL || 'mobile.import';
-  scope.email = `${data.mobile}@${emailDomain}`;
+  createUser.email = `${data.mobile}@${emailDomain}`;
 
   return new Promise((resolve, reject) => {
     logger.debug('User.post');
 
-    return northstar.Users.create(scope)
+    return northstar.Users.create(createUser)
       .then((northstarUser) => {
         app.locals.stathat(`${statName} 200`);
         logger.info(`northstar.Users created user:${northstarUser.id}`);
@@ -100,10 +102,12 @@ userSchema.statics.post = function (data) {
         return model.findOneAndUpdate(query, userData, helpers.upsertOptions()).exec();
       })
       .then(userDoc => resolve(userDoc))
-      .catch((error) => {
-        app.locals.stathatError(statName, error);
+      .catch((err) => {
+        app.locals.stathatError(statName, err);
+        const scope = err;
+        scope.message = `User.post error:${err.message}`;
 
-        return reject(error);
+        return reject(scope);
       });
   });
 };
