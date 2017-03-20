@@ -38,6 +38,7 @@
     "request": "2.34.x",
     "stathat": "0.0.8",
     "superagent": "^2.3.0",
+    "throng": "^4.0.0",
     "winston": "0.8.x",
     "winston-mongodb": "^2.0.0"
   },
