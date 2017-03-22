@@ -89,7 +89,9 @@ signupSchema.statics.lookupById = function (id) {
           return reject(notFoundError);
         }
 
-        return reject(err);
+        const scope = err;
+        scope.message = `Signup.lookupById error:${err.message}`;
+        return reject(scope);
       });
   });
 };
@@ -129,8 +131,10 @@ signupSchema.statics.lookupCurrent = function (user, campaign) {
       .then(signupDoc => resolve(signupDoc))
       .catch((err) => {
         app.locals.stathatError(statName, err);
+        const scope = err;
+        scope.message = `Signup.lookupCurrent error:${err.message}`;
 
-        return reject(err);
+        return reject(scope);
       });
   });
 };
@@ -171,8 +175,10 @@ signupSchema.statics.post = function (user, campaign, keyword) {
       .then(signupDoc => resolve(signupDoc))
       .catch((err) => {
         app.locals.stathatError(statName, err);
+        const scope = err;
+        scope.message = `Signup.post error:${err.message}`;
 
-        return reject(err);
+        return reject(scope);
       });
   });
 };
@@ -203,7 +209,12 @@ signupSchema.methods.createDraftReportbackSubmission = function () {
 
         return resolve(updatedSignup);
       })
-      .catch(err => reject(err));
+      .catch((err) => {
+        const scope = err;
+        scope.message = `Signup.post error:${err.message}`;
+
+        return reject(scope);
+      });
   });
 };
 
@@ -257,7 +268,10 @@ signupSchema.methods.postDraftReportbackSubmission = function () {
         submission.failed_at = dateSubmitted;
         submission.save();
 
-        return reject(err);
+        const scope = err;
+        scope.message = `Signup.post error:${err.message}`;
+
+        return reject(scope);
       });
   });
 };
