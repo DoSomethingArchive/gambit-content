@@ -190,7 +190,8 @@ signupSchema.methods.createDraftReportbackSubmission = function () {
   const signup = this;
 
   return new Promise((resolve, reject) => {
-    logger.debug('Signup.createDraftReportbackSubmission');
+    const logPrefix = 'Signup.createDraftReportbackSubmission';
+    logger.debug(logPrefix);
 
     return ReportbackSubmission
       .create({
@@ -199,12 +200,13 @@ signupSchema.methods.createDraftReportbackSubmission = function () {
       })
       .then(reportbackSubmission => {
         const submissionId = reportbackSubmission._id;
-        logger.debug(`Signup.createDraftReportbackSubmission created:${submissionId.toString()}`);
+        logger.debug(`${logPrefix} created reportback_submission:${submissionId.toString()}`);
         signup.draft_reportback_submission = submissionId;
 
         return signup.save();
       })
       .then((updatedSignup) => {
+        logger.debug(`${logPrefix} updated signup:${signup._id}`);
         app.locals.stathat('created draft_reportback_submission');
 
         return resolve(updatedSignup);
