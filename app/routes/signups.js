@@ -45,7 +45,7 @@ router.post('/', (req, res) => {
     .then((signup) => {
       scope.signup = signup;
 
-      return phoenix.client.Campaigns.get(signup.campaign);
+      return phoenix.fetchCampaign(signup.campaign);
     })
     .then((phoenixCampaign) => {
       if (phoenix.isClosedCampaign(phoenixCampaign)) {

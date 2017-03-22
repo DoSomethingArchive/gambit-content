@@ -25,7 +25,7 @@ function fetchCampaign(id, renderMessages) {
   return new Promise((resolve, reject) => {
     logger.debug(`fetchCampaign:${id}`);
 
-    return phoenix.client.Campaigns.get(id)
+    return phoenix.fetchCampaign(id)
       .then((phoenixCampaign) => {
         campaign.title = phoenixCampaign.title;
         campaign.status = phoenixCampaign.status;
@@ -60,7 +60,7 @@ function fetchCampaign(id, renderMessages) {
         return resolve(campaign);
       })
       .catch(error => {
-        if (error.message === 'Not Found') {
+        if (error.status === 404) {
           const notFoundError = new NotFoundError(`Campaign ${id} not found`);
           return reject(notFoundError);
         }
@@ -136,9 +136,8 @@ router.post('/:id/message', (req, res) => {
     logger.debug(`loadCampaignMessage campaign:${campaignId} msgType:${type}`);
     let campaign;
 
-    return phoenix.client.Campaigns.get(campaignId)
+    return phoenix.fetchCampaign(campaignId)
       .then((phoenixCampaign) => {
-        logger.debug(`phoenix.client.Campaigns.get found campaign:${campaignId}`);
         if (phoenix.isClosedCampaign(phoenixCampaign)) {
           const err = new ClosedCampaignError(phoenixCampaign);
           return reject(err);

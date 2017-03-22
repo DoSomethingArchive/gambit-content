@@ -50,7 +50,12 @@ campaignSchema.statics.lookupByIds = function (campaignIds) {
 
         return resolve(Promise.all(promises));
       })
-      .catch(error => reject(error));
+      .catch((err) => {
+        const scope = err;
+        scope.message = `Campaign.lookupByIds error:${err.message}`;
+
+        return reject(scope);
+      });
   });
 };
 
@@ -69,9 +74,7 @@ campaignSchema.methods.findOrCreateMessagingGroups = function () {
       this.mobilecommons_group_completed = groups.completed;
       return this.save();
     })
-    .catch((error) => {
-      logger.error(`findOrCreateMessagingGroups() caught an error: ${error.message}`);
-    });
+    .catch(error => logger.error(`Campaign.findOrCreateMessagingGroups error: ${error.message}`));
 };
 
 /**
