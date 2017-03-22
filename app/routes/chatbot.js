@@ -143,7 +143,7 @@ router.post('/', (req, res) => {
               logger.info(`loaded broadcast:${scope.broadcast_id}`);
               const campaignId = currentBroadcast.fields.campaign.fields.campaignId;
 
-              return phoenix.client.Campaigns.get(campaignId);
+              return phoenix.fetchCampaign(campaignId);
             })
             .then((campaign) => {
               if (!campaign.id) {
@@ -180,8 +180,10 @@ router.post('/', (req, res) => {
                 const err = new Error(msg);
                 return reject(err);
               }
+              const campaignId = keyword.fields.campaign.fields.campaignId;
+              logger.debug(`keyword campaignId:${campaignId}`);
 
-              return phoenix.client.Campaigns.get(keyword.fields.campaign.fields.campaignId);
+              return phoenix.fetchCampaign(campaignId);
             })
             .then((campaign) => {
               if (!campaign.id) {
@@ -198,7 +200,7 @@ router.post('/', (req, res) => {
 
         // If we've made it this far, check for User's current_campaign.
         logger.debug(`user.current_campaign:${user.current_campaign}`);
-        return phoenix.client.Campaigns.get(user.current_campaign)
+        return phoenix.fetchCampaign(user.current_campaign)
           .then((campaign) => {
             if (!campaign.id) {
               // TODO: Send to non-existent start menu to select a campaign.
@@ -366,8 +368,12 @@ router.post('/', (req, res) => {
       }
 
       stathat(err.message);
+      let errStatus = err.status;
+      if (!errStatus) {
+        errStatus = 500;
+      }
 
-      return helpers.sendResponse(res, 500, err.message);
+      return helpers.sendResponse(res, errStatus, err.message);
     });
 });
 
