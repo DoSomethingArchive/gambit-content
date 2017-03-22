@@ -213,7 +213,7 @@ signupSchema.methods.createDraftReportbackSubmission = function () {
       })
       .catch((err) => {
         const scope = err;
-        scope.message = `Signup.post error:${err.message}`;
+        scope.message = `Signup.createDraftReportbackSubmission error:${err.message}`;
 
         return reject(scope);
       });
@@ -271,7 +271,7 @@ signupSchema.methods.postDraftReportbackSubmission = function () {
         submission.save();
 
         const scope = err;
-        scope.message = `Signup.post error:${err.message}`;
+        scope.message = `Signup.postDraftReportbackSubmission error:${err.message}`;
 
         return reject(scope);
       });
