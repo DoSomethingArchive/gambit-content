@@ -71,6 +71,7 @@ router.post('/', (req, res) => {
 
   if (req.body.keyword) {
     scope.keyword = req.body.keyword.toLowerCase();
+    logger.debug(`keyword:${scope.keyword}`);
     logRequest.keyword = scope.keyword;
   }
 
@@ -261,7 +262,7 @@ router.post('/', (req, res) => {
       }
 
       if (isCommand(scope.incoming_message, 'reportback')) {
-        return controller.createReportbackSubmission(scope);
+        return scope.signup.createDraftReportbackSubmission().then(() => 'ask_quantity');
       }
 
       if (scope.signup.reportback) {
