@@ -109,24 +109,6 @@ class CampaignBotController {
   }
 
   /**
-   * TODO: Move into router.
-   * Creates new ReportbackSubmission model and updates Signup model's draft.
-   * @param {object} req - Express request
-   * @return {string} - Message to send and begin collecting Reportback data.
-   */
-  createReportbackSubmission(req) {
-    this.debug(req, 'createReportbackSubmission');
-
-    return req.signup
-      .createDraftReportbackSubmission()
-      .then(() => {
-        this.debug(req, `updated signup:${req.signup._id.toString()}`);
-
-        return this.collectReportbackProperty(req, 'quantity', true);
-      });
-  }
-
-  /**
    * Wrapper function for logger.debug(msg)
    */
   debug(req, msg) {
