@@ -8,7 +8,6 @@ const Promise = require('bluebird');
 const ReportbackSubmission = require('./ReportbackSubmission');
 const NotFoundError = require('../exceptions/NotFoundError');
 const helpers = require('../../lib/helpers');
-const northstar = require('../../lib/northstar');
 const phoenix = require('../../lib/phoenix');
 const logger = app.locals.logger;
 
@@ -72,7 +71,7 @@ signupSchema.statics.lookupById = function (id) {
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.lookupById:${id}`);
 
-    return northstar.Signups.get(id)
+    return phoenix.client.Signups.get(id)
       .then((northstarSignup) => {
         app.locals.stathat(`${statName} 200`);
         logger.debug(`northstar.Signups.get:${id} success`);
@@ -108,7 +107,7 @@ signupSchema.statics.lookupCurrent = function (user, campaign) {
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.lookupCurrent(${user._id}, ${campaign.id})`);
 
-    return northstar.Signups.index({ user: user._id, campaigns: campaign.id })
+    return phoenix.client.Signups.index({ user: user._id, campaigns: campaign.id })
       .then((northstarSignups) => {
         app.locals.stathat(`${statName} 200`);
 
