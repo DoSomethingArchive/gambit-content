@@ -42,19 +42,19 @@ const signupSchema = new mongoose.Schema({
 
 });
 
-function parseNorthstarSignup(northstarSignup) {
+function parsePhoenixSignup(phoenixSignup) {
   const data = {
-    _id: Number(northstarSignup.id),
-    user: northstarSignup.user,
-    campaign: Number(northstarSignup.campaign),
+    _id: Number(phoenixSignup.id),
+    user: phoenixSignup.user,
+    campaign: Number(phoenixSignup.campaign),
   };
   // Only set if this was called from postSignup(req).
-  if (northstarSignup.keyword) {
-    data.keyword = northstarSignup.keyword;
+  if (phoenixSignup.keyword) {
+    data.keyword = phoenixSignup.keyword;
   }
-  if (northstarSignup.reportback) {
-    data.reportback = Number(northstarSignup.reportback.id);
-    data.total_quantity_submitted = northstarSignup.reportback.quantity;
+  if (phoenixSignup.reportback) {
+    data.reportback = Number(phoenixSignup.reportback.id);
+    data.total_quantity_submitted = phoenixSignup.reportback.quantity;
   }
 
   return data;
@@ -66,16 +66,16 @@ function parseNorthstarSignup(northstarSignup) {
  */
 signupSchema.statics.lookupById = function (id) {
   const model = this;
-  const statName = 'northstar: GET signups/{id}';
+  const statName = 'phoenix: GET signups/{id}';
 
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.lookupById:${id}`);
 
     return phoenix.client.Signups.get(id)
-      .then((northstarSignup) => {
+      .then((phoenixSignup) => {
         app.locals.stathat(`${statName} 200`);
-        logger.debug(`northstar.Signups.get:${id} success`);
-        const data = parseNorthstarSignup(northstarSignup);
+        logger.debug(`phoenix.Signups.get:${id} success`);
+        const data = parsePhoenixSignup(phoenixSignup);
 
         return model.findOneAndUpdate({ _id: id }, data, helpers.upsertOptions()).exec();
       })
@@ -102,25 +102,25 @@ signupSchema.statics.lookupById = function (id) {
  */
 signupSchema.statics.lookupCurrent = function (user, campaign) {
   const model = this;
-  const statName = 'northstar: GET signups';
+  const statName = 'phoenix: GET signups';
 
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.lookupCurrent(${user._id}, ${campaign.id})`);
 
     return phoenix.client.Signups.index({ user: user._id, campaigns: campaign.id })
-      .then((northstarSignups) => {
+      .then((phoenixSignups) => {
         app.locals.stathat(`${statName} 200`);
 
-        if (northstarSignups.length < 1) {
+        if (phoenixSignups.length < 1) {
           return resolve(false);
         }
 
-        const currentSignup = northstarSignups.find(signup => signup.campaignRun.current);
+        const currentSignup = phoenixSignups.find(signup => signup.campaignRun.current);
         if (!currentSignup) {
           return resolve(false);
         }
 
-        const data = parseNorthstarSignup(currentSignup);
+        const data = parsePhoenixSignup(currentSignup);
 
         return model.findOneAndUpdate({ _id: data._id }, data, helpers.upsertOptions())
           .populate('user')
