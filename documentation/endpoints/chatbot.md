@@ -22,7 +22,7 @@ Name | Type | Description
 `phone` | `string` | **Required.** Mobile number that sent incoming message.
 `args` | `string` | Incoming text sent.
 `mms_image_url` | `string` | Incoming image sent.
-`keyword` | `string` | [Mobile Commons keyword](https://github.com/DoSomething/gambit/wiki/Chatbot#mdata) that triggered the incoming mData POST.
+`keyword` | `string` | Mobile Commons keyword that triggered the incoming mData POST.
 `profile_id` | `number` | Mobile Commons Profile ID
 `broadcast_id` | `number` | Mobile Commons Broadcast ID, if User is responding to a Broadcast
 
