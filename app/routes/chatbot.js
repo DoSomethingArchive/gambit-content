@@ -119,6 +119,7 @@ router.post('/', (req, res) => {
           });
           return resolve(user);
         }
+
         return reject(err);
       });
   });
@@ -213,7 +214,8 @@ router.post('/', (req, res) => {
 
             return resolve(campaign);
           });
-      });
+      })
+      .catch(err => reject(err));
   });
 
   return loadCampaign
