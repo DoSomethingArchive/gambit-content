@@ -12,6 +12,7 @@ const CampaignBotController = require('../controllers/CampaignBotController');
 const controller = new CampaignBotController();
 const helpers = require('../../lib/helpers');
 const contentful = require('../../lib/contentful');
+const newrelic = require('newrelic');
 const mobilecommons = require('../../lib/mobilecommons');
 const phoenix = require('../../lib/phoenix');
 const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
@@ -76,6 +77,14 @@ router.post('/', (req, res) => {
   }
 
   logger.info(logRequest);
+  newrelic.addCustomParameters({
+    incomingImageUrl: scope.incoming_image_url,
+    incomingMessage: scope.incoming_message,
+    keyword: scope.keyword,
+    mobileCommonsBroadcastId: scope.broadcast_id,
+    mobileCommonsMessageId: scope.body.message_id,
+    mobileCommonsProfileId: req.body.profile_id,
+  });
 
   let configured = true;
   // Check for required config variables.
@@ -132,6 +141,7 @@ router.post('/', (req, res) => {
       .then((user) => {
         logger.info(`loaded user:${user._id}`);
         scope.user = user;
+        newrelic.addCustomParameters({ userId: user._id });
 
         if (scope.broadcast_id) {
           return contentful.fetchBroadcast(scope.broadcast_id)
@@ -221,6 +231,8 @@ router.post('/', (req, res) => {
   return loadCampaign
     .then((campaign) => {
       scope.campaign = campaign;
+      newrelic.addCustomParameters({ campaignId: campaign.id });
+
       if (phoenix.isClosedCampaign(campaign)) {
         throw new ClosedCampaignError(campaign);
       }
@@ -240,6 +252,7 @@ router.post('/', (req, res) => {
     .then((signup) => {
       logger.info(`loaded signup:${signup._id.toString()}`);
       scope.signup = signup;
+      newrelic.addCustomParameters({ signupId: signup._id });
 
       if (!scope.signup) {
         // TODO: Handle this edge-case.
@@ -303,6 +316,8 @@ router.post('/', (req, res) => {
     })
     .then((renderedMessage) => {
       scope.response_message = `${scope.msg_prefix} ${renderedMessage}`;
+      newrelic.addCustomParameters({ gambitResponseMessageType: scope.msg_type });
+
       let quantity = req.signup.total_quantity_submitted;
       if (req.signup.draft_reportback_submission) {
         quantity = req.signup.draft_reportback_submission.quantity;
