@@ -79,9 +79,10 @@ router.post('/', (req, res) => {
   BotRequest.log(req, 'chatbot')
     .then((botRequestDoc) => {
       currentBotRequest = botRequestDoc;
-      logger.info(JSON.stringify(currentBotRequest.body));
+      const id = botRequestDoc._id.toString();
+      logger.info(`created botRequest:${id} data:${JSON.stringify(currentBotRequest.body)}`);
 
-      return helpers.sendResponse(res, 200, `Message ${botRequestDoc._id.toString()} queued.`);
+      return helpers.sendResponse(res, 200, `Queued request:${id}`);
     })
     .catch(err => helpers.sendResponse(res, 500, err.message));
 
@@ -117,6 +118,7 @@ router.post('/', (req, res) => {
         logger.info(`loaded user:${user._id}`);
         scope.user = user;
         newrelic.addCustomParameters({ userId: user._id });
+        currentBotRequest.user_id = scope.user._id;
 
         if (scope.broadcast_id) {
           return contentful.fetchBroadcast(scope.broadcast_id)
@@ -207,6 +209,7 @@ router.post('/', (req, res) => {
     .then((campaign) => {
       scope.campaign = campaign;
       newrelic.addCustomParameters({ campaignId: campaign.id });
+      currentBotRequest.campaign_id = scope.campaign.id;
 
       if (phoenix.isClosedCampaign(campaign)) {
         throw new ClosedCampaignError(campaign);
@@ -312,19 +315,22 @@ router.post('/', (req, res) => {
     })
     .then(() => {
       scope.response_message = helpers.addSenderPrefix(scope.response_message);
+      currentBotRequest.bot_response_type = scope.msg_type;
+      currentBotRequest.bot_response_message = scope.response_message;
       logger.debug(`saved user.current_campaign:${scope.campaign.id}`);
+
       scope.user.postMobileCommonsProfileUpdate(scope.oip, scope.response_message);
       stathat(`campaignbot:${scope.msg_type}`);
 
-      // TODO: Update the botRequest we created from the start.
-      return BotRequest.log(req, 'campaignbot', null, scope.msg_type, scope.response_message);
+      return currentBotRequest.save();
     })
-    .then(botRequest => logger.debug(`created botRequest:${botRequest._id}`))
+    .then(botRequest => logger.debug(`updated botRequest:${botRequest._id}`))
     .catch(NotFoundError, (err) => {
       logger.error(err.message);
 
       // TODO: Add a new errorOccurredMessage field to Contentful campaigns to reply with.
-      return scope.user.postMobileCommonsProfileUpdate(scope.oip, err.message);
+      scope.user.postMobileCommonsProfileUpdate(scope.oip, err.message);
+      return currentBotRequest.save();
     })
     .catch(ClosedCampaignError, (err) => {
       logger.warn(err.message);
@@ -335,12 +341,14 @@ router.post('/', (req, res) => {
           scope.response_message = helpers.addSenderPrefix(responseMessage);
 
           // Send to Agent View for now until we get a Select Campaign menu up and running.
-          return scope.user.postMobileCommonsProfileUpdate(agentViewOip, scope.response_message);
+          scope.user.postMobileCommonsProfileUpdate(agentViewOip, scope.response_message);
+          return currentBotRequest.save();
         })
         .catch((renderError) => {
           logger.error(renderError.message);
 
-          return scope.user.postMobileCommonsProfileUpdate(agentViewOip, renderError.message);
+          scope.user.postMobileCommonsProfileUpdate(agentViewOip, renderError.message);
+          return currentBotRequest.save();
         });
     })
     .catch(err => {
@@ -353,12 +361,19 @@ router.post('/', (req, res) => {
           stathat(`error: ${logMsg}`);
         }
         const msg = helpers.addSenderPrefix(scope.response_message);
-        // TODO: Update botRequest we created at the start of the request.
+
         // Log the no response:
-        BotRequest.log(req, 'broadcast', null, 'prompt_declined', msg);
+        currentBotRequest.bot_response_type = 'prompt_declined';
+        currentBotRequest.bot_response_message = msg;
+
         // Send broadcast declined using Mobile Commons Send Message API:
-        return mobilecommons.send_message(scope.user.mobile, msg);
+        mobilecommons.send_message(scope.user.mobile, msg);
+
+        return currentBotRequest.save();
       }
+
+      // If an error occurrs -- do we even need to let the user know?
+      // If so we'll need to call user.postMobileCommonsProfileUpdate().
 
       stathat(err.message);
       return logger.error(err.message);
