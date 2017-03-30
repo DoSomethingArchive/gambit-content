@@ -46,8 +46,7 @@ function isCommand(incomingMessage, commandType) {
  * Currently only supports Mobile Commons mData's.
  */
 router.post('/', (req, res) => {
-  const route = 'v1/chatbot';
-  stathat(`route: ${route}`);
+  stathat('route: v1/chatbot');
 
   const scope = req;
   // Currently only support mobilecommons.
@@ -58,25 +57,15 @@ router.post('/', (req, res) => {
   scope.incoming_message = req.body.args;
   scope.incoming_image_url = req.body.mms_image_url;
 
-  const logRequest = {
-    route,
-    profile_id: req.body.profile_id,
-    incoming_message: scope.incoming_message,
-    incoming_image_url: scope.incoming_image_url,
-  };
-
   if (req.body.broadcast_id) {
     scope.broadcast_id = req.body.broadcast_id;
-    logRequest.broadcast_id = scope.broadcast_id;
   }
 
   if (req.body.keyword) {
     scope.keyword = req.body.keyword.toLowerCase();
     logger.debug(`keyword:${scope.keyword}`);
-    logRequest.keyword = scope.keyword;
   }
 
-  logger.info(logRequest);
   newrelic.addCustomParameters({
     incomingImageUrl: scope.incoming_image_url,
     incomingMessage: scope.incoming_message,
@@ -86,33 +75,19 @@ router.post('/', (req, res) => {
     mobileCommonsProfileId: req.body.profile_id,
   });
 
-  let configured = true;
-  // Check for required config variables.
-  const settings = [
-    'GAMBIT_CMD_MEMBER_SUPPORT',
-    'GAMBIT_CMD_REPORTBACK',
-    'MOBILECOMMONS_OIP_AGENTVIEW',
-    'MOBILECOMMONS_OIP_CHATBOT',
-  ];
-  settings.forEach((configVar) => {
-    if (!process.env[configVar]) {
-      const msg = `undefined process.env.${configVar}`;
-      stathat(`error: ${msg}`);
-      logger.error(msg);
-      configured = false;
-    }
-  });
+  let currentBotRequest;
+  BotRequest.log(req, 'chatbot')
+    .then((botRequestDoc) => {
+      currentBotRequest = botRequestDoc;
+      logger.info(JSON.stringify(currentBotRequest.body));
 
-  if (!configured) {
-    return res.sendStatus(500);
-  }
+      return helpers.sendResponse(res, 200, `Message ${botRequestDoc._id.toString()} queued.`);
+    })
+    .catch(err => helpers.sendResponse(res, 500, err.message));
 
-  if (!req.body.phone) {
-    stathat('error: undefined req.body.phone');
-
-    return res.status(422).send({ error: 'phone is required.' });
-  }
-
+  /**
+   * Begin processing incoming request by loading DS User for given mobile number.
+   */
   const loadUser = new Promise((resolve, reject) => {
     logger.log('loadUser');
 
@@ -339,16 +314,17 @@ router.post('/', (req, res) => {
       scope.response_message = helpers.addSenderPrefix(scope.response_message);
       logger.debug(`saved user.current_campaign:${scope.campaign.id}`);
       scope.user.postMobileCommonsProfileUpdate(scope.oip, scope.response_message);
-      helpers.sendResponse(res, 200, scope.response_message);
       stathat(`campaignbot:${scope.msg_type}`);
 
+      // TODO: Update the botRequest we created from the start.
       return BotRequest.log(req, 'campaignbot', null, scope.msg_type, scope.response_message);
     })
     .then(botRequest => logger.debug(`created botRequest:${botRequest._id}`))
     .catch(NotFoundError, (err) => {
       logger.error(err.message);
 
-      return helpers.sendResponse(res, 404, err.message);
+      // TODO: Add a new errorOccurredMessage field to Contentful campaigns to reply with.
+      return scope.user.postMobileCommonsProfileUpdate(scope.oip, err.message);
     })
     .catch(ClosedCampaignError, (err) => {
       logger.warn(err.message);
@@ -357,12 +333,15 @@ router.post('/', (req, res) => {
       return contentful.renderMessageForPhoenixCampaign(scope.campaign, 'campaign_closed')
         .then((responseMessage) => {
           scope.response_message = helpers.addSenderPrefix(responseMessage);
-          // Send to Agent View for now until we get a Select Campaign menu up and running.
-          scope.user.postMobileCommonsProfileUpdate(agentViewOip, scope.response_message);
 
-          return helpers.sendResponse(res, 200, scope.response_message);
+          // Send to Agent View for now until we get a Select Campaign menu up and running.
+          return scope.user.postMobileCommonsProfileUpdate(agentViewOip, scope.response_message);
         })
-        .catch(renderError => helpers.sendResponse(res, 500, renderError.message));
+        .catch((renderError) => {
+          logger.error(renderError.message);
+
+          return scope.user.postMobileCommonsProfileUpdate(agentViewOip, renderError.message);
+        });
     })
     .catch(err => {
       if (err.message === 'broadcast declined') {
@@ -372,26 +351,17 @@ router.post('/', (req, res) => {
           const logMsg = 'undefined broadcast.declinedMessage';
           logger.error(logMsg);
           stathat(`error: ${logMsg}`);
-
-          // Don't send an error code to Mobile Commons, which would trigger error message to User.
-          return helpers.sendResponse(res, 200, logMsg);
         }
         const msg = helpers.addSenderPrefix(scope.response_message);
+        // TODO: Update botRequest we created at the start of the request.
         // Log the no response:
         BotRequest.log(req, 'broadcast', null, 'prompt_declined', msg);
         // Send broadcast declined using Mobile Commons Send Message API:
-        mobilecommons.send_message(scope.user.mobile, msg);
-
-        return helpers.sendResponse(res, 200, msg);
+        return mobilecommons.send_message(scope.user.mobile, msg);
       }
 
       stathat(err.message);
-      let errStatus = err.status;
-      if (!errStatus) {
-        errStatus = 500;
-      }
-
-      return helpers.sendResponse(res, errStatus, err.message);
+      return logger.error(err.message);
     });
 });
 
