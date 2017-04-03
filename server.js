@@ -59,6 +59,56 @@ function startWorker(id) {
 
   const express = require('express');
   const Promise = require('bluebird');
+  const Profiler = require('./lib/tools/profiler');
+  const Uploader = require('./lib/tools/uploader');
+
+  /**
+   * Profiler setup
+   */
+
+  if (process.env.V8_PROFILER_ENABLED) {
+    logger.info('HEAP SNAPSHOT PROFILER IS ENABLED.');
+
+    const profiler = new Profiler(null, `worker #${id}`, 'heapsnapshot');
+    const uploader = new Uploader({
+      params: {
+        Bucket: 'v8-profiler.dosomething.org',
+        ContentType: 'binary/octet-stream',
+        ACL: 'public-read',
+      },
+    });
+
+    /**
+     * The profiler has fired the snapshotCreated event, now we can process the snapshot
+     */
+    profiler.on('snapshotCreated', (snapshot) => {
+      const fileName = snapshot.getHeader().title;
+      const uploadStream = uploader.getUploadStream(fileName);
+
+
+
+      /**
+       * This is the multipart stream that will upload the snapshot to S3
+       */
+      uploadStream
+        .on('error', (error) => {
+          logger.info(`Upload Stream error: ${error}`);
+          snapshot.delete();
+        })
+        .on('uploaded', () => snapshot.delete());
+
+
+      /**
+       * This is the snapshot stream that will pipe the serialized version of the
+       * snapshot to the uploadStream
+       */
+      snapshot
+        .export()
+        .pipe(uploadStream)
+        .on('error', error => logger.info(`Snapshot error: ${error}`));
+    });
+    profiler.start();
+  }
 
   app = express();
 
