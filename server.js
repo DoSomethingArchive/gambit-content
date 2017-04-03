@@ -66,7 +66,9 @@ function startWorker(id) {
    * Profiler setup
    */
 
-  if (process.env.V8_PROFILER_ENABLED) {
+  if (process.env.V8_PROFILER_ENABLED &&
+      process.env.AWS_ACCESS_KEY_ID &&
+      process.env.AWS_SECRET_ACCESS_KEY) {
     logger.info('HEAP SNAPSHOT PROFILER IS ENABLED.');
 
     const profiler = new Profiler(null, `worker #${id}`, 'heapsnapshot');
