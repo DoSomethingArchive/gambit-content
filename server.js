@@ -87,8 +87,6 @@ function startWorker(id) {
       const fileName = snapshot.getHeader().title;
       const uploadStream = uploader.getUploadStream(fileName);
 
-
-
       /**
        * This is the multipart stream that will upload the snapshot to S3
        */
@@ -98,7 +96,6 @@ function startWorker(id) {
           snapshot.delete();
         })
         .on('uploaded', () => snapshot.delete());
-
 
       /**
        * This is the snapshot stream that will pipe the serialized version of the
