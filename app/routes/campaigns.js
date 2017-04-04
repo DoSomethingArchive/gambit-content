@@ -3,7 +3,7 @@
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
 const Promise = require('bluebird');
-const Campaign = require('../models/Campaign');
+
 const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
 const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
@@ -47,15 +47,14 @@ function fetchCampaign(id, renderMessages) {
       .then((keywords) => {
         campaign.keywords = keywords;
 
-        return groups.findGroup(id, campaign.current_run);
+        return groups.findOrCreateGroup(id, campaign.current_run);
       })
       .then((groupsResponse) => {
         if (!groupsResponse) {
           logger.warn(`Error returning Messaging Groups API response for id ${id}.`);
           return resolve(campaign);
         }
-        logger.debug(`groups.findGroup:${JSON.stringify(groupsResponse)}`);
-  
+
         campaign.mobilecommons_group_doing = groupsResponse.doing;
         campaign.mobilecommons_group_completed = groupsResponse.completed;
 
@@ -99,6 +98,9 @@ router.get('/:id', (req, res) => {
 
       return contentful.fetchCampaign(campaignId);
     })
+    // TODO: Querying Contentful again here to get its sys.id. We could avoid this extra query
+    // by refactoring contentful.renderAllMessagesForPhoenixCampaign to optionally accept a loaded
+    // Contentful campaign.
     .then((contentfulCampaign) => {
       const spaceId = process.env.CONTENTFUL_SPACE_ID;
       const contentfulId = contentfulCampaign.sys.id;
