@@ -71,10 +71,15 @@ function startWorker(id) {
       process.env.AWS_SECRET_ACCESS_KEY) {
     logger.info('HEAP SNAPSHOT PROFILER IS ENABLED.');
 
-    const profiler = new Profiler(null, `worker #${id}`, 'heapsnapshot');
+    const profiler = new Profiler({
+      interval: process.env.V8_PROFILER_DEFAULT_INTERVAL_MS,
+      tag: `worker #${id}`,
+      extension: 'heapsnapshot',
+      namePrefix: process.env.V8_PROFILER_NAME_PREFIX,
+    });
     const uploader = new Uploader({
       params: {
-        Bucket: 'v8-profiler.dosomething.org',
+        Bucket: process.env.UPLOADER_BUCKET || 'v8-profiler.dosomething.org',
         ContentType: 'binary/octet-stream',
         ACL: 'public-read',
       },
@@ -95,7 +100,10 @@ function startWorker(id) {
           logger.info(`Upload Stream error: ${error}`);
           snapshot.delete();
         })
-        .on('uploaded', () => snapshot.delete());
+        .on('uploaded', (details) => {
+          logger.debug(`Snapshot upload successful. File name: ${details.Key}`);
+          snapshot.delete();
+        });
 
       /**
        * This is the snapshot stream that will pipe the serialized version of the
