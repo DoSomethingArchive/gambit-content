@@ -164,11 +164,6 @@ function startWorker(id) {
     stathat.trackEZCount(key, stat, 1, status => logger.verbose(`stathat:${stat} ${status}`));
   };
 
-  if (!process.env.CAMPAIGNBOT_CAMPAIGNS) {
-    app.locals.logger.error('process.env.CAMPAIGNBOT_CAMPAIGNS undefined');
-    process.exit(1);
-  }
-
   app.locals.stathatError = function (statName, error) {
     if (error.status) {
       app.locals.stathat(`${statName} ${error.status}`);
