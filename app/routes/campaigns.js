@@ -52,6 +52,9 @@ function fetchCampaign(id, renderMessages) {
       .then((groupsResponse) => {
         if (!groupsResponse) {
           logger.warn(`Error returning Messaging Groups API response for id ${id}.`);
+          campaign.mobilecommons_group_doing = null;
+          campaign.mobilecommons_group_completed = null;
+
           return resolve(campaign);
         }
 
