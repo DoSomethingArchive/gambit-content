@@ -72,10 +72,10 @@ function startWorker(id) {
     logger.info('HEAP SNAPSHOT PROFILER IS ENABLED.');
 
     const profiler = new Profiler({
-      interval: process.env.V8_PROFILER_DEFAULT_INTERVAL_MS,
+      interval: process.env.V8_PROFILER_DEFAULT_INTERVAL_MS || 3600000,
       tag: `worker #${id}`,
       extension: 'heapsnapshot',
-      namePrefix: process.env.V8_PROFILER_NAME_PREFIX,
+      namePrefix: process.env.V8_PROFILER_NAME_PREFIX || 'v8.heap.snapshot',
     });
     const uploader = new Uploader({
       params: {
