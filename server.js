@@ -58,7 +58,6 @@ function startWorker(id) {
   logger.info(`Started worker ${id}`);
 
   const express = require('express');
-  const Promise = require('bluebird');
   const Profiler = require('./lib/tools/profiler');
   const Uploader = require('./lib/tools/uploader');
 
@@ -175,7 +174,7 @@ function startWorker(id) {
   require('./app/routes');
 
   const mongoose = require('mongoose');
-  mongoose.Promise = global.Promise;
+  mongoose.Promise = require('bluebird');
 
   // Based on the answers of this Stack Overflow thread
   // http://stackoverflow.com/questions/38486384/mongodb-connection-to-mongolab-timing-out-in-nodejs-on-heroku
