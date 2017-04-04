@@ -9,6 +9,7 @@ const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
 
 const contentful = require('../../lib/contentful');
+const groups = require('../../lib/groups');
 const helpers = require('../../lib/helpers');
 const mobilecommons = rootRequire('lib/mobilecommons');
 const phoenix = require('../../lib/phoenix');
@@ -29,6 +30,7 @@ function fetchCampaign(id, renderMessages) {
       .then((phoenixCampaign) => {
         campaign.title = phoenixCampaign.title;
         campaign.status = phoenixCampaign.status;
+        campaign.current_run = phoenixCampaign.currentCampaignRun.id;
         if (renderMessages === true) {
           return contentful.renderAllMessagesForPhoenixCampaign(phoenixCampaign);
         }
@@ -45,17 +47,17 @@ function fetchCampaign(id, renderMessages) {
       .then((keywords) => {
         campaign.keywords = keywords;
 
-        return Campaign.findById(id).exec();
+        return groups.findGroup(id, campaign.current_run);
       })
-      .then((campaignDoc) => {
-        if (!campaignDoc) {
-          logger.warn(`Could not find campaigns document for id ${id}.`);
+      .then((groupsResponse) => {
+        if (!groupsResponse) {
+          logger.warn(`Error returning Messaging Groups API response for id ${id}.`);
           return resolve(campaign);
         }
-
-        campaign.current_run = campaignDoc.current_run;
-        campaign.mobilecommons_group_doing = campaignDoc.mobilecommons_group_doing;
-        campaign.mobilecommons_group_completed = campaignDoc.mobilecommons_group_completed;
+        logger.debug(`groups.findGroup:${JSON.stringify(groupsResponse)}`);
+  
+        campaign.mobilecommons_group_doing = groupsResponse.doing;
+        campaign.mobilecommons_group_completed = groupsResponse.completed;
 
         return resolve(campaign);
       })
