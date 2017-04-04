@@ -79,7 +79,7 @@ function startWorker(id) {
     });
     const uploader = new Uploader({
       params: {
-        Bucket: process.env.UPLOADER_BUCKET || 'v8-profiler.dosomething.org',
+        Bucket: process.env.V8_PROFILER_S3_BUCKET || 'v8-profiler.dosomething.org',
         ContentType: 'binary/octet-stream',
         ACL: 'public-read',
       },
