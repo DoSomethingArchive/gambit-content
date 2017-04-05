@@ -58,7 +58,6 @@ function startWorker(id) {
   logger.info(`Started worker ${id}`);
 
   const express = require('express');
-  const Promise = require('bluebird');
   const Profiler = require('./lib/tools/profiler');
   const Uploader = require('./lib/tools/uploader');
 
@@ -79,7 +78,7 @@ function startWorker(id) {
     });
     const uploader = new Uploader({
       params: {
-        Bucket: process.env.V8_PROFILER_S3_BUCKET || 'v8-profiler.dosomething.org',
+        Bucket: process.env.V8_PROFILER_S3_BUCKET || 'local-v8-profiler.dosomething.org',
         ContentType: 'binary/octet-stream',
         ACL: 'public-read',
       },
@@ -164,11 +163,6 @@ function startWorker(id) {
     stathat.trackEZCount(key, stat, 1, status => logger.verbose(`stathat:${stat} ${status}`));
   };
 
-  if (!process.env.CAMPAIGNBOT_CAMPAIGNS) {
-    app.locals.logger.error('process.env.CAMPAIGNBOT_CAMPAIGNS undefined');
-    process.exit(1);
-  }
-
   app.locals.stathatError = function (statName, error) {
     if (error.status) {
       app.locals.stathat(`${statName} ${error.status}`);
@@ -180,7 +174,7 @@ function startWorker(id) {
   require('./app/routes');
 
   const mongoose = require('mongoose');
-  mongoose.Promise = global.Promise;
+  mongoose.Promise = require('bluebird');
 
   // Based on the answers of this Stack Overflow thread
   // http://stackoverflow.com/questions/38486384/mongodb-connection-to-mongolab-timing-out-in-nodejs-on-heroku
@@ -203,34 +197,10 @@ function startWorker(id) {
   const conn = mongoose.connection;
   conn.on('connected', () => {
     logger.info(`conn.readyState:${conn.readyState}`);
+    const port = process.env.PORT || 5000;
 
-    // Load Campaign Messaging Groups.
-    const Campaign = require('./app/models/Campaign');
-    const loadCampaigns = Campaign.lookupByIds(process.env.CAMPAIGNBOT_CAMPAIGNS)
-      .then((campaigns) => {
-        logger.debug(`Campaign.lookupByIds found ${campaigns.length} campaigns`);
-
-        return campaigns.forEach((campaign) => {
-          logger.info(`Checking messaging groups for Campaign ${campaign._id}`);
-          if (!campaign.mobilecommons_group_doing || !campaign.mobilecommons_group_completed) {
-            campaign.findOrCreateMessagingGroups();
-          }
-        });
-      })
-      .catch(err => logger.error(err.message));
-
-    // Start server.
-    Promise.all([loadCampaigns])
-      .then(() => {
-        const port = process.env.PORT || 5000;
-
-        return app.listen(port, () => {
-          logger.info(`Gambit is listening on port:${port} env:${process.env.NODE_ENV}.`);
-        });
-      })
-      .catch((err) => {
-        logger.error(err.message);
-        process.exit(1);
-      });
+    return app.listen(port, () => {
+      logger.info(`Gambit is listening on port:${port} env:${process.env.NODE_ENV}.`);
+    });
   });
 }
