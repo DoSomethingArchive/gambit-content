@@ -47,9 +47,10 @@ function fetchCampaign(id, renderMessages) {
       .then((keywords) => {
         campaign.keywords = keywords;
 
-        return groups.findOrCreateGroup(id, campaign.current_run);
+        return groups.getGroups(id, campaign.current_run);
       })
-      .then((groupsResponse) => {
+      .then((response) => {
+        const groupsResponse = response.body.data;
         if (!groupsResponse) {
           logger.warn(`Error returning Messaging Groups API response for id ${id}.`);
           campaign.mobilecommons_group_doing = null;
@@ -58,8 +59,8 @@ function fetchCampaign(id, renderMessages) {
           return resolve(campaign);
         }
 
-        campaign.mobilecommons_group_doing = groupsResponse.doing;
-        campaign.mobilecommons_group_completed = groupsResponse.completed;
+        campaign.mobilecommons_group_doing = groupsResponse.doing.id;
+        campaign.mobilecommons_group_completed = groupsResponse.completed.id;
 
         return resolve(campaign);
       })
