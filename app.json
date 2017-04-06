@@ -5,9 +5,6 @@
     "BITLY_GENERIC_ACCESS_TOKEN": {
       "required": true
     },
-    "CAMPAIGNBOT_CAMPAIGNS": {
-      "required": true
-    },
     "CONTENTFUL_ACCESS_TOKEN": {
       "required": true
     },
