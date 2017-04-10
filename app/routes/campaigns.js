@@ -14,7 +14,7 @@ const groups = require('../../lib/groups');
 const helpers = require('../../lib/helpers');
 const mobilecommons = rootRequire('lib/mobilecommons');
 const phoenix = require('../../lib/phoenix');
-const stathat = app.locals.stathat;
+const stathat = require('../../lib/stathat');
 
 /**
  * Queries Phoenix, Contentful, and Mongo to render an object for a given Campaign id.
@@ -80,7 +80,7 @@ function fetchCampaign(id, renderMessages) {
  */
 router.get('/', (req, res) => {
   logger.debug('get campaigns');
-  stathat('route: v1/campaigns');
+  stathat.postStat('route: v1/campaigns');
 
   return contentful.fetchCampaignIdsWithKeywords()
     .then(campaignIds => Promise.map(campaignIds, fetchCampaign))
@@ -92,7 +92,7 @@ router.get('/', (req, res) => {
  * GET single campaign.
  */
 router.get('/:id', (req, res) => {
-  stathat('route: v1/campaigns/{id}');
+  stathat.postStat('route: v1/campaigns/{id}');
   const campaignId = req.params.id;
   let response;
 
@@ -128,6 +128,7 @@ router.post('/:id/message', (req, res) => {
   const campaignId = req.params.id;
   const phone = req.body.phone;
   const type = req.body.type;
+  const statName = `campaignbot:${type}`;
 
   if (!campaignId) {
     return helpers.sendResponse(res, 422, 'Missing required campaign id.');
@@ -173,7 +174,7 @@ router.post('/:id/message', (req, res) => {
       mobilecommons.send_message(phone, messageBody);
       const msg = `Sent message:${type} for campaign:${campaignId} to phone:${phone}`;
       logger.info(msg);
-      stathat(`Sent campaign message:${type}`);
+      stathat.postStat(statName);
 
       return helpers.sendResponse(res, 200, messageBody);
     })
@@ -186,6 +187,7 @@ router.post('/:id/message', (req, res) => {
       if (err.response) {
         logger.error(err.response.error);
       }
+      stathat.postStatWithError(statName, err);
       const msg = `Error sending text to phone:${phone}: ${err.message}`;
 
       return helpers.sendResponse(res, 500, msg);

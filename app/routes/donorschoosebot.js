@@ -10,7 +10,7 @@ const logger = require('winston');
 const donorschoose = require('../../lib/donorschoose');
 const mobilecommons = require('../../lib/mobilecommons');
 const helpers = require('../../lib/helpers');
-const stathat = app.locals.stathat;
+const stathat = require('../../lib/stathat');
 const DonorsChooseDonation = require('../models/DonorsChooseDonation');
 
 function debug(req, message) {
@@ -59,7 +59,7 @@ function sendResponse(req, res, code, msgType) {
  * it to update it with their email, zip, first name, and a custom field to keep donation count.
  */
 router.post('/', (req, res) => {
-  stathat('route: v1/donorschoosebot');
+  stathat.postStat('route: v1/donorschoosebot');
 
   let incomingMessage = req.body.args;
   const scope = req;
@@ -191,7 +191,7 @@ router.post('/', (req, res) => {
     .then((tokenResponse) => {
       debug(req, `token.statusDescription:${tokenResponse.statusDescription}`);
       if (tokenResponse.statusDescription !== 'success') {
-        stathat(`donorschoose: POST token ${tokenResponse.statusDescription}`);
+        stathat.postStat(`donorschoose: POST token ${tokenResponse.statusDescription}`);
 
         throw new Error('DonorsChoose API request for token failed.');
       }
@@ -212,7 +212,7 @@ router.post('/', (req, res) => {
       return donorschoose.post(donationsUri, data);
     })
     .then((donation) => {
-      stathat('donorschoose: POST donation 200');
+      stathat.postStat('donorschoose: POST donation 200');
       info(req, `created donation_id:${donation.donationId}`);
 
       const data = {
@@ -244,13 +244,13 @@ router.post('/', (req, res) => {
     })
     .catch((err) => {
       if (err.message === 'no search results') {
-        stathat('donorschoose: no projects found');
+        stathat.postStat('donorschoose: no projects found');
         scope.oip = process.env.MOBILECOMMONS_OIP_DONORSCHOOSEBOT_ERROR;
 
         return sendResponse(scope, res, 200, 'search_no_results');
       }
 
-      stathat(`donorschoose: error ${err.message}`);
+      stathat.postStat(`donorschoose: error ${err.message}`);
       error(req, err.message);
 
       return res.status(500).send(err.message);

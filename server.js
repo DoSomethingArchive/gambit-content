@@ -129,32 +129,6 @@ function startWorker(id) {
     next();
   });
 
-  /**
-   * Load stathat.
-   */
-  const stathat = require('stathat');
-
-  app.locals.stathat = function (statName) {
-    const key = process.env.STATHAT_EZ_KEY;
-    if (!key) {
-      logger.warn('STATHAT_EZ_KEY undefined');
-
-      return;
-    }
-    const appName = process.env.STATHAT_APP_NAME || 'gambit';
-    const stat = `${appName} - ${statName}`;
-    // Bump count of stat by 1.
-    stathat.trackEZCount(key, stat, 1, status => logger.debug(`stathat:${stat} ${status}`));
-  };
-
-  app.locals.stathatError = function (statName, error) {
-    if (error.status) {
-      app.locals.stathat(`${statName} ${error.status}`);
-    } else {
-      app.locals.stathat(`${statName} failed`);
-    }
-  };
-
   require('./app/routes');
 
   const mongoose = require('mongoose');
