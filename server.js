@@ -143,10 +143,8 @@ function startWorker(id) {
     }
     const appName = process.env.STATHAT_APP_NAME || 'gambit';
     const stat = `${appName} - ${statName}`;
-    logger.debug(`stathat: ${stat}`);
-
     // Bump count of stat by 1.
-    stathat.trackEZCount(key, stat, 1, status => logger.verbose(`stathat:${stat} ${status}`));
+    stathat.trackEZCount(key, stat, 1, status => logger.debug(`stathat:${stat} ${status}`));
   };
 
   app.locals.stathatError = function (statName, error) {
