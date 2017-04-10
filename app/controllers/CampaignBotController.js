@@ -3,7 +3,7 @@
 /**
  * Imports.
  */
-const logger = app.locals.logger;
+const logger = require('winston');
 const helpers = rootRequire('lib/helpers');
 
 /**

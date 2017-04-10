@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 const Promise = require('bluebird');
 const gambitJunior = rootRequire('lib/junior');
 const BotRequest = require('./BotRequest');
-const logger = app.locals.logger;
+const logger = require('winston');
 const stathat = app.locals.stathat;
 
 const donorsChooseBotSchema = new mongoose.Schema({

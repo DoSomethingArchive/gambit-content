@@ -5,11 +5,12 @@
  */
 const mongoose = require('mongoose');
 const Promise = require('bluebird');
+const logger = require('winston');
+
 const ReportbackSubmission = require('./ReportbackSubmission');
 const NotFoundError = require('../exceptions/NotFoundError');
 const helpers = require('../../lib/helpers');
 const phoenix = require('../../lib/phoenix');
-const logger = app.locals.logger;
 
 const postSource = process.env.DS_API_POST_SOURCE || 'sms-mobilecommons';
 

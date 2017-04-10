@@ -3,6 +3,7 @@
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
 const Promise = require('bluebird');
+const logger = require('winston');
 
 const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
 const NotFoundError = require('../exceptions/NotFoundError');
@@ -13,7 +14,6 @@ const groups = require('../../lib/groups');
 const helpers = require('../../lib/helpers');
 const mobilecommons = rootRequire('lib/mobilecommons');
 const phoenix = require('../../lib/phoenix');
-const logger = app.locals.logger;
 const stathat = app.locals.stathat;
 
 /**

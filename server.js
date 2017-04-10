@@ -18,28 +18,22 @@ const DB_URI = process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder';
 /**
  * Load logger.
  */
-const winston = require('winston');
+const logger = require('winston');
 require('winston-mongodb').MongoDB; // eslint-disable-line no-unused-expressions
 const WINSTON_LEVEL = process.env.LOGGING_LEVEL || 'info';
-
-const logger = new (winston.Logger)({
-  levels: {
-    verbose: 0,
-    debug: 1,
-    info: 2,
-    warn: 3,
-    error: 4,
-  },
+logger.configure({
   transports: [
-    new winston.transports.Console({ prettyPrint: true, colorize: true, level: WINSTON_LEVEL }),
-    new winston.transports.MongoDB({ db: DB_URI, level: WINSTON_LEVEL }),
-  ],
-  exceptionHandlers: [
-    new winston.transports.Console({ prettyPrint: true, colorize: true }),
-    new winston.transports.MongoDB({ db: DB_URI }),
+    new logger.transports.Console({
+      prettyPrint: true,
+      colorize: true,
+      level: WINSTON_LEVEL,
+    }),
+    new logger.transports.MongoDB({
+      db: DB_URI,
+      level: WINSTON_LEVEL,
+    }),
   ],
 });
-
 
 // Initialize Concurrency
 throng({
@@ -129,17 +123,9 @@ function startWorker(id) {
 
   // current worker
   app.locals.currentWorker = id;
-
-  // logger
-  app.locals.logger = logger;
-
-  if (!app.locals.logger) {
-    process.exit(1);
-  }
-
   // Expose which worker is handling request through middleware
   app.use((req, res, next) => {
-    app.locals.logger.info(`Request handled by worker ${app.locals.currentWorker}`);
+    logger.info(`Request handled by worker ${app.locals.currentWorker}`);
     next();
   });
 
@@ -157,10 +143,8 @@ function startWorker(id) {
     }
     const appName = process.env.STATHAT_APP_NAME || 'gambit';
     const stat = `${appName} - ${statName}`;
-    logger.debug(`stathat: ${stat}`);
-
     // Bump count of stat by 1.
-    stathat.trackEZCount(key, stat, 1, status => logger.verbose(`stathat:${stat} ${status}`));
+    stathat.trackEZCount(key, stat, 1, status => logger.debug(`stathat:${stat} ${status}`));
   };
 
   app.locals.stathatError = function (statName, error) {

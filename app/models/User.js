@@ -5,11 +5,11 @@
  */
 const mongoose = require('mongoose');
 const Promise = require('bluebird');
+const logger = require('winston');
 
 const helpers = rootRequire('lib/helpers');
 const mobilecommons = rootRequire('lib/mobilecommons');
 const northstar = require('../../lib/northstar');
-const logger = app.locals.logger;
 
 /**
  * Schema.
