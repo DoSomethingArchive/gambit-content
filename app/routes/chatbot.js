@@ -5,9 +5,10 @@
  */
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
-const logger = app.locals.logger;
-const stathat = app.locals.stathat;
+const logger = require('winston');
 const Promise = require('bluebird');
+
+const stathat = app.locals.stathat;
 const CampaignBotController = require('../controllers/CampaignBotController');
 const controller = new CampaignBotController();
 const helpers = require('../../lib/helpers');

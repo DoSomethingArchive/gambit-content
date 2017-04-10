@@ -5,10 +5,11 @@
  */
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
+const logger = require('winston');
+
 const donorschoose = require('../../lib/donorschoose');
 const mobilecommons = require('../../lib/mobilecommons');
 const helpers = require('../../lib/helpers');
-const logger = app.locals.logger;
 const stathat = app.locals.stathat;
 const DonorsChooseDonation = require('../models/DonorsChooseDonation');
 
