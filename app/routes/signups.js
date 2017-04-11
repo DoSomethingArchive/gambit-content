@@ -17,27 +17,37 @@ const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError
 const Signup = require('../models/Signup');
 const User = require('../models/User');
 
-router.post('/', (req, res) => {
-  stathat.postStat('route: v1/signups');
-
+/**
+ * Validate required body parameters.
+ */
+router.use((req, res, next) => {
   if (!req.body.id) {
     return helpers.sendResponse(res, 422, 'Missing required id.');
   }
-  const signupId = req.body.id;
 
   if (!req.body.source) {
     return helpers.sendResponse(res, 422, 'Missing required source.');
   }
+
   const source = req.body.source;
-
-  logger.info(`signups id:${signupId} source:${source}`);
-
   if (source === process.env.DS_API_POST_SOURCE) {
     const msg = `CampaignBot only sends confirmation when source not equal to ${source}.`;
 
     return helpers.sendResponse(res, 208, msg);
   }
 
+  return next();
+});
+
+// const timeout = require('connect-timeout')
+// router.use(timeout('1s'));
+
+router.post('/', (req, res) => {
+  stathat.postStat('route: v1/signups');
+
+  const signupId = req.body.id;
+  const source = req.body.source;
+  logger.info(`signups id:${signupId} source:${source}`);
   const scope = req;
   scope.client = 'external_signup';
 
@@ -82,6 +92,9 @@ router.post('/', (req, res) => {
     })
     .then((user) => {
       logger.debug(`updated user:${user._id} current_campaign:${user.current_campaign}`);
+      if (req.timedout) {
+        return helpers.sendGambitTimeoutResponse(res);
+      }
 
       // TODO: Promisify postMobileCommonsProfileUpdate and send success if we know the
       // Mobile Commons Profile Update request succeeded.
