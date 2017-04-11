@@ -7,8 +7,8 @@ const mongoose = require('mongoose');
 const Promise = require('bluebird');
 const gambitJunior = rootRequire('lib/junior');
 const BotRequest = require('./BotRequest');
-const logger = app.locals.logger;
-const stathat = app.locals.stathat;
+const logger = require('winston');
+const stathat = require('../../lib/stathat');
 
 const donorsChooseBotSchema = new mongoose.Schema({
 
@@ -58,7 +58,7 @@ donorsChooseBotSchema.statics.lookupByID = function (id) {
 donorsChooseBotSchema.methods.renderMessage = function (req, msgType) {
   const logMsg = `donorschoosebot: ${msgType}`;
   logger.info(logMsg);
-  stathat(logMsg);
+  stathat.postStat(logMsg);
 
   const property = `msg_${msgType}`;
   let msg = this[property];

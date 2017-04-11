@@ -5,11 +5,13 @@
  */
 const mongoose = require('mongoose');
 const Promise = require('bluebird');
+const logger = require('winston');
+
 const ReportbackSubmission = require('./ReportbackSubmission');
 const NotFoundError = require('../exceptions/NotFoundError');
 const helpers = require('../../lib/helpers');
 const phoenix = require('../../lib/phoenix');
-const logger = app.locals.logger;
+const stathat = require('../../lib/stathat');
 
 const postSource = process.env.DS_API_POST_SOURCE || 'sms-mobilecommons';
 
@@ -73,7 +75,7 @@ signupSchema.statics.lookupById = function (id) {
 
     return phoenix.client.Signups.get(id)
       .then((phoenixSignup) => {
-        app.locals.stathat(`${statName} 200`);
+        stathat.postStat(`${statName} 200`);
         logger.debug(`phoenix.Signups.get:${id} success`);
         const data = parsePhoenixSignup(phoenixSignup);
 
@@ -81,7 +83,7 @@ signupSchema.statics.lookupById = function (id) {
       })
       .then(signupDoc => resolve(signupDoc))
       .catch(err => {
-        app.locals.stathatError(statName, err);
+        stathat.postStatWithError(statName, err);
         if (err.status === 404) {
           const msg = `Signup ${id} not found.`;
           const notFoundError = new NotFoundError(msg);
@@ -109,7 +111,7 @@ signupSchema.statics.lookupCurrent = function (user, campaign) {
 
     return phoenix.client.Signups.index({ user: user._id, campaigns: campaign.id })
       .then((phoenixSignups) => {
-        app.locals.stathat(`${statName} 200`);
+        stathat.postStat(`${statName} 200`);
 
         if (phoenixSignups.length < 1) {
           return resolve(false);
@@ -129,7 +131,7 @@ signupSchema.statics.lookupCurrent = function (user, campaign) {
       })
       .then(signupDoc => resolve(signupDoc))
       .catch((err) => {
-        app.locals.stathatError(statName, err);
+        stathat.postStatWithError(statName, err);
         const scope = err;
         scope.message = `Signup.lookupCurrent error:${err.message}`;
 
@@ -157,9 +159,9 @@ signupSchema.statics.post = function (user, campaign, keyword) {
 
     return phoenix.client.Campaigns.signup(campaign.id, postData)
       .then((signupId) => {
-        app.locals.stathat(`${statName} 200`);
+        stathat.postStat(`${statName} 200`);
         if (keyword) {
-          app.locals.stathat(`signup: ${keyword}`);
+          stathat.postStat(`signup: ${keyword}`);
         }
         logger.info(`Signup.post created signup:${signupId}`);
 
@@ -173,7 +175,7 @@ signupSchema.statics.post = function (user, campaign, keyword) {
       })
       .then(signupDoc => resolve(signupDoc))
       .catch((err) => {
-        app.locals.stathatError(statName, err);
+        stathat.postStatWithError(statName, err);
         const scope = err;
         scope.message = `Signup.post error:${err.message}`;
 
@@ -206,7 +208,7 @@ signupSchema.methods.createDraftReportbackSubmission = function () {
       })
       .then((updatedSignup) => {
         logger.debug(`${logPrefix} updated signup:${signup._id}`);
-        app.locals.stathat('created draft_reportback_submission');
+        stathat.postStat('created draft_reportback_submission');
 
         return resolve(updatedSignup);
       })
@@ -245,7 +247,7 @@ signupSchema.methods.postDraftReportbackSubmission = function () {
 
     return phoenix.client.Campaigns.reportback(signup.campaign, data)
       .then((reportbackId) => {
-        app.locals.stathat(`${statName} 200`);
+        stathat.postStat(`${statName} 200`);
         logger.info(`phoenix.client.Campaigns.reportback:${reportbackId}`);
 
         signup.reportback = reportbackId;

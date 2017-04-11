@@ -1,6 +1,6 @@
 {
   "name": "gambit",
-  "version": "3.9.1",
+  "version": "3.9.2",
   "description": "A DoSomething.org chatbot",
   "license": "MIT",
   "repository": {
@@ -43,7 +43,7 @@
     "superagent": "^2.3.0",
     "throng": "^4.0.0",
     "v8-profiler": "5.7.0",
-    "winston": "0.8.x",
+    "winston": "2.3.x",
     "winston-mongodb": "^2.0.0"
   },
   "devDependencies": {

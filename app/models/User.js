@@ -5,11 +5,12 @@
  */
 const mongoose = require('mongoose');
 const Promise = require('bluebird');
+const logger = require('winston');
 
 const helpers = rootRequire('lib/helpers');
 const mobilecommons = rootRequire('lib/mobilecommons');
 const northstar = require('../../lib/northstar');
-const logger = app.locals.logger;
+const stathat = require('../../lib/stathat');
 
 /**
  * Schema.
@@ -58,7 +59,7 @@ userSchema.statics.lookup = function (type, id) {
 
     return northstar.Users.get(type, id)
       .then((northstarUser) => {
-        app.locals.stathat(`${statName} 200`);
+        stathat.postStat(`${statName} 200`);
         logger.debug('northstar.Users.lookup success');
         const userData = parseNorthstarUser(northstarUser);
         const query = { _id: userData._id };
@@ -67,7 +68,7 @@ userSchema.statics.lookup = function (type, id) {
       })
       .then(userDoc => resolve(userDoc))
       .catch((err) => {
-        app.locals.stathatError(statName, err);
+        stathat.postStatWithError(statName, err);
         const scope = err;
         scope.message = `User.lookup error:${err.message}`;
 
@@ -94,7 +95,7 @@ userSchema.statics.post = function (data) {
 
     return northstar.Users.create(createUser)
       .then((northstarUser) => {
-        app.locals.stathat(`${statName} 200`);
+        stathat.postStat(`${statName} 200`);
         logger.info(`northstar.Users created user:${northstarUser.id}`);
         const query = { _id: northstarUser.id };
         const userData = parseNorthstarUser(northstarUser);
@@ -103,7 +104,7 @@ userSchema.statics.post = function (data) {
       })
       .then(userDoc => resolve(userDoc))
       .catch((err) => {
-        app.locals.stathatError(statName, err);
+        stathat.postStatWithError(statName, err);
         const scope = err;
         scope.message = `User.post error:${err.message}`;
 

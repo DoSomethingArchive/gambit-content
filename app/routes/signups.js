@@ -2,23 +2,23 @@
 
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
-const contentful = require('../../lib/contentful');
-const phoenix = require('../../lib/phoenix');
-const helpers = require('../../lib/helpers');
-const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
-const NotFoundError = require('../exceptions/NotFoundError');
-const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
+const logger = require('winston');
 // Requiring Bluebird overrides native promises,
 // which we need for our exception handling logic in this endpoint.
 const Promise = require('bluebird'); // eslint-disable-line no-unused-vars
-const logger = app.locals.logger;
-// Models.
+
+const contentful = require('../../lib/contentful');
+const helpers = require('../../lib/helpers');
+const phoenix = require('../../lib/phoenix');
+const stathat = require('../../lib/stathat');
+const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
+const NotFoundError = require('../exceptions/NotFoundError');
+const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
 const Signup = require('../models/Signup');
 const User = require('../models/User');
 
-
 router.post('/', (req, res) => {
-  app.locals.stathat('route: v1/signups');
+  stathat.postStat('route: v1/signups');
 
   if (!req.body.id) {
     return helpers.sendResponse(res, 422, 'Missing required id.');
