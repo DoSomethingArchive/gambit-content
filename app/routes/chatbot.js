@@ -8,14 +8,15 @@ const router = express.Router(); // eslint-disable-line new-cap
 const logger = require('winston');
 const Promise = require('bluebird');
 
-const stathat = app.locals.stathat;
 const CampaignBotController = require('../controllers/CampaignBotController');
 const controller = new CampaignBotController();
+
 const helpers = require('../../lib/helpers');
 const contentful = require('../../lib/contentful');
 const newrelic = require('newrelic');
 const mobilecommons = require('../../lib/mobilecommons');
 const phoenix = require('../../lib/phoenix');
+const stathat = require('../../lib/stathat');
 const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
 const NotFoundError = require('../exceptions/NotFoundError');
 // Models.
@@ -48,7 +49,7 @@ function isCommand(incomingMessage, commandType) {
  */
 router.post('/', (req, res) => {
   const route = 'v1/chatbot';
-  stathat(`route: ${route}`);
+  stathat.postStat(`route: ${route}`);
 
   const scope = req;
   // Currently only support mobilecommons.
@@ -98,7 +99,7 @@ router.post('/', (req, res) => {
   settings.forEach((configVar) => {
     if (!process.env[configVar]) {
       const msg = `undefined process.env.${configVar}`;
-      stathat(`error: ${msg}`);
+      stathat.postStat(`error: ${msg}`);
       logger.error(msg);
       configured = false;
     }
@@ -109,7 +110,7 @@ router.post('/', (req, res) => {
   }
 
   if (!req.body.phone) {
-    stathat('error: undefined req.body.phone');
+    stathat.postStat('error: undefined req.body.phone');
 
     return res.status(422).send({ error: 'phone is required.' });
   }
@@ -341,7 +342,7 @@ router.post('/', (req, res) => {
       logger.debug(`saved user.current_campaign:${scope.campaign.id}`);
       scope.user.postMobileCommonsProfileUpdate(scope.oip, scope.response_message);
       helpers.sendResponse(res, 200, scope.response_message);
-      stathat(`campaignbot:${scope.msg_type}`);
+      stathat.postStat(`campaignbot:${scope.msg_type}`);
 
       return BotRequest.log(req, 'campaignbot', null, scope.msg_type, scope.response_message);
     })
@@ -353,7 +354,7 @@ router.post('/', (req, res) => {
     })
     .catch(ClosedCampaignError, (err) => {
       logger.warn(err.message);
-      stathat('campaign closed');
+      stathat.postStat('campaign closed');
 
       return contentful.renderMessageForPhoenixCampaign(scope.campaign, 'campaign_closed')
         .then((responseMessage) => {
@@ -372,7 +373,7 @@ router.post('/', (req, res) => {
         if (!scope.response_message) {
           const logMsg = 'undefined broadcast.declinedMessage';
           logger.error(logMsg);
-          stathat(`error: ${logMsg}`);
+          stathat.postStat(`error: ${logMsg}`);
 
           // Don't send an error code to Mobile Commons, which would trigger error message to User.
           return helpers.sendResponse(res, 200, logMsg);
@@ -386,7 +387,7 @@ router.post('/', (req, res) => {
         return helpers.sendResponse(res, 200, msg);
       }
 
-      stathat(err.message);
+      stathat.postStat(err.message);
       let errStatus = err.status;
       if (!errStatus) {
         errStatus = 500;
