@@ -76,9 +76,11 @@ router.use((req, res, next) => {
   if (!req.body.phone) {
     return helpers.sendUnproccessibleEntityResponse(res, 'Missing required phone.');
   }
-  if (!(req.body.args || req.body.mms_image_url)) {
-    return helpers.sendUnproccessibleEntityResponse(res, 'Missing required args or mms_image_url.');
+  if (!(req.body.keyword || req.body.args || req.body.mms_image_url)) {
+    const msg = 'Missing required keyword, args, or mms_image_url.';
+    return helpers.sendUnproccessibleEntityResponse(res, msg);
   }
+
   /* eslint-disable no-param-reassign */
   req.client = 'mobilecommons';
   req.incoming_message = req.body.args;
