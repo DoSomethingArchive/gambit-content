@@ -171,6 +171,56 @@ router.use((req, res, next) => {
 });
 
 /**
+ * Check if the incoming request is a reply to a Broadcast, and set req.campaignId if User said yes.
+ * Send the Broadcast Declined message if they said no.
+ */
+router.use((req, res, next) => {
+  if (!req.broadcast_id) {
+    return next();
+  }
+
+  return contentful.fetchBroadcast(req.broadcast_id)
+    .then((broadcast) => {
+      if (req.timedout) {
+        return helpers.sendTimeoutResponse(res);
+      }
+      if (!broadcast) {
+        return helpers.sendResponse(res, 404, `Broadcast ${req.broadcast_id} not found.`);
+      }
+
+      logger.info(`loaded broadcast:${req.broadcast_id} for user:${req.user._id}`);
+      const saidNo = !(req.incoming_message && helpers.isYesResponse(req.incoming_message));
+      if (saidNo) {
+        logger.info(`user:${req.user._id} declined broadcast:${req.broadcast_id}`);
+        const replyMessage = helpers.addSenderPrefix(broadcast.fields.declinedMessage);
+        BotRequest.log(req, 'broadcast', null, 'prompt_declined', replyMessage);
+        // TODO: Promisify send_message and return 200 when we know message delivery successful.
+        mobilecommons.send_message(req.user.mobile, replyMessage);
+
+        return helpers.sendResponse(res, 200, replyMessage);
+      }
+
+      const broadcastCampaign = broadcast.fields.campaign.fields;
+      req.campaignId = broadcastCampaign.campaignId; // eslint-disable-line no-param-reassign
+
+      return next();
+    })
+    .catch(err => helpers.sendErrorResponse(res, err));
+});
+
+router.post('/', (req, res) => {
+  phoenix.fetchCampaign(req.campaignId)
+    .then((phoenixCampaign) => {
+      if (req.timedout) {
+        return helpers.sendTimeoutResponse(res);
+      }
+      // Temporary success for now.
+      return res.send(phoenixCampaign);
+    })
+    .catch(err => helpers.sendErrorResponse(res, err));
+});
+
+/**
  * Posts to chatbot route will find or create a Northstar User for the given req.body.phone.
  * Currently only supports Mobile Commons mData's.
  */
@@ -179,41 +229,6 @@ router.post('/', (req, res) => {
 
   const loadCampaign = new Promise((resolve, reject) => {
     logger.log('loadCampaign');
-    let currentBroadcast;
-
-    if (scope.broadcast_id) {
-      return contentful.fetchBroadcast(scope.broadcast_id)
-        .then((broadcast) => {
-          if (!broadcast) {
-            const err = new NotFoundError(`broadcast ${scope.broadcast_id} not found`);
-            return reject(err);
-          }
-          logger.debug(`found broadcast:${JSON.stringify(broadcast)}`);
-          currentBroadcast = broadcast;
-          logger.info(`loaded broadcast:${scope.broadcast_id}`);
-          const campaignId = currentBroadcast.fields.campaign.fields.campaignId;
-
-          return phoenix.fetchCampaign(campaignId);
-        })
-        .then((campaign) => {
-          if (!campaign.id) {
-            const err = new Error('broadcast campaign undefined');
-            return reject(err);
-          }
-
-          logger.info(`loaded campaign:${campaign.id}`);
-
-          scope.broadcast = currentBroadcast;
-          const saidNo = !(req.incoming_message && helpers.isYesResponse(req.incoming_message));
-          if (saidNo) {
-            const err = new Error('broadcast declined');
-            return reject(err);
-          }
-
-          return resolve(campaign);
-        })
-        .catch(err => reject(err));
-    }
 
     if (scope.keyword) {
       return contentful.fetchKeyword(scope.keyword)
