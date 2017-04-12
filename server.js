@@ -121,11 +121,6 @@ function startWorker(id) {
   const bodyParser = require('body-parser');
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: true }));
-  // TODO: I don't think we need this?
-  app.use(require('connect-multiparty')());
-  // Also unsure if this is used:
-  // const errorHandler = require('errorhandler');
-  // app.use(errorHandler());
 
   // current worker
   app.locals.currentWorker = id;
