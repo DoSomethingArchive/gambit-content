@@ -66,12 +66,12 @@ router.use((req, res, next) => {
         return helpers.sendTimeoutResponse(res);
       }
       if (phoenix.isClosedCampaign(phoenixCampaign)) {
-        throw new ClosedCampaignError(phoenixCampaign);
+        const err = new ClosedCampaignError(phoenixCampaign);
+        return helpers.sendResponse(res, 422, err.message);
       }
       req.campaign = phoenixCampaign; // eslint-disable-line no-param-reassign
       return next();
     })
-    .catch(ClosedCampaignError, err => helpers.sendResponse(res, 422, err.message))
     .catch(err => helpers.sendResponse(res, 500, err.message));
 });
 
