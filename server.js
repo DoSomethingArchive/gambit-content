@@ -111,15 +111,17 @@ function startWorker(id) {
   }
 
   app = express();
+  const timeout = require('connect-timeout');
+  const helpers = require('./lib/helpers');
+  const timeoutNumSeconds = helpers.getGambitTimeoutNumSeconds();
+  // Set respond to false so we can send our own 504 status.
+  // Note: Our routes will need to check for req.timedout.
+  // @see https://github.com/expressjs/timeout/tree/v1.8.0#api
+  app.use(timeout(`${timeoutNumSeconds}s`, { respond: false }));
 
   const bodyParser = require('body-parser');
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: true }));
-  // TODO: I don't think we need this?
-  app.use(require('connect-multiparty')());
-  // Also unsure if this is used:
-  const errorHandler = require('errorhandler');
-  app.use(errorHandler());
 
   // current worker
   app.locals.currentWorker = id;
