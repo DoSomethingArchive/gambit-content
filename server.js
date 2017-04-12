@@ -112,7 +112,8 @@ function startWorker(id) {
 
   app = express();
   const timeout = require('connect-timeout');
-  const timeoutNumSeconds = Number(process.env.GAMBIT_TIMEOUT_NUM_SECONDS) || 15;
+  const helpers = require('./lib/helpers');
+  const timeoutNumSeconds = helpers.getGambitTimeoutNumSeconds();
   // Set respond to false so we can send our own 504 status.
   // Note: Our routes will need to check for req.timedout.
   // @see https://github.com/expressjs/timeout/tree/v1.8.0#api
