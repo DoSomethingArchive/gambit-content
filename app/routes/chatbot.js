@@ -70,7 +70,7 @@ router.use((req, res, next) => {
 });
 
 /**
- * Check for required body parameters.
+ * Check for required body parameters and add/log helper variables.
  */
 router.use((req, res, next) => {
   if (!req.body.phone) {
@@ -82,7 +82,34 @@ router.use((req, res, next) => {
   /* eslint-disable no-param-reassign */
   req.incoming_message = req.body.args;
   req.incoming_image_url = req.body.mms_image_url;
+  req.broadcast_id = req.body.broadcast_id;
+  if (req.body.keyword) {
+    req.keyword = req.body.keyword.toLowerCase();
+  }
+  // TODO: Define this in app.locals to DRY with routes/signups?
+  req.oip = process.env.MOBILECOMMONS_OIP_CHATBOT;
   /* eslint-enable no-param-reassign */
+
+  const route = 'v1/chatbot';
+  stathat.postStat(`route: ${route}`);
+  // Compile body params for logging (Mobile Commons sends through more than we need to pay
+  // attention to an incoming req.body).
+  const incomingParams = {
+    profile_id: req.body.profile_id,
+    incoming_message: req.incoming_message,
+    incoming_image_url: req.incoming_image_url,
+    broadcast_id: req.broadcast_id,
+    keyword: req.keyword,
+  };
+  logger.info(`${route} post:${JSON.stringify(incomingParams)}`);
+  newrelic.addCustomParameters({
+    incomingImageUrl: req.incoming_image_url,
+    incomingMessage: req.incoming_message,
+    keyword: req.keyword,
+    mobileCommonsBroadcastId: req.broadcast_id,
+    mobileCommonsMessageId: req.body.message_id,
+    mobileCommonsProfileId: req.body.profile_id,
+  });
 
   return next();
 });
@@ -92,44 +119,7 @@ router.use((req, res, next) => {
  * Currently only supports Mobile Commons mData's.
  */
 router.post('/', (req, res) => {
-  const route = 'v1/chatbot';
-  stathat.postStat(`route: ${route}`);
-
   const scope = req;
-  // Currently only support mobilecommons.
-  scope.client = 'mobilecommons';
-  // TODO: Define this in app.locals to DRY with routes/signups
-  scope.oip = process.env.MOBILECOMMONS_OIP_CHATBOT;
-  scope.incoming_message = req.body.args;
-  scope.incoming_image_url = req.body.mms_image_url;
-
-  const logRequest = {
-    route,
-    profile_id: req.body.profile_id,
-    incoming_message: scope.incoming_message,
-    incoming_image_url: scope.incoming_image_url,
-  };
-
-  if (req.body.broadcast_id) {
-    scope.broadcast_id = req.body.broadcast_id;
-    logRequest.broadcast_id = scope.broadcast_id;
-  }
-
-  if (req.body.keyword) {
-    scope.keyword = req.body.keyword.toLowerCase();
-    logger.debug(`keyword:${scope.keyword}`);
-    logRequest.keyword = scope.keyword;
-  }
-
-  logger.info(logRequest);
-  newrelic.addCustomParameters({
-    incomingImageUrl: scope.incoming_image_url,
-    incomingMessage: scope.incoming_message,
-    keyword: scope.keyword,
-    mobileCommonsBroadcastId: scope.broadcast_id,
-    mobileCommonsMessageId: scope.body.message_id,
-    mobileCommonsProfileId: req.body.profile_id,
-  });
 
   const loadUser = new Promise((resolve, reject) => {
     logger.log('loadUser');
@@ -395,6 +385,8 @@ router.post('/', (req, res) => {
           return helpers.sendResponse(res, 200, logMsg);
         }
         const msg = helpers.addSenderPrefix(scope.response_message);
+        // TODO: This is failing with error message when using 'closed' as broadcast_id.
+        // Unhandled rejection ValidationError: bot_requests validation failed
         // Log the no response:
         BotRequest.log(req, 'broadcast', null, 'prompt_declined', msg);
         // Send broadcast declined using Mobile Commons Send Message API:
