@@ -24,6 +24,7 @@ const BotRequest = require('../models/BotRequest');
 const Signup = require('../models/Signup');
 const User = require('../models/User');
 
+const agentViewOip = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
 
 /**
  * Determines if given incomingMessage matches given Gambit command type.
@@ -44,6 +45,31 @@ function isCommand(incomingMessage, commandType) {
 }
 
 /**
+ * Check for required config variables.
+ */
+router.use((req, res, next) => {
+  const settings = [
+    'GAMBIT_CMD_MEMBER_SUPPORT',
+    'GAMBIT_CMD_REPORTBACK',
+    'MOBILECOMMONS_OIP_AGENTVIEW',
+    'MOBILECOMMONS_OIP_CHATBOT',
+  ];
+  let configured = true;
+  settings.forEach((configVar) => {
+    if (!process.env[configVar]) {
+      const msg = `undefined process.env.${configVar}`;
+      stathat.postStat(`error: ${msg}`);
+      logger.error(msg);
+      configured = false;
+    }
+  });
+  if (!configured) {
+    return res.sendStatus(500);
+  }
+  return next();
+});
+
+/**
  * Posts to chatbot route will find or create a Northstar User for the given req.body.phone.
  * Currently only supports Mobile Commons mData's.
  */
@@ -56,7 +82,6 @@ router.post('/', (req, res) => {
   scope.client = 'mobilecommons';
   // TODO: Define this in app.locals to DRY with routes/signups
   scope.oip = process.env.MOBILECOMMONS_OIP_CHATBOT;
-  const agentViewOip = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
   scope.incoming_message = req.body.args;
   scope.incoming_image_url = req.body.mms_image_url;
 
@@ -87,27 +112,6 @@ router.post('/', (req, res) => {
     mobileCommonsMessageId: scope.body.message_id,
     mobileCommonsProfileId: req.body.profile_id,
   });
-
-  let configured = true;
-  // Check for required config variables.
-  const settings = [
-    'GAMBIT_CMD_MEMBER_SUPPORT',
-    'GAMBIT_CMD_REPORTBACK',
-    'MOBILECOMMONS_OIP_AGENTVIEW',
-    'MOBILECOMMONS_OIP_CHATBOT',
-  ];
-  settings.forEach((configVar) => {
-    if (!process.env[configVar]) {
-      const msg = `undefined process.env.${configVar}`;
-      stathat.postStat(`error: ${msg}`);
-      logger.error(msg);
-      configured = false;
-    }
-  });
-
-  if (!configured) {
-    return res.sendStatus(500);
-  }
 
   if (!req.body.phone) {
     stathat.postStat('error: undefined req.body.phone');
