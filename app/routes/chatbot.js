@@ -70,6 +70,24 @@ router.use((req, res, next) => {
 });
 
 /**
+ * Check for required body parameters.
+ */
+router.use((req, res, next) => {
+  if (!req.body.phone) {
+    return helpers.sendUnproccessibleEntityResponse(res, 'Missing required phone.');
+  }
+  if (!(req.body.args || req.body.mms_image_url)) {
+    return helpers.sendUnproccessibleEntityResponse(res, 'Missing required args or mms_image_url.');
+  }
+  /* eslint-disable no-param-reassign */
+  req.incoming_message = req.body.args;
+  req.incoming_image_url = req.body.mms_image_url;
+  /* eslint-enable no-param-reassign */
+
+  return next();
+});
+
+/**
  * Posts to chatbot route will find or create a Northstar User for the given req.body.phone.
  * Currently only supports Mobile Commons mData's.
  */
@@ -112,12 +130,6 @@ router.post('/', (req, res) => {
     mobileCommonsMessageId: scope.body.message_id,
     mobileCommonsProfileId: req.body.profile_id,
   });
-
-  if (!req.body.phone) {
-    stathat.postStat('error: undefined req.body.phone');
-
-    return res.status(422).send({ error: 'phone is required.' });
-  }
 
   const loadUser = new Promise((resolve, reject) => {
     logger.log('loadUser');
