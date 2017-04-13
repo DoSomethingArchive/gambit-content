@@ -24,11 +24,11 @@ router.use((req, res, next) => {
   logger.debug(`signups post:${JSON.stringify(req.body)}`);
 
   if (!req.body.id) {
-    return helpers.sendResponse(res, 422, 'Missing required id.');
+    return helpers.sendUnproccessibleEntityResponse(res, 'Missing required id.');
   }
 
   if (!req.body.source) {
-    return helpers.sendResponse(res, 422, 'Missing required source.');
+    return helpers.sendUnproccessibleEntityResponse(res, 'Missing required source.');
   }
 
   const source = req.body.source;
@@ -67,7 +67,7 @@ router.use((req, res, next) => {
       }
       if (phoenix.isClosedCampaign(phoenixCampaign)) {
         const err = new ClosedCampaignError(phoenixCampaign);
-        return helpers.sendResponse(res, 422, err.message);
+        return helpers.sendUnproccessibleEntityResponse(res, err.message);
       }
       req.campaign = phoenixCampaign; // eslint-disable-line no-param-reassign
       return next();
@@ -86,11 +86,10 @@ router.use((req, res, next) => {
       }
       if (keywords.length === 0) {
         const msg = `Campaign ${req.campaign.id} does not have any Gambit keywords.`;
-        throw new UnprocessibleEntityError(msg);
+        return helpers.sendUnproccessibleEntityResponse(msg);
       }
       return next();
     })
-    .catch(UnprocessibleEntityError, err => helpers.sendResponse(res, 422, err.message))
     .catch(err => helpers.sendResponse(res, 500, err.message));
 });
 
@@ -104,12 +103,11 @@ router.use((req, res, next) => {
         return helpers.sendTimeoutResponse(res);
       }
       if (!user.mobile) {
-        throw new UnprocessibleEntityError('Missing required user.mobile.');
+        return helpers.sendUnproccessibleEntityResponse(res, 'Missing required user.mobile.');
       }
       req.user = user; // eslint-disable-line no-param-reassign
       return next();
     })
-    .catch(UnprocessibleEntityError, err => helpers.sendResponse(res, 422, err.message))
     .catch(err => helpers.sendResponse(res, 500, err.message));
 });
 
