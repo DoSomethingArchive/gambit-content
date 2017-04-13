@@ -6,7 +6,6 @@
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
 const logger = require('winston');
-const Promise = require('bluebird');
 
 const CampaignBotController = require('../controllers/CampaignBotController');
 const controller = new CampaignBotController();
@@ -18,7 +17,7 @@ const mobilecommons = require('../../lib/mobilecommons');
 const phoenix = require('../../lib/phoenix');
 const stathat = require('../../lib/stathat');
 const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
-const NotFoundError = require('../exceptions/NotFoundError');
+
 // Models.
 const BotRequest = require('../models/BotRequest');
 const Signup = require('../models/Signup');
@@ -45,13 +44,22 @@ function isCommand(incomingMessage, commandType) {
 }
 
 /**
- * Sends message to user and returns success response.
+ * Sends given message to user to end conversation.
  */
-function sendMessage(req, res, message) {
+function endConversationWithMessage(req, res, message) {
   // TODO: Promisify send_message and return 200 when we know message delivery successful.
   mobilecommons.send_message(req.user.mobile, message);
 
   return helpers.sendResponse(res, 200, message);
+}
+
+/**
+ * Renders message for given messageType, then sends it to end conversation.
+ */
+function endConversationWithMessageType(req, res, messageType) {
+  contentful.renderMessageForPhoenixCampaign(req.campaign, messageType)
+    .then(message => endConversationWithMessage(req, res, helpers.addSenderPrefix(message)))
+    .catch(err => helpers.sendErrorResponse(res, err));
 }
 
 /**
@@ -206,7 +214,7 @@ router.use((req, res, next) => {
         const replyMessage = helpers.addSenderPrefix(broadcast.fields.declinedMessage);
         BotRequest.log(req, 'broadcast', null, 'prompt_declined', replyMessage);
 
-        return sendMessage(req, res, replyMessage);
+        return endConversationWithMessage(req, res, replyMessage);
       }
 
       const broadcastCampaign = broadcast.fields.campaign.fields;
@@ -266,30 +274,39 @@ router.use((req, res, next) => {
 });
 
 /**
- * Load Campaign and the User's Campaign Status, and reply accordingly.
+ * Load Campaign from DS API.
+ */
+router.use((req, res, next) => {
+  phoenix.fetchCampaign(req.campaignId)
+    .then((campaign) => {
+      req.campaign = campaign; // eslint-disable-line no-param-reassign
+      newrelic.addCustomParameters({ campaignId: campaign.id });
+
+      if (req.timedout) {
+        return helpers.sendTimeoutResponse(res);
+      }
+
+      if (phoenix.isClosedCampaign(campaign)) {
+        const err = new ClosedCampaignError(campaign);
+        logger.warn(err.message);
+        stathat.postStat(err.message);
+
+        return endConversationWithMessageType(req, res, 'campaign_closed');
+      }
+
+      return next();
+    })
+    .catch(err => helpers.sendErrorResponse(res, err));
+});
+
+/**
+ * Find or create Signup for our User and Campaign, and reply accordingly.
  * TODO: Split this up into more middleware functions.
  */
 router.post('/', (req, res) => {
   const scope = req;
 
-  // Uses Bluebird for filtered catch later.
-  const loadCampaign = new Promise((resolve, reject) => {
-    phoenix.fetchCampaign(req.campaignId)
-      .then(campaign => resolve(campaign))
-      .catch(err => reject(err));
-  });
-
-  return loadCampaign
-    .then((campaign) => {
-      scope.campaign = campaign;
-      newrelic.addCustomParameters({ campaignId: campaign.id });
-
-      if (phoenix.isClosedCampaign(campaign)) {
-        throw new ClosedCampaignError(campaign);
-      }
-
-      return Signup.lookupCurrent(scope.user, scope.campaign);
-    })
+  return Signup.lookupCurrent(scope.user, scope.campaign)
     .then((currentSignup) => {
       if (currentSignup) {
         logger.debug(`Signup.lookupCurrent found signup:${currentSignup._id}`);
@@ -397,25 +414,6 @@ router.post('/', (req, res) => {
       return BotRequest.log(req, 'campaignbot', null, scope.msg_type, scope.response_message);
     })
     .then(botRequest => logger.debug(`created botRequest:${botRequest._id}`))
-    .catch(NotFoundError, (err) => {
-      logger.error(err.message);
-
-      return helpers.sendResponse(res, 404, err.message);
-    })
-    .catch(ClosedCampaignError, (err) => {
-      logger.warn(err.message);
-      stathat.postStat('campaign closed');
-
-      return contentful.renderMessageForPhoenixCampaign(scope.campaign, 'campaign_closed')
-        .then((responseMessage) => {
-          scope.response_message = helpers.addSenderPrefix(responseMessage);
-          // Send to Agent View for now until we get a Select Campaign menu up and running.
-          scope.user.postMobileCommonsProfileUpdate(agentViewOip, scope.response_message);
-
-          return helpers.sendResponse(res, 200, scope.response_message);
-        })
-        .catch(renderError => helpers.sendResponse(res, 500, renderError.message));
-    })
     .catch(err => helpers.sendErrorResponse(res, err));
 });
 
