@@ -416,35 +416,7 @@ router.post('/', (req, res) => {
         })
         .catch(renderError => helpers.sendResponse(res, 500, renderError.message));
     })
-    .catch(err => {
-      if (err.message === 'broadcast declined') {
-        logger.info('broadcast declined');
-        scope.response_message = scope.broadcast.fields.declinedMessage;
-        if (!scope.response_message) {
-          const logMsg = 'undefined broadcast.declinedMessage';
-          logger.error(logMsg);
-          stathat.postStat(`error: ${logMsg}`);
-
-          // Don't send an error code to Mobile Commons, which would trigger error message to User.
-          return helpers.sendResponse(res, 200, logMsg);
-        }
-        const msg = helpers.addSenderPrefix(scope.response_message);
-        // Log the no response:
-        BotRequest.log(req, 'broadcast', null, 'prompt_declined', msg);
-        // Send broadcast declined using Mobile Commons Send Message API:
-        mobilecommons.send_message(scope.user.mobile, msg);
-
-        return helpers.sendResponse(res, 200, msg);
-      }
-
-      stathat.postStat(err.message);
-      let errStatus = err.status;
-      if (!errStatus) {
-        errStatus = 500;
-      }
-
-      return helpers.sendResponse(res, errStatus, err.message);
-    });
+    .catch(err => helpers.sendErrorResponse(res, err));
 });
 
 module.exports = router;
