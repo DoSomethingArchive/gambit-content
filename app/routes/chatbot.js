@@ -45,6 +45,16 @@ function isCommand(incomingMessage, commandType) {
 }
 
 /**
+ * Sends message to user and returns success response.
+ */
+function sendMessage(req, res, message) {
+  // TODO: Promisify send_message and return 200 when we know message delivery successful.
+  mobilecommons.send_message(req.user.mobile, message);
+
+  return helpers.sendResponse(res, 200, message);
+}
+
+/**
  * Check for required config variables.
  */
 router.use((req, res, next) => {
@@ -171,99 +181,101 @@ router.use((req, res, next) => {
 });
 
 /**
- * Posts to chatbot route will find or create a Northstar User for the given req.body.phone.
- * Currently only supports Mobile Commons mData's.
+ * Check if the incoming request is a reply to a Broadcast, and set req.campaignId if User said yes.
+ * Send the Broadcast Declined message if they said no.
+ */
+router.use((req, res, next) => {
+  if (!req.broadcast_id) {
+    return next();
+  }
+
+  return contentful.fetchBroadcast(req.broadcast_id)
+    .then((broadcast) => {
+      if (req.timedout) {
+        return helpers.sendTimeoutResponse(res);
+      }
+      if (!broadcast) {
+        return helpers.sendResponse(res, 404, `Broadcast ${req.broadcast_id} not found.`);
+      }
+
+      logger.info(`loaded broadcast:${req.broadcast_id} for user:${req.user._id}`);
+      const saidNo = !(req.incoming_message && helpers.isYesResponse(req.incoming_message));
+      if (saidNo) {
+        logger.info(`user:${req.user._id} declined broadcast:${req.broadcast_id}`);
+
+        const replyMessage = helpers.addSenderPrefix(broadcast.fields.declinedMessage);
+        BotRequest.log(req, 'broadcast', null, 'prompt_declined', replyMessage);
+
+        return sendMessage(req, res, replyMessage);
+      }
+
+      const broadcastCampaign = broadcast.fields.campaign.fields;
+      req.campaignId = broadcastCampaign.campaignId; // eslint-disable-line no-param-reassign
+
+      return next();
+    })
+    .catch(err => helpers.sendErrorResponse(res, err));
+});
+
+/**
+ * If we don't have a campaignId yet and incoming request contains a keyword, set the campaignId.
+ */
+router.use((req, res, next) => {
+  if (req.campaignId || !req.keyword) {
+    return next();
+  }
+  return contentful.fetchKeyword(req.keyword)
+    .then((keyword) => {
+      if (req.timedout) {
+        return helpers.sendTimeoutResponse(res);
+      }
+      if (!keyword) {
+        return helpers.sendResponse(res, 404, `Keyword ${req.keyword} not found.`);
+      }
+      if (keyword.fields.environment !== process.env.NODE_ENV) {
+        const msg = `Keyword ${req.keyword} environment error: defined as ${keyword.environment} ` +
+                    `but sent to ${process.env.NODE_ENV}.`;
+        return helpers.sendResponse(res, 500, msg);
+      }
+      const keywordCampaign = keyword.fields.campaign.fields;
+      req.campaignId = keywordCampaign.campaignId; // eslint-disable-line no-param-reassign
+
+      return next();
+    })
+    .catch(err => helpers.sendErrorResponse(res, err));
+});
+
+/**
+ * If we still haven't set a campaignId, user already should be in a Campaign conversation.
+ */
+router.use((req, res, next) => {
+  if (req.campaignId) {
+    return next();
+  }
+
+  const campaignId = req.user.current_campaign;
+  logger.debug(`user.current_campaign:${campaignId}`);
+
+  if (!campaignId) {
+    return helpers.sendResponse(res, 500, 'user.current_campaign undefined');
+  }
+
+  req.campaignId = campaignId; // eslint-disable-line no-param-reassign
+
+  return next();
+});
+
+/**
+ * Load Campaign and the User's Campaign Status, and reply accordingly.
+ * TODO: Split this up into more middleware functions.
  */
 router.post('/', (req, res) => {
   const scope = req;
 
+  // Uses Bluebird for filtered catch later.
   const loadCampaign = new Promise((resolve, reject) => {
-    logger.log('loadCampaign');
-    let currentBroadcast;
-
-    if (scope.broadcast_id) {
-      return contentful.fetchBroadcast(scope.broadcast_id)
-        .then((broadcast) => {
-          if (!broadcast) {
-            const err = new NotFoundError(`broadcast ${scope.broadcast_id} not found`);
-            return reject(err);
-          }
-          logger.debug(`found broadcast:${JSON.stringify(broadcast)}`);
-          currentBroadcast = broadcast;
-          logger.info(`loaded broadcast:${scope.broadcast_id}`);
-          const campaignId = currentBroadcast.fields.campaign.fields.campaignId;
-
-          return phoenix.fetchCampaign(campaignId);
-        })
-        .then((campaign) => {
-          if (!campaign.id) {
-            const err = new Error('broadcast campaign undefined');
-            return reject(err);
-          }
-
-          logger.info(`loaded campaign:${campaign.id}`);
-
-          scope.broadcast = currentBroadcast;
-          const saidNo = !(req.incoming_message && helpers.isYesResponse(req.incoming_message));
-          if (saidNo) {
-            const err = new Error('broadcast declined');
-            return reject(err);
-          }
-
-          return resolve(campaign);
-        })
-        .catch(err => reject(err));
-    }
-
-    if (scope.keyword) {
-      return contentful.fetchKeyword(scope.keyword)
-        .then((keyword) => {
-          if (!keyword) {
-            const err = new NotFoundError(`keyword ${scope.keyword} not found`);
-            return reject(err);
-          }
-          logger.debug(`found keyword:${JSON.stringify(keyword.fields)}`);
-
-          if (keyword.fields.environment !== process.env.NODE_ENV) {
-            let msg = `mData misconfiguration: ${keyword.environment} keyword sent to`;
-            msg = `${msg} ${process.env.NODE_ENV}`;
-            const err = new Error(msg);
-            return reject(err);
-          }
-          const campaignId = keyword.fields.campaign.fields.campaignId;
-          logger.debug(`keyword campaignId:${campaignId}`);
-
-          return phoenix.fetchCampaign(campaignId);
-        })
-        .then((campaign) => {
-          if (!campaign.id) {
-            const msg = `Campaign not found for keyword '${scope.keyword}'.`;
-            const err = new NotFoundError(msg);
-            return reject(err);
-          }
-          logger.debug(`found campaign:${campaign.id}`);
-
-          return resolve(campaign);
-        })
-        .catch(err => reject(err));
-    }
-
-    // If we've made it this far, check for User's current_campaign.
-    logger.debug(`user.current_campaign:${req.user.current_campaign}`);
-    // TODO: Check if current_campaign is undefined before fetching.
-    return phoenix.fetchCampaign(req.user.current_campaign)
-      .then((campaign) => {
-        if (!campaign.id) {
-          // TODO: Send to non-existent start menu to select a campaign.
-          const user = req.user;
-          const msg = `User:${user._id} undefined current_campaign:${user.current_campaign}`;
-          const err = new NotFoundError(msg);
-
-          return reject(err);
-        }
-
-        return resolve(campaign);
-      })
+    phoenix.fetchCampaign(req.campaignId)
+      .then(campaign => resolve(campaign))
       .catch(err => reject(err));
   });
 
@@ -300,6 +312,7 @@ router.post('/', (req, res) => {
       }
 
       if (scope.broadcast_id) {
+        // TODO: Add new parameter for broadcast_id to Signup post instead of saving here.
         scope.signup.broadcast_id = scope.broadcast_id;
         scope.signup.save().catch((err) => logger.error('Error saving broadcast id', err.message));
       }
