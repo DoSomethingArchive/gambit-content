@@ -311,6 +311,7 @@ router.post('/', (req, res) => {
       }
 
       if (scope.broadcast_id) {
+        // TODO: Add new parameter for broadcast_id to Signup post instead of saving here.
         scope.signup.broadcast_id = scope.broadcast_id;
         scope.signup.save().catch((err) => logger.error('Error saving broadcast id', err.message));
       }
