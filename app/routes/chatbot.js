@@ -24,6 +24,7 @@ const BotRequest = require('../models/BotRequest');
 const Signup = require('../models/Signup');
 const User = require('../models/User');
 
+const agentViewOip = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
 
 /**
  * Determines if given incomingMessage matches given Gambit command type.
@@ -44,58 +45,26 @@ function isCommand(incomingMessage, commandType) {
 }
 
 /**
- * Posts to chatbot route will find or create a Northstar User for the given req.body.phone.
- * Currently only supports Mobile Commons mData's.
+ * Sends message to user and returns success response.
  */
-router.post('/', (req, res) => {
-  const route = 'v1/chatbot';
-  stathat.postStat(`route: ${route}`);
+function sendMessage(req, res, message) {
+  // TODO: Promisify send_message and return 200 when we know message delivery successful.
+  mobilecommons.send_message(req.user.mobile, message);
 
-  const scope = req;
-  // Currently only support mobilecommons.
-  scope.client = 'mobilecommons';
-  // TODO: Define this in app.locals to DRY with routes/signups
-  scope.oip = process.env.MOBILECOMMONS_OIP_CHATBOT;
-  const agentViewOip = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
-  scope.incoming_message = req.body.args;
-  scope.incoming_image_url = req.body.mms_image_url;
+  return helpers.sendResponse(res, 200, message);
+}
 
-  const logRequest = {
-    route,
-    profile_id: req.body.profile_id,
-    incoming_message: scope.incoming_message,
-    incoming_image_url: scope.incoming_image_url,
-  };
-
-  if (req.body.broadcast_id) {
-    scope.broadcast_id = req.body.broadcast_id;
-    logRequest.broadcast_id = scope.broadcast_id;
-  }
-
-  if (req.body.keyword) {
-    scope.keyword = req.body.keyword.toLowerCase();
-    logger.debug(`keyword:${scope.keyword}`);
-    logRequest.keyword = scope.keyword;
-  }
-
-  logger.info(logRequest);
-  newrelic.addCustomParameters({
-    incomingImageUrl: scope.incoming_image_url,
-    incomingMessage: scope.incoming_message,
-    keyword: scope.keyword,
-    mobileCommonsBroadcastId: scope.broadcast_id,
-    mobileCommonsMessageId: scope.body.message_id,
-    mobileCommonsProfileId: req.body.profile_id,
-  });
-
-  let configured = true;
-  // Check for required config variables.
+/**
+ * Check for required config variables.
+ */
+router.use((req, res, next) => {
   const settings = [
     'GAMBIT_CMD_MEMBER_SUPPORT',
     'GAMBIT_CMD_REPORTBACK',
     'MOBILECOMMONS_OIP_AGENTVIEW',
     'MOBILECOMMONS_OIP_CHATBOT',
   ];
+  let configured = true;
   settings.forEach((configVar) => {
     if (!process.env[configVar]) {
       const msg = `undefined process.env.${configVar}`;
@@ -104,129 +73,209 @@ router.post('/', (req, res) => {
       configured = false;
     }
   });
-
   if (!configured) {
     return res.sendStatus(500);
   }
+  return next();
+});
 
+/**
+ * Check for required body parameters and add/log helper variables.
+ */
+router.use((req, res, next) => {
   if (!req.body.phone) {
-    stathat.postStat('error: undefined req.body.phone');
-
-    return res.status(422).send({ error: 'phone is required.' });
+    return helpers.sendUnproccessibleEntityResponse(res, 'Missing required phone.');
+  }
+  if (!(req.body.keyword || req.body.args || req.body.mms_image_url)) {
+    const msg = 'Missing required keyword, args, or mms_image_url.';
+    return helpers.sendUnproccessibleEntityResponse(res, msg);
   }
 
-  const loadUser = new Promise((resolve, reject) => {
-    logger.log('loadUser');
+  /* eslint-disable no-param-reassign */
+  req.client = 'mobilecommons';
+  req.incoming_message = req.body.args;
+  req.incoming_image_url = req.body.mms_image_url;
+  req.broadcast_id = req.body.broadcast_id;
+  if (req.body.keyword) {
+    req.keyword = req.body.keyword.toLowerCase();
+  }
+  // TODO: Define this in app.locals to DRY with routes/signups?
+  req.oip = process.env.MOBILECOMMONS_OIP_CHATBOT;
+  /* eslint-enable no-param-reassign */
 
-    return User.lookup('mobile', req.body.phone)
-      .then(user => resolve(user))
-      .catch((err) => {
-        if (err && err.status === 404) {
-          logger.info(`User.lookup could not find mobile:${req.body.phone}`);
-
-          const user = User.post({
-            mobile: req.body.phone,
-            mobilecommons_id: req.profile_id,
-          });
-          return resolve(user);
-        }
-
-        return reject(err);
-      });
+  const route = 'v1/chatbot';
+  stathat.postStat(`route: ${route}`);
+  // Compile body params for logging (Mobile Commons sends through more than we need to pay
+  // attention to an incoming req.body).
+  const incomingParams = {
+    profile_id: req.body.profile_id,
+    incoming_message: req.incoming_message,
+    incoming_image_url: req.incoming_image_url,
+    broadcast_id: req.broadcast_id,
+    keyword: req.keyword,
+  };
+  logger.info(`${route} post:${JSON.stringify(incomingParams)}`);
+  newrelic.addCustomParameters({
+    incomingImageUrl: req.incoming_image_url,
+    incomingMessage: req.incoming_message,
+    keyword: req.keyword,
+    mobileCommonsBroadcastId: req.broadcast_id,
+    mobileCommonsMessageId: req.body.message_id,
+    mobileCommonsProfileId: req.body.profile_id,
   });
 
+  return next();
+});
+
+/**
+ * Check if DS User exists for given mobile number.
+ */
+router.use((req, res, next) => {
+  User.lookup('mobile', req.body.phone)
+    .then((user) => {
+      if (req.timedout) {
+        return helpers.sendTimeoutResponse(res);
+      }
+      req.user = user; // eslint-disable-line no-param-reassign
+      newrelic.addCustomParameters({ userId: user._id });
+
+      return next();
+    })
+    .catch((err) => {
+      if (err && err.status === 404) {
+        if (req.timedout) {
+          return helpers.sendTimeoutResponse(res);
+        }
+        logger.info(`User.lookup could not find mobile:${req.body.phone}`);
+
+        return next();
+      }
+
+      return helpers.sendErrorResponse(res, err);
+    });
+});
+
+/**
+ * Create DS User for given mobile number if we didn't find one.
+ */
+router.use((req, res, next) => {
+  if (req.user) {
+    return next();
+  }
+
+  const data = {
+    mobile: req.body.phone,
+    mobilecommons_id: req.profile_id,
+  };
+  return User.post(data)
+    .then((user) => {
+      if (req.timedout) {
+        return helpers.sendTimeoutResponse(res);
+      }
+      req.user = user; // eslint-disable-line no-param-reassign
+      newrelic.addCustomParameters({ userId: user._id });
+
+      return next();
+    })
+   .catch(err => helpers.sendErrorResponse(res, err));
+});
+
+/**
+ * Check if the incoming request is a reply to a Broadcast, and set req.campaignId if User said yes.
+ * Send the Broadcast Declined message if they said no.
+ */
+router.use((req, res, next) => {
+  if (!req.broadcast_id) {
+    return next();
+  }
+
+  return contentful.fetchBroadcast(req.broadcast_id)
+    .then((broadcast) => {
+      if (req.timedout) {
+        return helpers.sendTimeoutResponse(res);
+      }
+      if (!broadcast) {
+        return helpers.sendResponse(res, 404, `Broadcast ${req.broadcast_id} not found.`);
+      }
+
+      logger.info(`loaded broadcast:${req.broadcast_id} for user:${req.user._id}`);
+      const saidNo = !(req.incoming_message && helpers.isYesResponse(req.incoming_message));
+      if (saidNo) {
+        logger.info(`user:${req.user._id} declined broadcast:${req.broadcast_id}`);
+
+        const replyMessage = helpers.addSenderPrefix(broadcast.fields.declinedMessage);
+        BotRequest.log(req, 'broadcast', null, 'prompt_declined', replyMessage);
+
+        return sendMessage(req, res, replyMessage);
+      }
+
+      const broadcastCampaign = broadcast.fields.campaign.fields;
+      req.campaignId = broadcastCampaign.campaignId; // eslint-disable-line no-param-reassign
+
+      return next();
+    })
+    .catch(err => helpers.sendErrorResponse(res, err));
+});
+
+/**
+ * If we don't have a campaignId yet and incoming request contains a keyword, set the campaignId.
+ */
+router.use((req, res, next) => {
+  if (req.campaignId || !req.keyword) {
+    return next();
+  }
+  return contentful.fetchKeyword(req.keyword)
+    .then((keyword) => {
+      if (req.timedout) {
+        return helpers.sendTimeoutResponse(res);
+      }
+      if (!keyword) {
+        return helpers.sendResponse(res, 404, `Keyword ${req.keyword} not found.`);
+      }
+      if (keyword.fields.environment !== process.env.NODE_ENV) {
+        const msg = `Keyword ${req.keyword} environment error: defined as ${keyword.environment} ` +
+                    `but sent to ${process.env.NODE_ENV}.`;
+        return helpers.sendResponse(res, 500, msg);
+      }
+      const keywordCampaign = keyword.fields.campaign.fields;
+      req.campaignId = keywordCampaign.campaignId; // eslint-disable-line no-param-reassign
+
+      return next();
+    })
+    .catch(err => helpers.sendErrorResponse(res, err));
+});
+
+/**
+ * If we still haven't set a campaignId, user already should be in a Campaign conversation.
+ */
+router.use((req, res, next) => {
+  if (req.campaignId) {
+    return next();
+  }
+
+  const campaignId = req.user.current_campaign;
+  logger.debug(`user.current_campaign:${campaignId}`);
+
+  if (!campaignId) {
+    return helpers.sendResponse(res, 500, 'user.current_campaign undefined');
+  }
+
+  req.campaignId = campaignId; // eslint-disable-line no-param-reassign
+
+  return next();
+});
+
+/**
+ * Load Campaign and the User's Campaign Status, and reply accordingly.
+ * TODO: Split this up into more middleware functions.
+ */
+router.post('/', (req, res) => {
+  const scope = req;
+
+  // Uses Bluebird for filtered catch later.
   const loadCampaign = new Promise((resolve, reject) => {
-    logger.log('loadCampaign');
-    let currentBroadcast;
-
-    return loadUser
-      .then((user) => {
-        logger.info(`loaded user:${user._id}`);
-        scope.user = user;
-        newrelic.addCustomParameters({ userId: user._id });
-
-        if (scope.broadcast_id) {
-          return contentful.fetchBroadcast(scope.broadcast_id)
-            .then((broadcast) => {
-              if (!broadcast) {
-                const err = new NotFoundError(`broadcast ${scope.broadcast_id} not found`);
-                return reject(err);
-              }
-              logger.debug(`found broadcast:${JSON.stringify(broadcast)}`);
-              currentBroadcast = broadcast;
-              logger.info(`loaded broadcast:${scope.broadcast_id}`);
-              const campaignId = currentBroadcast.fields.campaign.fields.campaignId;
-
-              return phoenix.fetchCampaign(campaignId);
-            })
-            .then((campaign) => {
-              if (!campaign.id) {
-                const err = new Error('broadcast campaign undefined');
-                return reject(err);
-              }
-
-              logger.info(`loaded campaign:${campaign.id}`);
-
-              scope.broadcast = currentBroadcast;
-              const saidNo = !(req.incoming_message && helpers.isYesResponse(req.incoming_message));
-              if (saidNo) {
-                const err = new Error('broadcast declined');
-                return reject(err);
-              }
-
-              return resolve(campaign);
-            })
-            .catch(err => reject(err));
-        }
-
-        if (scope.keyword) {
-          return contentful.fetchKeyword(scope.keyword)
-            .then((keyword) => {
-              if (!keyword) {
-                const err = new NotFoundError(`keyword ${scope.keyword} not found`);
-                return reject(err);
-              }
-              logger.debug(`found keyword:${JSON.stringify(keyword.fields)}`);
-
-              if (keyword.fields.environment !== process.env.NODE_ENV) {
-                let msg = `mData misconfiguration: ${keyword.environment} keyword sent to`;
-                msg = `${msg} ${process.env.NODE_ENV}`;
-                const err = new Error(msg);
-                return reject(err);
-              }
-              const campaignId = keyword.fields.campaign.fields.campaignId;
-              logger.debug(`keyword campaignId:${campaignId}`);
-
-              return phoenix.fetchCampaign(campaignId);
-            })
-            .then((campaign) => {
-              if (!campaign.id) {
-                const msg = `Campaign not found for keyword '${scope.keyword}'.`;
-                const err = new NotFoundError(msg);
-                return reject(err);
-              }
-              logger.debug(`found campaign:${campaign.id}`);
-
-              return resolve(campaign);
-            })
-            .catch(err => reject(err));
-        }
-
-        // If we've made it this far, check for User's current_campaign.
-        logger.debug(`user.current_campaign:${user.current_campaign}`);
-        return phoenix.fetchCampaign(user.current_campaign)
-          .then((campaign) => {
-            if (!campaign.id) {
-              // TODO: Send to non-existent start menu to select a campaign.
-              const msg = `User ${user._id} current_campaign ${user.current_campaign} not found.`;
-              const err = new NotFoundError(msg);
-
-              return reject(err);
-            }
-
-            return resolve(campaign);
-          });
-      })
+    phoenix.fetchCampaign(req.campaignId)
+      .then(campaign => resolve(campaign))
       .catch(err => reject(err));
   });
 
@@ -263,6 +312,7 @@ router.post('/', (req, res) => {
       }
 
       if (scope.broadcast_id) {
+        // TODO: Add new parameter for broadcast_id to Signup post instead of saving here.
         scope.signup.broadcast_id = scope.broadcast_id;
         scope.signup.save().catch((err) => logger.error('Error saving broadcast id', err.message));
       }
@@ -366,35 +416,7 @@ router.post('/', (req, res) => {
         })
         .catch(renderError => helpers.sendResponse(res, 500, renderError.message));
     })
-    .catch(err => {
-      if (err.message === 'broadcast declined') {
-        logger.info('broadcast declined');
-        scope.response_message = scope.broadcast.fields.declinedMessage;
-        if (!scope.response_message) {
-          const logMsg = 'undefined broadcast.declinedMessage';
-          logger.error(logMsg);
-          stathat.postStat(`error: ${logMsg}`);
-
-          // Don't send an error code to Mobile Commons, which would trigger error message to User.
-          return helpers.sendResponse(res, 200, logMsg);
-        }
-        const msg = helpers.addSenderPrefix(scope.response_message);
-        // Log the no response:
-        BotRequest.log(req, 'broadcast', null, 'prompt_declined', msg);
-        // Send broadcast declined using Mobile Commons Send Message API:
-        mobilecommons.send_message(scope.user.mobile, msg);
-
-        return helpers.sendResponse(res, 200, msg);
-      }
-
-      stathat.postStat(err.message);
-      let errStatus = err.status;
-      if (!errStatus) {
-        errStatus = 500;
-      }
-
-      return helpers.sendResponse(res, errStatus, err.message);
-    });
+    .catch(err => helpers.sendErrorResponse(res, err));
 });
 
 module.exports = router;

@@ -3,16 +3,12 @@
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
 const logger = require('winston');
-// Requiring Bluebird overrides native promises,
-// which we need for our exception handling logic in this endpoint.
-const Promise = require('bluebird'); // eslint-disable-line no-unused-vars
 
 const contentful = require('../../lib/contentful');
 const helpers = require('../../lib/helpers');
 const phoenix = require('../../lib/phoenix');
 const stathat = require('../../lib/stathat');
 const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
-const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
 const Signup = require('../models/Signup');
 const User = require('../models/User');
 
@@ -24,11 +20,11 @@ router.use((req, res, next) => {
   logger.debug(`signups post:${JSON.stringify(req.body)}`);
 
   if (!req.body.id) {
-    return helpers.sendResponse(res, 422, 'Missing required id.');
+    return helpers.sendUnproccessibleEntityResponse(res, 'Missing required id.');
   }
 
   if (!req.body.source) {
-    return helpers.sendResponse(res, 422, 'Missing required source.');
+    return helpers.sendUnproccessibleEntityResponse(res, 'Missing required source.');
   }
 
   const source = req.body.source;
@@ -67,7 +63,7 @@ router.use((req, res, next) => {
       }
       if (phoenix.isClosedCampaign(phoenixCampaign)) {
         const err = new ClosedCampaignError(phoenixCampaign);
-        return helpers.sendResponse(res, 422, err.message);
+        return helpers.sendUnproccessibleEntityResponse(res, err.message);
       }
       req.campaign = phoenixCampaign; // eslint-disable-line no-param-reassign
       return next();
@@ -86,11 +82,10 @@ router.use((req, res, next) => {
       }
       if (keywords.length === 0) {
         const msg = `Campaign ${req.campaign.id} does not have any Gambit keywords.`;
-        throw new UnprocessibleEntityError(msg);
+        return helpers.sendUnproccessibleEntityResponse(msg);
       }
       return next();
     })
-    .catch(UnprocessibleEntityError, err => helpers.sendResponse(res, 422, err.message))
     .catch(err => helpers.sendResponse(res, 500, err.message));
 });
 
@@ -104,12 +99,11 @@ router.use((req, res, next) => {
         return helpers.sendTimeoutResponse(res);
       }
       if (!user.mobile) {
-        throw new UnprocessibleEntityError('Missing required user.mobile.');
+        return helpers.sendUnproccessibleEntityResponse(res, 'Missing required user.mobile.');
       }
       req.user = user; // eslint-disable-line no-param-reassign
       return next();
     })
-    .catch(UnprocessibleEntityError, err => helpers.sendResponse(res, 422, err.message))
     .catch(err => helpers.sendResponse(res, 500, err.message));
 });
 
