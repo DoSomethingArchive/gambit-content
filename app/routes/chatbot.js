@@ -45,6 +45,16 @@ function isCommand(incomingMessage, commandType) {
 }
 
 /**
+ * Sends message to user and returns success response.
+ */
+function sendMessage(req, res, message) {
+  // TODO: Promisify send_message and return 200 when we know message delivery successful.
+  mobilecommons.send_message(req.user.mobile, message);
+
+  return helpers.sendResponse(res, 200, message);
+}
+
+/**
  * Check for required config variables.
  */
 router.use((req, res, next) => {
@@ -192,12 +202,11 @@ router.use((req, res, next) => {
       const saidNo = !(req.incoming_message && helpers.isYesResponse(req.incoming_message));
       if (saidNo) {
         logger.info(`user:${req.user._id} declined broadcast:${req.broadcast_id}`);
+
         const replyMessage = helpers.addSenderPrefix(broadcast.fields.declinedMessage);
         BotRequest.log(req, 'broadcast', null, 'prompt_declined', replyMessage);
-        // TODO: Promisify send_message and return 200 when we know message delivery successful.
-        mobilecommons.send_message(req.user.mobile, replyMessage);
 
-        return helpers.sendResponse(res, 200, replyMessage);
+        return sendMessage(req, res, replyMessage);
       }
 
       const broadcastCampaign = broadcast.fields.campaign.fields;
@@ -237,44 +246,36 @@ router.use((req, res, next) => {
 });
 
 /**
- * Load Campaign from DS API.
+ * If we still haven't set a campaignId, user already should be in a Campaign conversation.
  */
-router.post('/', (req, res) => {
-  phoenix.fetchCampaign(req.campaignId)
-    .then((phoenixCampaign) => {
-      if (req.timedout) {
-        return helpers.sendTimeoutResponse(res);
-      }
-      // Temporary success for now.
-      return res.send(phoenixCampaign);
-    })
-    .catch(err => helpers.sendErrorResponse(res, err));
+router.use((req, res, next) => {
+  if (req.campaignId) {
+    return next();
+  }
+
+  const campaignId = req.user.current_campaign;
+  logger.debug(`user.current_campaign:${campaignId}`);
+
+  if (!campaignId) {
+    return helpers.sendResponse(res, 500, 'user.current_campaign undefined');
+  }
+
+  req.campaignId = campaignId; // eslint-disable-line no-param-reassign
+
+  return next();
 });
 
 /**
- * Posts to chatbot route will find or create a Northstar User for the given req.body.phone.
- * Currently only supports Mobile Commons mData's.
+ * Load Campaign and the User's Campaign Status, and reply accordingly.
+ * TODO: Split this up into more middleware functions.
  */
 router.post('/', (req, res) => {
   const scope = req;
 
+  // Uses Bluebird for filtered catch later.
   const loadCampaign = new Promise((resolve, reject) => {
-    // If we've made it this far, check for User's current_campaign.
-    logger.debug(`user.current_campaign:${req.user.current_campaign}`);
-    // TODO: Check if current_campaign is undefined before fetching.
-    return phoenix.fetchCampaign(req.user.current_campaign)
-      .then((campaign) => {
-        if (!campaign.id) {
-          // TODO: Send to non-existent start menu to select a campaign.
-          const user = req.user;
-          const msg = `User:${user._id} undefined current_campaign:${user.current_campaign}`;
-          const err = new NotFoundError(msg);
-
-          return reject(err);
-        }
-
-        return resolve(campaign);
-      })
+    phoenix.fetchCampaign(req.campaignId)
+      .then(campaign => resolve(campaign))
       .catch(err => reject(err));
   });
 
