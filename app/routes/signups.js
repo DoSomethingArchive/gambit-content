@@ -3,16 +3,12 @@
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
 const logger = require('winston');
-// Requiring Bluebird overrides native promises,
-// which we need for our exception handling logic in this endpoint.
-const Promise = require('bluebird'); // eslint-disable-line no-unused-vars
 
 const contentful = require('../../lib/contentful');
 const helpers = require('../../lib/helpers');
 const phoenix = require('../../lib/phoenix');
 const stathat = require('../../lib/stathat');
 const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
-const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
 const Signup = require('../models/Signup');
 const User = require('../models/User');
 
