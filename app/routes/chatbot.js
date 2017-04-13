@@ -24,6 +24,7 @@ const BotRequest = require('../models/BotRequest');
 const Signup = require('../models/Signup');
 const User = require('../models/User');
 
+const agentViewOip = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
 
 /**
  * Determines if given incomingMessage matches given Gambit command type.
@@ -44,58 +45,16 @@ function isCommand(incomingMessage, commandType) {
 }
 
 /**
- * Posts to chatbot route will find or create a Northstar User for the given req.body.phone.
- * Currently only supports Mobile Commons mData's.
+ * Check for required config variables.
  */
-router.post('/', (req, res) => {
-  const route = 'v1/chatbot';
-  stathat.postStat(`route: ${route}`);
-
-  const scope = req;
-  // Currently only support mobilecommons.
-  scope.client = 'mobilecommons';
-  // TODO: Define this in app.locals to DRY with routes/signups
-  scope.oip = process.env.MOBILECOMMONS_OIP_CHATBOT;
-  const agentViewOip = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
-  scope.incoming_message = req.body.args;
-  scope.incoming_image_url = req.body.mms_image_url;
-
-  const logRequest = {
-    route,
-    profile_id: req.body.profile_id,
-    incoming_message: scope.incoming_message,
-    incoming_image_url: scope.incoming_image_url,
-  };
-
-  if (req.body.broadcast_id) {
-    scope.broadcast_id = req.body.broadcast_id;
-    logRequest.broadcast_id = scope.broadcast_id;
-  }
-
-  if (req.body.keyword) {
-    scope.keyword = req.body.keyword.toLowerCase();
-    logger.debug(`keyword:${scope.keyword}`);
-    logRequest.keyword = scope.keyword;
-  }
-
-  logger.info(logRequest);
-  newrelic.addCustomParameters({
-    incomingImageUrl: scope.incoming_image_url,
-    incomingMessage: scope.incoming_message,
-    keyword: scope.keyword,
-    mobileCommonsBroadcastId: scope.broadcast_id,
-    mobileCommonsMessageId: scope.body.message_id,
-    mobileCommonsProfileId: req.body.profile_id,
-  });
-
-  let configured = true;
-  // Check for required config variables.
+router.use((req, res, next) => {
   const settings = [
     'GAMBIT_CMD_MEMBER_SUPPORT',
     'GAMBIT_CMD_REPORTBACK',
     'MOBILECOMMONS_OIP_AGENTVIEW',
     'MOBILECOMMONS_OIP_CHATBOT',
   ];
+  let configured = true;
   settings.forEach((configVar) => {
     if (!process.env[configVar]) {
       const msg = `undefined process.env.${configVar}`;
@@ -104,128 +63,206 @@ router.post('/', (req, res) => {
       configured = false;
     }
   });
-
   if (!configured) {
     return res.sendStatus(500);
   }
+  return next();
+});
 
+/**
+ * Check for required body parameters and add/log helper variables.
+ */
+router.use((req, res, next) => {
   if (!req.body.phone) {
-    stathat.postStat('error: undefined req.body.phone');
-
-    return res.status(422).send({ error: 'phone is required.' });
+    return helpers.sendUnproccessibleEntityResponse(res, 'Missing required phone.');
+  }
+  if (!(req.body.keyword || req.body.args || req.body.mms_image_url)) {
+    const msg = 'Missing required keyword, args, or mms_image_url.';
+    return helpers.sendUnproccessibleEntityResponse(res, msg);
   }
 
-  const loadUser = new Promise((resolve, reject) => {
-    logger.log('loadUser');
+  /* eslint-disable no-param-reassign */
+  req.client = 'mobilecommons';
+  req.incoming_message = req.body.args;
+  req.incoming_image_url = req.body.mms_image_url;
+  req.broadcast_id = req.body.broadcast_id;
+  if (req.body.keyword) {
+    req.keyword = req.body.keyword.toLowerCase();
+  }
+  // TODO: Define this in app.locals to DRY with routes/signups?
+  req.oip = process.env.MOBILECOMMONS_OIP_CHATBOT;
+  /* eslint-enable no-param-reassign */
 
-    return User.lookup('mobile', req.body.phone)
-      .then(user => resolve(user))
-      .catch((err) => {
-        if (err && err.status === 404) {
-          logger.info(`User.lookup could not find mobile:${req.body.phone}`);
-
-          const user = User.post({
-            mobile: req.body.phone,
-            mobilecommons_id: req.profile_id,
-          });
-          return resolve(user);
-        }
-
-        return reject(err);
-      });
+  const route = 'v1/chatbot';
+  stathat.postStat(`route: ${route}`);
+  // Compile body params for logging (Mobile Commons sends through more than we need to pay
+  // attention to an incoming req.body).
+  const incomingParams = {
+    profile_id: req.body.profile_id,
+    incoming_message: req.incoming_message,
+    incoming_image_url: req.incoming_image_url,
+    broadcast_id: req.broadcast_id,
+    keyword: req.keyword,
+  };
+  logger.info(`${route} post:${JSON.stringify(incomingParams)}`);
+  newrelic.addCustomParameters({
+    incomingImageUrl: req.incoming_image_url,
+    incomingMessage: req.incoming_message,
+    keyword: req.keyword,
+    mobileCommonsBroadcastId: req.broadcast_id,
+    mobileCommonsMessageId: req.body.message_id,
+    mobileCommonsProfileId: req.body.profile_id,
   });
+
+  return next();
+});
+
+/**
+ * Check if DS User exists for given mobile number.
+ */
+router.use((req, res, next) => {
+  User.lookup('mobile', req.body.phone)
+    .then((user) => {
+      if (req.timedout) {
+        return helpers.sendTimeoutResponse(res);
+      }
+      req.user = user; // eslint-disable-line no-param-reassign
+      newrelic.addCustomParameters({ userId: user._id });
+
+      return next();
+    })
+    .catch((err) => {
+      if (err && err.status === 404) {
+        if (req.timedout) {
+          return helpers.sendTimeoutResponse(res);
+        }
+        logger.info(`User.lookup could not find mobile:${req.body.phone}`);
+
+        return next();
+      }
+
+      return helpers.sendErrorResponse(res, err);
+    });
+});
+
+/**
+ * Create DS User for given mobile number if we didn't find one.
+ */
+router.use((req, res, next) => {
+  if (req.user) {
+    return next();
+  }
+
+  const data = {
+    mobile: req.body.phone,
+    mobilecommons_id: req.profile_id,
+  };
+  return User.post(data)
+    .then((user) => {
+      if (req.timedout) {
+        return helpers.sendTimeoutResponse(res);
+      }
+      req.user = user; // eslint-disable-line no-param-reassign
+      newrelic.addCustomParameters({ userId: user._id });
+
+      return next();
+    })
+   .catch(err => helpers.sendErrorResponse(res, err));
+});
+
+/**
+ * Posts to chatbot route will find or create a Northstar User for the given req.body.phone.
+ * Currently only supports Mobile Commons mData's.
+ */
+router.post('/', (req, res) => {
+  const scope = req;
 
   const loadCampaign = new Promise((resolve, reject) => {
     logger.log('loadCampaign');
     let currentBroadcast;
 
-    return loadUser
-      .then((user) => {
-        logger.info(`loaded user:${user._id}`);
-        scope.user = user;
-        newrelic.addCustomParameters({ userId: user._id });
+    if (scope.broadcast_id) {
+      return contentful.fetchBroadcast(scope.broadcast_id)
+        .then((broadcast) => {
+          if (!broadcast) {
+            const err = new NotFoundError(`broadcast ${scope.broadcast_id} not found`);
+            return reject(err);
+          }
+          logger.debug(`found broadcast:${JSON.stringify(broadcast)}`);
+          currentBroadcast = broadcast;
+          logger.info(`loaded broadcast:${scope.broadcast_id}`);
+          const campaignId = currentBroadcast.fields.campaign.fields.campaignId;
 
-        if (scope.broadcast_id) {
-          return contentful.fetchBroadcast(scope.broadcast_id)
-            .then((broadcast) => {
-              if (!broadcast) {
-                const err = new NotFoundError(`broadcast ${scope.broadcast_id} not found`);
-                return reject(err);
-              }
-              logger.debug(`found broadcast:${JSON.stringify(broadcast)}`);
-              currentBroadcast = broadcast;
-              logger.info(`loaded broadcast:${scope.broadcast_id}`);
-              const campaignId = currentBroadcast.fields.campaign.fields.campaignId;
+          return phoenix.fetchCampaign(campaignId);
+        })
+        .then((campaign) => {
+          if (!campaign.id) {
+            const err = new Error('broadcast campaign undefined');
+            return reject(err);
+          }
 
-              return phoenix.fetchCampaign(campaignId);
-            })
-            .then((campaign) => {
-              if (!campaign.id) {
-                const err = new Error('broadcast campaign undefined');
-                return reject(err);
-              }
+          logger.info(`loaded campaign:${campaign.id}`);
 
-              logger.info(`loaded campaign:${campaign.id}`);
+          scope.broadcast = currentBroadcast;
+          const saidNo = !(req.incoming_message && helpers.isYesResponse(req.incoming_message));
+          if (saidNo) {
+            const err = new Error('broadcast declined');
+            return reject(err);
+          }
 
-              scope.broadcast = currentBroadcast;
-              const saidNo = !(req.incoming_message && helpers.isYesResponse(req.incoming_message));
-              if (saidNo) {
-                const err = new Error('broadcast declined');
-                return reject(err);
-              }
+          return resolve(campaign);
+        })
+        .catch(err => reject(err));
+    }
 
-              return resolve(campaign);
-            })
-            .catch(err => reject(err));
+    if (scope.keyword) {
+      return contentful.fetchKeyword(scope.keyword)
+        .then((keyword) => {
+          if (!keyword) {
+            const err = new NotFoundError(`keyword ${scope.keyword} not found`);
+            return reject(err);
+          }
+          logger.debug(`found keyword:${JSON.stringify(keyword.fields)}`);
+
+          if (keyword.fields.environment !== process.env.NODE_ENV) {
+            let msg = `mData misconfiguration: ${keyword.environment} keyword sent to`;
+            msg = `${msg} ${process.env.NODE_ENV}`;
+            const err = new Error(msg);
+            return reject(err);
+          }
+          const campaignId = keyword.fields.campaign.fields.campaignId;
+          logger.debug(`keyword campaignId:${campaignId}`);
+
+          return phoenix.fetchCampaign(campaignId);
+        })
+        .then((campaign) => {
+          if (!campaign.id) {
+            const msg = `Campaign not found for keyword '${scope.keyword}'.`;
+            const err = new NotFoundError(msg);
+            return reject(err);
+          }
+          logger.debug(`found campaign:${campaign.id}`);
+
+          return resolve(campaign);
+        })
+        .catch(err => reject(err));
+    }
+
+    // If we've made it this far, check for User's current_campaign.
+    logger.debug(`user.current_campaign:${req.user.current_campaign}`);
+    // TODO: Check if current_campaign is undefined before fetching.
+    return phoenix.fetchCampaign(req.user.current_campaign)
+      .then((campaign) => {
+        if (!campaign.id) {
+          // TODO: Send to non-existent start menu to select a campaign.
+          const user = req.user;
+          const msg = `User:${user._id} undefined current_campaign:${user.current_campaign}`;
+          const err = new NotFoundError(msg);
+
+          return reject(err);
         }
 
-        if (scope.keyword) {
-          return contentful.fetchKeyword(scope.keyword)
-            .then((keyword) => {
-              if (!keyword) {
-                const err = new NotFoundError(`keyword ${scope.keyword} not found`);
-                return reject(err);
-              }
-              logger.debug(`found keyword:${JSON.stringify(keyword.fields)}`);
-
-              if (keyword.fields.environment !== process.env.NODE_ENV) {
-                let msg = `mData misconfiguration: ${keyword.environment} keyword sent to`;
-                msg = `${msg} ${process.env.NODE_ENV}`;
-                const err = new Error(msg);
-                return reject(err);
-              }
-              const campaignId = keyword.fields.campaign.fields.campaignId;
-              logger.debug(`keyword campaignId:${campaignId}`);
-
-              return phoenix.fetchCampaign(campaignId);
-            })
-            .then((campaign) => {
-              if (!campaign.id) {
-                const msg = `Campaign not found for keyword '${scope.keyword}'.`;
-                const err = new NotFoundError(msg);
-                return reject(err);
-              }
-              logger.debug(`found campaign:${campaign.id}`);
-
-              return resolve(campaign);
-            })
-            .catch(err => reject(err));
-        }
-
-        // If we've made it this far, check for User's current_campaign.
-        logger.debug(`user.current_campaign:${user.current_campaign}`);
-        return phoenix.fetchCampaign(user.current_campaign)
-          .then((campaign) => {
-            if (!campaign.id) {
-              // TODO: Send to non-existent start menu to select a campaign.
-              const msg = `User ${user._id} current_campaign ${user.current_campaign} not found.`;
-              const err = new NotFoundError(msg);
-
-              return reject(err);
-            }
-
-            return resolve(campaign);
-          });
+        return resolve(campaign);
       })
       .catch(err => reject(err));
   });
