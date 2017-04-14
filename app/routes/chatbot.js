@@ -438,22 +438,29 @@ router.post('/', (req, res, next) => {
     return endConversationWithMessageType(req, res, 'member_support');
   }
 
-  // If this is a reportback conversation, skip to our next middleware.
-  if (req.signup.draft_reportback_submission || isCommand(req.incoming_message, 'reportback')) {
+  // If user is reporting back, skip to next.
+  if (req.signup.draft_reportback_submission) {
     return next();
   }
 
+  if (isCommand(req.incoming_message, 'reportback')) {
+    return req.signup.createDraftReportbackSubmission()
+      .then(() => continueConversationWithMessageType(req, res, 'ask_quantity'))
+      .catch(err => helpers.sendErrorResponse(res, err));
+  }
+
+  const isNewConversation = req.keyword || req.broadcast_id;
+
   // If member has completed this campaign:
   if (req.signup.reportback) {
-    // And it's the beginning of a conversation:
-    if (req.keyword || req.broadcast_id) {
+    if (isNewConversation) {
       return continueConversationWithMessageType(req, res, 'menu_completed');
     }
-    // Otherwise member didn't text back Reportback or Member Support commands.
+    // Otherwise member didn't text back a Reportback or Member Support command.
     return continueConversationWithMessageType(req, res, 'invalid_cmd_completed');
   }
 
-  if (req.keyword || req.broadcast_id) {
+  if (isNewConversation) {
     return continueConversationWithMessageType(req, res, 'menu_signedup_gambit');
   }
 
@@ -464,22 +471,11 @@ router.post('/', (req, res, next) => {
  * Find message type to reply with based on current Reportback Submission and data submitted in req.
  */
 router.post('/', (req, res) => {
-  if (req.signup.draft_reportback_submission) {
-    logger.debug(`draft_reportback_submission:${req.signup.draft_reportback_submission._id}`);
+  logger.debug(`draft_reportback_submission:${req.signup.draft_reportback_submission._id}`);
 
-    return controller.continueReportbackSubmission(req)
-      .then((messageType) => continueConversationWithMessageType(req, res, messageType))
-      .catch(err => helpers.sendErrorResponse(res, err));
-  }
-
-  if (isCommand(req.incoming_message, 'reportback')) {
-    return req.signup.createDraftReportbackSubmission()
-      .then(() => continueConversationWithMessageType(req, res, 'ask_quantity'))
-      .catch(err => helpers.sendErrorResponse(res, err));
-  }
-
-  // This should never get called, but in case it does:
-  return helpers.sendResponse(res, 500, 'I don\'t know how to respond :(');
+  return controller.continueReportbackSubmission(req)
+    .then((messageType) => continueConversationWithMessageType(req, res, messageType))
+    .catch(err => helpers.sendErrorResponse(res, err));
 });
 
 module.exports = router;
