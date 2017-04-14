@@ -41,30 +41,80 @@ function isCommand(incomingMessage, commandType) {
 }
 
 /**
+ * Renders message for given message type and request.
+ */
+function renderMessageForMessageType(req, messageType) {
+  newrelic.addCustomParameters({ gambitResponseMessageType: messageType });
+
+  let messagePrefix = '';
+  let renderMessageType = messageType;
+
+  // Check if we're replying to inform user they've submitted invalid values for text fields.
+  // If they did, ask for field again, setting messagePrefix to prepend to the rendered ask message.
+  const invalidTextSentMessage = 'Sorry, I didn\'t understand that.\n\n';
+  if (messageType === 'invalid_caption') {
+    renderMessageType = 'ask_caption';
+    messagePrefix = invalidTextSentMessage;
+  } else if (messageType === 'invalid_why_participated') {
+    renderMessageType = 'ask_caption';
+    messagePrefix = invalidTextSentMessage;
+  }
+
+  return contentful.renderMessageForPhoenixCampaign(req.campaign, renderMessageType)
+    .then((renderedMessage) => {
+      let message = `${messagePrefix}${renderedMessage}`;
+
+      // Possible for edge cases like closed campaign messages.
+      if (!req.signup) {
+        return helpers.addSenderPrefix(message);
+      }
+
+      let quantity = req.signup.total_quantity_submitted;
+      if (req.signup.draft_reportback_submission) {
+        quantity = req.signup.draft_reportback_submission.quantity;
+      }
+      if (quantity) {
+        message = message.replace(/{{quantity}}/gi, quantity);
+      }
+
+      const revisiting = req.keyword && req.signup.draft_reportback_submission;
+      if (revisiting) {
+        const continuingMessage = 'Picking up where you left off on';
+        const campaignTitle = req.campaign.title;
+        message = `${continuingMessage} ${campaignTitle}...\n\n${message}`;
+      }
+
+      return helpers.addSenderPrefix(message);
+    })
+    .catch(err => err);
+}
+
+/**
  * Renders message for given messageType, sends it to continue conversation for current campaign.
  * Assumes we have a loaded req.user and req.campaign.
  */
 function continueConversationWithMessageType(req, res, messageType) {
-  const scope = req;
+  let replyMessage;
 
-  return contentful.renderMessageForPhoenixCampaign(req.campaign, messageType)
+  return renderMessageForMessageType(req, messageType)
     .then((message) => {
-      scope.replyMessage = helpers.addSenderPrefix(message);
-      // Store current campaign for subsequent messages.
-      scope.user.current_campaign = req.campaignId;
+      replyMessage = message;
 
-      return scope.user.save();
+      // Store current campaign to continue conversation in subsequent messages.
+      req.user.current_campaign = req.campaignId; // eslint-disable-line no-param-reassign
+
+      return req.user.save();
     })
     .then(() => {
-      logger.debug(`saved user:${req.user._id} current_campaign:${req.campaignId}`);
+      logger.verbose(`saved user:${req.user._id} current_campaign:${req.campaignId}`);
 
       // todo: Promisify this POST request and only send back Gambit 200 on profile_update success.
-      const oip = process.env.MOBILECOMMONS_OIP_CHATBOT;
-      req.user.postMobileCommonsProfileUpdate(oip, scope.replyMessage);
-      stathat.postStat(`campaignbot:${messageType}`);
-      BotRequest.log(req, 'campaignbot', messageType, scope.replyMessage);
+      req.user.postMobileCommonsProfileUpdate(process.env.MOBILECOMMONS_OIP_CHATBOT, replyMessage);
 
-      return helpers.sendResponse(res, 200, scope.replyMessage);
+      stathat.postStat(`campaignbot:${messageType}`);
+      BotRequest.log(req, 'campaignbot', messageType, replyMessage);
+
+      return helpers.sendResponse(res, 200, replyMessage);
     })
     .catch(err => helpers.sendErrorResponse(res, err));
 }
@@ -74,8 +124,7 @@ function continueConversationWithMessageType(req, res, messageType) {
  */
 function endConversationWithMessage(req, res, message) {
   // todo: Promisify this POST request and only send back Gambit 200 on profile_update success.
-  const oip = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
-  req.user.postMobileCommonsProfileUpdate(oip, message);
+  req.user.postMobileCommonsProfileUpdate(process.env.MOBILECOMMONS_OIP_AGENTVIEW, message);
 
   return helpers.sendResponse(res, 200, message);
 }
@@ -84,12 +133,11 @@ function endConversationWithMessage(req, res, message) {
  * Renders message for given messageType, then sends it to end conversation.
  */
 function endConversationWithMessageType(req, res, messageType) {
-  contentful.renderMessageForPhoenixCampaign(req.campaign, messageType)
+  renderMessageForMessageType(req, messageType)
     .then((message) => {
-      const replyMessage = helpers.addSenderPrefix(message);
-      BotRequest.log(req, 'campaignbot', messageType, replyMessage);
+      BotRequest.log(req, 'campaignbot', messageType, message);
 
-      return endConversationWithMessage(req, res, replyMessage);
+      return endConversationWithMessage(req, res, message);
     })
     .catch(err => helpers.sendErrorResponse(res, err));
 }
@@ -139,8 +187,6 @@ router.use((req, res, next) => {
   if (req.body.keyword) {
     req.keyword = req.body.keyword.toLowerCase();
   }
-  // TODO: Define this in app.locals to DRY with routes/signups?
-  req.oip = process.env.MOBILECOMMONS_OIP_CHATBOT;
   /* eslint-enable no-param-reassign */
 
   const route = 'v1/chatbot';
@@ -287,6 +333,7 @@ router.use((req, res, next) => {
 
 /**
  * If we still haven't set a campaignId, user already should be in a Campaign conversation.
+ * @see continueConversationWithMessageType
  */
 router.use((req, res, next) => {
   if (req.campaignId) {
@@ -414,82 +461,25 @@ router.post('/', (req, res, next) => {
 });
 
 /**
- * Determine message type for reply based on current Reportback conversation state.
+ * Find message type to reply with based on current Reportback Submission and data submitted in req.
  */
-router.post('/', (req, res, next) => {
+router.post('/', (req, res) => {
   if (req.signup.draft_reportback_submission) {
     logger.debug(`draft_reportback_submission:${req.signup.draft_reportback_submission._id}`);
 
     return controller.continueReportbackSubmission(req)
-      .then((messageType) => {
-        req.msg_type = messageType; // eslint-disable-line no-param-reassign
-        return next();
-      });
+      .then((messageType) => continueConversationWithMessageType(req, res, messageType))
+      .catch(err => helpers.sendErrorResponse(res, err));
   }
 
   if (isCommand(req.incoming_message, 'reportback')) {
     return req.signup.createDraftReportbackSubmission()
-      .then(() => {
-        req.msg_type = 'ask_quantity'; // eslint-disable-line no-param-reassign
-        return next();
-      });
+      .then(() => continueConversationWithMessageType(req, res, 'ask_quantity'))
+      .catch(err => helpers.sendErrorResponse(res, err));
   }
 
   // This should never get called, but in case it does:
   return helpers.sendResponse(res, 500, 'I don\'t know how to respond :(');
-});
-
-/**
- * Send back reply to Reportback conversation.
- * TODO: Refactor to return continueConversationWithMessageType to DRY.
- */
-router.post('/', (req, res) => {
-  const scope = req;
-  // TODO: Add config variable for invalid text input copy.
-  scope.msg_prefix = 'Sorry, I didn\'t understand that.\n\n';
-
-  if (scope.msg_type === 'invalid_caption') {
-    scope.msg_type = 'ask_caption';
-  } else if (scope.msg_type === 'invalid_why_participated') {
-    scope.msg_type = 'ask_why_participated';
-  } else {
-    scope.msg_prefix = '';
-  }
-
-  return contentful.renderMessageForPhoenixCampaign(scope.campaign, scope.msg_type)
-    .then((renderedMessage) => {
-      scope.response_message = `${scope.msg_prefix} ${renderedMessage}`;
-      newrelic.addCustomParameters({ gambitResponseMessageType: scope.msg_type });
-
-      let quantity = req.signup.total_quantity_submitted;
-      if (req.signup.draft_reportback_submission) {
-        quantity = req.signup.draft_reportback_submission.quantity;
-      }
-      scope.response_message = scope.response_message.replace(/{{quantity}}/gi, quantity);
-      const revisiting = req.keyword && req.signup.draft_reportback_submission;
-      if (revisiting) {
-        // TODO: Add config variable for continue draft message copy.
-        const continueMsg = 'Picking up where you left off on';
-        const campaignTitle = scope.campaign.title;
-        scope.response_message = `${continueMsg} ${campaignTitle}...\n\n${scope.response_message}`;
-      }
-      // Save to continue conversation with future mData requests that don't contain a keyword.
-      scope.user.current_campaign = scope.campaign.id;
-
-      return scope.user.save();
-    })
-    .then(() => {
-      logger.debug(`saved user.current_campaign:${scope.campaign.id}`);
-
-      scope.response_message = helpers.addSenderPrefix(scope.response_message);
-      scope.user.postMobileCommonsProfileUpdate(scope.oip, scope.response_message);
-
-      stathat.postStat(`campaignbot:${scope.msg_type}`);
-      BotRequest.log(req, 'campaignbot', scope.msg_type, scope.response_message);
-
-      return helpers.sendResponse(res, 200, scope.response_message);
-    })
-    .catch(err => helpers.sendErrorResponse(res, err));
 });
 
 module.exports = router;
