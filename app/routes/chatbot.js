@@ -64,6 +64,11 @@ function renderMessageForMessageType(req, messageType) {
     .then((renderedMessage) => {
       let message = `${messagePrefix}${renderedMessage}`;
 
+      // Possible for edge cases like closed campaign messages.
+      if (!req.signup) {
+        return helpers.addSenderPrefix(message);
+      }
+
       let quantity = req.signup.total_quantity_submitted;
       if (req.signup.draft_reportback_submission) {
         quantity = req.signup.draft_reportback_submission.quantity;
