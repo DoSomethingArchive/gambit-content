@@ -13,7 +13,6 @@ const controller = new CampaignBotController();
 const helpers = require('../../lib/helpers');
 const contentful = require('../../lib/contentful');
 const newrelic = require('newrelic');
-const mobilecommons = require('../../lib/mobilecommons');
 const phoenix = require('../../lib/phoenix');
 const stathat = require('../../lib/stathat');
 const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
@@ -74,8 +73,9 @@ function continueConversationWithMessageType(req, res, messageType) {
  * Sends given message to user to end conversation.
  */
 function endConversationWithMessage(req, res, message) {
-  // TODO: Promisify send_message and return 200 when we know message delivery successful.
-  mobilecommons.send_message(req.user.mobile, message);
+  // todo: Promisify this POST request and only send back Gambit 200 on profile_update success.
+  const oip = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
+  req.user.postMobileCommonsProfileUpdate(oip, message);
 
   return helpers.sendResponse(res, 200, message);
 }
