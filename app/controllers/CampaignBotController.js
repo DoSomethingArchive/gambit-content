@@ -86,26 +86,28 @@ class CampaignBotController {
     const submission = req.signup.draft_reportback_submission;
     const ask = req.keyword || req.broadcast_id;
 
-    if (!submission.quantity) {
-      return this.collectReportbackProperty(req, 'quantity', ask);
-    }
-    if (!submission.photo) {
-      return this.collectReportbackProperty(req, 'photo', ask);
-    }
-    if (!submission.caption) {
-      return this.collectReportbackProperty(req, 'caption', ask);
-    }
+    return new Promise((resolve) => {
+      if (!submission.quantity) {
+        return resolve(this.collectReportbackProperty(req, 'quantity', ask));
+      }
+      if (!submission.photo) {
+        return resolve(this.collectReportbackProperty(req, 'photo', ask));
+      }
+      if (!submission.caption) {
+        return resolve(this.collectReportbackProperty(req, 'caption', ask));
+      }
 
-    const askWhy = !this.hasReportedBack(req) && !submission.why_participated;
-    if (askWhy) {
-      return this.collectReportbackProperty(req, 'why_participated', ask);
-    }
+      const askWhy = !this.hasReportedBack(req) && !submission.why_participated;
+      if (askWhy) {
+        return resolve(this.collectReportbackProperty(req, 'why_participated', ask));
+      }
 
-    // If we're here, we have a completed submission but the POST request
-    // likely failed.
-    // TODO: Check failed_at before sending? Message about whoops trying again?
-    logger.warn('no messages sent from continueReportbackSubmission');
-    return this.postReportback(req);
+      // If we're here, we have a completed submission but the POST request
+      // likely failed.
+      // TODO: Check failed_at before sending? Message about whoops trying again?
+      logger.warn('no messages sent from continueReportbackSubmission');
+      return resolve(this.postReportback(req));
+    });
   }
 
   /**
