@@ -265,13 +265,13 @@ signupSchema.methods.postDraftReportbackSubmission = function () {
         return signup.save();
       })
       .then(() => {
-        logger.debug(`updated signup:${signup._id}`);
+        logger.verbose(`updated signup:${signup._id}`);
         submission.submitted_at = dateSubmitted;
 
         return submission.save();
       })
       .then(() => {
-        logger.debug(`updated reportback_submission:${submission._id.toString()}`);
+        logger.verbose(`updated reportback_submission:${submission._id.toString()}`);
 
         return resolve(signup);
       })

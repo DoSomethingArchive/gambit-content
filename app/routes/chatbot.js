@@ -7,9 +7,6 @@ const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
 const logger = require('winston');
 
-const CampaignBotController = require('../controllers/CampaignBotController');
-const controller = new CampaignBotController();
-
 const helpers = require('../../lib/helpers');
 const contentful = require('../../lib/contentful');
 const newrelic = require('newrelic');
@@ -56,7 +53,7 @@ function renderMessageForMessageType(req, messageType) {
     renderMessageType = 'ask_caption';
     messagePrefix = invalidTextSentMessage;
   } else if (messageType === 'invalid_why_participated') {
-    renderMessageType = 'ask_caption';
+    renderMessageType = 'ask_why_participated';
     messagePrefix = invalidTextSentMessage;
   }
 
@@ -438,6 +435,8 @@ router.post('/', (req, res, next) => {
     return endConversationWithMessageType(req, res, 'member_support');
   }
 
+  req.isNewConversation = req.keyword || req.broadcast_id; // eslint-disable-line no-param-reassign
+
   // If user is reporting back, skip to next.
   if (req.signup.draft_reportback_submission) {
     return next();
@@ -449,18 +448,16 @@ router.post('/', (req, res, next) => {
       .catch(err => helpers.sendErrorResponse(res, err));
   }
 
-  const isNewConversation = req.keyword || req.broadcast_id;
-
   // If member has completed this campaign:
   if (req.signup.reportback) {
-    if (isNewConversation) {
+    if (req.isNewConversation) {
       return continueConversationWithMessageType(req, res, 'menu_completed');
     }
     // Otherwise member didn't text back a Reportback or Member Support command.
     return continueConversationWithMessageType(req, res, 'invalid_cmd_completed');
   }
 
-  if (isNewConversation) {
+  if (req.isNewConversation) {
     return continueConversationWithMessageType(req, res, 'menu_signedup_gambit');
   }
 
@@ -470,11 +467,88 @@ router.post('/', (req, res, next) => {
 /**
  * Find message type to reply with based on current Reportback Submission and data submitted in req.
  */
-router.post('/', (req, res) => {
-  logger.debug(`draft_reportback_submission:${req.signup.draft_reportback_submission._id}`);
+router.post('/', (req, res, next) => {
+  const draft = req.signup.draft_reportback_submission;
+  const input = req.incoming_message;
+  logger.debug(`draft_reportback_submission:${draft._id}`);
 
-  return controller.continueReportbackSubmission(req)
-    .then((messageType) => continueConversationWithMessageType(req, res, messageType))
+  if (!draft.quantity) {
+    if (req.isNewConversation) {
+      return continueConversationWithMessageType(req, res, 'ask_quantity');
+    }
+    if (!helpers.isValidReportbackQuantity(input)) {
+      return continueConversationWithMessageType(req, res, 'invalid_quantity');
+    }
+
+    draft.quantity = Number(input);
+
+    return draft.save()
+      .then(() => continueConversationWithMessageType(req, res, 'ask_photo'))
+      .catch(err => helpers.sendErrorResponse(res, err));
+  }
+
+  if (!draft.photo) {
+    if (req.isNewConversation) {
+      return continueConversationWithMessageType(req, res, 'ask_photo');
+    }
+    if (!req.incoming_image_url) {
+      return continueConversationWithMessageType(req, res, 'no_photo_sent');
+    }
+
+    draft.photo = req.incoming_image_url;
+
+    return draft.save()
+      .then(() => continueConversationWithMessageType(req, res, 'ask_caption'))
+      .catch(err => helpers.sendErrorResponse(res, err));
+  }
+
+  if (!draft.caption) {
+    if (req.isNewConversation) {
+      return continueConversationWithMessageType(req, res, 'ask_caption');
+    }
+    if (!helpers.isValidReportbackText(input)) {
+      return continueConversationWithMessageType(req, res, 'invalid_caption');
+    }
+
+    draft.caption = input;
+
+    return draft.save()
+      .then(() => {
+        // If member hasn't submitted a reportback yet, ask for why_participated.
+        if (!req.signup.total_quantity_submitted) {
+          return continueConversationWithMessageType(req, res, 'ask_why_participated');
+        }
+
+        // Otherwise skip to post reportback to DS API.
+        return next();
+      })
+      .catch(err => helpers.sendErrorResponse(res, err));
+  }
+
+  if (!draft.why_participated) {
+    if (req.isNewConversation) {
+      return continueConversationWithMessageType(req, res, 'ask_why_participated');
+    }
+    if (!helpers.isValidReportbackText(input)) {
+      return continueConversationWithMessageType(req, res, 'invalid_why_participated');
+    }
+
+    draft.why_participated = input;
+
+    return draft.save()
+      .then(() => next())
+      .catch(err => helpers.sendErrorResponse(res, err));
+  }
+
+  return next();
+});
+
+/**
+ * If we've made it this far, time to submit the completed draft reportback submission.
+ */
+router.post('/', (req, res) => {
+  req.signup.postDraftReportbackSubmission()
+    .then(() => continueConversationWithMessageType(req, res, 'menu_completed'))
     .catch(err => helpers.sendErrorResponse(res, err));
 });
 
