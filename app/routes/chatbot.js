@@ -63,7 +63,7 @@ function continueConversationWithMessageType(req, res, messageType) {
       const oip = process.env.MOBILECOMMONS_OIP_CHATBOT;
       req.user.postMobileCommonsProfileUpdate(oip, scope.replyMessage);
       stathat.postStat(`campaignbot:${messageType}`);
-      BotRequest.log(req, 'campaignbot', null, messageType, scope.replyMessage);
+      BotRequest.log(req, 'campaignbot', messageType, scope.replyMessage);
 
       return helpers.sendResponse(res, 200, scope.replyMessage);
     })
@@ -84,9 +84,13 @@ function endConversationWithMessage(req, res, message) {
  * Renders message for given messageType, then sends it to end conversation.
  */
 function endConversationWithMessageType(req, res, messageType) {
-  // TODO: Log botRequest for incoming request / outgoing response.
   contentful.renderMessageForPhoenixCampaign(req.campaign, messageType)
-    .then(message => endConversationWithMessage(req, res, helpers.addSenderPrefix(message)))
+    .then((message) => {
+      const replyMessage = helpers.addSenderPrefix(message);
+      BotRequest.log(req, 'campaignbot', messageType, replyMessage);
+
+      return endConversationWithMessage(req, res, replyMessage);
+    })
     .catch(err => helpers.sendErrorResponse(res, err));
 }
 
@@ -240,7 +244,7 @@ router.use((req, res, next) => {
         logger.info(`user:${req.user._id} declined broadcast:${req.broadcast_id}`);
 
         const replyMessage = helpers.addSenderPrefix(broadcast.fields.declinedMessage);
-        BotRequest.log(req, 'broadcast', null, 'prompt_declined', replyMessage);
+        BotRequest.log(req, 'broadcast', 'prompt_declined', replyMessage);
 
         return endConversationWithMessage(req, res, replyMessage);
       }
@@ -475,15 +479,16 @@ router.post('/', (req, res) => {
       return scope.user.save();
     })
     .then(() => {
-      scope.response_message = helpers.addSenderPrefix(scope.response_message);
       logger.debug(`saved user.current_campaign:${scope.campaign.id}`);
-      scope.user.postMobileCommonsProfileUpdate(scope.oip, scope.response_message);
-      helpers.sendResponse(res, 200, scope.response_message);
-      stathat.postStat(`campaignbot:${scope.msg_type}`);
 
-      return BotRequest.log(req, 'campaignbot', null, scope.msg_type, scope.response_message);
+      scope.response_message = helpers.addSenderPrefix(scope.response_message);
+      scope.user.postMobileCommonsProfileUpdate(scope.oip, scope.response_message);
+
+      stathat.postStat(`campaignbot:${scope.msg_type}`);
+      BotRequest.log(req, 'campaignbot', scope.msg_type, scope.response_message);
+
+      return helpers.sendResponse(res, 200, scope.response_message);
     })
-    .then(botRequest => logger.debug(`created botRequest:${botRequest._id}`))
     .catch(err => helpers.sendErrorResponse(res, err));
 });
 
