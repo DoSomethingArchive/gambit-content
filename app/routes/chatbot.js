@@ -23,8 +23,6 @@ const BotRequest = require('../models/BotRequest');
 const Signup = require('../models/Signup');
 const User = require('../models/User');
 
-const agentViewOip = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
-
 /**
  * Determines if given incomingMessage matches given Gambit command type.
  */
@@ -44,6 +42,35 @@ function isCommand(incomingMessage, commandType) {
 }
 
 /**
+ * Renders message for given messageType, sends it to continue conversation for current campaign.
+ * Assumes we have a loaded req.user and req.campaign.
+ */
+function continueConversationWithMessageType(req, res, messageType) {
+  const scope = req;
+
+  return contentful.renderMessageForPhoenixCampaign(req.campaign, messageType)
+    .then((message) => {
+      scope.replyMessage = helpers.addSenderPrefix(message);
+      // Store current campaign for subsequent messages.
+      scope.user.current_campaign = req.campaignId;
+
+      return scope.user.save();
+    })
+    .then(() => {
+      logger.debug(`saved user:${req.user._id} current_campaign:${req.campaignId}`);
+
+      // todo: Promisify this POST request and only send back Gambit 200 on profile_update success.
+      const oip = process.env.MOBILECOMMONS_OIP_CHATBOT;
+      req.user.postMobileCommonsProfileUpdate(oip, scope.replyMessage);
+      stathat.postStat(`campaignbot:${messageType}`);
+      BotRequest.log(req, 'campaignbot', null, messageType, scope.replyMessage);
+
+      return helpers.sendResponse(res, 200, scope.replyMessage);
+    })
+    .catch(err => helpers.sendErrorResponse(res, err));
+}
+
+/**
  * Sends given message to user to end conversation.
  */
 function endConversationWithMessage(req, res, message) {
@@ -57,6 +84,7 @@ function endConversationWithMessage(req, res, message) {
  * Renders message for given messageType, then sends it to end conversation.
  */
 function endConversationWithMessageType(req, res, messageType) {
+  // TODO: Log botRequest for incoming request / outgoing response.
   contentful.renderMessageForPhoenixCampaign(req.campaign, messageType)
     .then(message => endConversationWithMessage(req, res, helpers.addSenderPrefix(message)))
     .catch(err => helpers.sendErrorResponse(res, err));
@@ -300,89 +328,129 @@ router.use((req, res, next) => {
 });
 
 /**
- * Find or create Signup for our User and Campaign, and reply accordingly.
- * TODO: Split this up into more middleware functions.
+ * Check DS API for existing Signup.
  */
+router.use((req, res, next) => {
+  Signup.lookupCurrent(req.user, req.campaign)
+    .then((signup) => {
+      if (req.timedout) {
+        return helpers.sendTimeoutResponse(res);
+      }
+      if (signup) {
+        req.signup = signup; // eslint-disable-line no-param-reassign
+      }
+
+      return next();
+    })
+    .catch(err => helpers.sendErrorResponse(res, err));
+});
+
+/**
+ * If Signup wasn't found, post Signup to DS API.
+ */
+router.use((req, res, next) => {
+  if (req.signup) {
+    return next();
+  }
+
+  // TODO: Pass broadcast_id here too.
+  return Signup.post(req.user, req.campaign, req.keyword)
+    .then((signup) => {
+      if (req.timedout) {
+        return helpers.sendTimeoutResponse(res);
+      }
+      req.signup = signup; // eslint-disable-line no-param-reassign
+
+      return next();
+    })
+    .catch(err => helpers.sendErrorResponse(res, err));
+});
+
+/**
+ * Sanity check: make sure there's a Signup.
+ */
+router.use((req, res, next) => {
+  if (!req.signup) {
+    return helpers.sendResponse(res, 500, 'req.signup is undefined');
+  }
+
+  logger.info(`user:${req.user._id} campaign:${req.campaign.id} signup:${req.signup._id}`);
+  newrelic.addCustomParameters({ signupId: req.signup._id });
+
+  return next();
+});
+
+/**
+ * Check for non-reportback conversation messages first for sending reply message.
+ */
+router.post('/', (req, res, next) => {
+  if (isCommand(req.incoming_message, 'member_support')) {
+    return endConversationWithMessageType(req, res, 'member_support');
+  }
+
+  // If this is a reportback conversation, skip to our next middleware.
+  if (req.signup.draft_reportback_submission || isCommand(req.incoming_message, 'reportback')) {
+    return next();
+  }
+
+  // If member has completed this campaign:
+  if (req.signup.reportback) {
+    // And it's the beginning of a conversation:
+    if (req.keyword || req.broadcast_id) {
+      return continueConversationWithMessageType(req, res, 'menu_completed');
+    }
+    // Otherwise member didn't text back Reportback or Member Support commands.
+    return continueConversationWithMessageType(req, res, 'invalid_cmd_completed');
+  }
+
+  if (req.keyword || req.broadcast_id) {
+    return continueConversationWithMessageType(req, res, 'menu_signedup_gambit');
+  }
+
+  return continueConversationWithMessageType(req, res, 'invalid_cmd_signedup');
+});
+
+/**
+ * Determine message type for reply based on current Reportback conversation state.
+ */
+router.post('/', (req, res, next) => {
+  if (req.signup.draft_reportback_submission) {
+    logger.debug(`draft_reportback_submission:${req.signup.draft_reportback_submission._id}`);
+
+    return controller.continueReportbackSubmission(req)
+      .then((messageType) => {
+        req.msg_type = messageType; // eslint-disable-line no-param-reassign
+        return next();
+      });
+  }
+
+  if (isCommand(req.incoming_message, 'reportback')) {
+    return req.signup.createDraftReportbackSubmission()
+      .then(() => {
+        req.msg_type = 'ask_quantity'; // eslint-disable-line no-param-reassign
+        return next();
+      });
+  }
+
+  // This should never get called, but in case it does:
+  return helpers.sendResponse(res, 500, 'I don\'t know how to respond :(');
+});
+
+
 router.post('/', (req, res) => {
   const scope = req;
+  // TODO: Add config variable for invalid text input copy.
+  scope.msg_prefix = 'Sorry, I didn\'t understand that.\n\n';
 
-  return Signup.lookupCurrent(scope.user, scope.campaign)
-    .then((currentSignup) => {
-      if (currentSignup) {
-        logger.debug(`Signup.lookupCurrent found signup:${currentSignup._id}`);
+  if (scope.msg_type === 'invalid_caption') {
+    scope.msg_type = 'ask_caption';
+  } else if (scope.msg_type === 'invalid_why_participated') {
+    scope.msg_type = 'ask_why_participated';
+  } else {
+    scope.msg_prefix = '';
+  }
 
-        return currentSignup;
-      }
-      logger.debug('Signup.lookupCurrent not find signup');
-
-      return Signup.post(scope.user, scope.campaign, scope.keyword);
-    })
-    .then((signup) => {
-      logger.info(`loaded signup:${signup._id.toString()}`);
-      scope.signup = signup;
-      newrelic.addCustomParameters({ signupId: signup._id });
-
-      if (!scope.signup) {
-        // TODO: Handle this edge-case.
-        logger.error('signup undefined');
-        return false;
-      }
-
-      if (scope.broadcast_id) {
-        // TODO: Add new parameter for broadcast_id to Signup post instead of saving here.
-        scope.signup.broadcast_id = scope.broadcast_id;
-        scope.signup.save().catch((err) => logger.error('Error saving broadcast id', err.message));
-      }
-
-      if (isCommand(scope.incoming_message, 'member_support')) {
-        scope.cmd_member_support = true;
-        scope.oip = agentViewOip;
-        return 'member_support';
-      }
-
-      if (scope.signup.draft_reportback_submission) {
-        logger.debug(`draft_reportback_submission:${scope.signup.draft_reportback_submission._id}`);
-        return controller.continueReportbackSubmission(scope);
-      }
-
-      if (isCommand(scope.incoming_message, 'reportback')) {
-        return scope.signup.createDraftReportbackSubmission().then(() => 'ask_quantity');
-      }
-
-      if (scope.signup.reportback) {
-        if (scope.keyword || scope.broadcast_id) {
-          return 'menu_completed';
-        }
-        // If we're this far, member didn't text back Reportback or Member Support commands.
-        return 'invalid_cmd_completed';
-      }
-
-      if (scope.keyword || scope.broadcast_id) {
-        return 'menu_signedup_gambit';
-      }
-
-      return 'invalid_cmd_signedup';
-    })
-    .then((msgType) => {
-      // This is hacky, CampaignBotController.postReportback returns error that isn't caught.
-      // TODO: Clean this up when ready to take on https://github.com/DoSomething/gambit/issues/744.
-      if (msgType instanceof Error) {
-        throw new Error(msgType.message);
-      }
-
-      scope.msg_type = msgType;
-      // TODO: Add config variable for invalid text input copy.
-      scope.msg_prefix = 'Sorry, I didn\'t understand that.\n\n';
-
-      if (scope.msg_type === 'invalid_caption') {
-        scope.msg_type = 'ask_caption';
-      } else if (scope.msg_type === 'invalid_why_participated') {
-        scope.msg_type = 'ask_why_participated';
-      } else {
-        scope.msg_prefix = '';
-      }
-      return contentful.renderMessageForPhoenixCampaign(scope.campaign, scope.msg_type);
-    })
+  return contentful.renderMessageForPhoenixCampaign(scope.campaign, scope.msg_type)
     .then((renderedMessage) => {
       scope.response_message = `${scope.msg_prefix} ${renderedMessage}`;
       newrelic.addCustomParameters({ gambitResponseMessageType: scope.msg_type });

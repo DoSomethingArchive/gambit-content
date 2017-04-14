@@ -123,6 +123,7 @@ signupSchema.statics.lookupCurrent = function (user, campaign) {
         }
 
         const data = parsePhoenixSignup(currentSignup);
+        logger.debug(`Signup.lookCurrent found signup:${data._id}`);
 
         return model.findOneAndUpdate({ _id: data._id }, data, helpers.upsertOptions())
           .populate('user')
@@ -201,13 +202,13 @@ signupSchema.methods.createDraftReportbackSubmission = function () {
       })
       .then(reportbackSubmission => {
         const submissionId = reportbackSubmission._id;
-        logger.debug(`${logPrefix} created reportback_submission:${submissionId.toString()}`);
+        logger.verbose(`${logPrefix} created reportback_submission:${submissionId.toString()}`);
         signup.draft_reportback_submission = submissionId;
 
         return signup.save();
       })
       .then((updatedSignup) => {
-        logger.debug(`${logPrefix} updated signup:${signup._id}`);
+        logger.verbose(`${logPrefix} updated signup:${signup._id}`);
         stathat.postStat('created draft_reportback_submission');
 
         return resolve(updatedSignup);
