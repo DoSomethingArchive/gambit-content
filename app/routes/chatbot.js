@@ -435,7 +435,10 @@ router.post('/', (req, res, next) => {
   return helpers.sendResponse(res, 500, 'I don\'t know how to respond :(');
 });
 
-
+/**
+ * Send back reply to Reportback conversation.
+ * TODO: Refactor to return continueConversationWithMessageType to DRY.
+ */
 router.post('/', (req, res) => {
   const scope = req;
   // TODO: Add config variable for invalid text input copy.
