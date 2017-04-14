@@ -548,7 +548,13 @@ router.post('/', (req, res, next) => {
  */
 router.post('/', (req, res) => {
   req.signup.postDraftReportbackSubmission()
-    .then(() => continueConversationWithMessageType(req, res, 'menu_completed'))
+    .then(() => {
+      if (req.timedout) {
+        return helpers.sendTimeoutResponse(res);
+      }
+
+      return continueConversationWithMessageType(req, res, 'menu_completed');
+    })
     .catch(err => helpers.sendErrorResponse(res, err));
 });
 
