@@ -353,8 +353,7 @@ router.use((req, res, next) => {
     return next();
   }
 
-  // TODO: Pass broadcast_id here too.
-  return Signup.post(req.user, req.campaign, req.keyword)
+  return Signup.post(req.user, req.campaign, req.keyword, req.broadcast_id)
     .then((signup) => {
       if (req.timedout) {
         return helpers.sendTimeoutResponse(res);
@@ -374,7 +373,7 @@ router.use((req, res, next) => {
     return helpers.sendResponse(res, 500, 'req.signup is undefined');
   }
 
-  logger.info(`user:${req.user._id} campaign:${req.campaign.id} signup:${req.signup._id}`);
+  logger.verbose(`user:${req.user._id} campaign:${req.campaign.id} signup:${req.signup._id}`);
   newrelic.addCustomParameters({ signupId: req.signup._id });
 
   return next();

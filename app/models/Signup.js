@@ -123,7 +123,7 @@ signupSchema.statics.lookupCurrent = function (user, campaign) {
         }
 
         const data = parsePhoenixSignup(currentSignup);
-        logger.debug(`Signup.lookCurrent found signup:${data._id}`);
+        logger.verbose(`Signup.lookCurrent found signup:${data._id}`);
 
         return model.findOneAndUpdate({ _id: data._id }, data, helpers.upsertOptions())
           .populate('user')
@@ -146,8 +146,10 @@ signupSchema.statics.lookupCurrent = function (user, campaign) {
  * @param {User} user - User model.
  * @param {Campaign} campaign - Phoenix Campaign object.
  * @param {string} keyword - Keyword used to trigger Campaign Signup.
+ * @param {number} broadcastId
+ * @return {Promise}
  */
-signupSchema.statics.post = function (user, campaign, keyword) {
+signupSchema.statics.post = function (user, campaign, keyword, broadcastId) {
   const model = this;
   const statName = 'phoenix: POST signups';
 
@@ -169,8 +171,13 @@ signupSchema.statics.post = function (user, campaign, keyword) {
         const data = {
           campaign: campaign.id,
           user: user._id,
-          keyword,
         };
+        if (keyword) {
+          data.keyword = keyword;
+        }
+        if (broadcastId) {
+          data.broadcast_id = broadcastId;
+        }
 
         return model.findOneAndUpdate({ _id: signupId }, data, helpers.upsertOptions()).exec();
       })
