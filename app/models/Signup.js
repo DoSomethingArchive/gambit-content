@@ -123,6 +123,7 @@ signupSchema.statics.lookupCurrent = function (user, campaign) {
         }
 
         const data = parsePhoenixSignup(currentSignup);
+        logger.verbose(`Signup.lookCurrent found signup:${data._id}`);
 
         return model.findOneAndUpdate({ _id: data._id }, data, helpers.upsertOptions())
           .populate('user')
@@ -145,8 +146,10 @@ signupSchema.statics.lookupCurrent = function (user, campaign) {
  * @param {User} user - User model.
  * @param {Campaign} campaign - Phoenix Campaign object.
  * @param {string} keyword - Keyword used to trigger Campaign Signup.
+ * @param {number} broadcastId
+ * @return {Promise}
  */
-signupSchema.statics.post = function (user, campaign, keyword) {
+signupSchema.statics.post = function (user, campaign, keyword, broadcastId) {
   const model = this;
   const statName = 'phoenix: POST signups';
 
@@ -168,8 +171,13 @@ signupSchema.statics.post = function (user, campaign, keyword) {
         const data = {
           campaign: campaign.id,
           user: user._id,
-          keyword,
         };
+        if (keyword) {
+          data.keyword = keyword;
+        }
+        if (broadcastId) {
+          data.broadcast_id = broadcastId;
+        }
 
         return model.findOneAndUpdate({ _id: signupId }, data, helpers.upsertOptions()).exec();
       })
@@ -201,13 +209,13 @@ signupSchema.methods.createDraftReportbackSubmission = function () {
       })
       .then(reportbackSubmission => {
         const submissionId = reportbackSubmission._id;
-        logger.debug(`${logPrefix} created reportback_submission:${submissionId.toString()}`);
+        logger.verbose(`${logPrefix} created reportback_submission:${submissionId.toString()}`);
         signup.draft_reportback_submission = submissionId;
 
         return signup.save();
       })
       .then((updatedSignup) => {
-        logger.debug(`${logPrefix} updated signup:${signup._id}`);
+        logger.verbose(`${logPrefix} updated signup:${signup._id}`);
         stathat.postStat('created draft_reportback_submission');
 
         return resolve(updatedSignup);
@@ -257,13 +265,13 @@ signupSchema.methods.postDraftReportbackSubmission = function () {
         return signup.save();
       })
       .then(() => {
-        logger.debug(`updated signup:${signup._id}`);
+        logger.verbose(`updated signup:${signup._id}`);
         submission.submitted_at = dateSubmitted;
 
         return submission.save();
       })
       .then(() => {
-        logger.debug(`updated reportback_submission:${submission._id.toString()}`);
+        logger.verbose(`updated reportback_submission:${submission._id.toString()}`);
 
         return resolve(signup);
       })

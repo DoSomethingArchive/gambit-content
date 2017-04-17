@@ -4,6 +4,7 @@
  * Models a conversation request to Gambit API.
  */
 const mongoose = require('mongoose');
+const logger = require('winston');
 
 const botRequestSchema = new mongoose.Schema({
 
@@ -14,7 +15,6 @@ const botRequestSchema = new mongoose.Schema({
   user_id: String,
   campaign_id: Number,
   bot_type: String,
-  bot_id: String,
   bot_response_type: String,
   bot_response_message: String,
 
@@ -26,9 +26,8 @@ const botRequestSchema = new mongoose.Schema({
  * @param {string} botType - Type of bot handling response (campaignbot, donorschoosebot)
  * @param {string} msgType - Type of bot message to respond back with
  * @param {string} msg - Rendered bot response message text
- * @param {Signup} signup - Signup model. If set, stores user and campaign ID's.
  */
-botRequestSchema.statics.log = function (req, botType, botId, msgType, msg) {
+botRequestSchema.statics.log = function (req, botType, msgType, msg) {
   const data = {
     client: req.client,
     query: req.query,
@@ -61,11 +60,16 @@ botRequestSchema.statics.log = function (req, botType, botId, msgType, msg) {
     data.campaign_id = req.campaign._id;
   }
   data.bot_type = botType;
-  data.bot_id = botId;
   data.bot_response_type = msgType;
   data.bot_response_message = msg;
 
-  return this.create(data);
+  return this.create(data)
+    .then((doc) => {
+      logger.debug(`BotRequest created:${doc._id.toString()}`);
+
+      return doc;
+    })
+    .catch(err => logger.err(`BotRequest error:${err.message}`));
 };
 
 module.exports = mongoose.model('bot_requests', botRequestSchema);

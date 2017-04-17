@@ -6,25 +6,18 @@
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
 const logger = require('winston');
-const Promise = require('bluebird');
-
-const CampaignBotController = require('../controllers/CampaignBotController');
-const controller = new CampaignBotController();
 
 const helpers = require('../../lib/helpers');
 const contentful = require('../../lib/contentful');
 const newrelic = require('newrelic');
-const mobilecommons = require('../../lib/mobilecommons');
 const phoenix = require('../../lib/phoenix');
 const stathat = require('../../lib/stathat');
 const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
-const NotFoundError = require('../exceptions/NotFoundError');
+
 // Models.
 const BotRequest = require('../models/BotRequest');
 const Signup = require('../models/Signup');
 const User = require('../models/User');
-
-const agentViewOip = process.env.MOBILECOMMONS_OIP_AGENTVIEW;
 
 /**
  * Determines if given incomingMessage matches given Gambit command type.
@@ -45,13 +38,105 @@ function isCommand(incomingMessage, commandType) {
 }
 
 /**
- * Sends message to user and returns success response.
+ * Renders message for given message type and request.
  */
-function sendMessage(req, res, message) {
-  // TODO: Promisify send_message and return 200 when we know message delivery successful.
-  mobilecommons.send_message(req.user.mobile, message);
+function renderMessageForMessageType(req, messageType) {
+  newrelic.addCustomParameters({ gambitResponseMessageType: messageType });
+
+  let messagePrefix = '';
+  let renderMessageType = messageType;
+
+  // Check if we're replying to inform user they've submitted invalid values for text fields.
+  // If they did, ask for field again, setting messagePrefix to prepend to the rendered ask message.
+  const invalidTextSentMessage = 'Sorry, I didn\'t understand that.\n\n';
+  if (messageType === 'invalid_caption') {
+    renderMessageType = 'ask_caption';
+    messagePrefix = invalidTextSentMessage;
+  } else if (messageType === 'invalid_why_participated') {
+    renderMessageType = 'ask_why_participated';
+    messagePrefix = invalidTextSentMessage;
+  }
+
+  return contentful.renderMessageForPhoenixCampaign(req.campaign, renderMessageType)
+    .then((renderedMessage) => {
+      let message = `${messagePrefix}${renderedMessage}`;
+
+      // Possible for edge cases like closed campaign messages.
+      if (!req.signup) {
+        return helpers.addSenderPrefix(message);
+      }
+
+      let quantity = req.signup.total_quantity_submitted;
+      if (req.signup.draft_reportback_submission) {
+        quantity = req.signup.draft_reportback_submission.quantity;
+      }
+      if (quantity) {
+        message = message.replace(/{{quantity}}/gi, quantity);
+      }
+
+      const revisiting = req.keyword && req.signup.draft_reportback_submission;
+      if (revisiting) {
+        const continuingMessage = 'Picking up where you left off on';
+        const campaignTitle = req.campaign.title;
+        message = `${continuingMessage} ${campaignTitle}...\n\n${message}`;
+      }
+
+      return helpers.addSenderPrefix(message);
+    })
+    .catch(err => err);
+}
+
+/**
+ * Renders message for given messageType, sends it to continue conversation for current campaign.
+ * Assumes we have a loaded req.user and req.campaign.
+ */
+function continueConversationWithMessageType(req, res, messageType) {
+  let replyMessage;
+
+  return renderMessageForMessageType(req, messageType)
+    .then((message) => {
+      replyMessage = message;
+
+      // Store current campaign to continue conversation in subsequent messages.
+      req.user.current_campaign = req.campaignId; // eslint-disable-line no-param-reassign
+
+      return req.user.save();
+    })
+    .then(() => {
+      logger.verbose(`saved user:${req.user._id} current_campaign:${req.campaignId}`);
+
+      // todo: Promisify this POST request and only send back Gambit 200 on profile_update success.
+      req.user.postMobileCommonsProfileUpdate(process.env.MOBILECOMMONS_OIP_CHATBOT, replyMessage);
+
+      stathat.postStat(`campaignbot:${messageType}`);
+      BotRequest.log(req, 'campaignbot', messageType, replyMessage);
+
+      return helpers.sendResponse(res, 200, replyMessage);
+    })
+    .catch(err => helpers.sendErrorResponse(res, err));
+}
+
+/**
+ * Sends given message to user to end conversation.
+ */
+function endConversationWithMessage(req, res, message) {
+  // todo: Promisify this POST request and only send back Gambit 200 on profile_update success.
+  req.user.postMobileCommonsProfileUpdate(process.env.MOBILECOMMONS_OIP_AGENTVIEW, message);
 
   return helpers.sendResponse(res, 200, message);
+}
+
+/**
+ * Renders message for given messageType, then sends it to end conversation.
+ */
+function endConversationWithMessageType(req, res, messageType) {
+  renderMessageForMessageType(req, messageType)
+    .then((message) => {
+      BotRequest.log(req, 'campaignbot', messageType, message);
+
+      return endConversationWithMessage(req, res, message);
+    })
+    .catch(err => helpers.sendErrorResponse(res, err));
 }
 
 /**
@@ -99,8 +184,6 @@ router.use((req, res, next) => {
   if (req.body.keyword) {
     req.keyword = req.body.keyword.toLowerCase();
   }
-  // TODO: Define this in app.locals to DRY with routes/signups?
-  req.oip = process.env.MOBILECOMMONS_OIP_CHATBOT;
   /* eslint-enable no-param-reassign */
 
   const route = 'v1/chatbot';
@@ -204,9 +287,9 @@ router.use((req, res, next) => {
         logger.info(`user:${req.user._id} declined broadcast:${req.broadcast_id}`);
 
         const replyMessage = helpers.addSenderPrefix(broadcast.fields.declinedMessage);
-        BotRequest.log(req, 'broadcast', null, 'prompt_declined', replyMessage);
+        BotRequest.log(req, 'broadcast', 'prompt_declined', replyMessage);
 
-        return sendMessage(req, res, replyMessage);
+        return endConversationWithMessage(req, res, replyMessage);
       }
 
       const broadcastCampaign = broadcast.fields.campaign.fields;
@@ -247,6 +330,7 @@ router.use((req, res, next) => {
 
 /**
  * If we still haven't set a campaignId, user already should be in a Campaign conversation.
+ * @see continueConversationWithMessageType
  */
 router.use((req, res, next) => {
   if (req.campaignId) {
@@ -266,155 +350,210 @@ router.use((req, res, next) => {
 });
 
 /**
- * Load Campaign and the User's Campaign Status, and reply accordingly.
- * TODO: Split this up into more middleware functions.
+ * Load Campaign from DS API.
  */
-router.post('/', (req, res) => {
-  const scope = req;
-
-  // Uses Bluebird for filtered catch later.
-  const loadCampaign = new Promise((resolve, reject) => {
-    phoenix.fetchCampaign(req.campaignId)
-      .then(campaign => resolve(campaign))
-      .catch(err => reject(err));
-  });
-
-  return loadCampaign
+router.use((req, res, next) => {
+  phoenix.fetchCampaign(req.campaignId)
     .then((campaign) => {
-      scope.campaign = campaign;
+      req.campaign = campaign; // eslint-disable-line no-param-reassign
       newrelic.addCustomParameters({ campaignId: campaign.id });
 
+      if (req.timedout) {
+        return helpers.sendTimeoutResponse(res);
+      }
+
       if (phoenix.isClosedCampaign(campaign)) {
-        throw new ClosedCampaignError(campaign);
+        const err = new ClosedCampaignError(campaign);
+        logger.warn(err.message);
+        stathat.postStat(err.message);
+
+        return endConversationWithMessageType(req, res, 'campaign_closed');
       }
 
-      return Signup.lookupCurrent(scope.user, scope.campaign);
+      return next();
     })
-    .then((currentSignup) => {
-      if (currentSignup) {
-        logger.debug(`Signup.lookupCurrent found signup:${currentSignup._id}`);
+    .catch(err => helpers.sendErrorResponse(res, err));
+});
 
-        return currentSignup;
-      }
-      logger.debug('Signup.lookupCurrent not find signup');
-
-      return Signup.post(scope.user, scope.campaign, scope.keyword);
-    })
+/**
+ * Check DS API for existing Signup.
+ */
+router.use((req, res, next) => {
+  Signup.lookupCurrent(req.user, req.campaign)
     .then((signup) => {
-      logger.info(`loaded signup:${signup._id.toString()}`);
-      scope.signup = signup;
-      newrelic.addCustomParameters({ signupId: signup._id });
-
-      if (!scope.signup) {
-        // TODO: Handle this edge-case.
-        logger.error('signup undefined');
-        return false;
+      if (req.timedout) {
+        return helpers.sendTimeoutResponse(res);
+      }
+      if (signup) {
+        req.signup = signup; // eslint-disable-line no-param-reassign
       }
 
-      if (scope.broadcast_id) {
-        // TODO: Add new parameter for broadcast_id to Signup post instead of saving here.
-        scope.signup.broadcast_id = scope.broadcast_id;
-        scope.signup.save().catch((err) => logger.error('Error saving broadcast id', err.message));
-      }
+      return next();
+    })
+    .catch(err => helpers.sendErrorResponse(res, err));
+});
 
-      if (isCommand(scope.incoming_message, 'member_support')) {
-        scope.cmd_member_support = true;
-        scope.oip = agentViewOip;
-        return 'member_support';
-      }
+/**
+ * If Signup wasn't found, post Signup to DS API.
+ */
+router.use((req, res, next) => {
+  if (req.signup) {
+    return next();
+  }
 
-      if (scope.signup.draft_reportback_submission) {
-        logger.debug(`draft_reportback_submission:${scope.signup.draft_reportback_submission._id}`);
-        return controller.continueReportbackSubmission(scope);
+  return Signup.post(req.user, req.campaign, req.keyword, req.broadcast_id)
+    .then((signup) => {
+      if (req.timedout) {
+        return helpers.sendTimeoutResponse(res);
       }
+      req.signup = signup; // eslint-disable-line no-param-reassign
 
-      if (isCommand(scope.incoming_message, 'reportback')) {
-        return scope.signup.createDraftReportbackSubmission().then(() => 'ask_quantity');
-      }
+      return next();
+    })
+    .catch(err => helpers.sendErrorResponse(res, err));
+});
 
-      if (scope.signup.reportback) {
-        if (scope.keyword || scope.broadcast_id) {
-          return 'menu_completed';
+/**
+ * Sanity check: make sure there's a Signup.
+ */
+router.use((req, res, next) => {
+  if (!req.signup) {
+    return helpers.sendResponse(res, 500, 'req.signup is undefined');
+  }
+
+  logger.verbose(`user:${req.user._id} campaign:${req.campaign.id} signup:${req.signup._id}`);
+  newrelic.addCustomParameters({ signupId: req.signup._id });
+
+  return next();
+});
+
+/**
+ * Check for non-reportback conversation messages first for sending reply message.
+ */
+router.post('/', (req, res, next) => {
+  if (isCommand(req.incoming_message, 'member_support')) {
+    return endConversationWithMessageType(req, res, 'member_support');
+  }
+
+  req.isNewConversation = req.keyword || req.broadcast_id; // eslint-disable-line no-param-reassign
+
+  // If user is reporting back, skip to next.
+  if (req.signup.draft_reportback_submission) {
+    return next();
+  }
+
+  if (isCommand(req.incoming_message, 'reportback')) {
+    return req.signup.createDraftReportbackSubmission()
+      .then(() => continueConversationWithMessageType(req, res, 'ask_quantity'))
+      .catch(err => helpers.sendErrorResponse(res, err));
+  }
+
+  // If member has completed this campaign:
+  if (req.signup.reportback) {
+    if (req.isNewConversation) {
+      return continueConversationWithMessageType(req, res, 'menu_completed');
+    }
+    // Otherwise member didn't text back a Reportback or Member Support command.
+    return continueConversationWithMessageType(req, res, 'invalid_cmd_completed');
+  }
+
+  if (req.isNewConversation) {
+    return continueConversationWithMessageType(req, res, 'menu_signedup_gambit');
+  }
+
+  return continueConversationWithMessageType(req, res, 'invalid_cmd_signedup');
+});
+
+/**
+ * Find message type to reply with based on current Reportback Submission and data submitted in req.
+ */
+router.post('/', (req, res, next) => {
+  const draft = req.signup.draft_reportback_submission;
+  const input = req.incoming_message;
+  logger.debug(`draft_reportback_submission:${draft._id}`);
+
+  if (!draft.quantity) {
+    if (req.isNewConversation) {
+      return continueConversationWithMessageType(req, res, 'ask_quantity');
+    }
+    if (!helpers.isValidReportbackQuantity(input)) {
+      return continueConversationWithMessageType(req, res, 'invalid_quantity');
+    }
+
+    draft.quantity = Number(input);
+
+    return draft.save()
+      .then(() => continueConversationWithMessageType(req, res, 'ask_photo'))
+      .catch(err => helpers.sendErrorResponse(res, err));
+  }
+
+  if (!draft.photo) {
+    if (req.isNewConversation) {
+      return continueConversationWithMessageType(req, res, 'ask_photo');
+    }
+    if (!req.incoming_image_url) {
+      return continueConversationWithMessageType(req, res, 'no_photo_sent');
+    }
+
+    draft.photo = req.incoming_image_url;
+
+    return draft.save()
+      .then(() => continueConversationWithMessageType(req, res, 'ask_caption'))
+      .catch(err => helpers.sendErrorResponse(res, err));
+  }
+
+  if (!draft.caption) {
+    if (req.isNewConversation) {
+      return continueConversationWithMessageType(req, res, 'ask_caption');
+    }
+    if (!helpers.isValidReportbackText(input)) {
+      return continueConversationWithMessageType(req, res, 'invalid_caption');
+    }
+
+    draft.caption = input;
+
+    return draft.save()
+      .then(() => {
+        // If member hasn't submitted a reportback yet, ask for why_participated.
+        if (!req.signup.total_quantity_submitted) {
+          return continueConversationWithMessageType(req, res, 'ask_why_participated');
         }
-        // If we're this far, member didn't text back Reportback or Member Support commands.
-        return 'invalid_cmd_completed';
-      }
 
-      if (scope.keyword || scope.broadcast_id) {
-        return 'menu_signedup_gambit';
-      }
+        // Otherwise skip to post reportback to DS API.
+        return next();
+      })
+      .catch(err => helpers.sendErrorResponse(res, err));
+  }
 
-      return 'invalid_cmd_signedup';
-    })
-    .then((msgType) => {
-      // This is hacky, CampaignBotController.postReportback returns error that isn't caught.
-      // TODO: Clean this up when ready to take on https://github.com/DoSomething/gambit/issues/744.
-      if (msgType instanceof Error) {
-        throw new Error(msgType.message);
-      }
+  if (!draft.why_participated) {
+    if (req.isNewConversation) {
+      return continueConversationWithMessageType(req, res, 'ask_why_participated');
+    }
+    if (!helpers.isValidReportbackText(input)) {
+      return continueConversationWithMessageType(req, res, 'invalid_why_participated');
+    }
 
-      scope.msg_type = msgType;
-      // TODO: Add config variable for invalid text input copy.
-      scope.msg_prefix = 'Sorry, I didn\'t understand that.\n\n';
+    draft.why_participated = input;
 
-      if (scope.msg_type === 'invalid_caption') {
-        scope.msg_type = 'ask_caption';
-      } else if (scope.msg_type === 'invalid_why_participated') {
-        scope.msg_type = 'ask_why_participated';
-      } else {
-        scope.msg_prefix = '';
-      }
-      return contentful.renderMessageForPhoenixCampaign(scope.campaign, scope.msg_type);
-    })
-    .then((renderedMessage) => {
-      scope.response_message = `${scope.msg_prefix} ${renderedMessage}`;
-      newrelic.addCustomParameters({ gambitResponseMessageType: scope.msg_type });
+    return draft.save()
+      .then(() => next())
+      .catch(err => helpers.sendErrorResponse(res, err));
+  }
 
-      let quantity = req.signup.total_quantity_submitted;
-      if (req.signup.draft_reportback_submission) {
-        quantity = req.signup.draft_reportback_submission.quantity;
-      }
-      scope.response_message = scope.response_message.replace(/{{quantity}}/gi, quantity);
-      const revisiting = req.keyword && req.signup.draft_reportback_submission;
-      if (revisiting) {
-        // TODO: Add config variable for continue draft message copy.
-        const continueMsg = 'Picking up where you left off on';
-        const campaignTitle = scope.campaign.title;
-        scope.response_message = `${continueMsg} ${campaignTitle}...\n\n${scope.response_message}`;
-      }
-      // Save to continue conversation with future mData requests that don't contain a keyword.
-      scope.user.current_campaign = scope.campaign.id;
+  return next();
+});
 
-      return scope.user.save();
-    })
+/**
+ * If we've made it this far, time to submit the completed draft reportback submission.
+ */
+router.post('/', (req, res) => {
+  req.signup.postDraftReportbackSubmission()
     .then(() => {
-      scope.response_message = helpers.addSenderPrefix(scope.response_message);
-      logger.debug(`saved user.current_campaign:${scope.campaign.id}`);
-      scope.user.postMobileCommonsProfileUpdate(scope.oip, scope.response_message);
-      helpers.sendResponse(res, 200, scope.response_message);
-      stathat.postStat(`campaignbot:${scope.msg_type}`);
+      if (req.timedout) {
+        return helpers.sendTimeoutResponse(res);
+      }
 
-      return BotRequest.log(req, 'campaignbot', null, scope.msg_type, scope.response_message);
-    })
-    .then(botRequest => logger.debug(`created botRequest:${botRequest._id}`))
-    .catch(NotFoundError, (err) => {
-      logger.error(err.message);
-
-      return helpers.sendResponse(res, 404, err.message);
-    })
-    .catch(ClosedCampaignError, (err) => {
-      logger.warn(err.message);
-      stathat.postStat('campaign closed');
-
-      return contentful.renderMessageForPhoenixCampaign(scope.campaign, 'campaign_closed')
-        .then((responseMessage) => {
-          scope.response_message = helpers.addSenderPrefix(responseMessage);
-          // Send to Agent View for now until we get a Select Campaign menu up and running.
-          scope.user.postMobileCommonsProfileUpdate(agentViewOip, scope.response_message);
-
-          return helpers.sendResponse(res, 200, scope.response_message);
-        })
-        .catch(renderError => helpers.sendResponse(res, 500, renderError.message));
+      return continueConversationWithMessageType(req, res, 'menu_completed');
     })
     .catch(err => helpers.sendErrorResponse(res, err));
 });
