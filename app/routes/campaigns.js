@@ -6,7 +6,6 @@ const Promise = require('bluebird');
 const logger = require('winston');
 
 const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
-const NotFoundError = require('../exceptions/NotFoundError');
 const UnprocessibleEntityError = require('../exceptions/UnprocessibleEntityError');
 
 const contentful = require('../../lib/contentful');
@@ -64,14 +63,7 @@ function fetchCampaign(id, renderMessages) {
 
         return resolve(campaign);
       })
-      .catch(error => {
-        if (error.status === 404) {
-          const notFoundError = new NotFoundError(`Campaign ${id} not found`);
-          return reject(notFoundError);
-        }
-
-        return reject(error);
-      });
+      .catch(error => reject(error));
   });
 }
 
@@ -115,9 +107,8 @@ router.get('/:id', (req, res) => {
     })
     // TODO: Refactor helpers.sendResponse to accept an error and know the codes based on custom
     // error class, to DRY.
-    .catch(NotFoundError, err => helpers.sendResponse(res, 404, err.message))
     .catch(UnprocessibleEntityError, err => helpers.sendResponse(res, 422, err.message))
-    .catch(err => helpers.sendResponse(res, 500, err.message));
+    .catch(err => helpers.sendErrorResponse(res, err));
 });
 
 /**
@@ -188,9 +179,10 @@ router.post('/:id/message', (req, res) => {
         logger.error(err.response.error);
       }
       stathat.postStatWithError(statName, err);
-      const msg = `Error sending text to phone:${phone}: ${err.message}`;
+      const scope = err;
+      scope.message = `Error sending text to phone:${phone}: ${err.message}`;
 
-      return helpers.sendResponse(res, 500, msg);
+      return helpers.sendErrorResponse(res, err);
     });
 });
 
