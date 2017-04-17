@@ -49,7 +49,7 @@ router.use((req, res, next) => {
       req.signup = signup; // eslint-disable-line no-param-reassign
       return next();
     })
-    .catch(err => helpers.sendResponse(res, 500, err.message));
+    .catch(err => helpers.sendErrorResponse(res, err));
 });
 
 /**
@@ -68,7 +68,7 @@ router.use((req, res, next) => {
       req.campaign = phoenixCampaign; // eslint-disable-line no-param-reassign
       return next();
     })
-    .catch(err => helpers.sendResponse(res, 500, err.message));
+    .catch(err => helpers.sendErrorResponse(res, err));
 });
 
 /**
@@ -86,7 +86,7 @@ router.use((req, res, next) => {
       }
       return next();
     })
-    .catch(err => helpers.sendResponse(res, 500, err.message));
+    .catch(err => helpers.sendErrorResponse(res, err));
 });
 
 /**
@@ -104,7 +104,7 @@ router.use((req, res, next) => {
       req.user = user; // eslint-disable-line no-param-reassign
       return next();
     })
-    .catch(err => helpers.sendResponse(res, 500, err.message));
+    .catch(err => helpers.sendErrorResponse(res, err));
 });
 
 /**
@@ -119,7 +119,7 @@ router.use((req, res, next) => {
       req.signupMessage = helpers.addSenderPrefix(message); // eslint-disable-line no-param-reassign
       return next();
     })
-    .catch(err => helpers.sendResponse(res, 500, err.message));
+    .catch(err => helpers.sendErrorResponse(res, err));
 });
 
 /**
@@ -147,7 +147,7 @@ router.post('/', (req, res) => {
 
     return helpers.sendResponse(res, 200, req.signupMessage);
   } catch (err) {
-    return helpers.sendResponse(res, 500, err.message);
+    return helpers.sendErrorResponse(res, err);
   }
 });
 

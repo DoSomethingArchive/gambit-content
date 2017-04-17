@@ -8,7 +8,6 @@ const Promise = require('bluebird');
 const logger = require('winston');
 
 const ReportbackSubmission = require('./ReportbackSubmission');
-const NotFoundError = require('../exceptions/NotFoundError');
 const helpers = require('../../lib/helpers');
 const phoenix = require('../../lib/phoenix');
 const stathat = require('../../lib/stathat');
@@ -84,14 +83,8 @@ signupSchema.statics.lookupById = function (id) {
       .then(signupDoc => resolve(signupDoc))
       .catch(err => {
         stathat.postStatWithError(statName, err);
-        if (err.status === 404) {
-          const msg = `Signup ${id} not found.`;
-          const notFoundError = new NotFoundError(msg);
-          return reject(notFoundError);
-        }
-
         const scope = err;
-        scope.message = `Signup.lookupById error:${err.message}`;
+        scope.message = `Signup.lookupById:${id} error:${err.message}`;
         return reject(scope);
       });
   });
