@@ -112,75 +112,101 @@ router.get('/:id', (req, res) => {
 });
 
 /**
- * Sends SMS message to given phone number with the given Campaign and its message type.
+ * POST /:id/message: Sends SMS message to given mobile with the given Campaign and message type.
+ *
+ * First check for required parameters.
+ */
+router.post('/:id/message', (req, res, next) => {
+  logger.debug(`campaigns/:id/message post:${JSON.stringify(req.body)}`);
+  // Check required parameters.
+  /* eslint-disable no-param-reassign */
+  req.campaignId = req.params.id;
+  req.phone = req.body.phone;
+  req.messageType = req.body.type;
+  /* eslint-enable no-param-reassign */
+
+  if (!req.campaignId) {
+    return helpers.sendUnproccessibleEntityResponse(res, 'Missing required campaign id.');
+  }
+  if (!req.phone) {
+    return helpers.sendUnproccessibleEntityResponse(res, 'Missing required phone parameter.');
+  }
+  if (!req.messageType) {
+    return helpers.sendUnproccessibleEntityResponse(res, 'Missing required type parameter.');
+  }
+  return next();
+});
+
+/**
+ * Fetch Campaign from Phoenix API and validate its Campaign Status active.
+ */
+router.post('/:id/message', (req, res, next) => {
+  phoenix.fetchCampaign(req.campaignId)
+    .then((phoenixCampaign) => {
+      if (req.timedout) {
+        return helpers.sendTimeoutResponse(res);
+      }
+
+      if (phoenix.isClosedCampaign(phoenixCampaign)) {
+        const err = new ClosedCampaignError(phoenixCampaign);
+        return helpers.sendUnproccessibleEntityResponse(res, err.message);
+      }
+
+      req.campaign = phoenixCampaign; // eslint-disable-line no-param-reassign
+
+      return next();
+    })
+    .catch(err => helpers.sendErrorResponse(res, err));
+});
+
+/**
+ * Fetch Campaign Keywords from Contentful to validate its running on Gambit.
+ */
+router.post('/:id/message', (req, res, next) => {
+  contentful.fetchKeywordsForCampaignId(req.campaignId)
+    .then((keywords) => {
+      if (req.timedout) {
+        return helpers.sendTimeoutResponse(res);
+      }
+
+      if (keywords.length === 0) {
+        const msg = `Campaign ${req.campaignId} does not have any Gambit keywords.`;
+        return helpers.sendUnproccessibleEntityResponse(res, msg);
+      }
+
+      return next();
+    })
+    .catch(err => helpers.sendErrorResponse(res, err));
+});
+
+/**
+ * Render our campaign message to deliver and post it to Mobile Commons.
  */
 router.post('/:id/message', (req, res) => {
-  // Check required parameters.
-  const campaignId = req.params.id;
-  const phone = req.body.phone;
-  const type = req.body.type;
-  const statName = `campaignbot:${type}`;
+  const statName = `campaignbot:${req.messageType}`;
 
-  if (!campaignId) {
-    return helpers.sendResponse(res, 422, 'Missing required campaign id.');
-  }
-  if (!phone) {
-    return helpers.sendResponse(res, 422, 'Missing required phone parameter.');
-  }
-  if (!type) {
-    return helpers.sendResponse(res, 422, 'Missing required message type parameter.');
-  }
-
-  let messageBody;
-  const loadCampaignMessage = new Promise((resolve, reject) => {
-    logger.debug(`loadCampaignMessage campaign:${campaignId} msgType:${type}`);
-    let campaign;
-
-    return phoenix.fetchCampaign(campaignId)
-      .then((phoenixCampaign) => {
-        if (phoenix.isClosedCampaign(phoenixCampaign)) {
-          const err = new ClosedCampaignError(phoenixCampaign);
-          return reject(err);
-        }
-        campaign = phoenixCampaign;
-
-        return contentful.fetchKeywordsForCampaignId(campaignId);
-      })
-      .then((keywords) => {
-        if (keywords.length === 0) {
-          const msg = `Campaign ${campaignId} does not have any Gambit keywords.`;
-          const err = new UnprocessibleEntityError(msg);
-          return reject(err);
-        }
-
-        return contentful.renderMessageForPhoenixCampaign(campaign, type);
-      })
-      .then(message => resolve(message))
-      .catch(err => reject(err));
-  });
-
-  return loadCampaignMessage
+  return contentful.renderMessageForPhoenixCampaign(req.campaign, req.messageType)
     .then((message) => {
-      messageBody = helpers.addSenderPrefix(message);
-      mobilecommons.send_message(phone, messageBody);
-      const msg = `Sent message:${type} for campaign:${campaignId} to phone:${phone}`;
+      if (req.timedout) {
+        return helpers.sendTimeoutResponse(res);
+      }
+      const messageBody = helpers.addSenderPrefix(message);
+      mobilecommons.send_message(req.phone, messageBody);
+      const msg = `Sent messageType:${req.messageType} campaign:${req.campaignId} ` +
+                  `phone:${req.phone}`;
       logger.info(msg);
       stathat.postStat(statName);
 
       return helpers.sendResponse(res, 200, messageBody);
     })
-    .catch(UnprocessibleEntityError, (err) => {
-      logger.error(err.message);
-
-      return helpers.sendResponse(res, 422, err.message);
-    })
     .catch((err) => {
+      // Check for response object that Mobile Commons may send:
       if (err.response) {
         logger.error(err.response.error);
       }
       stathat.postStatWithError(statName, err);
       const scope = err;
-      scope.message = `Error sending text to phone:${phone}: ${err.message}`;
+      scope.message = `Error sending text to phone:${req.phone}: ${err.message}`;
 
       return helpers.sendErrorResponse(res, err);
     });
