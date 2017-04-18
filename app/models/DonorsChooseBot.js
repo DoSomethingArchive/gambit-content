@@ -5,6 +5,7 @@
  */
 const mongoose = require('mongoose');
 const Promise = require('bluebird');
+
 const gambitJunior = rootRequire('lib/junior');
 const BotRequest = require('./BotRequest');
 const logger = require('winston');
@@ -37,7 +38,7 @@ donorsChooseBotSchema.statics.lookupByID = function (id) {
 
     return gambitJunior
       .get('donorschoosebots', id)
-      .then(response => {
+      .then((response) => {
         const data = response;
         data._id = Number(response.id);
         data.id = undefined;
