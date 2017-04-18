@@ -81,7 +81,7 @@ signupSchema.statics.lookupById = function (id) {
         return model.findOneAndUpdate({ _id: id }, data, helpers.upsertOptions()).exec();
       })
       .then(signupDoc => resolve(signupDoc))
-      .catch(err => {
+      .catch((err) => {
         stathat.postStatWithError(statName, err);
         const scope = err;
         scope.message = `Signup.lookupById:${id} error:${err.message}`;
@@ -200,7 +200,7 @@ signupSchema.methods.createDraftReportbackSubmission = function () {
         campaign: signup.campaign,
         user: signup.user,
       })
-      .then(reportbackSubmission => {
+      .then((reportbackSubmission) => {
         const submissionId = reportbackSubmission._id;
         logger.verbose(`${logPrefix} created reportback_submission:${submissionId.toString()}`);
         signup.draft_reportback_submission = submissionId;

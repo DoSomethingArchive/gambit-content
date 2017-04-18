@@ -4,6 +4,7 @@
  * Imports.
  */
 const express = require('express');
+
 const router = express.Router(); // eslint-disable-line new-cap
 const logger = require('winston');
 
@@ -18,24 +19,6 @@ const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
 const BotRequest = require('../models/BotRequest');
 const Signup = require('../models/Signup');
 const User = require('../models/User');
-
-/**
- * Determines if given incomingMessage matches given Gambit command type.
- */
-function isCommand(incomingMessage, commandType) {
-  logger.debug(`isCommand:${commandType}`);
-
-  if (!incomingMessage) {
-    return false;
-  }
-
-  const firstWord = helpers.getFirstWord(incomingMessage).toUpperCase();
-  const configName = `GAMBIT_CMD_${commandType.toUpperCase()}`;
-  const configValue = process.env[configName];
-  const result = firstWord === configValue.toUpperCase();
-
-  return result;
-}
 
 /**
  * Renders message for given message type and request.
@@ -431,7 +414,7 @@ router.use((req, res, next) => {
  * Check for non-reportback conversation messages first for sending reply message.
  */
 router.post('/', (req, res, next) => {
-  if (isCommand(req.incoming_message, 'member_support')) {
+  if (helpers.isCommand(req.incoming_message, 'member_support')) {
     return endConversationWithMessageType(req, res, 'member_support');
   }
 
@@ -442,7 +425,7 @@ router.post('/', (req, res, next) => {
     return next();
   }
 
-  if (isCommand(req.incoming_message, 'reportback')) {
+  if (helpers.isCommand(req.incoming_message, 'reportback')) {
     return req.signup.createDraftReportbackSubmission()
       .then(() => continueConversationWithMessageType(req, res, 'ask_quantity'))
       .catch(err => helpers.sendErrorResponse(res, err));
