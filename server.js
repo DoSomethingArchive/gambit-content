@@ -1,10 +1,16 @@
 /* eslint no-use-before-define: 0 */
+
+// TODO: refactor to implement best practices turned off here
+/* eslint-disable global-require */
+/* eslint-disable import/no-dynamic-require */
+
 require('newrelic'); // eslint-disable-line strict
 // @see https://docs.newrelic.com/docs/agents/nodejs-agent/installation-configuration
 // New Relic is required on first line, otherwise would declare 'use strict' for line 1 per eslint
 
 // Setup concurrency
 const throng = require('throng');
+
 const WORKERS = process.env.WEB_CONCURRENCY || 1;
 
 // Wrapper around require to set relative path at app root
@@ -20,6 +26,7 @@ const DB_URI = process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder';
  */
 const logger = require('winston');
 require('winston-mongodb').MongoDB; // eslint-disable-line no-unused-expressions
+
 const WINSTON_LEVEL = process.env.LOGGING_LEVEL || 'info';
 logger.configure({
   transports: [
