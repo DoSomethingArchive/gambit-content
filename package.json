@@ -8,7 +8,7 @@
     "url": "git+https://github.com/DoSomething/gambit.git"
   },
   "scripts": {
-    "test": "npm run lint",
+    "test": "npm run lint && ava",
     "start": "node server",
     "lint": "eslint --ext=.js server.js app config lib"
   },
@@ -17,6 +17,11 @@
       "app": true,
       "rootRequire": true
     }
+  },
+  "ava": {
+    "concurrency": 5,
+    "powerAssert": false,
+    "failWithoutAssertions": false
   },
   "engines": {
     "node": "6.10.x"
@@ -47,6 +52,7 @@
   },
   "devDependencies": {
     "@dosomething/eslint-config": "^1.1.1",
+    "ava": "^0.19.1",
     "eslint": "^2.10.2",
     "eslint-plugin-react": "^5.1.1"
   }
