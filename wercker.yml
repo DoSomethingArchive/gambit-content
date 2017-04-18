@@ -2,4 +2,11 @@ box: node:6.10
 build:
   steps:
     - npm-install
-    - npm-test
+    - script:
+      name: load env variables
+      code: |
+          export GAMBIT_CMD_REPORTBACK=$GAMBIT_CMD_REPORTBACK
+          export GAMBIT_CMD_MEMBER_SUPPORT=$GAMBIT_CMD_MEMBER_SUPPORT
+    - script:
+      name: run all tests
+      code: npm run test
