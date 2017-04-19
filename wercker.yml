@@ -10,3 +10,6 @@ build:
     - script:
       name: run all tests
       code: npm run test
+    - script:
+      name: publish coverage report to codecov
+      code: npm run publish-coverage-report
