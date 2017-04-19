@@ -14,3 +14,7 @@ node_modules
 # config
 **/config/*.json
 .pull_config.conf
+
+#code coverage directories
+.nyc_output
+coverage
