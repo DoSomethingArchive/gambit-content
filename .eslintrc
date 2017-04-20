@@ -15,4 +15,7 @@
       - 2
       - "global"
     # Mongo uses _id as its internal primary key, we have to allow this style
-    no-underscore-dangle: off
+    no-underscore-dangle:
+      - error
+      - allow:
+        - _id
