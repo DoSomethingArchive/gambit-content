@@ -9,7 +9,7 @@ build:
           export GAMBIT_CMD_MEMBER_SUPPORT=$GAMBIT_CMD_MEMBER_SUPPORT
     - script:
       name: run all tests
-      code: npm run test
+      code: npm run all-tests
     - script:
       name: publish coverage report to codecov
       code: npm run publish-coverage-report
