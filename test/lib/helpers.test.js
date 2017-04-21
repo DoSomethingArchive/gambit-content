@@ -11,7 +11,6 @@ const contentful = require('../../lib/contentful.js');
 const helpers = require('../../lib/helpers');
 
 const contentfulPromise = () => new Promise((resolve) => { resolve(stubs.getKeywords()); });
-sinon.stub(contentful, 'fetchKeywordsForCampaignId').returns(contentfulPromise());
 
 // setup should assertion style
 chai.should();
@@ -103,13 +102,20 @@ test('generatePassword', () => {
 // TODO: test more edge cases!
 // replacePhoenixCampaignVars
 test('replacePhoenixCampaignVars', async () => {
-  process.env.NODE_ENV = 'thor';
+  sinon.stub(contentful, 'fetchKeywordsForCampaignId').callsFake(contentfulPromise);
   const keywords = stubs.getKeywords();
   const phoenixCampaign = stubs.getPhoenixCampaign();
   const message = stubs.getDefaultContenfulCampaignMessage();
   const renderedMessage = await helpers.replacePhoenixCampaignVars(message, phoenixCampaign);
+
   sinon.assert.calledOnce(contentful.fetchKeywordsForCampaignId);
   renderedMessage.should.have.string(keywords[0].keyword);
+});
+
+test('replacePhoenixCampaignVars with no message should return empty string', async () => {
+  const phoenixCampaign = stubs.getPhoenixCampaign();
+  const renderedMessage = await helpers.replacePhoenixCampaignVars(undefined, phoenixCampaign);
+  renderedMessage.should.equal('');
 });
 
 // isCommand
