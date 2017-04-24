@@ -9,6 +9,8 @@
       - error
       - exceptions:
         - t
+    # need fot AVA test contetext support
+    no-param-reassign: off
     # Support should constructs like result.should.be.true;
     no-unused-expressions: 'off'
     ava/assertion-arguments: error
