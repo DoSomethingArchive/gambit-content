@@ -9,6 +9,7 @@ const stubs = require('../../test/utils/stubs');
 const sinon = require('sinon');
 const contentful = require('../../lib/contentful.js');
 const helpers = require('../../lib/helpers');
+const httpMocks = require('node-mocks-http');
 
 // Stub functions
 const fetchKeywordsForCampaignIdStub = () => new Promise((resolve) => {
@@ -17,10 +18,11 @@ const fetchKeywordsForCampaignIdStub = () => new Promise((resolve) => {
 const fetchKeywordsForCampaignIdStubFail = () => new Promise((resolve, reject) => {
   reject({ status: 500 });
 });
-const sendResponseStub = () => { true; };
+// const sendResponseStub = () => { true; };
 
 // Setup Spies
 sinon.spy(helpers, 'sendErrorResponse');
+sinon.spy(helpers, 'sendResponse');
 
 // Setup stubs
 sinon.stub(contentful, 'fetchKeywordsForCampaignId')
@@ -28,10 +30,18 @@ sinon.stub(contentful, 'fetchKeywordsForCampaignId')
   .callsFake(fetchKeywordsForCampaignIdStub)
   .onCall(1)
   .callsFake(fetchKeywordsForCampaignIdStubFail);
-sinon.stub(helpers, 'sendResponse').callsFake(sendResponseStub);
 
 // setup should assertion style
 chai.should();
+
+test.beforeEach((t) => {
+  t.context.req = httpMocks.createRequest();
+  t.context.res = httpMocks.createResponse();
+});
+
+/**
+ * Tests
+ */
 
 // replacePhoenixCampaignVars
 test('replacePhoenixCampaignVars', async () => {
@@ -185,6 +195,39 @@ test('isCommand should return true when incoming message is start and type is re
 test('isCommand should return false when missing incomingMessage argument', () => {
   helpers.isCommand(undefined, 'member_support').should.be.false;
   helpers.isCommand(undefined, 'reportback').should.be.false;
+});
+
+// sendTimeoutResponse
+test('sendTimeoutResponse', (t) => {
+  const timeoutNumSeconds = helpers.getGambitTimeoutNumSeconds();
+  helpers.sendTimeoutResponse(t.context.res);
+
+  sinon.assert.called(helpers.sendResponse);
+  sinon.assert.calledWith(helpers.sendResponse, t.context.res, 504, `Request timed out after ${timeoutNumSeconds} seconds.`);
+});
+
+// sendErrorResponse
+// TODO: Test for more error types and messages
+test('sendErrorResponse', (t) => {
+  helpers.sendErrorResponse(t.context.res, { /* Error Object */ });
+
+  sinon.assert.called(helpers.sendResponse);
+  sinon.assert.calledWith(helpers.sendResponse, t.context.res, 500);
+});
+
+// sendUnproccessibleEntityResponse
+test('sendUnproccessibleEntityResponse', (t) => {
+  const message = 'Test';
+  helpers.sendUnproccessibleEntityResponse(t.context.res, message);
+
+  sinon.assert.called(helpers.sendResponse);
+  sinon.assert.calledWith(helpers.sendResponse, t.context.res, 422, message);
+});
+
+// getGambitTimeoutNumSeconds
+test('getGambitTimeoutNumSeconds', () => {
+  helpers.getGambitTimeoutNumSeconds().should.not.be.undefined;
+  helpers.getGambitTimeoutNumSeconds().should.be.below(30);
 });
 
 // upsertOptions
