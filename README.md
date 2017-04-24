@@ -8,7 +8,7 @@ Install Node, MongoDB, and the Heroku toolbelt.
 Next, fork and clone this repository. To run Gambit locally:
 * `sudo mongod`
 * `npm install`
-* `npm run test` Make sure all tests pass
+* `npm run all-tests` Make sure all tests pass
 * `heroku local` from your Gambit directory
 
 #### Docker
