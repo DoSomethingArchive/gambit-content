@@ -10,10 +10,80 @@ const sinon = require('sinon');
 const contentful = require('../../lib/contentful.js');
 const helpers = require('../../lib/helpers');
 
-const contentfulPromise = () => new Promise((resolve) => { resolve(stubs.getKeywords()); });
+// Stub functions
+const fetchKeywordsForCampaignIdStub = () => new Promise((resolve) => {
+  resolve(stubs.getKeywords());
+});
+const fetchKeywordsForCampaignIdStubFail = () => new Promise((resolve, reject) => {
+  reject({ status: 500 });
+});
+const sendResponseStub = () => { true; };
+
+// Setup Spies
+sinon.spy(helpers, 'sendErrorResponse');
+
+// Setup stubs
+sinon.stub(contentful, 'fetchKeywordsForCampaignId')
+  .onCall(0)
+  .callsFake(fetchKeywordsForCampaignIdStub)
+  .onCall(1)
+  .callsFake(fetchKeywordsForCampaignIdStubFail);
+sinon.stub(helpers, 'sendResponse').callsFake(sendResponseStub);
 
 // setup should assertion style
 chai.should();
+
+// replacePhoenixCampaignVars
+test('replacePhoenixCampaignVars', async () => {
+  const phoenixCampaign = stubs.getPhoenixCampaign();
+  let renderedMessage = '';
+  // signedup through gambit
+  const signedupGambitMsg = stubs.getDefaultContenfulCampaignMessage('menu_signedup_gambit');
+  renderedMessage = await helpers.replacePhoenixCampaignVars(signedupGambitMsg, phoenixCampaign);
+  renderedMessage.should.have.string(phoenixCampaign.facts.problem);
+  // invalid sign up command
+  const invalidSignedupCmdMsg = stubs.getDefaultContenfulCampaignMessage('invalid_cmd_signedup');
+  renderedMessage = await helpers
+  .replacePhoenixCampaignVars(invalidSignedupCmdMsg, phoenixCampaign);
+  renderedMessage.should.have.string('Sorry, I didn\'t understand that.');
+
+  // TODO: test more messages!
+});
+
+test('replacePhoenixCampaignVars a message that makes a contentful request to get keywords', async () => {
+  const keywords = stubs.getKeywords();
+  let renderedMessage = '';
+  const phoenixCampaign = stubs.getPhoenixCampaign();
+  const relativeToSignUpMsg = stubs.getDefaultContenfulCampaignMessage('scheduled_relative_to_signup_date');
+  // fetchKeywordsForCampaignIdStub should be called here
+  // since it's the first time its called in our tests
+  renderedMessage = await helpers.replacePhoenixCampaignVars(relativeToSignUpMsg, phoenixCampaign);
+
+  sinon.assert.called(contentful.fetchKeywordsForCampaignId);
+  renderedMessage.should.have.string(keywords[0].keyword);
+});
+
+test('replacePhoenixCampaignVars failure to retrieve keywords should throw', async (t) => {
+  const phoenixCampaign = stubs.getPhoenixCampaign();
+  const memberSupportMsg = stubs.getDefaultContenfulCampaignMessage('member_support');
+  // fetchKeywordsForCampaignIdStubFail should be called here
+  // since it's the second time its called in our tests
+  await t.throws(helpers.replacePhoenixCampaignVars(memberSupportMsg, phoenixCampaign));
+  sinon.assert.called(contentful.fetchKeywordsForCampaignId);
+});
+
+test('replacePhoenixCampaignVars with no message should return empty string', async () => {
+  const phoenixCampaign = stubs.getPhoenixCampaign();
+  const renderedMessage = await helpers.replacePhoenixCampaignVars(undefined, phoenixCampaign);
+  renderedMessage.should.equal('');
+});
+
+test('replacePhoenixCampaignVars on a campaign object missing reportbackInfo should throw', async (t) => {
+  const phoenixCampaign = stubs.getPhoenixCampaign();
+  delete phoenixCampaign.reportbackInfo;
+  const memberSupportMsg = stubs.getDefaultContenfulCampaignMessage('menu_signedup_gambit');
+  await t.throws(helpers.replacePhoenixCampaignVars(memberSupportMsg, phoenixCampaign));
+});
 
 // addSenderPrefix
 test('addSenderPrefix', () => {
@@ -97,25 +167,6 @@ test('generatePassword', () => {
     .substring(0, 6);
   helpers.generatePassword('taco').should.be.equal(key);
   helpers.generatePassword('burrito').should.not.be.equal(key);
-});
-
-// TODO: test more edge cases!
-// replacePhoenixCampaignVars
-test('replacePhoenixCampaignVars', async () => {
-  sinon.stub(contentful, 'fetchKeywordsForCampaignId').callsFake(contentfulPromise);
-  const keywords = stubs.getKeywords();
-  const phoenixCampaign = stubs.getPhoenixCampaign();
-  const message = stubs.getDefaultContenfulCampaignMessage();
-  const renderedMessage = await helpers.replacePhoenixCampaignVars(message, phoenixCampaign);
-
-  sinon.assert.calledOnce(contentful.fetchKeywordsForCampaignId);
-  renderedMessage.should.have.string(keywords[0].keyword);
-});
-
-test('replacePhoenixCampaignVars with no message should return empty string', async () => {
-  const phoenixCampaign = stubs.getPhoenixCampaign();
-  const renderedMessage = await helpers.replacePhoenixCampaignVars(undefined, phoenixCampaign);
-  renderedMessage.should.equal('');
 });
 
 // isCommand
