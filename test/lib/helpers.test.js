@@ -11,6 +11,8 @@ const contentful = require('../../lib/contentful.js');
 const helpers = require('../../lib/helpers');
 const httpMocks = require('node-mocks-http');
 
+// TODO: Suppress logger console transport
+
 // Stub functions
 const fetchKeywordsForCampaignIdStub = () => new Promise((resolve) => {
   resolve(stubs.getKeywords());
