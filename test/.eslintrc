@@ -9,6 +9,8 @@
       - error
       - exceptions:
         - t
+    # need fot AVA test contetext support
+    no-param-reassign: off
     # Support should constructs like result.should.be.true;
     no-unused-expressions: 'off'
     ava/assertion-arguments: error
@@ -28,7 +30,8 @@
     ava/no-skip-test: off
     ava/no-statement-after-end: error
     ava/no-todo-implementation: error
-    ava/no-todo-test: warn
+    # Allow for setting up TODO tests
+    ava/no-todo-test: off
     ava/no-unknown-modifiers: error
     ava/prefer-async-await: error
     ava/prefer-power-assert: off
