@@ -301,7 +301,7 @@ router.use((req, res, next) => {
       if (keyword.fields.environment !== process.env.NODE_ENV) {
         const msg = `Keyword ${req.keyword} environment error: defined as ${keyword.environment} ` +
                     `but sent to ${process.env.NODE_ENV}.`;
-        return helpers.sendResponse(res, 500, msg);
+        return helpers.sendUnproccessibleEntityResponse(res, msg);
       }
       const keywordCampaign = keyword.fields.campaign.fields;
       req.campaignId = keywordCampaign.campaignId; // eslint-disable-line no-param-reassign
