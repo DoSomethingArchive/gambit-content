@@ -172,7 +172,10 @@ signupSchema.statics.post = function (user, campaign, keyword, broadcastId) {
           data.broadcast_id = broadcastId;
         }
 
-        return model.findOneAndUpdate({ _id: signupId }, data, helpers.upsertOptions()).exec();
+        return model.findOneAndUpdate({ _id: signupId }, data, helpers.upsertOptions())
+          .populate('user')
+          .populate('draft_reportback_submission')
+          .exec();
       })
       .then(signupDoc => resolve(signupDoc))
       .catch((err) => {
