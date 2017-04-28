@@ -8,13 +8,6 @@ Endpoint                                       | Functionality
 `POST /v1/chatbot` | [CampaignBot chat](endpoints/chatbot.md)
 
 
-## DonorsChooseBot
-
-Endpoint                                       | Functionality                                           
----------------------------------------------- | --------------------------------------------------------
-`POST /v1/donorschoosebot` | [DonorsChooseBot chat](endpoints/donorschoosebot.md)
-
-
 ## Campaigns
 
 Endpoint                                       | Functionality                                           

@@ -131,26 +131,6 @@ test('addSenderPrefix', () => {
   helpers.addSenderPrefix(text).should.be.equal(text);
 });
 
-// isValidZip
-test('isValidZip', () => {
-  helpers.isValidZip('10010').should.be.true;
-  helpers.isValidZip('10010-9995').should.be.true;
-  helpers.isValidZip('100100').should.be.false;
-  helpers.isValidZip('abc10').should.be.false;
-});
-
-// isValidEmail
-test('isValidEmail', () => {
-  helpers.isValidEmail('do@something.org').should.be.true;
-  helpers.isValidEmail('Joe Smith <email@example.com>').should.be.false;
-  helpers.isValidEmail('email.example.com').should.be.false;
-  helpers.isValidEmail('email@111.222.333.44444').should.be.false;
-  helpers.isValidEmail('email@example..com').should.be.false;
-  helpers.isValidEmail('Abc..123@example.com').should.be.false;
-  helpers.isValidEmail('.email@example.com').should.be.false;
-  helpers.isValidEmail('email@example.com (Joe Smith)').should.be.false;
-});
-
 // containsNaughtyWords
 test('containsNaughtyWords', () => {
   helpers.containsNaughtyWords('suck').should.be.true;

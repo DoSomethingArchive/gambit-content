@@ -32,5 +32,4 @@ router.use('/v1/status', (req, res) => res.send('ok'));
 
 router.use('/v1/campaigns', require('./campaigns'));
 router.use('/v1/chatbot', require('./chatbot'));
-router.use('/v1/donorschoosebot', require('./donorschoosebot'));
 router.use('/v1/signups', require('./signups'));
