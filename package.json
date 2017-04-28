@@ -8,9 +8,9 @@
     "url": "git+https://github.com/DoSomething/gambit.git"
   },
   "scripts": {
-    "test": "NODE_ENV=test ava",
+    "test": "NODE_ENV=test ava --serial",
     "all-tests": "npm run lint && npm run coverage",
-    "coverage": "NODE_ENV=test nyc --all ava",
+    "coverage": "NODE_ENV=test nyc --all ava --serial",
     "html-coverage-report": "nyc report --reporter=html",
     "publish-coverage-report": "nyc report --reporter=lcov && codecov",
     "start": "node server",
@@ -66,6 +66,7 @@
   "devDependencies": {
     "@dosomething/eslint-config": "^2.0.0",
     "ava": "^0.19.1",
+    "bluebird": "^3.5.0",
     "chai": "^3.5.0",
     "codecov": "^2.1.0",
     "dotenv": "^4.0.0",
@@ -73,6 +74,7 @@
     "eslint-plugin-ava": "^4.2.0",
     "node-mocks-http": "^1.6.1",
     "nyc": "^10.2.0",
-    "sinon": "^2.1.0"
+    "sinon": "^2.1.0",
+    "sinon-chai": "^2.9.0"
   }
 }
