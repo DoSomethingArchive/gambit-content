@@ -1,44 +1,65 @@
 'use strict';
 
 require('dotenv').config();
+const Promise = require('bluebird');
 const test = require('ava');
 const chai = require('chai');
 const expect = require('chai').expect;
-const crypto = require('crypto');
 const stubs = require('../../test/utils/stubs');
 const sinon = require('sinon');
-const contentful = require('../../lib/contentful.js');
-const helpers = require('../../lib/helpers');
+const sinonChai = require('sinon-chai');
 const httpMocks = require('node-mocks-http');
+const contentful = require('../../lib/contentful.js');
+const stathat = require('../../lib/stathat');
+const crypto = require('crypto');
+const logger = require('winston');
 
-// TODO: Suppress logger console transport
+// Module to test
+const helpers = require('../../lib/helpers');
 
 // Stub functions
-const fetchKeywordsForCampaignIdStub = () => new Promise((resolve) => {
-  resolve(stubs.getKeywords());
-});
-const fetchKeywordsForCampaignIdStubFail = () => new Promise((resolve, reject) => {
-  reject({ status: 500 });
-});
-// const sendResponseStub = () => { true; };
-
-// Setup Spies
-sinon.spy(helpers, 'sendErrorResponse');
-sinon.spy(helpers, 'sendResponse');
-
-// Setup stubs
-sinon.stub(contentful, 'fetchKeywordsForCampaignId')
-  .onCall(0)
-  .callsFake(fetchKeywordsForCampaignIdStub)
-  .onCall(1)
-  .callsFake(fetchKeywordsForCampaignIdStubFail);
+const fetchKeywordsForCampaignIdStub = () => Promise.resolve(stubs.getKeywords());
+const fetchKeywordsForCampaignIdStubFail = () => Promise.reject({ status: 500 });
+const cryptoCreateHmacStub = {
+  update() { return this; },
+  digest() { return this; },
+  substring() { return this; },
+};
 
 // setup should assertion style
 chai.should();
+chai.use(sinonChai);
 
+const sandbox = sinon.sandbox.create();
+
+// Setup!
 test.beforeEach((t) => {
+  // setup stubs
+  sandbox.stub(contentful, 'fetchKeywordsForCampaignId')
+    .callsFake(fetchKeywordsForCampaignIdStub)
+    .withArgs('fail')
+    .callsFake(fetchKeywordsForCampaignIdStubFail)
+    .withArgs('empty')
+    .returns(Promise.resolve([]));
+  sandbox.stub(logger, 'error');
+  sandbox.stub(logger, 'debug');
+  sandbox.stub(stathat, 'postStat');
+  sandbox.stub(crypto, 'createHmac').returns(cryptoCreateHmacStub);
+
+  // setup spies
+  sandbox.spy(helpers, 'sendErrorResponse');
+  sandbox.spy(helpers, 'sendResponse');
+
+  // setup req, res mocks
   t.context.req = httpMocks.createRequest();
   t.context.res = httpMocks.createResponse();
+});
+
+// Cleanup!
+test.afterEach((t) => {
+  // reset stubs, spies, and mocks
+  sandbox.restore();
+  t.context = {};
 });
 
 /**
@@ -51,7 +72,8 @@ test('replacePhoenixCampaignVars', async () => {
   let renderedMessage = '';
   // signedup through gambit
   const signedupGambitMsg = stubs.getDefaultContenfulCampaignMessage('menu_signedup_gambit');
-  renderedMessage = await helpers.replacePhoenixCampaignVars(signedupGambitMsg, phoenixCampaign);
+  renderedMessage = await helpers
+    .replacePhoenixCampaignVars(signedupGambitMsg, phoenixCampaign);
   renderedMessage.should.have.string(phoenixCampaign.facts.problem);
   // invalid sign up command
   const invalidSignedupCmdMsg = stubs.getDefaultContenfulCampaignMessage('invalid_cmd_signedup');
@@ -67,26 +89,27 @@ test('replacePhoenixCampaignVars a message that makes a contentful request to ge
   let renderedMessage = '';
   const phoenixCampaign = stubs.getPhoenixCampaign();
   const relativeToSignUpMsg = stubs.getDefaultContenfulCampaignMessage('scheduled_relative_to_signup_date');
-  // fetchKeywordsForCampaignIdStub should be called here
-  // since it's the first time its called in our tests
-  renderedMessage = await helpers.replacePhoenixCampaignVars(relativeToSignUpMsg, phoenixCampaign);
+  renderedMessage = await helpers
+    .replacePhoenixCampaignVars(relativeToSignUpMsg, phoenixCampaign);
 
-  sinon.assert.called(contentful.fetchKeywordsForCampaignId);
+  contentful.fetchKeywordsForCampaignId.should.have.been.called;
   renderedMessage.should.have.string(keywords[0].keyword);
 });
 
 test('replacePhoenixCampaignVars failure to retrieve keywords should throw', async (t) => {
   const phoenixCampaign = stubs.getPhoenixCampaign();
+  // will trigger fetchKeywordsForCampaignIdStubFail stub
+  phoenixCampaign.id = 'fail';
   const memberSupportMsg = stubs.getDefaultContenfulCampaignMessage('member_support');
-  // fetchKeywordsForCampaignIdStubFail should be called here
-  // since it's the second time its called in our tests
+
   await t.throws(helpers.replacePhoenixCampaignVars(memberSupportMsg, phoenixCampaign));
-  sinon.assert.called(contentful.fetchKeywordsForCampaignId);
+  contentful.fetchKeywordsForCampaignId.should.have.been.called;
 });
 
 test('replacePhoenixCampaignVars with no message should return empty string', async () => {
   const phoenixCampaign = stubs.getPhoenixCampaign();
-  const renderedMessage = await helpers.replacePhoenixCampaignVars(undefined, phoenixCampaign);
+  const renderedMessage = await helpers
+    .replacePhoenixCampaignVars(undefined, phoenixCampaign);
   renderedMessage.should.equal('');
 });
 
@@ -108,26 +131,6 @@ test('addSenderPrefix', () => {
   helpers.addSenderPrefix(text).should.be.equal(text);
 });
 
-// isValidZip
-test('isValidZip', () => {
-  helpers.isValidZip('10010').should.be.true;
-  helpers.isValidZip('10010-9995').should.be.true;
-  helpers.isValidZip('100100').should.be.false;
-  helpers.isValidZip('abc10').should.be.false;
-});
-
-// isValidEmail
-test('isValidEmail', () => {
-  helpers.isValidEmail('do@something.org').should.be.true;
-  helpers.isValidEmail('Joe Smith <email@example.com>').should.be.false;
-  helpers.isValidEmail('email.example.com').should.be.false;
-  helpers.isValidEmail('email@111.222.333.44444').should.be.false;
-  helpers.isValidEmail('email@example..com').should.be.false;
-  helpers.isValidEmail('Abc..123@example.com').should.be.false;
-  helpers.isValidEmail('.email@example.com').should.be.false;
-  helpers.isValidEmail('email@example.com (Joe Smith)').should.be.false;
-});
-
 // containsNaughtyWords
 test('containsNaughtyWords', () => {
   helpers.containsNaughtyWords('suck').should.be.true;
@@ -141,15 +144,21 @@ test('getFirstWord should return null if no message is passed', () => {
   expect(result).to.be.null;
 });
 
-// TODO: It is now failing due to a bug when processing the message
-// which fails to properly parse multi-word acceptable answers
-// https://github.com/DoSomething/gambit/issues/866
-test.skip('isYesResponse', () => {
+// isYesResponse
+test('isYesResponse', () => {
   helpers.isYesResponse('yea').should.be.true;
+  helpers.isYesResponse('si').should.be.true;
+  helpers.isYesResponse('s').should.be.true;
   helpers.isYesResponse('yesss').should.be.true;
   helpers.isYesResponse('i can').should.be.true;
   helpers.isYesResponse('yes').should.be.true;
   helpers.isYesResponse('nah').should.be.false;
+  helpers.isYesResponse('ss').should.be.false;
+  helpers.isYesResponse('abs').should.be.false;
+  helpers.isYesResponse('def').should.be.false;
+  helpers.isYesResponse('hell').should.be.false;
+  helpers.isYesResponse('tamales').should.be.false;
+  helpers.isYesResponse('definitely not').should.be.false;
 });
 
 // isValidReportbackQuantity
@@ -171,14 +180,8 @@ test('isValidReportbackText', () => {
 
 // generatePassword
 test('generatePassword', () => {
-  process.env.DS_API_PASSWORD_KEY = 'bell';
-  const key = crypto
-    .createHmac('sha1', 'bell')
-    .update('taco')
-    .digest('hex')
-    .substring(0, 6);
-  helpers.generatePassword('taco').should.be.equal(key);
-  helpers.generatePassword('burrito').should.not.be.equal(key);
+  helpers.generatePassword('taco');
+  crypto.createHmac.should.have.been.calledWithExactly('sha1', process.env.DS_API_PASSWORD_KEY);
 });
 
 // isCommand
@@ -204,8 +207,8 @@ test('sendTimeoutResponse', (t) => {
   const timeoutNumSeconds = helpers.getGambitTimeoutNumSeconds();
   helpers.sendTimeoutResponse(t.context.res);
 
-  sinon.assert.called(helpers.sendResponse);
-  sinon.assert.calledWith(helpers.sendResponse, t.context.res, 504, `Request timed out after ${timeoutNumSeconds} seconds.`);
+  helpers.sendResponse.should.have.been.called;
+  helpers.sendResponse.should.have.been.calledWithExactly(t.context.res, 504, `Request timed out after ${timeoutNumSeconds} seconds.`);
 });
 
 // sendErrorResponse
@@ -213,8 +216,9 @@ test('sendTimeoutResponse', (t) => {
 test('sendErrorResponse', (t) => {
   helpers.sendErrorResponse(t.context.res, { /* Error Object */ });
 
-  sinon.assert.called(helpers.sendResponse);
-  sinon.assert.calledWith(helpers.sendResponse, t.context.res, 500);
+  helpers.sendResponse.should.have.been.called;
+  // TODO: Use calledWithExactly when testing specific errors
+  helpers.sendResponse.should.have.been.calledWith(t.context.res, 500);
 });
 
 // sendUnproccessibleEntityResponse
@@ -222,8 +226,8 @@ test('sendUnproccessibleEntityResponse', (t) => {
   const message = 'Test';
   helpers.sendUnproccessibleEntityResponse(t.context.res, message);
 
-  sinon.assert.called(helpers.sendResponse);
-  sinon.assert.calledWith(helpers.sendResponse, t.context.res, 422, message);
+  helpers.sendResponse.should.have.been.called;
+  helpers.sendResponse.should.have.been.calledWithExactly(t.context.res, 422, message);
 });
 
 // getGambitTimeoutNumSeconds
