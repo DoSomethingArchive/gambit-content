@@ -296,7 +296,7 @@ router.use((req, res, next) => {
         return helpers.sendTimeoutResponse(res);
       }
       if (!keyword) {
-        return helpers.sendUnproccessibleEntityResponse(res, `Keyword ${req.keyword} not found.`);
+        return helpers.sendResponse(res, 404, `Keyword ${req.keyword} not found.`);
       }
       if (keyword.fields.environment !== process.env.NODE_ENV) {
         const msg = `Keyword ${req.keyword} environment error: defined as ${keyword.environment} ` +
