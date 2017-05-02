@@ -26,7 +26,7 @@ const cryptoCreateHmacStub = {
   substring() { return this; },
 };
 
-// setup should assertion style
+// setup "x.should.y" assertion style
 chai.should();
 chai.use(sinonChai);
 
