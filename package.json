@@ -1,6 +1,6 @@
 {
   "name": "gambit",
-  "version": "4.1.0",
+  "version": "4.1.1",
   "description": "A DoSomething.org chatbot",
   "license": "MIT",
   "repository": {
@@ -74,6 +74,7 @@
     "eslint-plugin-ava": "^4.2.0",
     "node-mocks-http": "^1.6.1",
     "nyc": "^10.2.0",
+    "rewire": "^2.5.2",
     "sinon": "^2.1.0",
     "sinon-chai": "^2.9.0"
   }

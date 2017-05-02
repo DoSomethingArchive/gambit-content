@@ -9,6 +9,12 @@
       - error
       - exceptions:
         - t
+    # Allow for rewire to work properly
+    no-underscore-dangle:
+      - error
+      - allow:
+        - __set__
+        - __get__
     # need fot AVA test contetext support
     no-param-reassign: off
     # Support should constructs like result.should.be.true;
