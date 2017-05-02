@@ -12,6 +12,7 @@ const httpMocks = require('node-mocks-http');
 const contentful = require('../../lib/contentful.js');
 const stathat = require('../../lib/stathat');
 const crypto = require('crypto');
+const newrelic = require('newrelic');
 const logger = require('winston');
 
 // Module to test
@@ -43,6 +44,7 @@ test.beforeEach((t) => {
     .returns(Promise.resolve([]));
   sandbox.stub(logger, 'error');
   sandbox.stub(logger, 'debug');
+  sandbox.stub(newrelic, 'addCustomParameters');
   sandbox.stub(stathat, 'postStat');
   sandbox.stub(crypto, 'createHmac').returns(cryptoCreateHmacStub);
 
@@ -217,6 +219,7 @@ test('sendErrorResponse', (t) => {
   helpers.sendErrorResponse(t.context.res, { /* Error Object */ });
 
   helpers.sendResponse.should.have.been.called;
+  newrelic.addCustomParameters.should.have.been.called;
   // TODO: Use calledWithExactly when testing specific errors
   helpers.sendResponse.should.have.been.calledWith(t.context.res, 500);
 });
