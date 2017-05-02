@@ -4,7 +4,6 @@ require('dotenv').config();
 const Promise = require('bluebird');
 const test = require('ava');
 const chai = require('chai');
-// const expect = require('chai').expect;
 const stubs = require('../../test/utils/stubs');
 const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
