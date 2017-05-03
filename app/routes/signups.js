@@ -49,7 +49,9 @@ router.use((req, res, next) => {
       if (req.timedout) {
         return helpers.sendTimeoutResponse(res);
       }
+
       req.signup = signup; // eslint-disable-line no-param-reassign
+
       return next();
     })
     .catch(err => helpers.sendErrorResponse(res, err));
@@ -128,7 +130,9 @@ router.use((req, res, next) => {
       if (req.timedout) {
         return helpers.sendTimeoutResponse(res);
       }
+
       req.signupMessage = helpers.addSenderPrefix(message); // eslint-disable-line no-param-reassign
+
       return next();
     })
     .catch(err => helpers.sendErrorResponse(res, err));
