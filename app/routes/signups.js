@@ -4,6 +4,7 @@ const express = require('express');
 
 const router = express.Router(); // eslint-disable-line new-cap
 const logger = require('winston');
+const newrelic = require('newrelic');
 
 const contentful = require('../../lib/contentful');
 const helpers = require('../../lib/helpers');
@@ -28,6 +29,7 @@ router.use((req, res, next) => {
     return helpers.sendUnproccessibleEntityResponse(res, 'Missing required source.');
   }
 
+  newrelic.addCustomParameters({ signupId: req.body.id });
   const source = req.body.source;
   if (source === process.env.DS_API_POST_SOURCE) {
     const msg = `CampaignBot only sends confirmation when source not equal to ${source}.`;
@@ -47,7 +49,9 @@ router.use((req, res, next) => {
       if (req.timedout) {
         return helpers.sendTimeoutResponse(res);
       }
+
       req.signup = signup; // eslint-disable-line no-param-reassign
+
       return next();
     })
     .catch(err => helpers.sendErrorResponse(res, err));
@@ -62,11 +66,15 @@ router.use((req, res, next) => {
       if (req.timedout) {
         return helpers.sendTimeoutResponse(res);
       }
+
       if (phoenix.isClosedCampaign(phoenixCampaign)) {
         const err = new ClosedCampaignError(phoenixCampaign);
         return helpers.sendUnproccessibleEntityResponse(res, err.message);
       }
+
       req.campaign = phoenixCampaign; // eslint-disable-line no-param-reassign
+      newrelic.addCustomParameters({ campaignId: req.campaign.id });
+
       return next();
     })
     .catch(err => helpers.sendErrorResponse(res, err));
@@ -81,10 +89,12 @@ router.use((req, res, next) => {
       if (req.timedout) {
         return helpers.sendTimeoutResponse(res);
       }
+
       if (keywords.length === 0) {
         const msg = `Campaign ${req.campaign.id} does not have any Gambit keywords.`;
-        return helpers.sendUnproccessibleEntityResponse(msg);
+        return helpers.sendUnproccessibleEntityResponse(res, msg);
       }
+
       return next();
     })
     .catch(err => helpers.sendErrorResponse(res, err));
@@ -102,7 +112,10 @@ router.use((req, res, next) => {
       if (!user.mobile) {
         return helpers.sendUnproccessibleEntityResponse(res, 'Missing required user.mobile.');
       }
+
       req.user = user; // eslint-disable-line no-param-reassign
+      newrelic.addCustomParameters({ userId: req.user.id });
+
       return next();
     })
     .catch(err => helpers.sendErrorResponse(res, err));
@@ -117,7 +130,9 @@ router.use((req, res, next) => {
       if (req.timedout) {
         return helpers.sendTimeoutResponse(res);
       }
+
       req.signupMessage = helpers.addSenderPrefix(message); // eslint-disable-line no-param-reassign
+
       return next();
     })
     .catch(err => helpers.sendErrorResponse(res, err));
