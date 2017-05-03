@@ -493,7 +493,7 @@ router.post('/', (req, res, next) => {
       return continueConversationWithMessageType(req, res, 'invalid_caption');
     }
 
-    draft.caption = input;
+    draft.caption = helpers.trimReportbackText(input);
 
     return draft.save()
       .then(() => {
@@ -516,7 +516,7 @@ router.post('/', (req, res, next) => {
       return continueConversationWithMessageType(req, res, 'invalid_why_participated');
     }
 
-    draft.why_participated = input;
+    draft.why_participated = helpers.trimReportbackText(input);
 
     return draft.save()
       .then(() => next())
