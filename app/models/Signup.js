@@ -84,7 +84,7 @@ signupSchema.statics.lookupById = function (id) {
       .catch((err) => {
         stathat.postStatWithError(statName, err);
         const scope = err;
-        scope.message = `Signup.lookupById:${id} error:${err.message}`;
+        scope.message = `Signup.lookupById error:${err.message}`;
         return reject(scope);
       });
   });
