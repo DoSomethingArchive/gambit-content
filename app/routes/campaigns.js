@@ -217,7 +217,6 @@ router.post('/:id/message', (req, res, next) => {
     if (err.response) {
       logger.error(err.response.error);
     }
-    stathat.postStatWithError(statName, err);
 
     return helpers.sendErrorResponse(res, err);
   };
