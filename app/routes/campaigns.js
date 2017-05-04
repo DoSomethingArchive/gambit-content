@@ -182,36 +182,44 @@ router.post('/:id/message', (req, res, next) => {
 });
 
 /**
- * Render our campaign message to deliver and post it to Mobile Commons.
+ * Render our campaign message to send.
  */
-router.post('/:id/message', (req, res) => {
-  const statName = `campaignbot:${req.messageType}`;
-
-  return contentful.renderMessageForPhoenixCampaign(req.campaign, req.messageType)
+router.post('/:id/message', (req, res, next) => {
+  contentful.renderMessageForPhoenixCampaign(req.campaign, req.messageType)
     .then((message) => {
       if (req.timedout) {
         return helpers.sendTimeoutResponse(res);
       }
-      const messageBody = helpers.addSenderPrefix(message);
-      mobilecommons.send_message(req.phone, messageBody);
-      const msg = `Sent messageType:${req.messageType} campaign:${req.campaignId} ` +
-                  `phone:${req.phone}`;
-      logger.info(msg);
-      stathat.postStat(statName);
 
-      return helpers.sendResponse(res, 200, messageBody);
+      req.messageBody = helpers.addSenderPrefix(message); // eslint-disable-line no-param-reassign
+
+      return next();
     })
-    .catch((err) => {
-      // Check for response object that Mobile Commons may send:
-      if (err.response) {
-        logger.error(err.response.error);
-      }
-      stathat.postStatWithError(statName, err);
-      const scope = err;
-      scope.message = `Error sending text to phone:${req.phone}: ${err.message}`;
+    .catch(err => helpers.sendErrorResponse(res, err));
+});
 
-      return helpers.sendErrorResponse(res, err);
-    });
+/**
+ * Post to Mobile Commons to send the message.
+ */
+router.post('/:id/message', (req, res) => {
+  const statName = `campaignbot:${req.messageType}`;
+
+  try {
+    mobilecommons.send_message(req.phone, req.messageBody);
+    const msg = `Sent messageType:${req.messageType} campaign:${req.campaignId} ` +
+                `phone:${req.phone}`;
+    logger.info(msg);
+    stathat.postStat(statName);
+
+    return helpers.sendResponse(res, 200, req.messageBody);
+  } catch (err) {
+    // Check for response object that Mobile Commons may send:
+    if (err.response) {
+      logger.error(err.response.error);
+    }
+
+    return helpers.sendErrorResponse(res, err);
+  }
 });
 
 module.exports = router;
