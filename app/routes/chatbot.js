@@ -90,6 +90,7 @@ function continueConversationWithMessageType(req, res, messageType) {
 
       // todo: Promisify this POST request and only send back Gambit 200 on profile_update success.
       req.user.postMobileCommonsProfileUpdate(process.env.MOBILECOMMONS_OIP_CHATBOT, replyMessage);
+      req.user.postDashbot('outgoing', replyMessage);
 
       stathat.postStat(`campaignbot:${messageType}`);
       BotRequest.log(req, 'campaignbot', messageType, replyMessage);
@@ -105,6 +106,7 @@ function continueConversationWithMessageType(req, res, messageType) {
 function endConversationWithMessage(req, res, message) {
   // todo: Promisify this POST request and only send back Gambit 200 on profile_update success.
   req.user.postMobileCommonsProfileUpdate(process.env.MOBILECOMMONS_OIP_AGENTVIEW, message);
+  req.user.postDashbot('outgoing', message);
 
   return helpers.sendResponse(res, 200, message);
 }
@@ -244,6 +246,22 @@ router.use((req, res, next) => {
       return next();
     })
    .catch(err => helpers.sendErrorResponse(res, err));
+});
+
+router.use((req, res, next) => {
+  let dashbotLog = '';
+  if (req.keyword) {
+    dashbotLog = `keyword:${req.keyword} `;
+  }
+  if (req.incoming_image_url) {
+    dashbotLog = `${dashbotLog}(image) `;
+  }
+  if (req.incoming_message) {
+    dashbotLog = `${dashbotLog}${req.incoming_message}`;
+  }
+
+  req.user.postDashbot('incoming', dashbotLog);
+  next();
 });
 
 /**
