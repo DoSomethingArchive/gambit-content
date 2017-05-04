@@ -201,7 +201,7 @@ router.post('/:id/message', (req, res, next) => {
 /**
  * Post to Mobile Commons to send the message.
  */
-router.post('/:id/message', (req, res, next) => {
+router.post('/:id/message', (req, res) => {
   const statName = `campaignbot:${req.messageType}`;
 
   try {
@@ -219,7 +219,7 @@ router.post('/:id/message', (req, res, next) => {
     }
 
     return helpers.sendErrorResponse(res, err);
-  };
+  }
 });
 
 module.exports = router;
