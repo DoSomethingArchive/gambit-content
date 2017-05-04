@@ -245,3 +245,13 @@ test('upsertOptions helper', () => {
   opts.upsert.should.be.true;
   opts.new.should.be.true;
 });
+
+// trimReportbackText
+test('trimReportbackText', () => {
+  const text = 'This is a caption';
+  helpers.trimReportbackText(text).should.be.equal(text);
+
+  const longText = 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem.';
+  const trimmed = 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium qu...';
+  helpers.trimReportbackText(longText).should.be.equal(trimmed);
+});
