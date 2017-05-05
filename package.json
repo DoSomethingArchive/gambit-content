@@ -59,6 +59,7 @@
     "stathat": "0.0.8",
     "superagent": "^2.3.0",
     "throng": "^4.0.0",
+    "underscore": "^1.8.3",
     "v8-profiler": "5.7.0",
     "winston": "2.3.x",
     "winston-mongodb": "^2.0.0"
