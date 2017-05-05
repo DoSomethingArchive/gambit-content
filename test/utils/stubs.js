@@ -1,5 +1,8 @@
 'use strict';
 
+/* eslint-disable quotes */
+/* eslint-disable import/no-dynamic-require */
+
 module.exports = {
   getPhoenixCampaign: function getPhoenixCampaign() {
     return {
@@ -82,26 +85,27 @@ module.exports = {
     }
     return msg;
   },
-  // Returns an object that is formatted in-place
-  // in lib/contentful's method: fetchKeywordsForCampaignId.
-  // We should be returning raw JSON data that we get from contentful here!
-  // TODO: Refactor when we format response in a separate function (testable)
-  // instead of in-place inside the promise's callback
-  getKeywords: function getKeywords() {
-    return [{ keyword: 'BOOKBOT' }];
-  },
+  contentful: {
 
-  /**
-   * For query:
-   *  {
-   *    content_type: 'keyword',
-   *    'fields.environment': 'thor',
-   *    'fields.campaign.sys.contentType.sys.id': 'campaign',
-   *    'fields.campaign.fields.campaignId': '2299'
-   *  }
-   */
-  getEntries: function getEntries() {
-    /* eslint-disable quotes */
-    return JSON.parse(`{"sys":{"type":"Array"},"total":1,"skip":0,"limit":100,"items":[{"sys":{"space":{"sys":{"type":"Link","linkType":"Space","id":"owik07lyerdj"}},"id":"3mMeUatw00GqQ0gAM86ICq","type":"Entry","createdAt":"2017-02-06T18:12:19.388Z","updatedAt":"2017-02-15T19:19:48.571Z","revision":2,"contentType":{"sys":{"type":"Link","linkType":"ContentType","id":"keyword"}},"locale":"en-US"},"fields":{"keyword":"bookbot","environment":"thor","campaign":{"sys":{"space":{"sys":{"type":"Link","linkType":"Space","id":"owik07lyerdj"}},"id":"68Oy1FcaR2EiaMieicaoom","type":"Entry","createdAt":"2017-02-15T19:19:34.100Z","updatedAt":"2017-02-15T19:19:34.100Z","revision":1,"contentType":{"sys":{"type":"Link","linkType":"ContentType","id":"campaign"}},"locale":"en-US"},"fields":{"campaignId":"2299"}}}}],"includes":{"Entry":[{"sys":{"space":{"sys":{"type":"Link","linkType":"Space","id":"owik07lyerdj"}},"id":"68Oy1FcaR2EiaMieicaoom","type":"Entry","createdAt":"2017-02-15T19:19:34.100Z","updatedAt":"2017-02-15T19:19:34.100Z","revision":1,"contentType":{"sys":{"type":"Link","linkType":"ContentType","id":"campaign"}},"locale":"en-US"},"fields":{"campaignId":"2299"}},{"sys":{"space":{"sys":{"type":"Link","linkType":"Space","id":"owik07lyerdj"}},"id":"3mMeUatw00GqQ0gAM86ICq","type":"Entry","createdAt":"2017-02-06T18:12:19.388Z","updatedAt":"2017-02-15T19:19:48.571Z","revision":2,"contentType":{"sys":{"type":"Link","linkType":"ContentType","id":"keyword"}},"locale":"en-US"},"fields":{"keyword":"bookbot","environment":"thor","campaign":{"sys":{"type":"Link","linkType":"Entry","id":"68Oy1FcaR2EiaMieicaoom"}}}}]}}`);
+    // Returns an object that is formatted in-place
+    // in lib/contentful's method: fetchKeywordsForCampaignId.
+    // We should be returning raw JSON data that we get from contentful here!
+    // TODO: Refactor when we format response in a separate function (testable)
+    // instead of in-place inside the promise's callback
+    getKeywords: function getKeywords() {
+      return [{ keyword: 'BOOKBOT' }];
+    },
+
+    /**
+     * Gets entries from contentful
+     *
+     * @param  {string} contentType the type of entries we are looking for
+     * @return {Object}             The stubbed JSON response from the server
+     */
+    getEntries: function getEntries(contentType) {
+      const path = '../stubs/contentful/';
+      const result = require(`${path}get-entries-${contentType}.json`);
+      return result;
+    },
   },
 };
