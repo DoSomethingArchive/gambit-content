@@ -129,7 +129,18 @@ userSchema.methods.postMobileCommonsProfileUpdate = function (oip, msgTxt) {
   return mobilecommons.profile_update(this.mobilecommons_id, this.mobile, oip, data);
 };
 
+/**
+ * Posts given messageText to the Dashbot API with given dashbotMessageType.
+ * @see https://www.dashbot.io/sdk/generic.
+ *
+ * @param {number} dashbotMessageType - Expected values: 'incoming' | 'outgoing'
+ * @param {string} messageText - text to track in Dashbot
+ */
 userSchema.methods.postDashbot = function (dashbotMessageType, messageText) {
+  if (!process.env.DASHBOT_API_KEY) {
+    return logger.warn('DASHBOT_API_KEY undefined');
+  }
+
   const logMessage = `user.postDashbot:${dashbotMessageType} ${this._id}:${messageText}`;
   logger.debug(logMessage);
 
