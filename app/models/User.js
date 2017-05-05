@@ -129,24 +129,34 @@ userSchema.methods.postMobileCommonsProfileUpdate = function (oip, msgTxt) {
   return mobilecommons.profile_update(this.mobilecommons_id, this.mobile, oip, data);
 };
 
-userSchema.methods.postDashbot = function (messageType, message) {
-  const logMessage = `user.postDashbot:${messageType}`;
+userSchema.methods.postDashbot = function (dashbotMessageType, messageText) {
+  const logMessage = `user.postDashbot:${dashbotMessageType} ${this._id}:${messageText}`;
   logger.debug(logMessage);
+
+  const data = {
+    userId: this._id,
+    text: messageText,
+  };
 
   return superagent
     .post('https://tracker.dashbot.io/track')
     .query({
       platform: 'generic',
       v: '0.8.2-rest', // eslint-disable-line id-length
-      type: messageType,
+      type: dashbotMessageType,
       apiKey: process.env.DASHBOT_API_KEY,
     })
-    .send({
-      userId: this._id,
-      text: message,
-    })
-    .then(response => logger.debug(`${logMessage} status:${response.status}`))
-    .catch(err => logger.error(`${logMessage} error:${err.message}`));
+    .send(data)
+    .then(response => logger.debug(`dashbot response:${JSON.stringify(response.body)}`))
+    .catch(err => logger.error(`dashbot response::${err.message}`));
+};
+
+userSchema.methods.postDashbotIncoming = function (message) {
+  this.postDashbot('incoming', message);
+};
+
+userSchema.methods.postDashbotOutgoing = function (gambitMessageType) {
+  this.postDashbot('outgoing', gambitMessageType);
 };
 
 module.exports = mongoose.model('users', userSchema);

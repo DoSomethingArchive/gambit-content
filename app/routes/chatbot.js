@@ -90,7 +90,7 @@ function continueConversationWithMessageType(req, res, messageType) {
 
       // todo: Promisify this POST request and only send back Gambit 200 on profile_update success.
       req.user.postMobileCommonsProfileUpdate(process.env.MOBILECOMMONS_OIP_CHATBOT, replyMessage);
-      req.user.postDashbot('outgoing', replyMessage);
+      req.user.postDashbotOutgoing(messageType);
 
       stathat.postStat(`campaignbot:${messageType}`);
       BotRequest.log(req, 'campaignbot', messageType, replyMessage);
@@ -106,7 +106,6 @@ function continueConversationWithMessageType(req, res, messageType) {
 function endConversationWithMessage(req, res, message) {
   // todo: Promisify this POST request and only send back Gambit 200 on profile_update success.
   req.user.postMobileCommonsProfileUpdate(process.env.MOBILECOMMONS_OIP_AGENTVIEW, message);
-  req.user.postDashbot('outgoing', message);
 
   return helpers.sendResponse(res, 200, message);
 }
@@ -118,6 +117,7 @@ function endConversationWithMessageType(req, res, messageType) {
   renderMessageForMessageType(req, messageType)
     .then((message) => {
       BotRequest.log(req, 'campaignbot', messageType, message);
+      req.user.postDashbotOutgoing(messageType);
 
       return endConversationWithMessage(req, res, message);
     })
@@ -260,7 +260,7 @@ router.use((req, res, next) => {
     dashbotLog = `${dashbotLog}${req.incoming_message}`;
   }
 
-  req.user.postDashbot('incoming', dashbotLog);
+  req.user.postDashbotIncoming(dashbotLog);
   next();
 });
 
@@ -289,6 +289,7 @@ router.use((req, res, next) => {
 
         const replyMessage = helpers.addSenderPrefix(broadcast.fields.declinedMessage);
         BotRequest.log(req, 'broadcast', 'prompt_declined', replyMessage);
+        req.user.postDashbotOutgoing('broadcast_declined');
 
         return endConversationWithMessage(req, res, replyMessage);
       }
