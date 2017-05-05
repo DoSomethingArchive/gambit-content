@@ -14,6 +14,8 @@ const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
 const Signup = require('../models/Signup');
 const User = require('../models/User');
 
+const OUTGOING_MESSAGE_TYPE = 'menu_signedup_external';
+
 /**
  * Validate required body parameters.
  */
@@ -125,7 +127,7 @@ router.use((req, res, next) => {
  * Render the External Signup Message.
  */
 router.use((req, res, next) => {
-  contentful.renderMessageForPhoenixCampaign(req.campaign, 'menu_signedup_external')
+  contentful.renderMessageForPhoenixCampaign(req.campaign, OUTGOING_MESSAGE_TYPE)
     .then((message) => {
       if (req.timedout) {
         return helpers.sendTimeoutResponse(res);
@@ -160,6 +162,7 @@ router.post('/', (req, res) => {
   try {
     const oip = process.env.MOBILECOMMONS_OIP_CHATBOT;
     req.user.postMobileCommonsProfileUpdate(oip, req.signupMessage);
+    req.user.postDashbotOutgoing(OUTGOING_MESSAGE_TYPE);
 
     return helpers.sendResponse(res, 200, req.signupMessage);
   } catch (err) {
