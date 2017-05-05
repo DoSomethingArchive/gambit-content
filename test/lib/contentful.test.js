@@ -12,6 +12,7 @@ const stathat = require('../../lib/stathat');
 const logger = require('winston');
 const contentfulAPI = require('contentful');
 const rewire = require('rewire');
+const underscore = require('underscore');
 
 // setup "x.should.y" assertion style
 chai.should();
@@ -43,11 +44,11 @@ test.beforeEach((t) => {
   sandbox.stub(contentfulAPI, 'createClient')
     .returns(contentfulAPIStub);
 
-  sandbox.spy(contentful, 'getFirstItemFromArray');
   sandbox.spy(contentful, 'contentfulError');
   sandbox.spy(contentful, 'fetchSingleEntry');
   sandbox.spy(contentful, 'fetchCampaign');
   sandbox.spy(contentful, 'fetchKeywords');
+  sandbox.spy(underscore, 'first');
 
   // setup req, res mocks
   t.context.req = httpMocks.createRequest();
@@ -93,7 +94,7 @@ test('fetchSingleEntry should only get one item from the entries returned by con
 async () => {
   await contentful.fetchSingleEntry({/* any Query */});
   contentful.getClient().getEntries.should.have.been.called;
-  contentful.getFirstItemFromArray.should.have.been.called;
+  underscore.first.should.have.been.called;
 });
 
 test('fetchSingleEntry should return an object if successful', async () => {
@@ -113,28 +114,28 @@ test('fetchSingleEntry should reject with a contentfulError if unsuccessful', as
 
 // fetchBroadcast
 test('fetchBroadcast should send contentful a query with content_type of broadcast', async () => {
-  const query = contentful.getQueryBuilder().type('broadcast').broadcast(1260764).build();
+  const query = contentful.getQueryBuilder().contentType('broadcast').broadcastId(1260764).build();
   await contentful.fetchBroadcast(1260764);
   contentful.fetchSingleEntry.getCall(0).args[0].should.be.eql(query);
 });
 
 // fetchCampaign
 test('fetchCampaign should send contentful a query with content_type of campaign', async () => {
-  const query = contentful.getQueryBuilder().type('campaign').campaign(2299).build();
+  const query = contentful.getQueryBuilder().contentType('campaign').campaignId(2299).build();
   await contentful.fetchCampaign(2299);
   contentful.fetchSingleEntry.getCall(0).args[0].should.be.eql(query);
 });
 
 // fetchKeyword
 test('fetchKeyword should send contentful a query with content_type of keyword', async () => {
-  const query = contentful.getQueryBuilder().type('keyword').keyword('bookbot').build();
+  const query = contentful.getQueryBuilder().contentType('keyword').keyword('bookbot').build();
   await contentful.fetchKeyword('bookbot');
   contentful.fetchSingleEntry.getCall(0).args[0].should.be.eql(query);
 });
 
 // fetchKeywords
 test('fetchKeywords should send contentful a query with content_type of keyword and current env', async () => {
-  const query = contentful.getQueryBuilder().type('keyword').env(process.env.NODE_ENV).build();
+  const query = contentful.getQueryBuilder().contentType('keyword').environment(process.env.NODE_ENV).build();
   await contentful.fetchKeywords();
   contentful.getClient().getEntries.getCall(0).args[0].should.be.eql(query);
 });
