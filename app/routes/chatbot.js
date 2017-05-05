@@ -90,6 +90,7 @@ function continueConversationWithMessageType(req, res, messageType) {
 
       // todo: Promisify this POST request and only send back Gambit 200 on profile_update success.
       req.user.postMobileCommonsProfileUpdate(process.env.MOBILECOMMONS_OIP_CHATBOT, replyMessage);
+      req.user.postDashbotOutgoing(messageType);
 
       stathat.postStat(`campaignbot:${messageType}`);
       BotRequest.log(req, 'campaignbot', messageType, replyMessage);
@@ -116,6 +117,7 @@ function endConversationWithMessageType(req, res, messageType) {
   renderMessageForMessageType(req, messageType)
     .then((message) => {
       BotRequest.log(req, 'campaignbot', messageType, message);
+      req.user.postDashbotOutgoing(messageType);
 
       return endConversationWithMessage(req, res, message);
     })
@@ -246,6 +248,22 @@ router.use((req, res, next) => {
    .catch(err => helpers.sendErrorResponse(res, err));
 });
 
+router.use((req, res, next) => {
+  let dashbotLog = '';
+  if (req.keyword) {
+    dashbotLog = `keyword:${req.keyword} `;
+  }
+  if (req.incoming_image_url) {
+    dashbotLog = `${dashbotLog}(image) `;
+  }
+  if (req.incoming_message) {
+    dashbotLog = `${dashbotLog}${req.incoming_message}`;
+  }
+
+  req.user.postDashbotIncoming(dashbotLog);
+  next();
+});
+
 /**
  * Check if the incoming request is a reply to a Broadcast, and set req.campaignId if User said yes.
  * Send the Broadcast Declined message if they said no.
@@ -271,6 +289,7 @@ router.use((req, res, next) => {
 
         const replyMessage = helpers.addSenderPrefix(broadcast.fields.declinedMessage);
         BotRequest.log(req, 'broadcast', 'prompt_declined', replyMessage);
+        req.user.postDashbotOutgoing('broadcast_declined');
 
         return endConversationWithMessage(req, res, replyMessage);
       }
