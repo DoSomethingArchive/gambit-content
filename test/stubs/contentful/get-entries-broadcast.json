@@ -1,0 +1,141 @@
+{
+  "sys": {
+    "type": "Array"
+  },
+  "total": 1,
+  "skip": 0,
+  "limit": 100,
+  "items": [
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "owik07lyerdj"
+          }
+        },
+        "id": "6EYYIAm7yo842kmYoYGuqQ",
+        "type": "Entry",
+        "createdAt": "2017-04-28T18:14:56.405Z",
+        "updatedAt": "2017-04-28T18:14:56.405Z",
+        "revision": 1,
+        "contentType": {
+          "sys": {
+            "type": "Link",
+            "linkType": "ContentType",
+            "id": "broadcast"
+          }
+        },
+        "locale": "en-US"
+      },
+      "fields": {
+        "broadcastId": "1260764",
+        "campaign": {
+          "sys": {
+            "space": {
+              "sys": {
+                "type": "Link",
+                "linkType": "Space",
+                "id": "owik07lyerdj"
+              }
+            },
+            "id": "4wg9DK69oAiak446OyAuWA",
+            "type": "Entry",
+            "createdAt": "2017-04-12T19:56:47.032Z",
+            "updatedAt": "2017-05-02T14:09:08.785Z",
+            "revision": 11,
+            "contentType": {
+              "sys": {
+                "type": "Link",
+                "linkType": "ContentType",
+                "id": "campaign"
+              }
+            },
+            "locale": "en-US"
+          },
+          "fields": {
+            "campaignId": "7656",
+            "gambitSignupMenuMessage": "At DoSomething, we wanted to say thanks for taking an important step to supporting our Muslim American neighbors.  \n\nOur goal is to send handmade Happy Ramadan cards to every mosque in America. Ramadan is the perfect time for a giant outpouring of appreciation. Today make 1 card to show your support.\n\nInclude a message like \"Happy Ramadan\" and sign off with your name and state!\n\nText the word START to share a photo of your card (and enter to win a $5000 scholarship).",
+            "externalSignupMenuMessage": "Hi it's Freddie from DoSomething, I wanted to say thanks for taking an important step to supporting our Muslim American neighbors.  \n\nOur goal is to send handmade Happy Ramadan cards to every mosque in America. Ramadan is the perfect time for a giant outpouring of appreciation. Today make 1 card to show your support.\n\nInclude a message like \"Happy Ramadan\" and sign off with your name and state!\nText the word START to share a photo of your card (and enter to win a $5000 scholarship).",
+            "invalidSignupMenuCommandMessage": "Sorry - I didn't get what you said, but I'm happy to help! \n\nDo you have a question about the campaign or making cards? Check out our FAQ page: http://doso.me/1jgw \n\nHave another question? Text QUESTION and someone will reply in 24 hours. ",
+            "completedMenuMessage": "Great, thanks for sharing your photo! You're helping us reach our goal of sending a handmade card to ever single mosque in the US.  \n\nNow mail the card to us and we'll send it to a mosque this Ramadan!\n\nMail to: \nAttn: Sincerely, Us Campaign\n19 West 21st Street\n8th Floor\nNew York, NY 10010\n\nTo make sure we can send the cards out by Ramadan (and so you can be eligible for the scholarship), please send your cards to us by June 10th.",
+            "scheduledRelativeToSignupDateMessage": "Hey, have you had a chance to check out some of the beautiful cards community members have been making? \n\nGo to the campaign page to see them! http://doso.me/1jgv"
+          }
+        },
+        "declinedMessage": "Ok, want to make a difference in another way? Take 2 mins to help save a life today.\n\n70% of people that need a bone marrow transplant need one from outside their immediate family.  More who know = more lives saved. Spread the word about the important bone marrow registry by sharing this: http://doso.me/1jg6\n\nText POST to send back a screenshot of the shared post by 11:59PM tonight. (You’ll be entered to win a $3,000 scholarship and a chance to win a gift card of your choice)!   "
+      }
+    }
+  ],
+  "includes": {
+    "Entry": [
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "4wg9DK69oAiak446OyAuWA",
+          "type": "Entry",
+          "createdAt": "2017-04-12T19:56:47.032Z",
+          "updatedAt": "2017-05-02T14:09:08.785Z",
+          "revision": 11,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "campaign"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "campaignId": "7656",
+          "gambitSignupMenuMessage": "At DoSomething, we wanted to say thanks for taking an important step to supporting our Muslim American neighbors.  \n\nOur goal is to send handmade Happy Ramadan cards to every mosque in America. Ramadan is the perfect time for a giant outpouring of appreciation. Today make 1 card to show your support.\n\nInclude a message like \"Happy Ramadan\" and sign off with your name and state!\n\nText the word START to share a photo of your card (and enter to win a $5000 scholarship).",
+          "externalSignupMenuMessage": "Hi it's Freddie from DoSomething, I wanted to say thanks for taking an important step to supporting our Muslim American neighbors.  \n\nOur goal is to send handmade Happy Ramadan cards to every mosque in America. Ramadan is the perfect time for a giant outpouring of appreciation. Today make 1 card to show your support.\n\nInclude a message like \"Happy Ramadan\" and sign off with your name and state!\nText the word START to share a photo of your card (and enter to win a $5000 scholarship).",
+          "invalidSignupMenuCommandMessage": "Sorry - I didn't get what you said, but I'm happy to help! \n\nDo you have a question about the campaign or making cards? Check out our FAQ page: http://doso.me/1jgw \n\nHave another question? Text QUESTION and someone will reply in 24 hours. ",
+          "completedMenuMessage": "Great, thanks for sharing your photo! You're helping us reach our goal of sending a handmade card to ever single mosque in the US.  \n\nNow mail the card to us and we'll send it to a mosque this Ramadan!\n\nMail to: \nAttn: Sincerely, Us Campaign\n19 West 21st Street\n8th Floor\nNew York, NY 10010\n\nTo make sure we can send the cards out by Ramadan (and so you can be eligible for the scholarship), please send your cards to us by June 10th.",
+          "scheduledRelativeToSignupDateMessage": "Hey, have you had a chance to check out some of the beautiful cards community members have been making? \n\nGo to the campaign page to see them! http://doso.me/1jgv"
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "6EYYIAm7yo842kmYoYGuqQ",
+          "type": "Entry",
+          "createdAt": "2017-04-28T18:14:56.405Z",
+          "updatedAt": "2017-04-28T18:14:56.405Z",
+          "revision": 1,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "broadcast"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "broadcastId": "1260764",
+          "campaign": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Entry",
+              "id": "4wg9DK69oAiak446OyAuWA"
+            }
+          },
+          "declinedMessage": "Ok, want to make a difference in another way? Take 2 mins to help save a life today.\n\n70% of people that need a bone marrow transplant need one from outside their immediate family.  More who know = more lives saved. Spread the word about the important bone marrow registry by sharing this: http://doso.me/1jg6\n\nText POST to send back a screenshot of the shared post by 11:59PM tonight. (You’ll be entered to win a $3,000 scholarship and a chance to win a gift card of your choice)!   "
+        }
+      }
+    ]
+  }
+}

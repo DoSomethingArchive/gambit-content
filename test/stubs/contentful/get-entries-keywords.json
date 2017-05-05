@@ -1,0 +1,1780 @@
+{
+  "sys": {
+    "type": "Array"
+  },
+  "total": 15,
+  "skip": 0,
+  "limit": 100,
+  "items": [
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "owik07lyerdj"
+          }
+        },
+        "id": "2M37TQO2reqSEsySQaY0OS",
+        "type": "Entry",
+        "createdAt": "2017-02-16T16:35:50.245Z",
+        "updatedAt": "2017-02-16T16:35:50.245Z",
+        "revision": 1,
+        "contentType": {
+          "sys": {
+            "type": "Link",
+            "linkType": "ContentType",
+            "id": "keyword"
+          }
+        },
+        "locale": "en-US"
+      },
+      "fields": {
+        "keyword": "signbot",
+        "environment": "thor",
+        "campaign": {
+          "sys": {
+            "space": {
+              "sys": {
+                "type": "Link",
+                "linkType": "Space",
+                "id": "owik07lyerdj"
+              }
+            },
+            "id": "11uL58PDWIUkOMwUAIgU6U",
+            "type": "Entry",
+            "createdAt": "2017-02-16T03:35:03.613Z",
+            "updatedAt": "2017-04-13T00:33:52.377Z",
+            "revision": 3,
+            "contentType": {
+              "sys": {
+                "type": "Link",
+                "linkType": "ContentType",
+                "id": "campaign"
+              }
+            },
+            "locale": "en-US"
+          },
+          "fields": {
+            "campaignId": "7623",
+            "gambitSignupMenuMessage": "Thanks for joining {{title}}!\n\n{{fact_problem}}\n\nBy spotting and acting on the signs of abusive partners, you can promote healthy relationship behavior to keep you and your friends safe. Click the link to share our Spot the Signs guide on Facebook with friends to teach them how to spot red flags for dating abuse: https://bit.ly/2jY5xZm\n\nOnce you have shared our guide, take a screenshot to prove it! Then text {{cmd_reportback}} to share it with us!",
+            "externalSignupMenuMessage": "Hey, it's Freddie. Thanks for joining {{title}}!\n\n{{fact_problem}}\n\nBy spotting and acting on the signs of abusive partners, you can promote healthy relationship behavior to keep you and your friends safe. Click the link to share our Spot the Signs guide on Facebook with friends to teach them how to spot red flags for dating abuse: https://bit.ly/2jY5xZm\n\nOnce you have shared our guide, take a screenshot to prove it! Then text {{cmd_reportback}} to share it with us!"
+          }
+        }
+      }
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "owik07lyerdj"
+          }
+        },
+        "id": "5uRpE60gXSYiGg60CskUQE",
+        "type": "Entry",
+        "createdAt": "2017-02-23T16:24:14.374Z",
+        "updatedAt": "2017-02-23T16:24:14.374Z",
+        "revision": 1,
+        "contentType": {
+          "sys": {
+            "type": "Link",
+            "linkType": "ContentType",
+            "id": "keyword"
+          }
+        },
+        "locale": "en-US"
+      },
+      "fields": {
+        "keyword": "historybot",
+        "environment": "thor",
+        "campaign": {
+          "sys": {
+            "space": {
+              "sys": {
+                "type": "Link",
+                "linkType": "Space",
+                "id": "owik07lyerdj"
+              }
+            },
+            "id": "3SAB1N4PfyU0IMA6kCK4WW",
+            "type": "Entry",
+            "createdAt": "2017-02-16T03:24:44.496Z",
+            "updatedAt": "2017-04-13T00:34:11.978Z",
+            "revision": 3,
+            "contentType": {
+              "sys": {
+                "type": "Link",
+                "linkType": "ContentType",
+                "id": "campaign"
+              }
+            },
+            "locale": "en-US"
+          },
+          "fields": {
+            "campaignId": "7554",
+            "gambitSignupMenuMessage": "Tons of important figures and events are erased from textbooks -- that's why this month it's more important than ever to share these stories.\n\nMake a bookmark (or print out) stories often left out of history textbooks. Click here for a template and stories you can share: http://doso.me/1jfw\n\nPlace the bookmark in a textbook at school and take a photo. Text {{cmd_reportback}} to share your photo and you'll be entered to win a $3000 scholarship!\n\n(BONUS: We'll pick a winner for a $25 gift card for anyone who sends in a bookmark photo by noon EST tomorrow!)",
+            "externalSignupMenuMessage": "Hey, it's Freddie. Thanks for joining {{title}}!\n\n{{fact_problem}}\n\nMaking a bookmark is an easy and creative way to reclaim your textbook and create a space for inclusive history to be told.\n\nCheck out this link for examples! http://doso.me/1jfu\n\nOnce you have made your bookmarks to insert stories left out of your textbook, take a pic to prove it! Then text {{cmd_reportback}} to share it with us!"
+          }
+        }
+      }
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "owik07lyerdj"
+          }
+        },
+        "id": "21d99Zl9cAKuECuuIGcK2A",
+        "type": "Entry",
+        "createdAt": "2017-01-30T17:21:21.142Z",
+        "updatedAt": "2017-02-15T20:33:19.515Z",
+        "revision": 4,
+        "contentType": {
+          "sys": {
+            "type": "Link",
+            "linkType": "ContentType",
+            "id": "keyword"
+          }
+        },
+        "locale": "en-US"
+      },
+      "fields": {
+        "keyword": "bumblebot",
+        "environment": "thor",
+        "campaign": {
+          "sys": {
+            "space": {
+              "sys": {
+                "type": "Link",
+                "linkType": "Space",
+                "id": "owik07lyerdj"
+              }
+            },
+            "id": "20LmlEJE2QcW2usKIy0Aas",
+            "type": "Entry",
+            "createdAt": "2017-02-15T20:05:28.870Z",
+            "updatedAt": "2017-02-15T20:05:28.870Z",
+            "revision": 1,
+            "contentType": {
+              "sys": {
+                "type": "Link",
+                "linkType": "ContentType",
+                "id": "campaign"
+              }
+            },
+            "locale": "en-US"
+          },
+          "fields": {
+            "campaignId": "2070"
+          }
+        }
+      }
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "owik07lyerdj"
+          }
+        },
+        "id": "6gneWiddLOOOuIOUACCswY",
+        "type": "Entry",
+        "createdAt": "2017-04-12T19:57:18.900Z",
+        "updatedAt": "2017-04-13T00:51:15.480Z",
+        "revision": 2,
+        "contentType": {
+          "sys": {
+            "type": "Link",
+            "linkType": "ContentType",
+            "id": "keyword"
+          }
+        },
+        "locale": "en-US"
+      },
+      "fields": {
+        "keyword": "unitybot",
+        "environment": "thor",
+        "campaign": {
+          "sys": {
+            "space": {
+              "sys": {
+                "type": "Link",
+                "linkType": "Space",
+                "id": "owik07lyerdj"
+              }
+            },
+            "id": "4wg9DK69oAiak446OyAuWA",
+            "type": "Entry",
+            "createdAt": "2017-04-12T19:56:47.032Z",
+            "updatedAt": "2017-05-04T16:04:50.332Z",
+            "revision": 12,
+            "contentType": {
+              "sys": {
+                "type": "Link",
+                "linkType": "ContentType",
+                "id": "campaign"
+              }
+            },
+            "locale": "en-US"
+          },
+          "fields": {
+            "campaignId": "7656",
+            "gambitSignupMenuMessage": "At DoSomething, we wanted to say thanks for taking an important step to supporting our Muslim American neighbors.  \n\nOur goal is to send handmade Happy Ramadan cards to every mosque in America. Ramadan is the perfect time for a giant outpouring of appreciation. Today make 1 card to show your support.\n\nInclude a message like \"Happy Ramadan\" and sign off with your name and state!\n\nText the word START to share a photo of your card (and enter to win a $5000 scholarship).",
+            "externalSignupMenuMessage": "Hi it's Freddie from DoSomething, I wanted to say thanks for taking an important step to supporting our Muslim American neighbors.  \n\nOur goal is to send handmade Happy Ramadan cards to every mosque in America. Ramadan is the perfect time for a giant outpouring of appreciation. Today make 1 card to show your support.\n\nInclude a message like \"Happy Ramadan\" and sign off with your name and state!\nText the word START to share a photo of your card (and enter to win a $5000 scholarship).",
+            "invalidSignupMenuCommandMessage": "Sorry - I didn't get what you said, but I'm happy to help! \n\nDo you have a question about the campaign or making cards? Check out our FAQ page: http://doso.me/1jgw \n\nHave another question? Text QUESTION and someone will reply in 24 hours. ",
+            "completedMenuMessage": "Great, thanks for sharing your photo! You're helping us reach our goal of sending a handmade card to ever single mosque in the US.  \n\nNow mail the card to us and we'll send it to a mosque this Ramadan!\n\nMail to: \nAttn: Sincerely, Us Campaign\n19 West 21st Street\n8th Floor\nNew York, NY 10010\n\nTo make sure we can send the cards out by Ramadan (and so you can be eligible for the scholarship), please send your cards to us by June 10th.",
+            "scheduledRelativeToSignupDateMessage": "Hi it's Freddie again! During the 30 days of Ramadan this summer, Muslims across the US are celebrating community, compassion, and mercy, three things we all believe in. \n\nRight now is the perfect time for a giant, beautiful outpouring of appreciation for our Muslim neighbors. The more people who know about this campaign the more cards we can send. \n\nLet your friends know about the campaign now to show your support: http://doso.me/1jh3"
+          }
+        }
+      }
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "owik07lyerdj"
+          }
+        },
+        "id": "3mMeUatw00GqQ0gAM86ICq",
+        "type": "Entry",
+        "createdAt": "2017-02-06T18:12:19.388Z",
+        "updatedAt": "2017-02-15T19:19:48.571Z",
+        "revision": 2,
+        "contentType": {
+          "sys": {
+            "type": "Link",
+            "linkType": "ContentType",
+            "id": "keyword"
+          }
+        },
+        "locale": "en-US"
+      },
+      "fields": {
+        "keyword": "bookbot",
+        "environment": "thor",
+        "campaign": {
+          "sys": {
+            "space": {
+              "sys": {
+                "type": "Link",
+                "linkType": "Space",
+                "id": "owik07lyerdj"
+              }
+            },
+            "id": "68Oy1FcaR2EiaMieicaoom",
+            "type": "Entry",
+            "createdAt": "2017-02-15T19:19:34.100Z",
+            "updatedAt": "2017-02-15T19:19:34.100Z",
+            "revision": 1,
+            "contentType": {
+              "sys": {
+                "type": "Link",
+                "linkType": "ContentType",
+                "id": "campaign"
+              }
+            },
+            "locale": "en-US"
+          },
+          "fields": {
+            "campaignId": "2299"
+          }
+        }
+      }
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "owik07lyerdj"
+          }
+        },
+        "id": "2Zjj1T4zZ6cs2Yasim8amg",
+        "type": "Entry",
+        "createdAt": "2017-04-06T19:48:06.164Z",
+        "updatedAt": "2017-04-07T15:12:23.187Z",
+        "revision": 2,
+        "contentType": {
+          "sys": {
+            "type": "Link",
+            "linkType": "ContentType",
+            "id": "keyword"
+          }
+        },
+        "locale": "en-US"
+      },
+      "fields": {
+        "keyword": "bubblebot",
+        "environment": "thor",
+        "campaign": {
+          "sys": {
+            "space": {
+              "sys": {
+                "type": "Link",
+                "linkType": "Space",
+                "id": "owik07lyerdj"
+              }
+            },
+            "id": "5sWJdklVf2WaYa2cSyCaAM",
+            "type": "Entry",
+            "createdAt": "2017-04-06T19:47:36.926Z",
+            "updatedAt": "2017-04-06T19:47:36.926Z",
+            "revision": 1,
+            "contentType": {
+              "sys": {
+                "type": "Link",
+                "linkType": "ContentType",
+                "id": "campaign"
+              }
+            },
+            "locale": "en-US"
+          },
+          "fields": {
+            "campaignId": "1524"
+          }
+        }
+      }
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "owik07lyerdj"
+          }
+        },
+        "id": "1lPlrxaZtimGAcaI6o8Osq",
+        "type": "Entry",
+        "createdAt": "2017-02-08T17:15:40.436Z",
+        "updatedAt": "2017-02-15T20:25:36.288Z",
+        "revision": 2,
+        "contentType": {
+          "sys": {
+            "type": "Link",
+            "linkType": "ContentType",
+            "id": "keyword"
+          }
+        },
+        "locale": "en-US"
+      },
+      "fields": {
+        "keyword": "suckerbot",
+        "environment": "thor",
+        "campaign": {
+          "sys": {
+            "space": {
+              "sys": {
+                "type": "Link",
+                "linkType": "Space",
+                "id": "owik07lyerdj"
+              }
+            },
+            "id": "5XiVoY8pxey8E6OoYI4IyM",
+            "type": "Entry",
+            "createdAt": "2017-02-15T20:25:30.378Z",
+            "updatedAt": "2017-02-15T20:25:30.378Z",
+            "revision": 1,
+            "contentType": {
+              "sys": {
+                "type": "Link",
+                "linkType": "ContentType",
+                "id": "campaign"
+              }
+            },
+            "locale": "en-US"
+          },
+          "fields": {
+            "campaignId": "46"
+          }
+        }
+      }
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "owik07lyerdj"
+          }
+        },
+        "id": "1j7fHcSki62iOE4WKAiqaG",
+        "type": "Entry",
+        "createdAt": "2017-02-08T17:12:09.885Z",
+        "updatedAt": "2017-02-15T20:30:47.044Z",
+        "revision": 2,
+        "contentType": {
+          "sys": {
+            "type": "Link",
+            "linkType": "ContentType",
+            "id": "keyword"
+          }
+        },
+        "locale": "en-US"
+      },
+      "fields": {
+        "keyword": "mirrorbot",
+        "environment": "thor",
+        "campaign": {
+          "sys": {
+            "space": {
+              "sys": {
+                "type": "Link",
+                "linkType": "Space",
+                "id": "owik07lyerdj"
+              }
+            },
+            "id": "6tlsrM2RTa40oMqwcIKSg6",
+            "type": "Entry",
+            "createdAt": "2017-02-15T20:30:31.426Z",
+            "updatedAt": "2017-05-03T19:05:47.936Z",
+            "revision": 8,
+            "contentType": {
+              "sys": {
+                "type": "Link",
+                "linkType": "ContentType",
+                "id": "campaign"
+              }
+            },
+            "locale": "en-US"
+          },
+          "fields": {
+            "campaignId": "7",
+            "gambitSignupMenuMessage": "Hey - this is Freddie from DoSomething. Thanks for joining a movement to spread positivity in school. You can do something simple to make a big impact for a stranger.\n\nLet's do this: post encouraging notes in places that can trigger low self-esteem, like school bathrooms.\n\nThen, text START to share a photo of the messages you posted (and you'll be entered to win a $1500 scholarship)!",
+            "externalSignupMenuMessage": "Hey - this is Freddie from DoSomething. Thanks for joining a movement to spread positivity in school. You can do something simple to make a big impact for a stranger.\n\nLet's do this: post encouraging notes in places that can trigger low self-esteem, like school bathrooms.\n\nThen, text START to share a photo of the messages you posted (and you'll be entered to win a $1500 scholarship)!",
+            "scheduledRelativeToSignupDateMessage": "Hi it's Freddie again! Have you had a chance to post a positive note in a place like a school bathroom? We're trying to positivity to every state in the country, so want to see what you've posted! \n\nWhen you're ready, text MIRROR to send back a photo of the notes you posted. (You'll be entered to win a $1500 scholarship)!"
+          }
+        }
+      }
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "owik07lyerdj"
+          }
+        },
+        "id": "jVi5zE3ZbUeCMyS6gUCs6",
+        "type": "Entry",
+        "createdAt": "2017-03-14T18:27:21.452Z",
+        "updatedAt": "2017-03-14T18:27:21.452Z",
+        "revision": 1,
+        "contentType": {
+          "sys": {
+            "type": "Link",
+            "linkType": "ContentType",
+            "id": "keyword"
+          }
+        },
+        "locale": "en-US"
+      },
+      "fields": {
+        "keyword": "beesbot",
+        "environment": "thor",
+        "campaign": {
+          "sys": {
+            "space": {
+              "sys": {
+                "type": "Link",
+                "linkType": "Space",
+                "id": "owik07lyerdj"
+              }
+            },
+            "id": "20LmlEJE2QcW2usKIy0Aas",
+            "type": "Entry",
+            "createdAt": "2017-02-15T20:05:28.870Z",
+            "updatedAt": "2017-02-15T20:05:28.870Z",
+            "revision": 1,
+            "contentType": {
+              "sys": {
+                "type": "Link",
+                "linkType": "ContentType",
+                "id": "campaign"
+              }
+            },
+            "locale": "en-US"
+          },
+          "fields": {
+            "campaignId": "2070"
+          }
+        }
+      }
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "owik07lyerdj"
+          }
+        },
+        "id": "5wcp2wZUreEYAQgguWOeq",
+        "type": "Entry",
+        "createdAt": "2017-04-04T19:34:58.439Z",
+        "updatedAt": "2017-04-04T19:35:39.686Z",
+        "revision": 2,
+        "contentType": {
+          "sys": {
+            "type": "Link",
+            "linkType": "ContentType",
+            "id": "keyword"
+          }
+        },
+        "locale": "en-US"
+      },
+      "fields": {
+        "keyword": "dunkbot",
+        "environment": "thor",
+        "campaign": {
+          "sys": {
+            "space": {
+              "sys": {
+                "type": "Link",
+                "linkType": "Space",
+                "id": "owik07lyerdj"
+              }
+            },
+            "id": "1O9HnbVSfGmICQWaAc2cAK",
+            "type": "Entry",
+            "createdAt": "2017-04-04T19:33:54.637Z",
+            "updatedAt": "2017-04-04T19:33:54.637Z",
+            "revision": 1,
+            "contentType": {
+              "sys": {
+                "type": "Link",
+                "linkType": "ContentType",
+                "id": "campaign"
+              }
+            },
+            "locale": "en-US"
+          },
+          "fields": {
+            "campaignId": "6620"
+          }
+        }
+      }
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "owik07lyerdj"
+          }
+        },
+        "id": "7tFcZwcSVq40ewUWoWqeIo",
+        "type": "Entry",
+        "createdAt": "2017-02-07T16:12:57.357Z",
+        "updatedAt": "2017-02-15T20:20:47.435Z",
+        "revision": 2,
+        "contentType": {
+          "sys": {
+            "type": "Link",
+            "linkType": "ContentType",
+            "id": "keyword"
+          }
+        },
+        "locale": "en-US"
+      },
+      "fields": {
+        "keyword": "luckybot",
+        "environment": "thor",
+        "campaign": {
+          "sys": {
+            "space": {
+              "sys": {
+                "type": "Link",
+                "linkType": "Space",
+                "id": "owik07lyerdj"
+              }
+            },
+            "id": "3iR02GYG0oWi2uggMKqqwQ",
+            "type": "Entry",
+            "createdAt": "2017-02-15T20:20:38.173Z",
+            "updatedAt": "2017-02-15T20:20:38.173Z",
+            "revision": 1,
+            "contentType": {
+              "sys": {
+                "type": "Link",
+                "linkType": "ContentType",
+                "id": "campaign"
+              }
+            },
+            "locale": "en-US"
+          },
+          "fields": {
+            "campaignId": "2900"
+          }
+        }
+      }
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "owik07lyerdj"
+          }
+        },
+        "id": "22Fol3tT8UqaS2g6yGuk8E",
+        "type": "Entry",
+        "createdAt": "2017-02-24T17:41:30.076Z",
+        "updatedAt": "2017-02-24T17:41:30.076Z",
+        "revision": 1,
+        "contentType": {
+          "sys": {
+            "type": "Link",
+            "linkType": "ContentType",
+            "id": "keyword"
+          }
+        },
+        "locale": "en-US"
+      },
+      "fields": {
+        "keyword": "seedbot",
+        "environment": "thor",
+        "campaign": {
+          "sys": {
+            "space": {
+              "sys": {
+                "type": "Link",
+                "linkType": "Space",
+                "id": "owik07lyerdj"
+              }
+            },
+            "id": "35kNQwlEAUaSouQASOEAc2",
+            "type": "Entry",
+            "createdAt": "2017-02-24T17:41:08.072Z",
+            "updatedAt": "2017-02-24T17:41:08.072Z",
+            "revision": 1,
+            "contentType": {
+              "sys": {
+                "type": "Link",
+                "linkType": "ContentType",
+                "id": "campaign"
+              }
+            },
+            "locale": "en-US"
+          },
+          "fields": {
+            "campaignId": "819"
+          }
+        }
+      }
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "owik07lyerdj"
+          }
+        },
+        "id": "5Fphdwh6nuQuC02K6CGWIU",
+        "type": "Entry",
+        "createdAt": "2017-02-27T22:19:56.400Z",
+        "updatedAt": "2017-02-27T22:28:20.766Z",
+        "revision": 2,
+        "contentType": {
+          "sys": {
+            "type": "Link",
+            "linkType": "ContentType",
+            "id": "keyword"
+          }
+        },
+        "locale": "en-US"
+      },
+      "fields": {
+        "keyword": "rinsebot",
+        "environment": "thor",
+        "campaign": {
+          "sys": {
+            "space": {
+              "sys": {
+                "type": "Link",
+                "linkType": "Space",
+                "id": "owik07lyerdj"
+              }
+            },
+            "id": "3tUIp8oqTemqaSOKqGwIe6",
+            "type": "Entry",
+            "createdAt": "2017-02-27T16:50:42.326Z",
+            "updatedAt": "2017-03-07T18:03:37.816Z",
+            "revision": 2,
+            "contentType": {
+              "sys": {
+                "type": "Link",
+                "linkType": "ContentType",
+                "id": "campaign"
+              }
+            },
+            "locale": "en-US"
+          },
+          "fields": {
+            "campaignId": "7483",
+            "gambitSignupMenuMessage": "Great - it's simple: Keep beauty and personal care products out of landfills by making fun and creative recycling bins for the bathroom! \n\nThis action should take between 10 - 20 mins. Make it colorful so friends and family won't forget to recycle their bathroom empties. \n\nWhen you're done, text START to share a photo of your bin and you'll be entered to win a $5000 scholarship!",
+            "externalSignupMenuMessage": "Thanks for joining Rinse Recycle Repeat!\n\nNearly half of Americans don’t regularly recycle their beauty and personal care products. That’s a major reason these items account for a significant amount of landfill waste.\n\nThe solution is simple: Make fun and creative bins for bathrooms.\n\nOnce you have created some bathroom recycling bins, take a pic to prove it! Then text {{cmd_reportback}} to share it with us!",
+            "scheduledRelativeToSignupDateMessage": "Hey it's Freddie again! Have you had a chance to create a recycling bin?\n\nShare what you've done with other DoSomething members. Text back RINSE!"
+          }
+        }
+      }
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "owik07lyerdj"
+          }
+        },
+        "id": "52O60q5lHqsiKEs6eqIWqE",
+        "type": "Entry",
+        "createdAt": "2017-04-06T20:37:50.418Z",
+        "updatedAt": "2017-04-06T20:37:50.418Z",
+        "revision": 1,
+        "contentType": {
+          "sys": {
+            "type": "Link",
+            "linkType": "ContentType",
+            "id": "keyword"
+          }
+        },
+        "locale": "en-US"
+      },
+      "fields": {
+        "keyword": "cookiebot",
+        "environment": "thor",
+        "campaign": {
+          "sys": {
+            "space": {
+              "sys": {
+                "type": "Link",
+                "linkType": "Space",
+                "id": "owik07lyerdj"
+              }
+            },
+            "id": "4Qc3Pw3JAAImGKk4WuKkS0",
+            "type": "Entry",
+            "createdAt": "2017-04-06T20:37:46.446Z",
+            "updatedAt": "2017-04-06T20:37:46.446Z",
+            "revision": 1,
+            "contentType": {
+              "sys": {
+                "type": "Link",
+                "linkType": "ContentType",
+                "id": "campaign"
+              }
+            },
+            "locale": "en-US"
+          },
+          "fields": {
+            "campaignId": "2015"
+          }
+        }
+      }
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "owik07lyerdj"
+          }
+        },
+        "id": "6PmrxwRmEgwGoUOeGM602U",
+        "type": "Entry",
+        "createdAt": "2017-02-23T03:36:58.875Z",
+        "updatedAt": "2017-02-23T03:36:58.875Z",
+        "revision": 1,
+        "contentType": {
+          "sys": {
+            "type": "Link",
+            "linkType": "ContentType",
+            "id": "keyword"
+          }
+        },
+        "locale": "en-US"
+      },
+      "fields": {
+        "keyword": "bullybot",
+        "environment": "thor",
+        "campaign": {
+          "sys": {
+            "space": {
+              "sys": {
+                "type": "Link",
+                "linkType": "Space",
+                "id": "owik07lyerdj"
+              }
+            },
+            "id": "48gq0hl1pegQY206Q4KKuG",
+            "type": "Entry",
+            "createdAt": "2017-02-16T03:19:51.037Z",
+            "updatedAt": "2017-04-13T00:33:04.969Z",
+            "revision": 4,
+            "contentType": {
+              "sys": {
+                "type": "Link",
+                "linkType": "ContentType",
+                "id": "campaign"
+              }
+            },
+            "locale": "en-US"
+          },
+          "fields": {
+            "campaignId": "2086",
+            "gambitSignupMenuMessage": "We’re compiling the largest crowdsourced anti-bullying guide! It takes 2 mins: add your tip by making a sign that says 'I Beat Bullying By _______' and fill in the blank with a way you've beat bullying.\n\nTake a photo of you and your sign to enter to win a $3,000 scholarship.\n\nBONUS: Share your photo by midnight PST tonight for a chance to win a gift card of your choice!! Text {{cmd_reportback}} to share now.\"",
+            "externalSignupMenuMessage": "Hey it's Freddie! Thanks for joining {{title}}.\n\n{{fact_problem}}\n\nThe solution is simple: Submit your anti-bullying tactic by making a sign that says 'I Beat Bullying By _______' and filling in the blank with a specific tactic you've used.\n\nWe’re gathering the largest crowd-sourced guide...ever for how to beat bullying! Text {{cmd_reportback}} to submit your tactic by Feb 28th and you'll be eligible for a $3,000 scholarship AND have your tactic in the final report.",
+            "askCaptionMessage": "Got it! Now text back the tip you've shared on your sign.",
+            "scheduledRelativeToReportbackDateMessage": "Hi it's Freddie! Thanks for sharing your anti-bullying tip. Will you fill out this 2 min survey on bullying at your school? http://doso.me/1jfy"
+          }
+        }
+      }
+    }
+  ],
+  "includes": {
+    "Entry": [
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "11uL58PDWIUkOMwUAIgU6U",
+          "type": "Entry",
+          "createdAt": "2017-02-16T03:35:03.613Z",
+          "updatedAt": "2017-04-13T00:33:52.377Z",
+          "revision": 3,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "campaign"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "campaignId": "7623",
+          "gambitSignupMenuMessage": "Thanks for joining {{title}}!\n\n{{fact_problem}}\n\nBy spotting and acting on the signs of abusive partners, you can promote healthy relationship behavior to keep you and your friends safe. Click the link to share our Spot the Signs guide on Facebook with friends to teach them how to spot red flags for dating abuse: https://bit.ly/2jY5xZm\n\nOnce you have shared our guide, take a screenshot to prove it! Then text {{cmd_reportback}} to share it with us!",
+          "externalSignupMenuMessage": "Hey, it's Freddie. Thanks for joining {{title}}!\n\n{{fact_problem}}\n\nBy spotting and acting on the signs of abusive partners, you can promote healthy relationship behavior to keep you and your friends safe. Click the link to share our Spot the Signs guide on Facebook with friends to teach them how to spot red flags for dating abuse: https://bit.ly/2jY5xZm\n\nOnce you have shared our guide, take a screenshot to prove it! Then text {{cmd_reportback}} to share it with us!"
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "1O9HnbVSfGmICQWaAc2cAK",
+          "type": "Entry",
+          "createdAt": "2017-04-04T19:33:54.637Z",
+          "updatedAt": "2017-04-04T19:33:54.637Z",
+          "revision": 1,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "campaign"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "campaignId": "6620"
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "20LmlEJE2QcW2usKIy0Aas",
+          "type": "Entry",
+          "createdAt": "2017-02-15T20:05:28.870Z",
+          "updatedAt": "2017-02-15T20:05:28.870Z",
+          "revision": 1,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "campaign"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "campaignId": "2070"
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "35kNQwlEAUaSouQASOEAc2",
+          "type": "Entry",
+          "createdAt": "2017-02-24T17:41:08.072Z",
+          "updatedAt": "2017-02-24T17:41:08.072Z",
+          "revision": 1,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "campaign"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "campaignId": "819"
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "3SAB1N4PfyU0IMA6kCK4WW",
+          "type": "Entry",
+          "createdAt": "2017-02-16T03:24:44.496Z",
+          "updatedAt": "2017-04-13T00:34:11.978Z",
+          "revision": 3,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "campaign"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "campaignId": "7554",
+          "gambitSignupMenuMessage": "Tons of important figures and events are erased from textbooks -- that's why this month it's more important than ever to share these stories.\n\nMake a bookmark (or print out) stories often left out of history textbooks. Click here for a template and stories you can share: http://doso.me/1jfw\n\nPlace the bookmark in a textbook at school and take a photo. Text {{cmd_reportback}} to share your photo and you'll be entered to win a $3000 scholarship!\n\n(BONUS: We'll pick a winner for a $25 gift card for anyone who sends in a bookmark photo by noon EST tomorrow!)",
+          "externalSignupMenuMessage": "Hey, it's Freddie. Thanks for joining {{title}}!\n\n{{fact_problem}}\n\nMaking a bookmark is an easy and creative way to reclaim your textbook and create a space for inclusive history to be told.\n\nCheck out this link for examples! http://doso.me/1jfu\n\nOnce you have made your bookmarks to insert stories left out of your textbook, take a pic to prove it! Then text {{cmd_reportback}} to share it with us!"
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "3iR02GYG0oWi2uggMKqqwQ",
+          "type": "Entry",
+          "createdAt": "2017-02-15T20:20:38.173Z",
+          "updatedAt": "2017-02-15T20:20:38.173Z",
+          "revision": 1,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "campaign"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "campaignId": "2900"
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "3tUIp8oqTemqaSOKqGwIe6",
+          "type": "Entry",
+          "createdAt": "2017-02-27T16:50:42.326Z",
+          "updatedAt": "2017-03-07T18:03:37.816Z",
+          "revision": 2,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "campaign"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "campaignId": "7483",
+          "gambitSignupMenuMessage": "Great - it's simple: Keep beauty and personal care products out of landfills by making fun and creative recycling bins for the bathroom! \n\nThis action should take between 10 - 20 mins. Make it colorful so friends and family won't forget to recycle their bathroom empties. \n\nWhen you're done, text START to share a photo of your bin and you'll be entered to win a $5000 scholarship!",
+          "externalSignupMenuMessage": "Thanks for joining Rinse Recycle Repeat!\n\nNearly half of Americans don’t regularly recycle their beauty and personal care products. That’s a major reason these items account for a significant amount of landfill waste.\n\nThe solution is simple: Make fun and creative bins for bathrooms.\n\nOnce you have created some bathroom recycling bins, take a pic to prove it! Then text {{cmd_reportback}} to share it with us!",
+          "scheduledRelativeToSignupDateMessage": "Hey it's Freddie again! Have you had a chance to create a recycling bin?\n\nShare what you've done with other DoSomething members. Text back RINSE!"
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "48gq0hl1pegQY206Q4KKuG",
+          "type": "Entry",
+          "createdAt": "2017-02-16T03:19:51.037Z",
+          "updatedAt": "2017-04-13T00:33:04.969Z",
+          "revision": 4,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "campaign"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "campaignId": "2086",
+          "gambitSignupMenuMessage": "We’re compiling the largest crowdsourced anti-bullying guide! It takes 2 mins: add your tip by making a sign that says 'I Beat Bullying By _______' and fill in the blank with a way you've beat bullying.\n\nTake a photo of you and your sign to enter to win a $3,000 scholarship.\n\nBONUS: Share your photo by midnight PST tonight for a chance to win a gift card of your choice!! Text {{cmd_reportback}} to share now.\"",
+          "externalSignupMenuMessage": "Hey it's Freddie! Thanks for joining {{title}}.\n\n{{fact_problem}}\n\nThe solution is simple: Submit your anti-bullying tactic by making a sign that says 'I Beat Bullying By _______' and filling in the blank with a specific tactic you've used.\n\nWe’re gathering the largest crowd-sourced guide...ever for how to beat bullying! Text {{cmd_reportback}} to submit your tactic by Feb 28th and you'll be eligible for a $3,000 scholarship AND have your tactic in the final report.",
+          "askCaptionMessage": "Got it! Now text back the tip you've shared on your sign.",
+          "scheduledRelativeToReportbackDateMessage": "Hi it's Freddie! Thanks for sharing your anti-bullying tip. Will you fill out this 2 min survey on bullying at your school? http://doso.me/1jfy"
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "4Qc3Pw3JAAImGKk4WuKkS0",
+          "type": "Entry",
+          "createdAt": "2017-04-06T20:37:46.446Z",
+          "updatedAt": "2017-04-06T20:37:46.446Z",
+          "revision": 1,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "campaign"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "campaignId": "2015"
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "4wg9DK69oAiak446OyAuWA",
+          "type": "Entry",
+          "createdAt": "2017-04-12T19:56:47.032Z",
+          "updatedAt": "2017-05-04T16:04:50.332Z",
+          "revision": 12,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "campaign"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "campaignId": "7656",
+          "gambitSignupMenuMessage": "At DoSomething, we wanted to say thanks for taking an important step to supporting our Muslim American neighbors.  \n\nOur goal is to send handmade Happy Ramadan cards to every mosque in America. Ramadan is the perfect time for a giant outpouring of appreciation. Today make 1 card to show your support.\n\nInclude a message like \"Happy Ramadan\" and sign off with your name and state!\n\nText the word START to share a photo of your card (and enter to win a $5000 scholarship).",
+          "externalSignupMenuMessage": "Hi it's Freddie from DoSomething, I wanted to say thanks for taking an important step to supporting our Muslim American neighbors.  \n\nOur goal is to send handmade Happy Ramadan cards to every mosque in America. Ramadan is the perfect time for a giant outpouring of appreciation. Today make 1 card to show your support.\n\nInclude a message like \"Happy Ramadan\" and sign off with your name and state!\nText the word START to share a photo of your card (and enter to win a $5000 scholarship).",
+          "invalidSignupMenuCommandMessage": "Sorry - I didn't get what you said, but I'm happy to help! \n\nDo you have a question about the campaign or making cards? Check out our FAQ page: http://doso.me/1jgw \n\nHave another question? Text QUESTION and someone will reply in 24 hours. ",
+          "completedMenuMessage": "Great, thanks for sharing your photo! You're helping us reach our goal of sending a handmade card to ever single mosque in the US.  \n\nNow mail the card to us and we'll send it to a mosque this Ramadan!\n\nMail to: \nAttn: Sincerely, Us Campaign\n19 West 21st Street\n8th Floor\nNew York, NY 10010\n\nTo make sure we can send the cards out by Ramadan (and so you can be eligible for the scholarship), please send your cards to us by June 10th.",
+          "scheduledRelativeToSignupDateMessage": "Hi it's Freddie again! During the 30 days of Ramadan this summer, Muslims across the US are celebrating community, compassion, and mercy, three things we all believe in. \n\nRight now is the perfect time for a giant, beautiful outpouring of appreciation for our Muslim neighbors. The more people who know about this campaign the more cards we can send. \n\nLet your friends know about the campaign now to show your support: http://doso.me/1jh3"
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "5XiVoY8pxey8E6OoYI4IyM",
+          "type": "Entry",
+          "createdAt": "2017-02-15T20:25:30.378Z",
+          "updatedAt": "2017-02-15T20:25:30.378Z",
+          "revision": 1,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "campaign"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "campaignId": "46"
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "5sWJdklVf2WaYa2cSyCaAM",
+          "type": "Entry",
+          "createdAt": "2017-04-06T19:47:36.926Z",
+          "updatedAt": "2017-04-06T19:47:36.926Z",
+          "revision": 1,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "campaign"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "campaignId": "1524"
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "68Oy1FcaR2EiaMieicaoom",
+          "type": "Entry",
+          "createdAt": "2017-02-15T19:19:34.100Z",
+          "updatedAt": "2017-02-15T19:19:34.100Z",
+          "revision": 1,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "campaign"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "campaignId": "2299"
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "6tlsrM2RTa40oMqwcIKSg6",
+          "type": "Entry",
+          "createdAt": "2017-02-15T20:30:31.426Z",
+          "updatedAt": "2017-05-03T19:05:47.936Z",
+          "revision": 8,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "campaign"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "campaignId": "7",
+          "gambitSignupMenuMessage": "Hey - this is Freddie from DoSomething. Thanks for joining a movement to spread positivity in school. You can do something simple to make a big impact for a stranger.\n\nLet's do this: post encouraging notes in places that can trigger low self-esteem, like school bathrooms.\n\nThen, text START to share a photo of the messages you posted (and you'll be entered to win a $1500 scholarship)!",
+          "externalSignupMenuMessage": "Hey - this is Freddie from DoSomething. Thanks for joining a movement to spread positivity in school. You can do something simple to make a big impact for a stranger.\n\nLet's do this: post encouraging notes in places that can trigger low self-esteem, like school bathrooms.\n\nThen, text START to share a photo of the messages you posted (and you'll be entered to win a $1500 scholarship)!",
+          "scheduledRelativeToSignupDateMessage": "Hi it's Freddie again! Have you had a chance to post a positive note in a place like a school bathroom? We're trying to positivity to every state in the country, so want to see what you've posted! \n\nWhen you're ready, text MIRROR to send back a photo of the notes you posted. (You'll be entered to win a $1500 scholarship)!"
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "2M37TQO2reqSEsySQaY0OS",
+          "type": "Entry",
+          "createdAt": "2017-02-16T16:35:50.245Z",
+          "updatedAt": "2017-02-16T16:35:50.245Z",
+          "revision": 1,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "keyword"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "keyword": "signbot",
+          "environment": "thor",
+          "campaign": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Entry",
+              "id": "11uL58PDWIUkOMwUAIgU6U"
+            }
+          }
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "5uRpE60gXSYiGg60CskUQE",
+          "type": "Entry",
+          "createdAt": "2017-02-23T16:24:14.374Z",
+          "updatedAt": "2017-02-23T16:24:14.374Z",
+          "revision": 1,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "keyword"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "keyword": "historybot",
+          "environment": "thor",
+          "campaign": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Entry",
+              "id": "3SAB1N4PfyU0IMA6kCK4WW"
+            }
+          }
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "21d99Zl9cAKuECuuIGcK2A",
+          "type": "Entry",
+          "createdAt": "2017-01-30T17:21:21.142Z",
+          "updatedAt": "2017-02-15T20:33:19.515Z",
+          "revision": 4,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "keyword"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "keyword": "bumblebot",
+          "environment": "thor",
+          "campaign": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Entry",
+              "id": "20LmlEJE2QcW2usKIy0Aas"
+            }
+          }
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "6gneWiddLOOOuIOUACCswY",
+          "type": "Entry",
+          "createdAt": "2017-04-12T19:57:18.900Z",
+          "updatedAt": "2017-04-13T00:51:15.480Z",
+          "revision": 2,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "keyword"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "keyword": "unitybot",
+          "environment": "thor",
+          "campaign": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Entry",
+              "id": "4wg9DK69oAiak446OyAuWA"
+            }
+          }
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "3mMeUatw00GqQ0gAM86ICq",
+          "type": "Entry",
+          "createdAt": "2017-02-06T18:12:19.388Z",
+          "updatedAt": "2017-02-15T19:19:48.571Z",
+          "revision": 2,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "keyword"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "keyword": "bookbot",
+          "environment": "thor",
+          "campaign": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Entry",
+              "id": "68Oy1FcaR2EiaMieicaoom"
+            }
+          }
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "2Zjj1T4zZ6cs2Yasim8amg",
+          "type": "Entry",
+          "createdAt": "2017-04-06T19:48:06.164Z",
+          "updatedAt": "2017-04-07T15:12:23.187Z",
+          "revision": 2,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "keyword"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "keyword": "bubblebot",
+          "environment": "thor",
+          "campaign": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Entry",
+              "id": "5sWJdklVf2WaYa2cSyCaAM"
+            }
+          }
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "1lPlrxaZtimGAcaI6o8Osq",
+          "type": "Entry",
+          "createdAt": "2017-02-08T17:15:40.436Z",
+          "updatedAt": "2017-02-15T20:25:36.288Z",
+          "revision": 2,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "keyword"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "keyword": "suckerbot",
+          "environment": "thor",
+          "campaign": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Entry",
+              "id": "5XiVoY8pxey8E6OoYI4IyM"
+            }
+          }
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "1j7fHcSki62iOE4WKAiqaG",
+          "type": "Entry",
+          "createdAt": "2017-02-08T17:12:09.885Z",
+          "updatedAt": "2017-02-15T20:30:47.044Z",
+          "revision": 2,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "keyword"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "keyword": "mirrorbot",
+          "environment": "thor",
+          "campaign": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Entry",
+              "id": "6tlsrM2RTa40oMqwcIKSg6"
+            }
+          }
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "jVi5zE3ZbUeCMyS6gUCs6",
+          "type": "Entry",
+          "createdAt": "2017-03-14T18:27:21.452Z",
+          "updatedAt": "2017-03-14T18:27:21.452Z",
+          "revision": 1,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "keyword"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "keyword": "beesbot",
+          "environment": "thor",
+          "campaign": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Entry",
+              "id": "20LmlEJE2QcW2usKIy0Aas"
+            }
+          }
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "5wcp2wZUreEYAQgguWOeq",
+          "type": "Entry",
+          "createdAt": "2017-04-04T19:34:58.439Z",
+          "updatedAt": "2017-04-04T19:35:39.686Z",
+          "revision": 2,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "keyword"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "keyword": "dunkbot",
+          "environment": "thor",
+          "campaign": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Entry",
+              "id": "1O9HnbVSfGmICQWaAc2cAK"
+            }
+          }
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "7tFcZwcSVq40ewUWoWqeIo",
+          "type": "Entry",
+          "createdAt": "2017-02-07T16:12:57.357Z",
+          "updatedAt": "2017-02-15T20:20:47.435Z",
+          "revision": 2,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "keyword"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "keyword": "luckybot",
+          "environment": "thor",
+          "campaign": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Entry",
+              "id": "3iR02GYG0oWi2uggMKqqwQ"
+            }
+          }
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "22Fol3tT8UqaS2g6yGuk8E",
+          "type": "Entry",
+          "createdAt": "2017-02-24T17:41:30.076Z",
+          "updatedAt": "2017-02-24T17:41:30.076Z",
+          "revision": 1,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "keyword"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "keyword": "seedbot",
+          "environment": "thor",
+          "campaign": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Entry",
+              "id": "35kNQwlEAUaSouQASOEAc2"
+            }
+          }
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "5Fphdwh6nuQuC02K6CGWIU",
+          "type": "Entry",
+          "createdAt": "2017-02-27T22:19:56.400Z",
+          "updatedAt": "2017-02-27T22:28:20.766Z",
+          "revision": 2,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "keyword"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "keyword": "rinsebot",
+          "environment": "thor",
+          "campaign": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Entry",
+              "id": "3tUIp8oqTemqaSOKqGwIe6"
+            }
+          }
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "52O60q5lHqsiKEs6eqIWqE",
+          "type": "Entry",
+          "createdAt": "2017-04-06T20:37:50.418Z",
+          "updatedAt": "2017-04-06T20:37:50.418Z",
+          "revision": 1,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "keyword"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "keyword": "cookiebot",
+          "environment": "thor",
+          "campaign": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Entry",
+              "id": "4Qc3Pw3JAAImGKk4WuKkS0"
+            }
+          }
+        }
+      },
+      {
+        "sys": {
+          "space": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Space",
+              "id": "owik07lyerdj"
+            }
+          },
+          "id": "6PmrxwRmEgwGoUOeGM602U",
+          "type": "Entry",
+          "createdAt": "2017-02-23T03:36:58.875Z",
+          "updatedAt": "2017-02-23T03:36:58.875Z",
+          "revision": 1,
+          "contentType": {
+            "sys": {
+              "type": "Link",
+              "linkType": "ContentType",
+              "id": "keyword"
+            }
+          },
+          "locale": "en-US"
+        },
+        "fields": {
+          "keyword": "bullybot",
+          "environment": "thor",
+          "campaign": {
+            "sys": {
+              "type": "Link",
+              "linkType": "Entry",
+              "id": "48gq0hl1pegQY206Q4KKuG"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

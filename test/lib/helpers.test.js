@@ -19,7 +19,7 @@ const logger = require('winston');
 const helpers = require('../../lib/helpers');
 
 // Stub functions
-const fetchKeywordsForCampaignIdStub = () => Promise.resolve(stubs.getKeywords());
+const fetchKeywordsForCampaignIdStub = () => Promise.resolve(stubs.contentful.getKeywords());
 const fetchKeywordsForCampaignIdStubFail = () => Promise.reject({ status: 500 });
 const cryptoCreateHmacStub = {
   update() { return this; },
@@ -87,7 +87,7 @@ test('replacePhoenixCampaignVars', async () => {
 });
 
 test('replacePhoenixCampaignVars a message that makes a contentful request to get keywords', async () => {
-  const keywords = stubs.getKeywords();
+  const keywords = stubs.contentful.getKeywords();
   let renderedMessage = '';
   const phoenixCampaign = stubs.getPhoenixCampaign();
   const relativeToSignUpMsg = stubs.getDefaultContenfulCampaignMessage('scheduled_relative_to_signup_date');
