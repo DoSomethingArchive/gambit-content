@@ -6,6 +6,7 @@
 const mongoose = require('mongoose');
 const Promise = require('bluebird');
 const logger = require('winston');
+const superagent = require('superagent');
 
 const helpers = rootRequire('lib/helpers');
 const mobilecommons = rootRequire('lib/mobilecommons');
@@ -126,6 +127,47 @@ userSchema.methods.postMobileCommonsProfileUpdate = function (oip, msgTxt) {
   };
 
   return mobilecommons.profile_update(this.mobilecommons_id, this.mobile, oip, data);
+};
+
+/**
+ * Posts given messageText to the Dashbot API with given dashbotMessageType.
+ * @see https://www.dashbot.io/sdk/generic.
+ *
+ * @param {number} dashbotMessageType - Expected values: 'incoming' | 'outgoing'
+ * @param {string} messageText - text to track in Dashbot
+ */
+userSchema.methods.postDashbot = function (dashbotMessageType, messageText) {
+  if (!process.env.DASHBOT_API_KEY) {
+    return logger.warn('DASHBOT_API_KEY undefined');
+  }
+
+  const logMessage = `user.postDashbot:${dashbotMessageType} ${this._id}:${messageText}`;
+  logger.debug(logMessage);
+
+  const data = {
+    userId: this._id,
+    text: messageText,
+  };
+
+  return superagent
+    .post('https://tracker.dashbot.io/track')
+    .query({
+      platform: 'generic',
+      v: '0.8.2-rest', // eslint-disable-line id-length
+      type: dashbotMessageType,
+      apiKey: process.env.DASHBOT_API_KEY,
+    })
+    .send(data)
+    .then(response => logger.debug(`dashbot response:${JSON.stringify(response.body)}`))
+    .catch(err => logger.error(`dashbot response::${err.message}`));
+};
+
+userSchema.methods.postDashbotIncoming = function (message) {
+  this.postDashbot('incoming', message);
+};
+
+userSchema.methods.postDashbotOutgoing = function (gambitMessageType) {
+  this.postDashbot('outgoing', gambitMessageType);
 };
 
 module.exports = mongoose.model('users', userSchema);
