@@ -488,6 +488,9 @@ router.use((req, res, next) => {
  */
 router.post('/', (req, res, next) => {
   if (helpers.isCommand(req.incoming_message, 'member_support')) {
+    // TODO: If user was sent the member_support command, post our incoming_message to Zendesk.
+    // After submitting to Zendesk, prompt them to continue their conversation for current Campaign.
+    req.user.postZendeskMessage('This is a test');
     return endConversationWithMessageType(req, res, 'member_support');
   }
 
