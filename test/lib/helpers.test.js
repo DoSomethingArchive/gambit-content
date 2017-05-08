@@ -148,19 +148,16 @@ test('getFirstWord should return null if no message is passed', () => {
 
 // isYesResponse
 test('isYesResponse', () => {
-  helpers.isYesResponse('yea').should.be.true;
-  helpers.isYesResponse('si').should.be.true;
-  helpers.isYesResponse('s').should.be.true;
-  helpers.isYesResponse('yesss').should.be.true;
-  helpers.isYesResponse('i can').should.be.true;
-  helpers.isYesResponse('yes').should.be.true;
-  helpers.isYesResponse('nah').should.be.false;
-  helpers.isYesResponse('ss').should.be.false;
-  helpers.isYesResponse('abs').should.be.false;
-  helpers.isYesResponse('def').should.be.false;
-  helpers.isYesResponse('hell').should.be.false;
-  helpers.isYesResponse('tamales').should.be.false;
-  helpers.isYesResponse('definitely not').should.be.false;
+  const validResponses = stubs.helpers.getValidYesResponses();
+  const invalidResponses = stubs.helpers.getInvalidYesResponses();
+
+  validResponses.forEach((response) => {
+    helpers.isYesResponse(response).should.be.true;
+  });
+
+  invalidResponses.forEach((response) => {
+    helpers.isYesResponse(response).should.be.false;
+  });
 });
 
 // isValidReportbackQuantity
