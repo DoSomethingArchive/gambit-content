@@ -267,7 +267,7 @@ router.use((req, res, next) => {
     dashbotLog = `${dashbotLog}${req.incoming_message}`;
   }
 
-  req.user.postDashbotIncoming(dashbotLog);
+  req.user.postDashbotIncoming(dashbotLog.toLowerCase());
   next();
 });
 
