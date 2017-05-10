@@ -117,7 +117,12 @@ function startWorker(id) {
     profiler.start();
   }
 
+  const favicon = require('serve-favicon');
+  const path = require('path');
+
   app = express();
+  app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+
   const timeout = require('connect-timeout');
   const helpers = require('./lib/helpers');
   const timeoutNumSeconds = helpers.getGambitTimeoutNumSeconds();
