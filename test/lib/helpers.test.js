@@ -1,19 +1,25 @@
 'use strict';
 
+// env variables
 require('dotenv').config();
+
+// Libraries
 const Promise = require('bluebird');
 const test = require('ava');
 const chai = require('chai');
 const expect = require('chai').expect;
-const stubs = require('../../test/utils/stubs');
-const sinon = require('sinon');
-const sinonChai = require('sinon-chai');
-const httpMocks = require('node-mocks-http');
-const contentful = require('../../lib/contentful.js');
-const stathat = require('../../lib/stathat');
 const crypto = require('crypto');
 const newrelic = require('newrelic');
 const logger = require('winston');
+const sinonChai = require('sinon-chai');
+const httpMocks = require('node-mocks-http');
+const sinon = require('sinon');
+
+// App Modules
+const stubs = require('../../test/utils/stubs');
+const contentful = require('../../lib/contentful.js');
+const stathat = require('../../lib/stathat');
+const helpersConfig = require('../../config/helpers');
 
 // Module to test
 const helpers = require('../../lib/helpers');
@@ -134,10 +140,11 @@ test('addSenderPrefix', () => {
 });
 
 // containsNaughtyWords
-test('containsNaughtyWords', () => {
-  helpers.containsNaughtyWords('suck').should.be.true;
-  helpers.containsNaughtyWords('fuck you').should.be.true;
-  helpers.containsNaughtyWords('hi').should.be.false;
+// TODO: remove or fix pending: https://github.com/DoSomething/gambit/issues/895
+test.skip('containsNaughtyWords', () => {
+  helpersConfig.naughtyWords.forEach((word) => {
+    helpers.containsNaughtyWords(word).should.be.true;
+  });
 });
 
 // getFirstWord
@@ -184,16 +191,13 @@ test('generatePassword', () => {
 });
 
 // isCommand
-test('isCommand should return true when incoming message is Q and type is member_support', () => {
-  helpers.isCommand('q', 'member_support').should.be.true;
-  helpers.isCommand('q ', 'member_support').should.be.true;
-  helpers.isCommand(' q t pie', 'member_support').should.be.true;
-});
+test('isCommand should return true when incoming message and command are valid Gambit commands', () => {
+  const commandsObject = stubs.helpers.getValidCommandValues();
+  const commands = Object.keys(commandsObject);
 
-test('isCommand should return true when incoming message is start and type is reportback', () => {
-  helpers.isCommand('start', 'reportback').should.be.true;
-  helpers.isCommand('start ', 'reportback').should.be.true;
-  helpers.isCommand(' start the party!', 'reportback').should.be.true;
+  commands.forEach((command) => {
+    helpers.isCommand(commandsObject[command], command).should.be.true;
+  });
 });
 
 test('isCommand should return false when missing incomingMessage argument', () => {
