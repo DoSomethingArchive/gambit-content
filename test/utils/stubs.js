@@ -4,6 +4,25 @@
 /* eslint-disable import/no-dynamic-require */
 
 module.exports = {
+  helpers: {
+    getValidYesResponses: function getValidYesResponses() {
+      const yesResponses = process.env.GAMBIT_YES_RESPONSES || '';
+      return yesResponses.split(',');
+    },
+    getInvalidYesResponses: function getInvalidYesResponses() {
+      const invalidResponses = [
+        'nah', 'ss', 'abs', 'def',
+        'hell', 'tamales', 'definitely not',
+      ];
+      return invalidResponses;
+    },
+    getValidCommandValues: function getValidCommandValues() {
+      return {
+        member_support: process.env.GAMBIT_CMD_MEMBER_SUPPORT || 'Q',
+        reportback: process.env.GAMBIT_CMD_REPORTBACK || 'START',
+      };
+    },
+  },
   getPhoenixCampaign: function getPhoenixCampaign() {
     return {
       id: '2299',
@@ -24,6 +43,17 @@ module.exports = {
       },
     };
   },
+
+  /**
+   * This function returns mocks of the response that contentful sends to Gambit when queriyng for
+   * the default messages for each category here.
+   *
+   * TODO: This is inherently brittle, as there is no way to know when or if this default messages
+   * change. We have to think of a better way to do this in the future.
+   *
+   * @param  {string} type message type
+   * @return {string}      message mock
+   */
   getDefaultContenfulCampaignMessage: function getContenfulCampaignMessage(type) {
     let msg = '';
     switch (type) {
@@ -100,7 +130,7 @@ module.exports = {
      * Gets entries from contentful
      *
      * @param  {string} contentType the type of entries we are looking for
-     * @return {Object}             The stubbed JSON response from the server
+     * @return {Object}             The parsed JSON mock of a response from the server
      */
     getEntries: function getEntries(contentType) {
       const path = '../stubs/contentful/';
