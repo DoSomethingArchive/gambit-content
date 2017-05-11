@@ -248,7 +248,14 @@ router.use((req, res, next) => {
    .catch(err => helpers.sendErrorResponse(res, err));
 });
 
+/**
+ * Track incoming message (and outgoing, if this is a reply to a broadcast).
+ */
 router.use((req, res, next) => {
+  if (req.broadcast_id) {
+    req.user.postDashbotOutgoing('broadcast');
+  }
+
   let dashbotLog = '';
   if (req.keyword) {
     dashbotLog = `keyword:${req.keyword} `;
@@ -260,7 +267,7 @@ router.use((req, res, next) => {
     dashbotLog = `${dashbotLog}${req.incoming_message}`;
   }
 
-  req.user.postDashbotIncoming(dashbotLog);
+  req.user.postDashbotIncoming(dashbotLog.toLowerCase());
   next();
 });
 
