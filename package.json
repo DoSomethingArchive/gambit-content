@@ -1,6 +1,6 @@
 {
   "name": "gambit",
-  "version": "4.2.1",
+  "version": "4.2.2",
   "description": "A DoSomething.org chatbot",
   "license": "MIT",
   "repository": {
@@ -56,6 +56,7 @@
     "path": "~0.4.9",
     "request": "2.34.x",
     "s3-upload-stream": "^1.0.7",
+    "serve-favicon": "^2.4.2",
     "stathat": "0.0.8",
     "superagent": "^2.3.0",
     "throng": "^4.0.0",
