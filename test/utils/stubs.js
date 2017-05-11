@@ -16,6 +16,12 @@ module.exports = {
       ];
       return invalidResponses;
     },
+    getValidCommandValues: function getValidCommandValues() {
+      return {
+        member_support: process.env.GAMBIT_CMD_MEMBER_SUPPORT || 'Q',
+        reportback: process.env.GAMBIT_CMD_REPORTBACK || 'START',
+      };
+    },
   },
   getPhoenixCampaign: function getPhoenixCampaign() {
     return {
