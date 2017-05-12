@@ -4,6 +4,18 @@
 /* eslint-disable import/no-dynamic-require */
 
 module.exports = {
+  getCampaignId: function getCampaignId() {
+    return 2299;
+  },
+  getBroadcastId: function getBroadcastId() {
+    return 1260764;
+  },
+  getKeyword: function getKeyword() {
+    return 'bookbot';
+  },
+  getEnvironment: function getEnvironment() {
+    return process.env.NODE_ENV || 'thor';
+  },
   helpers: {
     getValidYesResponses: function getValidYesResponses() {
       const yesResponses = process.env.GAMBIT_YES_RESPONSES || '';
