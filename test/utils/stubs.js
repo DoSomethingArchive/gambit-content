@@ -129,6 +129,10 @@ module.exports = {
   },
   contentful: {
 
+    getAllFieldsForCampaign: function getAllFieldsForCampaign() {
+      return module.exports.getJSONstub('all-campaign-fields');
+    },
+
     // Returns an object that is formatted in-place
     // in lib/contentful's method: fetchKeywordsForCampaignId.
     // We should be returning raw JSON data that we get from contentful here!
@@ -149,5 +153,10 @@ module.exports = {
       const result = require(`${path}get-entries-${contentType}.json`);
       return result;
     },
+  },
+  getJSONstub: function getJSONstub(name, category = 'contentful') {
+    const path = `../stubs/${category}/`;
+    const result = require(`${path}${name}.json`);
+    return result;
   },
 };
