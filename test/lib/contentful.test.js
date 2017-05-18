@@ -16,6 +16,7 @@ const expect = require('chai').expect;
 const stubs = require('../../test/utils/stubs');
 const stathat = require('../../lib/stathat');
 const contentfulAPI = require('contentful');
+const helpers = require('../../lib/helpers');
 
 // setup "x.should.y" assertion style
 chai.should();
@@ -32,7 +33,10 @@ const allKeywordsStub = Promise.resolve(stubs.contentful.getEntries('keywords'))
 const keywordStub = Promise.resolve(stubs.contentful.getEntries('keyword'));
 const broadcastStub = Promise.resolve(stubs.contentful.getEntries('broadcast'));
 const campaignStub = Promise.resolve(stubs.contentful.getEntries('campaign'));
+const defaultCampaignStub = Promise.resolve(stubs.contentful.getEntries('default-campaign'));
+const campaignWithOverridesStub = Promise.resolve(stubs.contentful.getEntries('campaign-with-overrides'));
 const keywordsForCampaignStub = Promise.resolve(stubs.contentful.getEntries('keyword-for-campaign'));
+const getAllFieldsForCampaignStub = Promise.resolve(stubs.contentful.getAllFieldsForCampaign());
 const failStub = Promise.reject({ status: 500 });
 const contentfulAPIStub = {
   getEntries: () => {},
@@ -270,4 +274,133 @@ test('fetchMessageForCampaignId should return error when it fails', async () => 
   // TODO: Find a way to not hard code the message type here
   const error = await contentful.fetchMessageForCampaignId(stubs.getCampaignId(), 'menu_signedup_gambit');
   error.status.should.be.equal(500);
+});
+
+// renderMessageForPhoenixCampaign
+test('renderMessageForPhoenixCampaign should return rendered override message', async () => {
+  // setup
+  const campaign = stubs.getPhoenixCampaign();
+  sandbox.spy(contentful, 'fetchMessageForCampaignId');
+  contentful.__set__('client', {
+    getEntries: sinon.stub().returns(campaignWithOverridesStub),
+  });
+  // test
+  const msg = await contentful.renderMessageForPhoenixCampaign(campaign, 'menu_signedup_gambit');
+  contentful.fetchMessageForCampaignId.should.have.been.calledOnce;
+  msg.should.not.be.empty;
+});
+
+test('renderMessageForPhoenixCampaign should return default message if there is no override for message type', async () => {
+  // setup
+  const campaign = stubs.getPhoenixCampaign();
+  sandbox.spy(contentful, 'fetchMessageForCampaignId');
+  sandbox.spy(helpers, 'replacePhoenixCampaignVars');
+  const stub = sinon.stub();
+  // return a campaign with no overrides
+  stub.onCall(0).returns(campaignStub);
+  // return the default campaign in contentful wich has all default overrides
+  stub.onCall(1).returns(defaultCampaignStub);
+  contentful.__set__('client', {
+    getEntries: stub,
+  });
+  // test
+  const msg = await contentful.renderMessageForPhoenixCampaign(campaign, 'menu_signedup_gambit');
+  contentful.fetchMessageForCampaignId.should.have.been.calledTwice;
+  helpers.replacePhoenixCampaignVars.should.have.been.calledOnce;
+  msg.should.not.be.empty;
+});
+
+test('renderMessageForPhoenixCampaign should return error if the campaign field is valid but it doesnt have a default message',
+async () => {
+  // setup
+  const campaign = stubs.getPhoenixCampaign();
+  sandbox.spy(contentful, 'fetchMessageForCampaignId');
+  const stub = sinon.stub();
+  // return a campaign with no overrides
+  stub.onCall(0).returns(campaignStub);
+  // return the default campaign in contentful wich has all default overrides
+  stub.onCall(1).returns(defaultCampaignStub);
+  contentful.__set__('client', {
+    getEntries: stub,
+  });
+  // test
+  try {
+    await contentful.renderMessageForPhoenixCampaign(campaign, 'scheduled_relative_to_reportback_date');
+  } catch (error) {
+    error.status.should.be.equal(422);
+  }
+  contentful.fetchMessageForCampaignId.should.have.been.calledTwice;
+});
+
+test('renderMessageForPhoenixCampaign should return error fetchMessageForCampaignId fails',
+async () => {
+  // setup
+  const campaign = stubs.getPhoenixCampaign();
+  sandbox.stub(contentful, 'fetchMessageForCampaignId').returns(failStub);
+  // test
+  try {
+    await contentful.renderMessageForPhoenixCampaign(campaign, 'menu_signedup_gambit');
+  } catch (error) {
+    error.status.should.be.equal(500);
+  }
+  contentful.fetchMessageForCampaignId.should.have.been.calledOnce;
+});
+
+// getAllFieldsForCampaign
+test('getAllFieldsForCampaign should return fields with raw and override properties', async () => {
+  // setup
+  sandbox.spy(contentful, 'fetchCampaign');
+  const stub = sinon.stub();
+  // return a campaign with no overrides
+  stub.onCall(0).returns(campaignWithOverridesStub);
+  // return the default campaign in contentful wich has all default overrides
+  stub.onCall(1).returns(defaultCampaignStub);
+  contentful.__set__('client', {
+    getEntries: stub,
+  });
+
+  // test
+  const fields = await contentful.getAllFieldsForCampaign(stubs.getCampaignId());
+  contentful.fetchCampaign.should.have.been.calledTwice;
+  Object.keys(fields).forEach((fieldName) => {
+    fields[fieldName].should.include.keys(['raw', 'override']);
+  });
+});
+
+test('getAllFieldsForCampaign should throw when fetchCampaign fails', async () => {
+  // setup
+  sandbox.stub(contentful, 'fetchCampaign').returns(failStub);
+
+  // test
+  try {
+    await contentful.getAllFieldsForCampaign(stubs.getCampaignId());
+  } catch (error) {
+    error.status.should.be.equal(500);
+  }
+});
+
+// renderAllMessagesForPhoenixCampaign
+test('renderAllMessagesForPhoenixCampaign should inject a rendered property to each campaign field', async () => {
+  // setup
+  const renderedMessageStub = 'rendered!';
+  sandbox.stub(contentful, 'getAllFieldsForCampaign').returns(getAllFieldsForCampaignStub);
+  sandbox.stub(helpers, 'replacePhoenixCampaignVars').returns(Promise.resolve(renderedMessageStub));
+
+  // test
+  const fields = await contentful.renderAllMessagesForPhoenixCampaign(stubs.getPhoenixCampaign());
+  Object.keys(fields).forEach((fieldName) => {
+    fields[fieldName].rendered.should.be.equal(renderedMessageStub);
+  });
+});
+
+test('renderAllMessagesForPhoenixCampaign should return and error if getAllFieldsForCampaign fails', async () => {
+  // setup
+  sandbox.stub(contentful, 'getAllFieldsForCampaign').returns(failStub);
+
+  // test
+  try {
+    await contentful.renderAllMessagesForPhoenixCampaign(stubs.getPhoenixCampaign());
+  } catch (error) {
+    error.status.should.be.equal(500);
+  }
 });
