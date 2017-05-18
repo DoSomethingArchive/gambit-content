@@ -12,7 +12,6 @@ const helpers = rootRequire('lib/helpers');
 const mobilecommons = rootRequire('lib/mobilecommons');
 const northstar = require('../../lib/northstar');
 const stathat = require('../../lib/stathat');
-const zendesk = require('../../lib/zendesk');
 
 /**
  * Schema.
@@ -169,25 +168,6 @@ userSchema.methods.postDashbotIncoming = function (message) {
 
 userSchema.methods.postDashbotOutgoing = function (gambitMessageType) {
   this.postDashbot('outgoing', gambitMessageType);
-};
-
-/**
- * Posts given message to Zendesk on behalf of a User.
- * @param {string} message
- */
-userSchema.methods.postZendeskMessage = function (message) {
-  zendesk.getClient().tickets.create({
-    requester: {
-      phone: this.mobile,
-      email: this.email,
-    },
-    subject: 'Sent from Gambit',
-    comment: {
-      body: message,
-    },
-  })
-  .then(res => logger.debug(res.ticket))
-  .catch(err => logger.error(err.message));
 };
 
 module.exports = mongoose.model('users', userSchema);

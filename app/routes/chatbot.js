@@ -11,6 +11,7 @@ const helpers = require('../../lib/helpers');
 const contentful = require('../../lib/contentful');
 const phoenix = require('../../lib/phoenix');
 const stathat = require('../../lib/stathat');
+const zendesk = require('../../lib/zendesk');
 const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
 
 // Router
@@ -488,9 +489,16 @@ router.use((req, res, next) => {
  */
 router.post('/', (req, res, next) => {
   if (helpers.isCommand(req.incoming_message, 'member_support')) {
-    // TODO: If user was sent the member_support command, post our incoming_message to Zendesk.
-    // After submitting to Zendesk, prompt them to continue their conversation for current Campaign.
-    req.user.postZendeskMessage('This is a test');
+    if (process.env.MEMBER_SUPPORT_PROVIDER === 'zendesk') {
+      const subject = `Support request for ${req.campaign.title}`;
+      return zendesk.createTicketForUser(req.user, subject)
+        // TODO: Continue conversation, with a message explaining that Member Support team will
+        // reach out from a different mobile number (sent via Zendesk trigger).
+        // Gambit will want to re-ask whatever the last question we asked was here.
+        .then(ticket => res.send(ticket))
+        .catch(err => helpers.sendErrorResponse(res, err));
+    }
+
     return endConversationWithMessageType(req, res, 'member_support');
   }
 
