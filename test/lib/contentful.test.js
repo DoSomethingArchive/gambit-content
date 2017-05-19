@@ -404,3 +404,20 @@ test('renderAllMessagesForPhoenixCampaign should return and error if getAllField
     error.status.should.be.equal(500);
   }
 });
+
+// mapCampaignIds
+test('mapCampaignIds should return an array', async () => {
+  // setup
+  contentful.__set__('client', {
+    getEntries: sinon.stub().returns(allKeywordsStub),
+  });
+  const formattedKeywords = await contentful.fetchKeywords();
+
+  // test
+  const mapped = contentful.mapCampaignIds(formattedKeywords);
+  formattedKeywords.forEach((keywordObject) => {
+    if (keywordObject.campaign.fields.campaignId) {
+      mapped.should.include(keywordObject.campaign.fields.campaignId);
+    }
+  });
+});
