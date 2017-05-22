@@ -2,13 +2,16 @@
 
 /* eslint-disable global-require */
 
+// @see https://docs.newrelic.com/docs/agents/nodejs-agent/installation-configuration
+require('newrelic');
+
 // configuration
-// NOTE: Should be called first.
 const config = require('./config');
+
 // 3rd party modules
-const throng = require('throng');
 // logger has to be required after config
 const logger = require('winston');
+const throng = require('throng');
 
 function start(processId) {
   logger.info(`Started worker ${processId}`);

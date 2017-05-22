@@ -3,9 +3,6 @@
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable global-require */
 
-// @see https://docs.newrelic.com/docs/agents/nodejs-agent/installation-configuration
-require('newrelic');
-
 // Wrapper around require to set relative path at app root
 global.rootRequire = function (name) {
   return require(`../${name}`);
