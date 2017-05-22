@@ -1,19 +1,19 @@
 'use strict';
 
-/**
- * Imports.
- */
+// Third party modules
+const newrelic = require('newrelic');
 const express = require('express');
-
-const router = express.Router(); // eslint-disable-line new-cap
 const logger = require('winston');
 
+// Application modules
 const helpers = require('../../lib/helpers');
 const contentful = require('../../lib/contentful');
-const newrelic = require('newrelic');
 const phoenix = require('../../lib/phoenix');
 const stathat = require('../../lib/stathat');
 const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
+
+// Router
+const router = express.Router(); // eslint-disable-line new-cap
 
 // Models.
 const BotRequest = require('../models/BotRequest');
@@ -126,6 +126,7 @@ function endConversationWithMessageType(req, res, messageType) {
 
 /**
  * Check for required config variables.
+ * TODO: This MUST be refactored. Why are we checking these env variabes exist on each request?
  */
 router.use((req, res, next) => {
   const settings = [
