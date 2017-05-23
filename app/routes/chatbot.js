@@ -253,6 +253,12 @@ router.use((req, res, next) => {
  * Track incoming message (and outgoing, if this is a reply to a broadcast).
  */
 router.use((req, res, next) => {
+  // If this is a retry, we don't want to track duplicate analytics for this request.
+  const retryCount = Number(req.headers['x-blink-retry-count']);
+  if (retryCount && retryCount >= 1) {
+    return next();
+  }
+
   if (req.broadcast_id) {
     req.user.postDashbotOutgoing('broadcast');
   }
@@ -269,7 +275,8 @@ router.use((req, res, next) => {
   }
 
   req.user.postDashbotIncoming(dashbotLog.toLowerCase());
-  next();
+
+  return next();
 });
 
 /**
