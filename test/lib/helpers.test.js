@@ -205,15 +205,6 @@ test('isCommand should return false when missing incomingMessage argument', () =
   helpers.isCommand(undefined, 'reportback').should.be.false;
 });
 
-// sendTimeoutResponse
-test('sendTimeoutResponse', (t) => {
-  const timeoutNumSeconds = helpers.getGambitTimeoutNumSeconds();
-  helpers.sendTimeoutResponse(t.context.res);
-
-  helpers.sendResponse.should.have.been.called;
-  helpers.sendResponse.should.have.been.calledWithExactly(t.context.res, 504, `Request timed out after ${timeoutNumSeconds} seconds.`);
-});
-
 // sendErrorResponse
 // TODO: Test for more error types and messages
 test('sendErrorResponse', (t) => {
@@ -232,12 +223,6 @@ test('sendUnproccessibleEntityResponse', (t) => {
 
   helpers.sendResponse.should.have.been.called;
   helpers.sendResponse.should.have.been.calledWithExactly(t.context.res, 422, message);
-});
-
-// getGambitTimeoutNumSeconds
-test('getGambitTimeoutNumSeconds', () => {
-  helpers.getGambitTimeoutNumSeconds().should.not.be.undefined;
-  helpers.getGambitTimeoutNumSeconds().should.be.below(30);
 });
 
 // upsertOptions

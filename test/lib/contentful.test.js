@@ -25,9 +25,10 @@ chai.use(sinonChai);
 // module to be tested
 const contentful = rewire('../../lib/contentful');
 
+// sinon sandbox object
 const sandbox = sinon.sandbox.create();
 
-// Stub functions
+// Stubs
 const emptyStub = Promise.resolve(stubs.contentful.getEntries('empty'));
 const allKeywordsStub = Promise.resolve(stubs.contentful.getEntries('keywords'));
 const keywordStub = Promise.resolve(stubs.contentful.getEntries('keyword'));
