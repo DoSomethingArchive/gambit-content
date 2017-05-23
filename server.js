@@ -90,7 +90,7 @@ function start(processId) {
 
   config.mongooseConnection
     .then(() => {
-      logger.info(`conn.readyState:${config.mongooseConnection.readyState}`);
+      logger.info(`config.mongooseConnection.connection.readyState:${config.mongooseConnection.connection.readyState}`);
       return app.listen(config.port, () => {
         logger.info(`Gambit is listening on port:${config.port} env:${config.environment}.`);
       });
