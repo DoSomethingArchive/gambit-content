@@ -254,7 +254,7 @@ router.use((req, res, next) => {
  */
 router.use((req, res, next) => {
   // If this is a retry, we don't want to track duplicate analytics for this request.
-  const retryCount = Number(req.headers['x-blink-retry-count']);
+  const retryCount = Number(req.get('x-blink-retry-count'));
   if (retryCount && retryCount >= 1) {
     return next();
   }
