@@ -11,7 +11,7 @@ POST /v1/chatbot
 Name | Type | Description
 --- | --- | ---
 `x-gambit-api-key` | `string` | **Required.**
-
+`x-blink-retry-count` | `number` | If set, number of times [Blink](github.com/dosomething/blink) has retried this request.
 
 **Input**
 

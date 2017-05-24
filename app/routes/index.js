@@ -21,7 +21,7 @@ router.get('/', (req, res) => {
  */
 router.use((req, res, next) => {
   const apiKey = process.env.GAMBIT_API_KEY;
-  if (req.method === 'POST' && req.headers['x-gambit-api-key'] !== apiKey) {
+  if (req.method === 'POST' && req.get('x-gambit-api-key') !== apiKey) {
     stathat.postStat('error: invalid x-gambit-api-key');
     logger.warn('router invalid x-gambit-api-key:', req.url);
 
