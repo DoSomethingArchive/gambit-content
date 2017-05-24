@@ -145,6 +145,17 @@ function endConversationWithError(req, res, error) {
 }
 
 /**
+ * Handles a Phoenix POST error, calling endConversationWithError if we shouldn't retry.
+ */
+function handlePhoenixPostError(req, res, err) {
+  if (err.message.includes('API response is false')) {
+    return endConversationWithError(req, res, err);
+  }
+
+  return helpers.sendErrorResponse(res, err);
+}
+
+/**
  * Check for required config variables.
  * TODO: This MUST be refactored. Why are we checking these env variabes exist on each request?
  */
@@ -447,13 +458,7 @@ router.use((req, res, next) => {
 
       return next();
     })
-    .catch((err) => {
-      if (err.status && err.status === 500) {
-        return endConversationWithError(req, res, err);
-      }
-
-      return helpers.sendErrorResponse(res, err);
-    });
+    .catch(err => handlePhoenixPostError(req, res, err));
 });
 
 /**
@@ -598,13 +603,7 @@ router.post('/', (req, res) => {
 
       return continueConversationWithMessageType(req, res, 'menu_completed');
     })
-    .catch((err) => {
-      if (err.status && err.status === 500) {
-        return endConversationWithError(req, res, err);
-      }
-
-      return helpers.sendErrorResponse(res, err);
-    });
+    .catch(err => handlePhoenixPostError(req, res, err));
 });
 
 module.exports = router;
