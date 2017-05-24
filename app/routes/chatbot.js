@@ -125,6 +125,26 @@ function endConversationWithMessageType(req, res, messageType) {
 }
 
 /**
+ * Ends conversation with Error Occurred Message, suppressing Blink retries for given request.
+ */
+function endConversationWithError(req, res, error) {
+  const messageType = 'error_occurred';
+
+  return renderMessageForMessageType(req, messageType)
+    .then((message) => {
+      // todo: Promisify this POST request and only send back Gambit 200 on profile_update success.
+      req.user.postMobileCommonsProfileUpdate(process.env.MOBILECOMMONS_OIP_AGENTVIEW, message);
+      req.user.postDashbotOutgoing(messageType);
+
+      newrelic.addCustomParameters({ blinkSuppressRetry: true });
+      res.setHeader('x-blink-retry-suppress', true);
+
+      return helpers.sendErrorResponse(res, error);
+    })
+    .catch(err => helpers.sendErrorResponse(res, err));
+}
+
+/**
  * Check for required config variables.
  * TODO: This MUST be refactored. Why are we checking these env variabes exist on each request?
  */
@@ -427,7 +447,13 @@ router.use((req, res, next) => {
 
       return next();
     })
-    .catch(err => helpers.sendErrorResponse(res, err));
+    .catch((err) => {
+      if (err.status && err.status === 500) {
+        return endConversationWithError(req, res, err);
+      }
+
+      return helpers.sendErrorResponse(res, err);
+    });
 });
 
 /**
@@ -572,7 +598,13 @@ router.post('/', (req, res) => {
 
       return continueConversationWithMessageType(req, res, 'menu_completed');
     })
-    .catch(err => helpers.sendErrorResponse(res, err));
+    .catch((err) => {
+      if (err.status && err.status === 500) {
+        return endConversationWithError(req, res, err);
+      }
+
+      return helpers.sendErrorResponse(res, err);
+    });
 });
 
 module.exports = router;

@@ -30,5 +30,6 @@ module.exports = {
     scheduled_relative_to_reportback_date: 'scheduledRelativeToReportbackDateMessage',
     member_support: 'memberSupportMessage',
     campaign_closed: 'campaignClosedMessage',
+    error_occurred: 'errorOccurredMessage',
   },
 };
