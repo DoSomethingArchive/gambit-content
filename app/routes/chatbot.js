@@ -118,6 +118,7 @@ function endConversationWithMessageType(req, res, messageType) {
   renderMessageForMessageType(req, messageType)
     .then((message) => {
       BotRequest.log(req, 'campaignbot', messageType, message);
+      stathat.postStat(`campaignbot:${messageType}`);
       req.user.postDashbotOutgoing(messageType);
 
       return endConversationWithMessage(req, res, message);
@@ -135,6 +136,7 @@ function endConversationWithError(req, res, error) {
     .then((message) => {
       // todo: Promisify this POST request and only send back Gambit 200 on profile_update success.
       req.user.postMobileCommonsProfileUpdate(process.env.MOBILECOMMONS_OIP_AGENTVIEW, message);
+      stathat.postStat(`campaignbot:${messageType}`);
       req.user.postDashbotOutgoing(messageType);
 
       newrelic.addCustomParameters({ blinkSuppressRetry: true });
