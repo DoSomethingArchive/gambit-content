@@ -4,6 +4,18 @@
 /* eslint-disable import/no-dynamic-require */
 
 module.exports = {
+  getCampaignId: function getCampaignId() {
+    return 2299;
+  },
+  getBroadcastId: function getBroadcastId() {
+    return 1260764;
+  },
+  getKeyword: function getKeyword() {
+    return 'bookbot';
+  },
+  getEnvironment: function getEnvironment() {
+    return process.env.NODE_ENV || 'thor';
+  },
   helpers: {
     getValidYesResponses: function getValidYesResponses() {
       const yesResponses = process.env.GAMBIT_YES_RESPONSES || '';
@@ -117,6 +129,10 @@ module.exports = {
   },
   contentful: {
 
+    getAllFieldsForCampaign: function getAllFieldsForCampaign() {
+      return module.exports.getJSONstub('all-campaign-fields');
+    },
+
     // Returns an object that is formatted in-place
     // in lib/contentful's method: fetchKeywordsForCampaignId.
     // We should be returning raw JSON data that we get from contentful here!
@@ -137,5 +153,10 @@ module.exports = {
       const result = require(`${path}get-entries-${contentType}.json`);
       return result;
     },
+  },
+  getJSONstub: function getJSONstub(name, category = 'contentful') {
+    const path = `../stubs/${category}/`;
+    const result = require(`${path}${name}.json`);
+    return result;
   },
 };

@@ -1,6 +1,6 @@
 {
   "name": "gambit",
-  "version": "4.2.2",
+  "version": "4.3.0",
   "description": "A DoSomething.org chatbot",
   "license": "MIT",
   "repository": {
@@ -48,6 +48,7 @@
     "body-parser": "^1.9.2",
     "connect-timeout": "^1.8.0",
     "contentful": "^3.8.0",
+    "emoji-strip": "^1.0.1",
     "express": "^4.10.2",
     "html-entities": "^1.1.1",
     "mongoose": "~4.6.1",

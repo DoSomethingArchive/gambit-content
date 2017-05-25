@@ -1,0 +1,40 @@
+{
+  "sys": {
+    "type": "Array"
+  },
+  "total": 1,
+  "skip": 0,
+  "limit": 100,
+  "items": [
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "owik07lyerdj"
+          }
+        },
+        "id": "6tlsrM2RTa40oMqwcIKSg6",
+        "type": "Entry",
+        "createdAt": "2017-02-15T20:30:31.426Z",
+        "updatedAt": "2017-05-12T15:20:14.634Z",
+        "revision": 10,
+        "contentType": {
+          "sys": {
+            "type": "Link",
+            "linkType": "ContentType",
+            "id": "campaign"
+          }
+        },
+        "locale": "en-US"
+      },
+      "fields": {
+        "campaignId": "7",
+        "gambitSignupMenuMessage": "Great! Little moments can have a big impact. Complimenting someone can turn their whole day around.\n\nDo this: post encouraging notes in places that can trigger low self-esteem, like school bathrooms.\n\nThen, text START to share a photo of the messages you posted (and you'll be entered to win a $1500 scholarship)! \n\nBonus: Text back a photo of your posted note by 11:59PM tonight and you can enter to win a gift card of your choice! (Winners announced this week). ",
+        "externalSignupMenuMessage": "Hey - this is Freddie from DoSomething. Thanks for joining a movement to spread positivity in school. You can do something simple to make a big impact for a stranger.\n\nLet's do this: post encouraging notes in places that can trigger low self-esteem, like school bathrooms.\n\nThen, text START to share a photo of the messages you posted (and you'll be entered to win a $1500 scholarship)!",
+        "scheduledRelativeToSignupDateMessage": "It's Freddie again. Friends, I am blown away! Over 127,000 of you told me that you wanted to help make someone's day. \n\nWith your help, we're going to bring positivity to every state! Leave encouraging notes in places that trigger low self esteem like the bathroom. I promise you'll cheer someone up today. \n\nTake a photo of the notes you post to show us how you brought positivity to your school. Text MIRROR (and you'll be entered to win $1500 scholarship). "
+      }
+    }
+  ]
+}

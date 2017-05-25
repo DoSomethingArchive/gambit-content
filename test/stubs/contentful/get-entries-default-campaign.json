@@ -1,0 +1,51 @@
+{
+  "sys": {
+    "type": "Array"
+  },
+  "total": 1,
+  "skip": 0,
+  "limit": 100,
+  "items": [
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "owik07lyerdj"
+          }
+        },
+        "id": "3gWKLwCIPmouSosiUkGkOi",
+        "type": "Entry",
+        "createdAt": "2017-02-16T06:47:55.021Z",
+        "updatedAt": "2017-05-04T15:50:56.630Z",
+        "revision": 17,
+        "contentType": {
+          "sys": {
+            "type": "Link",
+            "linkType": "ContentType",
+            "id": "campaign"
+          }
+        },
+        "locale": "en-US"
+      },
+      "fields": {
+        "campaignId": "default",
+        "gambitSignupMenuMessage": "Thanks for joining {{title}}!\n\n{{fact_problem}} \n\nThe solution is simple: {{tagline}}\n\nOnce you have {{rb_verb}} some {{rb_noun}}, take a pic to prove it! Then text {{cmd_reportback}} to share it with us!",
+        "externalSignupMenuMessage": "Hey - this is Freddie from DoSomething. Thanks for joining {{title}}!\n\n{{fact_problem}}\n\nThe solution is simple: {{tagline}}\n\nMake sure to take a photo of what you did! When you have {{rb_verb}} some {{rb_noun}}, text {{cmd_reportback}} to share your photo.",
+        "invalidSignupMenuCommandMessage": "Sorry, I didn't understand that.\n\nText {{cmd_reportback}} when you have {{rb_verb}} some {{rb_noun}}.\n\nIf you have a question, text {{cmd_member_support}}.",
+        "askQuantityMessage": "Sweet! First, what's the total number of {{rb_noun}} you {{rb_verb}}?\n\nSend the exact number back.",
+        "invalidQuantityMessage": "Sorry, that's not a valid number.\n\nWhat's the total number of {{rb_noun}} you have {{rb_verb}}?\n\nIf you have a question, text {{cmd_member_support}}.",
+        "askPhotoMessage": "Nice! Send your best pic of you and the {{quantity}} {{rb_noun}} you {{rb_verb}}.",
+        "invalidPhotoMessage": "Sorry, I didn't get that.\n\nSend a photo of the {{rb_noun}} you have {{rb_verb}}.\n\nIf you have a question, text {{cmd_member_support}} - I'll get back to you within 24 hours.",
+        "askCaptionMessage": "Got it! Now text back a caption for your photo (think Instagram)! Keep it short & sweet, under 60 characters please.",
+        "askWhyParticipatedMessage": "Last question: Why was participating in {{title}} important to you? (No need to write an essay, one sentence is good).",
+        "completedMenuMessage": "{{rb_confirmation_msg}}\n\nWe've got you down for {{quantity}} {{rb_noun}} {{rb_verb}}.\n\nHave you {{rb_verb}} more? Text {{keyword}} {{cmd_reportback}} ",
+        "invalidCompletedMenuCommandMessage": "Sorry, I didn't understand that.\n\nText {{cmd_reportback}} if you have {{rb_verb}} more {{rb_noun}}.\n\nIf you have a question, text {{cmd_member_support}}.",
+        "scheduledRelativeToSignupDateMessage": "Have you completed {{title}} yet?  \n\nIf you have {{rb_verb}} some {{rb_noun}}, take a pic to prove it and text back {{keyword}}",
+        "memberSupportMessage": "Text back your question and I'll try to get back to you within 24 hrs.\n\nIf you want to continue {{title}}, text back {{keyword}}",
+        "campaignClosedMessage": "Sorry, {{title}} is no longer available.\n\nText {{cmd_member_support}} for help."
+      }
+    }
+  ]
+}

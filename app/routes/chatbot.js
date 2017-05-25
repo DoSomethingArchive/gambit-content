@@ -1,19 +1,20 @@
 'use strict';
 
-/**
- * Imports.
- */
+// Third party modules
+const newrelic = require('newrelic');
+const emojiStrip = require('emoji-strip');
 const express = require('express');
-
-const router = express.Router(); // eslint-disable-line new-cap
 const logger = require('winston');
 
+// Application modules
 const helpers = require('../../lib/helpers');
 const contentful = require('../../lib/contentful');
-const newrelic = require('newrelic');
 const phoenix = require('../../lib/phoenix');
 const stathat = require('../../lib/stathat');
 const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
+
+// Router
+const router = express.Router(); // eslint-disable-line new-cap
 
 // Models.
 const BotRequest = require('../models/BotRequest');
@@ -125,7 +126,39 @@ function endConversationWithMessageType(req, res, messageType) {
 }
 
 /**
+ * Ends conversation with Error Occurred Message, suppressing Blink retries for given request.
+ */
+function endConversationWithError(req, res, error) {
+  const messageType = 'error_occurred';
+
+  return renderMessageForMessageType(req, messageType)
+    .then((message) => {
+      // todo: Promisify this POST request and only send back Gambit 200 on profile_update success.
+      req.user.postMobileCommonsProfileUpdate(process.env.MOBILECOMMONS_OIP_AGENTVIEW, message);
+      req.user.postDashbotOutgoing(messageType);
+
+      newrelic.addCustomParameters({ blinkSuppressRetry: true });
+      res.setHeader('x-blink-retry-suppress', true);
+
+      return helpers.sendErrorResponse(res, error);
+    })
+    .catch(err => helpers.sendErrorResponse(res, err));
+}
+
+/**
+ * Handles a Phoenix POST error, calling endConversationWithError if we shouldn't retry.
+ */
+function handlePhoenixPostError(req, res, err) {
+  if (err.message.includes('API response is false')) {
+    return endConversationWithError(req, res, err);
+  }
+
+  return helpers.sendErrorResponse(res, err);
+}
+
+/**
  * Check for required config variables.
+ * TODO: This MUST be refactored. Why are we checking these env variabes exist on each request?
  */
 router.use((req, res, next) => {
   const settings = [
@@ -163,7 +196,12 @@ router.use((req, res, next) => {
 
   /* eslint-disable no-param-reassign */
   req.client = 'mobilecommons';
-  req.incoming_message = req.body.args;
+  if (req.body.args) {
+    req.incoming_message = emojiStrip(req.body.args);
+  } else {
+    req.incoming_message = '';
+  }
+
   req.incoming_image_url = req.body.mms_image_url;
   req.broadcast_id = req.body.broadcast_id;
   if (req.body.keyword) {
@@ -252,6 +290,12 @@ router.use((req, res, next) => {
  * Track incoming message (and outgoing, if this is a reply to a broadcast).
  */
 router.use((req, res, next) => {
+  // If this is a retry, we don't want to track duplicate analytics for this request.
+  const retryCount = Number(req.get('x-blink-retry-count'));
+  if (retryCount && retryCount >= 1) {
+    return next();
+  }
+
   if (req.broadcast_id) {
     req.user.postDashbotOutgoing('broadcast');
   }
@@ -268,7 +312,8 @@ router.use((req, res, next) => {
   }
 
   req.user.postDashbotIncoming(dashbotLog.toLowerCase());
-  next();
+
+  return next();
 });
 
 /**
@@ -419,7 +464,7 @@ router.use((req, res, next) => {
 
       return next();
     })
-    .catch(err => helpers.sendErrorResponse(res, err));
+    .catch(err => handlePhoenixPostError(req, res, err));
 });
 
 /**
@@ -564,7 +609,7 @@ router.post('/', (req, res) => {
 
       return continueConversationWithMessageType(req, res, 'menu_completed');
     })
-    .catch(err => helpers.sendErrorResponse(res, err));
+    .catch(err => handlePhoenixPostError(req, res, err));
 });
 
 module.exports = router;
