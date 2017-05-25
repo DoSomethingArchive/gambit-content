@@ -57,5 +57,9 @@
   "campaignClosedMessage": {
     "override": false,
     "raw": "Sorry, {{title}} is no longer available.\n\nText {{cmd_member_support}} for help."
+  },
+  "errorOccurredMessage": {
+    "override": false,
+    "raw": "Oops, an error occurred. We're looking into it -- sorry!"
   }
 }
