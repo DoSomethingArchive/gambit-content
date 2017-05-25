@@ -2,6 +2,7 @@
 
 // Third party modules
 const newrelic = require('newrelic');
+const emojiStrip = require('emoji-strip');
 const express = require('express');
 const logger = require('winston');
 
@@ -195,7 +196,12 @@ router.use((req, res, next) => {
 
   /* eslint-disable no-param-reassign */
   req.client = 'mobilecommons';
-  req.incoming_message = req.body.args;
+  if (req.body.args) {
+    req.incoming_message = emojiStrip(req.body.args);
+  } else {
+    req.incoming_message = '';
+  }
+
   req.incoming_image_url = req.body.mms_image_url;
   req.broadcast_id = req.body.broadcast_id;
   if (req.body.keyword) {
