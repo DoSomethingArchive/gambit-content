@@ -55,6 +55,7 @@
     "newrelic": "1.38.x",
     "node-request-retry": "^1.0.0",
     "path": "~0.4.9",
+    "phone": "^1.0.10",
     "request": "2.34.x",
     "s3-upload-stream": "^1.0.7",
     "serve-favicon": "^2.4.2",
