@@ -5,6 +5,7 @@
  */
 const mongoose = require('mongoose');
 const Promise = require('bluebird');
+const emojiStrip = require('emoji-strip');
 const logger = require('winston');
 
 const ReportbackSubmission = require('./ReportbackSubmission');
@@ -241,11 +242,15 @@ signupSchema.methods.postDraftReportbackSubmission = function () {
       source: postSource,
       uid: signup.user.phoenix_id,
       quantity: submission.quantity,
-      caption: submission.caption,
+      // Although we strip emoji in our chatbot router in pull#910, some submissions may have emoji
+      // saved before we deployed Gambit version 4.3.0.
+      // We can eventually move this once we clear out all stuck Reportback Submissions, as it's
+      // already been done for new submissions created after deployment of 4.3.0.
+      caption: emojiStrip(submission.caption),
       file_url: submission.photo,
     };
     if (submission.why_participated) {
-      data.why_participated = submission.why_participated;
+      data.why_participated = emojiStrip(submission.why_participated);
     }
     logger.debug(`Signup.postDraftReportbackSubmission data:${JSON.stringify(data)}`);
 
