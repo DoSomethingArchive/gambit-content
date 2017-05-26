@@ -491,10 +491,8 @@ router.post('/', (req, res, next) => {
   if (helpers.isCommand(req.incoming_message, 'member_support')) {
     if (process.env.MEMBER_SUPPORT_PROVIDER === 'zendesk') {
       const subject = `Support request for ${req.campaign.title}`;
+
       return zendesk.createTicketForUser(req.user, subject)
-        // TODO: Continue conversation, with a message explaining that Member Support team will
-        // reach out from a different mobile number (sent via Zendesk trigger).
-        // Gambit will want to re-ask whatever the last question we asked was here.
         .then(ticket => res.send(ticket))
         .catch(err => helpers.sendErrorResponse(res, err));
     }
