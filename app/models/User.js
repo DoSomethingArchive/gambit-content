@@ -8,8 +8,8 @@ const Promise = require('bluebird');
 const logger = require('winston');
 const superagent = require('superagent');
 
-const helpers = rootRequire('lib/helpers');
-const mobilecommons = rootRequire('lib/mobilecommons');
+const helpers = require('../../lib/helpers');
+const mobilecommons = require('../../lib/mobilecommons');
 const northstar = require('../../lib/northstar');
 const stathat = require('../../lib/stathat');
 
