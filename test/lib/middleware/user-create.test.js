@@ -7,7 +7,6 @@ const chai = require('chai');
 const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
 const httpMocks = require('node-mocks-http');
-const logger = require('winston');
 const newrelic = require('newrelic');
 const underscore = require('underscore');
 const Promise = require('bluebird');
@@ -21,29 +20,30 @@ chai.should();
 chai.use(sinonChai);
 
 // module to be tested
-const getUser = require('../../../lib/middleware/get-user-by-phone');
+const createNewUser = require('../../../lib/middleware/user-create');
 
 // sinon sandbox object
 const sandbox = sinon.sandbox.create();
 
-// stubs
-const loggerStub = underscore.noop;
+// stubsxww
 const newrelicStub = underscore.noop;
 const handleTimeoutStub = underscore.noop;
 const sendErrorResponseStub = underscore.noop;
-const userLookupStub = Promise.resolve(stubs.middleware.getUserByPhone.getUserFromLookup());
-const userLookupFailStub = Promise.reject({ status: 500 });
-const userLookupNotFoundStub = Promise.reject({ status: 404 });
+const userPostStub = Promise.resolve(stubs.middleware.createNewUser.getUserFromPost());
+const userPostFailStub = Promise.reject({ status: 500 });
 
 // Setup!
 test.beforeEach((t) => {
-  sandbox.stub(logger, 'info').returns(loggerStub);
   sandbox.stub(newrelic, 'addCustomParameters').returns(newrelicStub);
   sandbox.stub(helpers, 'handleTimeout').returns(handleTimeoutStub);
 
   // setup req, res mocks
   t.context.req = httpMocks.createRequest();
   t.context.res = httpMocks.createResponse();
+
+  // add params
+  t.context.req.body.phone = stubs.getPhoneNumber();
+  t.context.req.body.profile_id = stubs.getProfileId();
 });
 
 // Cleanup!
@@ -53,14 +53,12 @@ test.afterEach((t) => {
   t.context = {};
 });
 
-test('getUser should inject the user into the req object when found in the database', async (t) => {
+test('createNewUser should inject the user into the req object when successfuly posting a new user', async (t) => {
   // setup
   const next = sinon.stub();
-  const number = stubs.getPhoneNumber();
-  const user = stubs.middleware.getUserByPhone.getUserFromLookup();
-  sandbox.stub(User, 'lookup').returns(userLookupStub);
-  const middleware = getUser();
-  t.context.req.body.phone = number;
+  const user = stubs.middleware.createNewUser.getUserFromPost();
+  sandbox.stub(User, 'post').returns(userPostStub);
+  const middleware = createNewUser();
 
   // test
   await middleware(t.context.req, t.context.res, next);
@@ -69,31 +67,15 @@ test('getUser should inject the user into the req object when found in the datab
   next.should.have.been.called;
 });
 
-test('getUser should call sendErrorResponse when an error that is not 404 occurs', async (t) => {
+test('createNewUser should call sendErrorResponse when posting new users fails', async (t) => {
   // setup
   const next = sinon.stub();
-  const number = stubs.getPhoneNumber();
-  sandbox.stub(User, 'lookup').returns(userLookupFailStub);
+  sandbox.stub(User, 'post').returns(userPostFailStub);
   sandbox.stub(helpers, 'sendErrorResponse').returns(sendErrorResponseStub);
-  const middleware = getUser();
-  t.context.req.body.phone = number;
+  const middleware = createNewUser();
 
   // test
   await middleware(t.context.req, t.context.res, next);
   helpers.sendErrorResponse.should.have.been.called;
   next.should.not.have.been.called;
-});
-
-test('getUser should call next is a 404 is returned from User.lookup', async (t) => {
-  // setup
-  const next = sinon.stub();
-  const number = stubs.getPhoneNumber();
-  sandbox.stub(User, 'lookup').returns(userLookupNotFoundStub);
-  const middleware = getUser();
-  t.context.req.body.phone = number;
-
-  // test
-  await middleware(t.context.req, t.context.res, next);
-  helpers.handleTimeout.should.have.been.called;
-  next.should.have.been.called;
 });

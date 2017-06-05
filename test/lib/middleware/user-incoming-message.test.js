@@ -8,8 +8,9 @@ const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
 const httpMocks = require('node-mocks-http');
 const underscore = require('underscore');
+const logger = require('winston');
 
-const config = require('../../../config/middleware/chatbot/request-context');
+const config = require('../../../config/middleware/chatbot/user-incoming-message');
 const helpers = require('../../../lib/helpers');
 
 // setup "x.should.y" assertion style
@@ -17,16 +18,21 @@ chai.should();
 chai.use(sinonChai);
 
 // module to be tested
-const requestContext = require('../../../lib/middleware/request-context');
+const userIncomingMessage = require('../../../lib/middleware/user-incoming-message');
 
 // sinon sandbox object
 const sandbox = sinon.sandbox.create();
+
+// stubs
+const loggerStub = underscore.noop;
 
 // stubs
 const unprocessableEntityStub = () => true;
 
 // Setup!
 test.beforeEach((t) => {
+  sandbox.stub(logger, 'info').returns(loggerStub);
+
   // setup req, res mocks
   t.context.req = httpMocks.createRequest();
   t.context.res = httpMocks.createResponse();
@@ -39,11 +45,11 @@ test.afterEach((t) => {
   t.context = {};
 });
 
-test('checkRequestContext should fail if the req object doesnt contain at least one request context params', (t) => {
+test('checkUserIncomingMessage should fail if the req object doesnt contain at least one incoming message type params', (t) => {
   // setup
   const next = sinon.stub();
   sandbox.stub(helpers, 'sendUnproccessibleEntityResponse').returns(unprocessableEntityStub);
-  const middleware = requestContext(config);
+  const middleware = userIncomingMessage(config);
 
   // test
   middleware(t.context.req, t.context.res, next);
@@ -51,12 +57,12 @@ test('checkRequestContext should fail if the req object doesnt contain at least 
   next.should.not.have.been.called;
 });
 
-test('checkRequestContext should call next if the req object contains at least one of the possible context parameters', (t) => {
+test('checkUserIncomingMessage should call next if the req object contains at least one of the possible incoming message type params', (t) => {
   // setup
   const next = sinon.stub();
   sandbox.spy(helpers, 'sendUnproccessibleEntityResponse');
-  const middleware = requestContext(config);
-  const contextParam = underscore.sample(Object.keys(config.requestContexts));
+  const middleware = userIncomingMessage(config);
+  const contextParam = underscore.sample(Object.keys(config.incomingMessageTypes));
   t.context.req[config.containerProperty][contextParam] = 'tacos';
 
   // test
