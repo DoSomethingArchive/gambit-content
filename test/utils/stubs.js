@@ -23,7 +23,7 @@ module.exports = {
     return '5559108329';
   },
   middleware: {
-    getUserByPhone: {
+    getUser: {
       getUserFromLookup: function getUserFromLookup() {
         return {
           _id: '58d2b8fe10707d6d21713c55',
@@ -38,7 +38,7 @@ module.exports = {
         };
       },
     },
-    registerNewUser: {
+    createNewUser: {
       getUserFromPost: function getUserFromPost() {
         return {
           _id: '58d2b8fe10707d6d21713c55',
