@@ -19,7 +19,6 @@ const sinon = require('sinon');
 const stubs = require('../../test/utils/stubs');
 const contentful = require('../../lib/contentful.js');
 const stathat = require('../../lib/stathat');
-const helpersConfig = require('../../config/helpers');
 
 // Module to test
 const helpers = require('../../lib/helpers');
@@ -128,6 +127,14 @@ test('replacePhoenixCampaignVars on a campaign object missing reportbackInfo sho
   await t.throws(helpers.replacePhoenixCampaignVars(memberSupportMsg, phoenixCampaign));
 });
 
+// sendTimeoutResponse
+test('sendTimeoutResponse', (t) => {
+  sandbox.spy(t.context.res, 'status');
+  helpers.sendTimeoutResponse(t.context.res);
+  helpers.sendResponse.should.have.been.called;
+  t.context.res.status.should.have.been.calledWith(504);
+});
+
 // addSenderPrefix
 test('addSenderPrefix', () => {
   const prefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
@@ -137,14 +144,6 @@ test('addSenderPrefix', () => {
 
   process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX = '';
   helpers.addSenderPrefix(text).should.be.equal(text);
-});
-
-// containsNaughtyWords
-// TODO: remove or fix pending: https://github.com/DoSomething/gambit/issues/895
-test.skip('containsNaughtyWords', () => {
-  helpersConfig.naughtyWords.forEach((word) => {
-    helpers.containsNaughtyWords(word).should.be.true;
-  });
 });
 
 // getFirstWord

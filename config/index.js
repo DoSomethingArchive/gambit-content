@@ -4,6 +4,7 @@
 /* eslint-disable global-require */
 
 // Wrapper around require to set relative path at app root
+// TODO: Kill
 global.rootRequire = function (name) {
   return require(`../${name}`);
 };
@@ -30,5 +31,15 @@ require('./logger')({
 configVars.mongooseConnection = require('./mongoose')({
   dbUri: configVars.dbUri,
 });
+
+
+/**
+ * Check that required config vars exist, otherwise kill the Gambit!
+ */
+configVars.requiredVarsConfigured = require('./required-vars');
+
+if (!configVars.requiredVarsConfigured) {
+  throw new Error('Gambit is misconfigured.');
+}
 
 module.exports = configVars;
