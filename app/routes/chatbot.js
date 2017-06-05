@@ -2,7 +2,6 @@
 
 // Third party modules
 const newrelic = require('newrelic');
-const emojiStrip = require('emoji-strip');
 const express = require('express');
 const logger = require('winston');
 
@@ -13,13 +12,24 @@ const phoenix = require('../../lib/phoenix');
 const stathat = require('../../lib/stathat');
 const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
 
+// config modules
+const requiredParamsConf = require('../../config/middleware/chatbot/required-params');
+const userIncomingMessageConf = require('../../config/middleware/chatbot/user-incoming-message');
+const mapParamsConf = require('../../config/middleware/chatbot/map-request-params');
+
+// Middleware
+const requiredParamsMw = require('../../lib/middleware/required-params');
+const userIncomingMessageMw = require('../../lib/middleware/user-incoming-message');
+const mapRequestParamsMw = require('../../lib/middleware/map-request-params');
+const lookUpUserMw = require('../../lib/middleware/user-get');
+const createNewUserIfNotFound = require('../../lib/middleware/user-create');
+
 // Router
 const router = express.Router(); // eslint-disable-line new-cap
 
 // Models.
 const BotRequest = require('../models/BotRequest');
 const Signup = require('../models/Signup');
-const User = require('../models/User');
 
 /**
  * Renders message for given message type and request.
@@ -159,134 +169,21 @@ function handlePhoenixPostError(req, res, err) {
 }
 
 /**
- * Check for required config variables.
- * TODO: This MUST be refactored. Why are we checking these env variabes exist on each request?
- */
-router.use((req, res, next) => {
-  const settings = [
-    'GAMBIT_CMD_MEMBER_SUPPORT',
-    'GAMBIT_CMD_REPORTBACK',
-    'MOBILECOMMONS_OIP_AGENTVIEW',
-    'MOBILECOMMONS_OIP_CHATBOT',
-  ];
-  let configured = true;
-  settings.forEach((configVar) => {
-    if (!process.env[configVar]) {
-      const msg = `undefined process.env.${configVar}`;
-      stathat.postStat(`error: ${msg}`);
-      logger.error(msg);
-      configured = false;
-    }
-  });
-  if (!configured) {
-    return res.sendStatus(500);
-  }
-  return next();
-});
-
-/**
  * Check for required body parameters and add/log helper variables.
  */
-router.use((req, res, next) => {
-  if (!req.body.phone) {
-    return helpers.sendUnproccessibleEntityResponse(res, 'Missing required phone.');
-  }
-  if (!(req.body.keyword || req.body.args || req.body.mms_image_url)) {
-    const msg = 'Missing required keyword, args, or mms_image_url.';
-    return helpers.sendUnproccessibleEntityResponse(res, msg);
-  }
-
-  /* eslint-disable no-param-reassign */
-  req.client = 'mobilecommons';
-  if (req.body.args) {
-    req.incoming_message = emojiStrip(req.body.args);
-  } else {
-    req.incoming_message = '';
-  }
-
-  req.incoming_image_url = req.body.mms_image_url;
-  req.broadcast_id = req.body.broadcast_id;
-  if (req.body.keyword) {
-    req.keyword = req.body.keyword.toLowerCase();
-  }
-  /* eslint-enable no-param-reassign */
-
-  const route = 'v1/chatbot';
-  stathat.postStat(`route: ${route}`);
-  // Compile body params for logging (Mobile Commons sends through more than we need to pay
-  // attention to an incoming req.body).
-  const incomingParams = {
-    profile_id: req.body.profile_id,
-    incoming_message: req.incoming_message,
-    incoming_image_url: req.incoming_image_url,
-    broadcast_id: req.broadcast_id,
-    keyword: req.keyword,
-  };
-  logger.info(`${route} post:${JSON.stringify(incomingParams)}`);
-  newrelic.addCustomParameters({
-    incomingImageUrl: req.incoming_image_url,
-    incomingMessage: req.incoming_message,
-    keyword: req.keyword,
-    mobileCommonsBroadcastId: req.broadcast_id,
-    mobileCommonsMessageId: req.body.message_id,
-    mobileCommonsProfileId: req.body.profile_id,
-  });
-
-  return next();
-});
+router.use(requiredParamsMw(requiredParamsConf));
+router.use(userIncomingMessageMw(userIncomingMessageConf));
+router.use(mapRequestParamsMw(mapParamsConf));
 
 /**
  * Check if DS User exists for given mobile number.
  */
-router.use((req, res, next) => {
-  User.lookup('mobile', req.body.phone)
-    .then((user) => {
-      if (req.timedout) {
-        return helpers.sendTimeoutResponse(res);
-      }
-      req.user = user; // eslint-disable-line no-param-reassign
-      newrelic.addCustomParameters({ userId: user._id });
-
-      return next();
-    })
-    .catch((err) => {
-      if (err && err.status === 404) {
-        if (req.timedout) {
-          return helpers.sendTimeoutResponse(res);
-        }
-        logger.info(`User.lookup could not find mobile:${req.body.phone}`);
-
-        return next();
-      }
-
-      return helpers.sendErrorResponse(res, err);
-    });
-});
+router.use(lookUpUserMw());
 
 /**
  * Create DS User for given mobile number if we didn't find one.
  */
-router.use((req, res, next) => {
-  if (req.user) {
-    return next();
-  }
-
-  const data = {
-    mobile: req.body.phone,
-    mobilecommons_id: req.profile_id,
-  };
-  return User.post(data)
-    .then((user) => {
-      if (req.timedout) {
-        return helpers.sendTimeoutResponse(res);
-      }
-      req.user = user; // eslint-disable-line no-param-reassign
-      newrelic.addCustomParameters({ userId: user._id });
-
-      return next();
-    })
-   .catch(err => helpers.sendErrorResponse(res, err));
-});
+router.use(createNewUserIfNotFound());
 
 /**
  * Track incoming message (and outgoing, if this is a reply to a broadcast).

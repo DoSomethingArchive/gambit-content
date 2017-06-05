@@ -16,6 +16,43 @@ module.exports = {
   getEnvironment: function getEnvironment() {
     return process.env.NODE_ENV || 'thor';
   },
+  getProfileId: function getProfileId() {
+    return 5559108329;
+  },
+  getPhoneNumber: function getPhoneNumber() {
+    return '5559108329';
+  },
+  middleware: {
+    getUser: {
+      getUserFromLookup: function getUserFromLookup() {
+        return {
+          _id: '58d2b8fe10707d6d21713c55',
+          __v: 0,
+          mobile: '555910832',
+          first_name: 'john',
+          email: 'johnsnow@secretemailclient.com',
+          phoenix_id: 1654968,
+          mobilecommons_id: null,
+          role: 'user',
+          current_campaign: 2299,
+        };
+      },
+    },
+    createNewUser: {
+      getUserFromPost: function getUserFromPost() {
+        return {
+          _id: '58d2b8fe10707d6d21713c55',
+          __v: 0,
+          mobile: '555910832',
+          first_name: 'john',
+          email: 'johnsnow@secretemailclient.com',
+          phoenix_id: 1654968,
+          mobilecommons_id: null,
+          role: 'user',
+        };
+      },
+    },
+  },
   helpers: {
     getValidYesResponses: function getValidYesResponses() {
       const yesResponses = process.env.GAMBIT_YES_RESPONSES || '';
