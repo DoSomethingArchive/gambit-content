@@ -56,7 +56,7 @@ test.afterEach((t) => {
 test('getUser should inject the user into the req object when found in the database', async (t) => {
   // setup
   const next = sinon.stub();
-  const number = stubs.middleware.getUserByPhone.getPhoneNumber();
+  const number = stubs.getPhoneNumber();
   const user = stubs.middleware.getUserByPhone.getUserFromLookup();
   sandbox.stub(User, 'lookup').returns(userLookupStub);
   const middleware = getUser();
@@ -72,7 +72,7 @@ test('getUser should inject the user into the req object when found in the datab
 test('getUser should call sendErrorResponse when an error that is not 404 occurs', async (t) => {
   // setup
   const next = sinon.stub();
-  const number = stubs.middleware.getUserByPhone.getPhoneNumber();
+  const number = stubs.getPhoneNumber();
   sandbox.stub(User, 'lookup').returns(userLookupFailStub);
   sandbox.stub(helpers, 'sendErrorResponse').returns(sendErrorResponseStub);
   const middleware = getUser();
@@ -87,7 +87,7 @@ test('getUser should call sendErrorResponse when an error that is not 404 occurs
 test('getUser should call next is a 404 is returned from User.lookup', async (t) => {
   // setup
   const next = sinon.stub();
-  const number = stubs.middleware.getUserByPhone.getPhoneNumber();
+  const number = stubs.getPhoneNumber();
   sandbox.stub(User, 'lookup').returns(userLookupNotFoundStub);
   const middleware = getUser();
   t.context.req.body.phone = number;
