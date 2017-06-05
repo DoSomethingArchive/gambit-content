@@ -14,15 +14,15 @@ const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
 
 // config modules
 const requiredParamsConf = require('../../config/middleware/chatbot/required-params');
-const requestContextConf = require('../../config/middleware/chatbot/request-context');
+const userIncomingMessageConf = require('../../config/middleware/chatbot/user-incoming-message');
 const mapParamsConf = require('../../config/middleware/chatbot/map-request-params');
 
 // Middleware
 const requiredParamsMw = require('../../lib/middleware/required-params');
-const requestContextMw = require('../../lib/middleware/request-context');
+const userIncomingMessageMw = require('../../lib/middleware/user-incoming-message');
 const mapRequestParamsMw = require('../../lib/middleware/map-request-params');
-const lookUpUser = require('../../lib/middleware/get-user-by-phone');
-const RegisterNewUserIfNotFound = require('../../lib/middleware/register-new-user');
+const lookUpUserMw = require('../../lib/middleware/user-get');
+const createNewUserIfNotFound = require('../../lib/middleware/user-create');
 
 // Router
 const router = express.Router(); // eslint-disable-line new-cap
@@ -172,18 +172,18 @@ function handlePhoenixPostError(req, res, err) {
  * Check for required body parameters and add/log helper variables.
  */
 router.use(requiredParamsMw(requiredParamsConf));
-router.use(requestContextMw(requestContextConf));
+router.use(userIncomingMessageMw(userIncomingMessageConf));
 router.use(mapRequestParamsMw(mapParamsConf));
 
 /**
  * Check if DS User exists for given mobile number.
  */
-router.use(lookUpUser());
+router.use(lookUpUserMw());
 
 /**
  * Create DS User for given mobile number if we didn't find one.
  */
-router.use(RegisterNewUserIfNotFound());
+router.use(createNewUserIfNotFound());
 
 /**
  * Track incoming message (and outgoing, if this is a reply to a broadcast).
