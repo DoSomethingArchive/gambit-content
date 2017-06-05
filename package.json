@@ -60,6 +60,7 @@
     "serve-favicon": "^2.4.2",
     "stathat": "0.0.8",
     "superagent": "^2.3.0",
+    "supertest": "^3.0.0",
     "throng": "^4.0.0",
     "underscore": "^1.8.3",
     "v8-profiler": "5.7.0",
