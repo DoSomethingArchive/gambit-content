@@ -10,6 +10,7 @@ const helpers = require('../../lib/helpers');
 const contentful = require('../../lib/contentful');
 const phoenix = require('../../lib/phoenix');
 const stathat = require('../../lib/stathat');
+const zendesk = require('../../lib/zendesk');
 const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
 
 // config modules
@@ -385,6 +386,14 @@ router.use((req, res, next) => {
  */
 router.post('/', (req, res, next) => {
   if (helpers.isCommand(req.incoming_message, 'member_support')) {
+    if (process.env.MEMBER_SUPPORT_PROVIDER === 'zendesk') {
+      const subject = `Support request for ${req.campaign.title}`;
+
+      return zendesk.createTicketForUser(req.user, subject)
+        .then(ticket => res.send(ticket))
+        .catch(err => helpers.sendErrorResponse(res, err));
+    }
+
     return endConversationWithMessageType(req, res, 'member_support');
   }
 
