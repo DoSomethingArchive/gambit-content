@@ -187,6 +187,7 @@ router.use(createNewUserIfNotFound());
 
 /**
  * Track incoming message (and outgoing, if this is a reply to a broadcast).
+ * TODO: Move to middleware
  */
 router.use((req, res, next) => {
   // If this is a retry, we don't want to track duplicate analytics for this request.
