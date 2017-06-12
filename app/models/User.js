@@ -6,12 +6,12 @@
 const mongoose = require('mongoose');
 const Promise = require('bluebird');
 const logger = require('winston');
-const superagent = require('superagent');
 
 const helpers = require('../../lib/helpers');
 const mobilecommons = require('../../lib/mobilecommons');
 const northstar = require('../../lib/northstar');
 const stathat = require('../../lib/stathat');
+const Dashbot = require('../../lib/dashbot');
 
 /**
  * Schema.
@@ -137,9 +137,7 @@ userSchema.methods.postMobileCommonsProfileUpdate = function (oip, msgTxt) {
  * @param {string} messageText - text to track in Dashbot
  */
 userSchema.methods.postDashbot = function (dashbotMessageType, messageText) {
-  if (!process.env.DASHBOT_API_KEY) {
-    return logger.warn('DASHBOT_API_KEY undefined');
-  }
+  const dashbot = new Dashbot();
 
   const logMessage = `user.postDashbot:${dashbotMessageType} ${this._id}:${messageText}`;
   logger.debug(logMessage);
@@ -149,17 +147,7 @@ userSchema.methods.postDashbot = function (dashbotMessageType, messageText) {
     text: messageText,
   };
 
-  return superagent
-    .post('https://tracker.dashbot.io/track')
-    .query({
-      platform: 'generic',
-      v: '0.8.2-rest', // eslint-disable-line id-length
-      type: dashbotMessageType,
-      apiKey: process.env.DASHBOT_API_KEY,
-    })
-    .send(data)
-    .then(response => logger.debug(`dashbot response:${JSON.stringify(response.body)}`))
-    .catch(err => logger.error(`dashbot response::${err.message}`));
+  return dashbot.post(dashbotMessageType, data);
 };
 
 userSchema.methods.postDashbotIncoming = function (message) {
