@@ -31,11 +31,13 @@ const handleTimeoutStub = underscore.noop;
 const sendErrorResponseStub = underscore.noop;
 const userPostStub = Promise.resolve(stubs.middleware.createNewUser.getUserFromPost());
 const userPostFailStub = Promise.reject({ status: 500 });
+const trackUserMessageInDashbotStub = underscore.noop;
 
 // Setup!
 test.beforeEach((t) => {
   sandbox.stub(newrelic, 'addCustomParameters').returns(newrelicStub);
   sandbox.stub(helpers, 'handleTimeout').returns(handleTimeoutStub);
+  sandbox.stub(helpers, 'trackUserMessageInDashbot').returns(trackUserMessageInDashbotStub);
 
   // setup req, res mocks
   t.context.req = httpMocks.createRequest();
