@@ -1,19 +1,31 @@
 'use strict';
 
-/* eslint-disable import/no-dynamic-require */
-/* eslint-disable global-require */
+const underscore = require('underscore');
+const configExists = require('file-exists');
 
-// Wrapper around require to set relative path at app root
-// TODO: Kill
-global.rootRequire = function (name) {
-  return require(`../${name}`);
+const environment = process.env.NODE_ENV || 'development';
+const envConfigPath = `${__dirname}/env/${environment}`;
+let envConfig = {};
+
+if (configExists.sync(envConfigPath)) {
+  // eslint-disable-next-line import/no-dynamic-require, global-require
+  envConfig = require(envConfigPath);
+}
+
+const defaultConfig = {
+  environment,
+  port: process.env.PORT || 5000,
+  webConcurrency: process.env.WEB_CONCURRENCY || 1,
+  dbUri: process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder',
+  apiKey: process.env.GAMBIT_API_KEY || 'totallysecret',
 };
 
-const configVars = {};
-configVars.environment = process.env.NODE_ENV || 'development';
-configVars.port = process.env.PORT || 5000;
-configVars.webConcurrency = process.env.WEB_CONCURRENCY || 1;
-configVars.dbUri = process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder';
+const configVars = underscore.extend({}, defaultConfig, envConfig);
+
+/**
+ * Check that required config vars exist, otherwise kill the Gambit!
+ */
+configVars.requiredVarsConfigured = require('./required-vars')();
 
 /**
  * Winston Logger setup
@@ -31,15 +43,5 @@ require('./logger')({
 configVars.mongooseConnection = require('./mongoose')({
   dbUri: configVars.dbUri,
 });
-
-
-/**
- * Check that required config vars exist, otherwise kill the Gambit!
- */
-configVars.requiredVarsConfigured = require('./required-vars');
-
-if (!configVars.requiredVarsConfigured) {
-  throw new Error('Gambit is misconfigured.');
-}
 
 module.exports = configVars;
