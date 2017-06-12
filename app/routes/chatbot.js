@@ -18,11 +18,11 @@ const userIncomingMessageConf = require('../../config/middleware/chatbot/user-in
 const mapParamsConf = require('../../config/middleware/chatbot/map-request-params');
 
 // Middleware
-const requiredParamsMw = require('../../lib/middleware/required-params');
-const userIncomingMessageMw = require('../../lib/middleware/user-incoming-message');
-const mapRequestParamsMw = require('../../lib/middleware/map-request-params');
-const lookUpUserMw = require('../../lib/middleware/user-get');
-const createNewUserIfNotFound = require('../../lib/middleware/user-create');
+const requiredParamsMiddleware = require('../../lib/middleware/required-params');
+const userIncomingMessageMiddleware = require('../../lib/middleware/user-incoming-message');
+const mapRequestParamsMiddleware = require('../../lib/middleware/map-request-params');
+const lookUpUserMiddleware = require('../../lib/middleware/user-get');
+const createNewUserIfNotFoundMiddleware = require('../../lib/middleware/user-create');
 
 // Router
 const router = express.Router(); // eslint-disable-line new-cap
@@ -171,19 +171,19 @@ function handlePhoenixPostError(req, res, err) {
 /**
  * Check for required body parameters and add/log helper variables.
  */
-router.use(requiredParamsMw(requiredParamsConf));
-router.use(userIncomingMessageMw(userIncomingMessageConf));
-router.use(mapRequestParamsMw(mapParamsConf));
+router.use(requiredParamsMiddleware(requiredParamsConf));
+router.use(userIncomingMessageMiddleware(userIncomingMessageConf));
+router.use(mapRequestParamsMiddleware(mapParamsConf));
 
 /**
  * Check if DS User exists for given mobile number.
  */
-router.use(lookUpUserMw());
+router.use(lookUpUserMiddleware());
 
 /**
  * Create DS User for given mobile number if we didn't find one.
  */
-router.use(createNewUserIfNotFound());
+router.use(createNewUserIfNotFoundMiddleware());
 
 /**
  * Check if the incoming request is a reply to a Broadcast, and set req.campaignId if User said yes.

@@ -12,7 +12,7 @@ const authenticateConfig = require('../../config/middleware/authenticate');
 
 // middleware
 const timeoutMiddleware = require('../../lib/middleware/timeouts');
-const authenticateMw = require('../../lib/middleware/authenticate');
+const authenticateMiddleware = require('../../lib/middleware/authenticate');
 
 function regGlobalMiddleware(app) {
   // 504 timeouts middleware
@@ -21,7 +21,7 @@ function regGlobalMiddleware(app) {
   });
 
   // authenticate
-  app.use(authenticateMw(authenticateConfig));
+  app.use(authenticateMiddleware(authenticateConfig));
 }
 
 module.exports = function init(app) {
