@@ -18,8 +18,7 @@
   },
   "eslintConfig": {
     "globals": {
-      "app": true,
-      "rootRequire": true
+      "app": true
     }
   },
   "ava": {
@@ -37,7 +36,7 @@
     ]
   },
   "engines": {
-    "node": "6.10.x"
+    "node": "6.11.0"
   },
   "dependencies": {
     "@dosomething/northstar-js": "git://github.com/DoSomething/northstar-js.git",
@@ -50,6 +49,7 @@
     "contentful": "^3.8.0",
     "emoji-strip": "^1.0.1",
     "express": "^4.10.2",
+    "file-exists": "^4.0.0",
     "html-entities": "^1.1.1",
     "mongoose": "~4.6.1",
     "newrelic": "1.38.x",
