@@ -186,37 +186,6 @@ router.use(lookUpUserMw());
 router.use(createNewUserIfNotFound());
 
 /**
- * Track incoming message (and outgoing, if this is a reply to a broadcast).
- * TODO: Move to middleware
- */
-router.use((req, res, next) => {
-  // If this is a retry, we don't want to track duplicate analytics for this request.
-  const retryCount = Number(req.get('x-blink-retry-count'));
-  if (retryCount && retryCount >= 1) {
-    return next();
-  }
-
-  if (req.broadcast_id) {
-    req.user.postDashbotOutgoing('broadcast');
-  }
-
-  let dashbotLog = '';
-  if (req.keyword) {
-    dashbotLog = `keyword:${req.keyword} `;
-  }
-  if (req.incoming_image_url) {
-    dashbotLog = `${dashbotLog}(image) `;
-  }
-  if (req.incoming_message) {
-    dashbotLog = `${dashbotLog}${req.incoming_message}`;
-  }
-
-  req.user.postDashbotIncoming(dashbotLog.toLowerCase());
-
-  return next();
-});
-
-/**
  * Check if the incoming request is a reply to a Broadcast, and set req.campaignId if User said yes.
  * Send the Broadcast Declined message if they said no.
  */
