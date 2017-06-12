@@ -1,8 +1,8 @@
 'use strict';
 
-const logger = require('winston');
 const stathat = require('../lib/stathat');
 
+const missingRequiredVars = [];
 const vars = [
   'GAMBIT_CMD_MEMBER_SUPPORT',
   'GAMBIT_CMD_REPORTBACK',
@@ -11,9 +11,7 @@ const vars = [
 ];
 
 function logMissingVar(name) {
-  const msg = `undefined process.env.${name}`;
-  stathat.postStat(`error: ${msg}`);
-  logger.error(msg);
+  stathat.postStat(`error: undefined process.env.${name}`);
 }
 
 function checkRequiredVars(requiredVars) {
@@ -22,10 +20,19 @@ function checkRequiredVars(requiredVars) {
     const configVar = process.env[name];
     if (!configVar) {
       logMissingVar(name);
+      missingRequiredVars.push(name);
       configured = false;
     }
   });
   return configured;
 }
 
-module.exports = checkRequiredVars(vars);
+module.exports = () => {
+  const passCheck = checkRequiredVars(vars);
+
+  if (!passCheck) {
+    throw new Error(`Gambit is misconfigured. Missing ${missingRequiredVars.join(', ')}`);
+  }
+
+  return passCheck;
+};

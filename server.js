@@ -79,12 +79,13 @@ function start(processId) {
   }
 
   // current process
-  app.locals.currentProcess = processId;
+  app.set('currentProcess', processId);
+  app.set('apiKey', config.apiKey);
 
   // Expose which worker is handling request through middleware
   // TODO: Move to external middleware
   app.use((req, res, next) => {
-    logger.info(`Request handled by worker ${app.locals.currentProcess}`);
+    logger.info(`Request handled by worker ${app.get('currentProcess')}`);
     next();
   });
 

@@ -1,40 +1,34 @@
 'use strict';
 
-// Libs
-const express = require('express');
-const logger = require('winston');
+// Routes
+const campaignsRoute = require('./campaigns');
+const chatbotRoute = require('./chatbot');
+const signupsRoute = require('./signups');
+const statusRoute = require('./status');
+const homeRoute = require('./home');
 
-// App modules
-const stathat = require('../../lib/stathat');
+// middleware config
+const authenticateConfig = require('../../config/middleware/authenticate');
 
-// Router
-const router = express.Router(); // eslint-disable-line new-cap
+// middleware
+const timeoutMiddleware = require('../../lib/middleware/timeouts');
+const authenticateMiddleware = require('../../lib/middleware/authenticate');
 
-router.get('/', (req, res) => {
-  stathat.postStat('route: /');
-  return res.send('hi');
-});
+function regGlobalMiddleware(app) {
+  // 504 timeouts middleware
+  Object.keys(timeoutMiddleware).forEach((name) => {
+    app.use(timeoutMiddleware[name]);
+  });
 
-/**
- * Authentication.
- * TODO: Take out to separate middleware
- */
-router.use((req, res, next) => {
-  const apiKey = process.env.GAMBIT_API_KEY;
-  if (req.method === 'POST' && req.get('x-gambit-api-key') !== apiKey) {
-    stathat.postStat('error: invalid x-gambit-api-key');
-    logger.warn('router invalid x-gambit-api-key:', req.url);
-
-    return res.sendStatus(403);
-  }
-  return next();
-});
-
-router.use('/v1/status', (req, res) => res.send('ok'));
-router.use('/v1/campaigns', require('./campaigns'));
-router.use('/v1/chatbot', require('./chatbot'));
-router.use('/v1/signups', require('./signups'));
+  // authenticate
+  app.use(authenticateMiddleware(authenticateConfig));
+}
 
 module.exports = function init(app) {
-  app.use('/', router);
+  regGlobalMiddleware(app);
+  app.get('/', homeRoute);
+  app.use('/v1/status', statusRoute);
+  app.use('/v1/campaigns', campaignsRoute);
+  app.use('/v1/chatbot', chatbotRoute);
+  app.use('/v1/signups', signupsRoute);
 };

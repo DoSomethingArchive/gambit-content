@@ -13,7 +13,7 @@ const contentful = require('../../lib/contentful');
 const groups = require('../../lib/groups');
 const helpers = require('../../lib/helpers');
 
-const mobilecommons = rootRequire('lib/mobilecommons');
+const mobilecommons = require('../../lib/mobilecommons');
 const phoenix = require('../../lib/phoenix');
 const stathat = require('../../lib/stathat');
 const User = require('../models/User');

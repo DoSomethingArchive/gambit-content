@@ -2,7 +2,6 @@
   extends: "@dosomething/eslint-config"
   globals:
     app: true
-    rootRequire: true
   parserOptions:
     # Node requires 'use strict' to use built-in ES6 compatibility.
     # Use script source type, so lint doesn't throw error:
