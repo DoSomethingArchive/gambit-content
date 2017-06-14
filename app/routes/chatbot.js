@@ -23,6 +23,7 @@ const userIncomingMessageMiddleware = require('../../lib/middleware/user-incomin
 const mapRequestParamsMiddleware = require('../../lib/middleware/map-request-params');
 const lookUpUserMiddleware = require('../../lib/middleware/user-get');
 const createNewUserIfNotFoundMiddleware = require('../../lib/middleware/user-create');
+const processBroadcastConversationMiddleware = require('../../lib/middleware/broadcast');
 
 // Router
 const router = express.Router(); // eslint-disable-line new-cap
@@ -112,16 +113,6 @@ function continueConversationWithMessageType(req, res, messageType) {
 }
 
 /**
- * Sends given message to user to end conversation.
- */
-function endConversationWithMessage(req, res, message) {
-  // todo: Promisify this POST request and only send back Gambit 200 on profile_update success.
-  req.user.postMobileCommonsProfileUpdate(process.env.MOBILECOMMONS_OIP_AGENTVIEW, message);
-
-  return helpers.sendResponse(res, 200, message);
-}
-
-/**
  * Renders message for given messageType, then sends it to end conversation.
  */
 function endConversationWithMessageType(req, res, messageType) {
@@ -131,7 +122,7 @@ function endConversationWithMessageType(req, res, messageType) {
       stathat.postStat(`campaignbot:${messageType}`);
       req.user.postDashbotOutgoing(messageType);
 
-      return endConversationWithMessage(req, res, message);
+      return helpers.endConversationWithMessage(req, res, message);
     })
     .catch(err => helpers.sendErrorResponse(res, err));
 }
@@ -185,92 +176,7 @@ router.use(lookUpUserMiddleware());
  */
 router.use(createNewUserIfNotFoundMiddleware());
 
-/**
- * Check if the incoming request is a reply to a Broadcast, and set req.campaignId if User said yes.
- * Send the Broadcast Declined message if they said no.
- */
-router.use((req, res, next) => {
-  if (!req.broadcast_id) {
-    return next();
-  }
-
-  return contentful.fetchBroadcast(req.broadcast_id)
-    .then((broadcast) => {
-      if (req.timedout) {
-        return helpers.sendTimeoutResponse(res);
-      }
-      if (!broadcast) {
-        return helpers.sendResponse(res, 404, `Broadcast ${req.broadcast_id} not found.`);
-      }
-
-      logger.info(`loaded broadcast:${req.broadcast_id} for user:${req.user._id}`);
-      const saidNo = !(req.incoming_message && helpers.isYesResponse(req.incoming_message));
-      if (saidNo) {
-        logger.info(`user:${req.user._id} declined broadcast:${req.broadcast_id}`);
-
-        const replyMessage = helpers.addSenderPrefix(broadcast.fields.declinedMessage);
-        BotRequest.log(req, 'broadcast', 'prompt_declined', replyMessage);
-        req.user.postDashbotOutgoing('broadcast_declined');
-
-        return endConversationWithMessage(req, res, replyMessage);
-      }
-
-      const broadcastCampaign = broadcast.fields.campaign.fields;
-      req.campaignId = broadcastCampaign.campaignId; // eslint-disable-line no-param-reassign
-
-      return next();
-    })
-    .catch(err => helpers.sendErrorResponse(res, err));
-});
-
-/**
- * If we don't have a campaignId yet and incoming request contains a keyword, set the campaignId.
- */
-router.use((req, res, next) => {
-  if (req.campaignId || !req.keyword) {
-    return next();
-  }
-  return contentful.fetchKeyword(req.keyword)
-    .then((keyword) => {
-      if (req.timedout) {
-        return helpers.sendTimeoutResponse(res);
-      }
-      if (!keyword) {
-        return helpers.sendResponse(res, 404, `Keyword ${req.keyword} not found.`);
-      }
-      if (keyword.fields.environment !== process.env.NODE_ENV) {
-        const msg = `Keyword ${req.keyword} environment error: defined as ${keyword.environment} ` +
-                    `but sent to ${process.env.NODE_ENV}.`;
-        return helpers.sendUnproccessibleEntityResponse(res, msg);
-      }
-      const keywordCampaign = keyword.fields.campaign.fields;
-      req.campaignId = keywordCampaign.campaignId; // eslint-disable-line no-param-reassign
-
-      return next();
-    })
-    .catch(err => helpers.sendErrorResponse(res, err));
-});
-
-/**
- * If we still haven't set a campaignId, user already should be in a Campaign conversation.
- * @see continueConversationWithMessageType
- */
-router.use((req, res, next) => {
-  if (req.campaignId) {
-    return next();
-  }
-
-  const campaignId = req.user.current_campaign;
-  logger.debug(`user.current_campaign:${campaignId}`);
-
-  if (!campaignId) {
-    return helpers.sendResponse(res, 500, 'user.current_campaign undefined');
-  }
-
-  req.campaignId = campaignId; // eslint-disable-line no-param-reassign
-
-  return next();
-});
+router.use(processBroadcastConversationMiddleware());
 
 /**
  * Load Campaign from DS API.

@@ -78,9 +78,10 @@ function start(processId) {
     profiler.start();
   }
 
-  // current process
+  // set app properties
   app.set('currentProcess', processId);
   app.set('apiKey', config.apiKey);
+  app.set('environment', config.environment);
 
   // Expose which worker is handling request through middleware
   // TODO: Move to external middleware
