@@ -11,7 +11,6 @@ const httpMocks = require('node-mocks-http');
 const sinon = require('sinon');
 const nock = require('nock');
 const underscore = require('underscore');
-const querystring = require('querystring');
 
 const stubs = require('../utils/stubs.js');
 const config = require('../../config/lib/dashbot');
@@ -77,13 +76,14 @@ test('dashbot should call handleSuccess on successful post', async () => {
   Dashbot.handleSuccess.should.have.been.called;
 });
 
-// TODO: Nock is breaking on wercker, investigate why.
-test.skip('dashbot should call handleError on failed post', async () => {
+test('dashbot should call handleError on failed post', async () => {
   // setup
   const dashbot = new Dashbot(config);
   const msgType = 'test';
   nock(config.url)
-    .post(`?${querystring.stringify(dashbot.getQuery(msgType))}`, {})
+    .post('', {})
+    // nock will match any query params
+    .query(true)
     .reply(500, 'testing, is all bad');
 
   // test
