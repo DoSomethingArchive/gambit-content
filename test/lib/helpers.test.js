@@ -19,11 +19,18 @@ const sinon = require('sinon');
 const stubs = require('../../test/utils/stubs');
 const contentful = require('../../lib/contentful.js');
 const stathat = require('../../lib/stathat');
+const userFactory = require('../utils/factories/user');
 
 // Module to test
 const helpers = require('../../lib/helpers');
 
 // Stub functions
+const fetchKeywordStub = Promise.resolve(stubs.getJSONstub('fetchKeyword'));
+const fetchKeywordStubEmpty = Promise.resolve('');
+const fetchKeywordStubFail = Promise.reject(false);
+const fetchBroadcastStub = Promise.resolve(stubs.getJSONstub('fetchBroadcast'));
+const fetchBroadcastStubEmpty = Promise.resolve('');
+const fetchBroadcastStubFail = Promise.reject(false);
 const fetchKeywordsForCampaignIdStub = () => Promise.resolve(stubs.contentful.getKeywords());
 const fetchKeywordsForCampaignIdStubFail = () => Promise.reject({ status: 500 });
 const cryptoCreateHmacStub = {
@@ -40,15 +47,13 @@ const sandbox = sinon.sandbox.create();
 
 // Setup!
 test.beforeEach((t) => {
-  // setup stubs
+  stubs.stubLogger(sandbox, logger);
   sandbox.stub(contentful, 'fetchKeywordsForCampaignId')
     .callsFake(fetchKeywordsForCampaignIdStub)
     .withArgs('fail')
     .callsFake(fetchKeywordsForCampaignIdStubFail)
     .withArgs('empty')
     .returns(Promise.resolve([]));
-  sandbox.stub(logger, 'error');
-  sandbox.stub(logger, 'debug');
   sandbox.stub(newrelic, 'addCustomParameters');
   sandbox.stub(stathat, 'postStat');
   sandbox.stub(crypto, 'createHmac').returns(cryptoCreateHmacStub);
@@ -72,6 +77,28 @@ test.afterEach((t) => {
 /**
  * Tests
  */
+
+// handlePhoenixPostError
+test('handlePhoenixPostError should send error response', (t) => {
+  // setup
+  const error = { status: 500, message: 'error' };
+
+  // test
+  helpers.handlePhoenixPostError(t.context.req, t.context.res, error);
+  helpers.sendErrorResponse.should.have.been.calledWith(t.context.res, error);
+});
+
+test('handlePhoenixPostError should end conversation with error if API response is false', (t) => {
+  // setup
+  // TODO: This is quite brittle, this especific error should at least be in a config file, not
+  // harcoded in helpers code.
+  const error = { status: 500, message: 'API response is false' };
+  sandbox.stub(helpers, 'endConversationWithError');
+
+  // test
+  helpers.handlePhoenixPostError(t.context.req, t.context.res, error);
+  helpers.endConversationWithError.should.have.been.called;
+});
 
 // replacePhoenixCampaignVars
 test('replacePhoenixCampaignVars', async () => {
@@ -134,6 +161,151 @@ test('sendTimeoutResponse', (t) => {
   helpers.sendResponse.should.have.been.called;
   t.context.res.status.should.have.been.calledWith(504);
 });
+
+test('getCampaignIdFromUser should return user\'s current_campaign', (t) => {
+  // setup
+  const user = userFactory.getValidUser();
+  t.context.req.user = user;
+
+  // test
+  const campaignId = helpers.getCampaignIdFromUser(t.context.req, t.context.res);
+  campaignId.should.be.equal(user.current_campaign);
+});
+
+test('getCampaignIdFromUser should send a 500 error response if user has no current_campaign', (t) => {
+  // setup
+  const user = userFactory.getValidUser();
+  user.current_campaign = undefined;
+  t.context.req.user = user;
+
+  // test
+  helpers.getCampaignIdFromUser(t.context.req, t.context.res);
+  helpers.sendResponse.should.have.been.calledWith(t.context.res, 500);
+});
+
+// getKeyword
+test('getKeyword should return a promise that will resolve in a keyword when found', async (t) => {
+  // setup
+  sandbox.stub(contentful, 'fetchKeyword').returns(fetchKeywordStub);
+  sandbox.spy(helpers, 'sendUnproccessibleEntityResponse');
+  t.context.req.app = {
+    get: sinon.stub().returns('thor'),
+  };
+
+  // test
+  const keyword = await helpers.getKeyword(t.context.req, t.context.res);
+  helpers.sendResponse.should.not.have.been.called;
+  helpers.sendUnproccessibleEntityResponse.should.not.have.been.called;
+  keyword.should.not.be.empty;
+});
+
+test('getKeyword should send a 404 response when no broadcast is found', async (t) => {
+  // setup
+  sandbox.stub(contentful, 'fetchKeyword').returns(fetchKeywordStubEmpty);
+  t.context.req.app = {
+    get: sinon.stub().returns('thor'),
+  };
+
+  // test
+  await helpers.getKeyword(t.context.req, t.context.res);
+  helpers.sendResponse.should.have.been.calledWith(t.context.res, 404);
+});
+
+
+test('getKeyword should send Error response when it fails retrieving a broadcast', async (t) => {
+  // setup
+  sandbox.stub(contentful, 'fetchKeyword').returns(fetchKeywordStubFail);
+
+  // test
+  await helpers.getKeyword(t.context.req, t.context.res);
+  helpers.sendErrorResponse.should.have.been.called;
+});
+
+test('getKeyword should send an unprocessable entity error response when environments don\'t match for keyword', async (t) => {
+  // setup
+
+  // The fetchKeywordStub response is a thor environment keyword
+  sandbox.stub(contentful, 'fetchKeyword').returns(fetchKeywordStub);
+  sandbox.spy(helpers, 'sendUnproccessibleEntityResponse');
+  t.context.req.app = {
+    get: sinon.stub().returns('test'),
+  };
+
+  // test
+  await helpers.getKeyword(t.context.req, t.context.res);
+  helpers.sendUnproccessibleEntityResponse.should.have.been.called;
+});
+
+// getBroadcast
+test('getBroadcast should return a promise that will resolve in a broadcast when found', async (t) => {
+  // setup
+  sandbox.stub(contentful, 'fetchBroadcast').returns(fetchBroadcastStub);
+
+  // test
+  const broadcast = await helpers.getBroadcast(t.context.req, t.context.res);
+  helpers.sendResponse.should.not.have.been.called;
+  broadcast.should.not.be.empty;
+});
+
+test('getBroadcast should send a 404 response when no broadcast is found', async (t) => {
+  // setup
+  sandbox.stub(contentful, 'fetchBroadcast').returns(fetchBroadcastStubEmpty);
+
+  // test
+  await helpers.getBroadcast(t.context.req, t.context.res);
+  helpers.sendResponse.should.have.been.calledWith(t.context.res, 404);
+});
+
+
+test('getBroadcast should send Error response when it fails retrieving a broadcast', async (t) => {
+  // setup
+  sandbox.stub(contentful, 'fetchBroadcast').returns(fetchBroadcastStubFail);
+
+  // test
+  await helpers.getBroadcast(t.context.req, t.context.res);
+  helpers.sendErrorResponse.should.have.been.called;
+});
+
+// trackUserMessageInDashbot
+test('trackUserMessageInDashbot should post dashbot incoming by default', (t) => {
+  // setup
+  const user = userFactory.getValidUser();
+  sandbox.stub(user, 'postDashbotIncoming');
+  sandbox.stub(user, 'postDashbotOutgoing');
+  t.context.req.user = user;
+
+  // test
+  helpers.trackUserMessageInDashbot(t.context.req);
+  user.postDashbotIncoming.should.have.been.called;
+});
+
+test('trackUserMessageInDashbot should post dashbot outgoing if there is a broadcast_id set in the request', (t) => {
+  // setup
+  t.context.req.broadcast_id = stubs.getBroadcastId();
+  const user = userFactory.getValidUser();
+  sandbox.stub(user, 'postDashbotIncoming');
+  sandbox.stub(user, 'postDashbotOutgoing');
+  t.context.req.user = user;
+
+  // test
+  helpers.trackUserMessageInDashbot(t.context.req);
+  user.postDashbotOutgoing.should.have.been.called;
+});
+
+test('trackUserMessageInDashbot should not track request if its a retry request', (t) => {
+  // setup
+  t.context.req.retryCount = 1;
+  const user = userFactory.getValidUser();
+  sandbox.stub(user, 'postDashbotIncoming');
+  sandbox.stub(user, 'postDashbotOutgoing');
+  t.context.req.user = user;
+
+  // test
+  helpers.trackUserMessageInDashbot(t.context.req);
+  user.postDashbotOutgoing.should.not.have.been.called;
+  user.postDashbotIncoming.should.not.have.been.called;
+});
+
 
 // addSenderPrefix
 test('addSenderPrefix', () => {
@@ -202,6 +374,28 @@ test('isCommand should return true when incoming message and command are valid G
 test('isCommand should return false when missing incomingMessage argument', () => {
   helpers.isCommand(undefined, 'member_support').should.be.false;
   helpers.isCommand(undefined, 'reportback').should.be.false;
+});
+
+// handleTimeout
+test('handleTimeout should send timeout response if req.timedout is true', (t) => {
+  // setup
+  sandbox.spy(helpers, 'sendTimeoutResponse');
+  t.context.req.timedout = true;
+
+  // test
+  helpers.handleTimeout(t.context.req, t.context.res);
+  helpers.sendTimeoutResponse.should.have.been.called;
+});
+
+test('handleTimeout should return false if req.timedout is false', (t) => {
+  // setup
+  sandbox.spy(helpers, 'sendTimeoutResponse');
+  t.context.req.timedout = false;
+
+  // test
+  const timedout = helpers.handleTimeout(t.context.req, t.context.res);
+  helpers.sendTimeoutResponse.should.not.have.been.called;
+  timedout.should.be.false;
 });
 
 // sendErrorResponse
