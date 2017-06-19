@@ -8,8 +8,12 @@ const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
 const httpMocks = require('node-mocks-http');
 const logger = require('winston');
+const Promise = require('bluebird');
+const rewire = require('rewire');
 
+const stubs = require('../../utils/stubs');
 const stathat = require('../../../lib/stathat');
+const helpers = require('../../../lib/helpers');
 const config = require('../../../config/middleware/chatbot/map-request-params');
 
 // setup "x.should.y" assertion style
@@ -17,7 +21,7 @@ chai.should();
 chai.use(sinonChai);
 
 // module to be tested
-const mapRequestParams = require('../../../lib/middleware/map-request-params');
+const mapRequestParams = rewire('../../../lib/middleware/map-request-params');
 
 // sinon sandbox object
 const sandbox = sinon.sandbox.create();
@@ -25,6 +29,8 @@ const sandbox = sinon.sandbox.create();
 // stubs
 const loggerStub = () => true;
 const stathatStub = () => true;
+const getKeywordStub = Promise.resolve(stubs.getJSONstub('fetchKeyword'));
+const getBroadcastStub = Promise.resolve(stubs.getJSONstub('fetchBroadcast'));
 
 // Setup!
 test.beforeEach((t) => {
@@ -43,8 +49,10 @@ test.afterEach((t) => {
   t.context = {};
 });
 
-test('mapRequestParams should strip emojies from the args param when mapping', (t) => {
+test('mapRequestParams should strip emojies from the args param when mapping', async (t) => {
   // setup
+  sandbox.stub(helpers, 'getKeyword').returns(getKeywordStub);
+  sandbox.stub(helpers, 'getBroadcast').returns(getBroadcastStub);
   const next = sinon.stub();
   const middleware = mapRequestParams(config);
   const emojiStripParam = config.emojiStripParam;
@@ -56,8 +64,44 @@ test('mapRequestParams should strip emojies from the args param when mapping', (
   t.context.req[config.containerProperty][toLowerCaseParam] = toLowerCaseValue;
 
   // test
-  middleware(t.context.req, t.context.res, next);
+  await middleware(t.context.req, t.context.res, next);
   t.context.req[config.paramsMap[emojiStripParam]].should.be.equal(prefix);
   t.context.req[config.paramsMap[toLowerCaseParam]].should.be.equal(toLowerCaseValue.toLowerCase());
+  next.should.have.been.called;
+});
+
+test('mapRequestParams should populate the broadcast object and campaignId when it gets a broadcast_id', async (t) => {
+  // setup
+  sandbox.stub(helpers, 'getKeyword').returns(getKeywordStub);
+  sandbox.stub(helpers, 'getBroadcast').returns(getBroadcastStub);
+  const getCampaign = mapRequestParams.__get__('getCampaignFromContentfulObject');
+  const next = sinon.stub();
+  const middleware = mapRequestParams(config);
+  const broadcastObject = stubs.getJSONstub('fetchBroadcast');
+  const campaign = getCampaign(broadcastObject);
+  t.context.req[config.containerProperty].broadcast_id = stubs.getBroadcastId();
+
+  // test
+  await middleware(t.context.req, t.context.res, next);
+  t.context.req.broadcastContentfulObject.should.be.equal(broadcastObject);
+  t.context.req.campaignId.should.be.equal(campaign.campaignId);
+  next.should.have.been.called;
+});
+
+test('mapRequestParams should populate the keyword object and campaignId from the keyword if no broadcast_id is found', async (t) => {
+  // setup
+  sandbox.stub(helpers, 'getKeyword').returns(getKeywordStub);
+  sandbox.stub(helpers, 'getBroadcast').returns(getBroadcastStub);
+  const getCampaign = mapRequestParams.__get__('getCampaignFromContentfulObject');
+  const next = sinon.stub();
+  const middleware = mapRequestParams(config);
+  const keywordObject = stubs.getJSONstub('fetchKeyword');
+  const campaign = getCampaign(keywordObject);
+  t.context.req[config.containerProperty].keyword = stubs.getKeyword();
+
+  // test
+  await middleware(t.context.req, t.context.res, next);
+  t.context.req.keywordContentfulObject.should.be.equal(keywordObject);
+  t.context.req.campaignId.should.be.equal(campaign.campaignId);
   next.should.have.been.called;
 });

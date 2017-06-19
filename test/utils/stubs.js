@@ -8,7 +8,7 @@ module.exports = {
     return 2299;
   },
   getBroadcastId: function getBroadcastId() {
-    return 1260764;
+    return 1246319;
   },
   getKeyword: function getKeyword() {
     return 'bookbot';
@@ -21,6 +21,9 @@ module.exports = {
   },
   getPhoneNumber: function getPhoneNumber() {
     return '5559108329';
+  },
+  getKeywordContentfulObject: function getKeywordContentfulObject() {
+    return {};
   },
   middleware: {
     getUser: {

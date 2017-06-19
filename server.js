@@ -78,13 +78,15 @@ function start(processId) {
     profiler.start();
   }
 
-  // current process
-  app.locals.currentProcess = processId;
+  // set app properties
+  app.set('currentProcess', processId);
+  app.set('apiKey', config.apiKey);
+  app.set('environment', config.environment);
 
   // Expose which worker is handling request through middleware
   // TODO: Move to external middleware
   app.use((req, res, next) => {
-    logger.info(`Request handled by worker ${app.locals.currentProcess}`);
+    logger.info(`Request handled by worker ${app.get('currentProcess')}`);
     next();
   });
 

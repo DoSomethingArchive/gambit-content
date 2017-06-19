@@ -1,0 +1,55 @@
+{
+  "sys": {
+    "space": {
+      "sys": {
+        "type": "Link",
+        "linkType": "Space",
+        "id": "owik07lyerdj"
+      }
+    },
+    "id": "7tFcZwcSVq40ewUWoWqeIo",
+    "type": "Entry",
+    "createdAt": "2017-02-07T16:12:57.357Z",
+    "updatedAt": "2017-02-15T20:20:47.435Z",
+    "revision": 2,
+    "contentType": {
+      "sys": {
+        "type": "Link",
+        "linkType": "ContentType",
+        "id": "keyword"
+      }
+    },
+    "locale": "en-US"
+  },
+  "fields": {
+    "keyword": "luckybot",
+    "environment": "thor",
+    "campaign": {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "owik07lyerdj"
+          }
+        },
+        "id": "3iR02GYG0oWi2uggMKqqwQ",
+        "type": "Entry",
+        "createdAt": "2017-02-15T20:20:38.173Z",
+        "updatedAt": "2017-02-15T20:20:38.173Z",
+        "revision": 1,
+        "contentType": {
+          "sys": {
+            "type": "Link",
+            "linkType": "ContentType",
+            "id": "campaign"
+          }
+        },
+        "locale": "en-US"
+      },
+      "fields": {
+        "campaignId": "2900"
+      }
+    }
+  }
+}
