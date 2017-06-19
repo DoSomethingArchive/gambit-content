@@ -1,0 +1,20 @@
+{
+  "id": "2900",
+  "title": "Get Lucky",
+  "tagline": "Stash our fortune tellers with tips on using condoms.",
+  "status": "active",
+  "uri": "https://thor.dosomething.org/api/v1/campaigns/2900",
+  "type": "campaign",
+  "currentCampaignRun": {
+    "id": "6477"
+  },
+  "reportbackInfo": {
+    "confirmationMessage": "Score! Thanks for telling people what's up with condoms.",
+    "copy": "Show us how you stashed these fortune tellers with ninja-like stealthiness!",
+    "noun": "fortune tellers",
+    "verb": "created"
+  },
+  "facts": {
+    "problem": "There are a surprising number of ways to improperly use a condom. Seems easy, but people mess it up all the time."
+  }
+}

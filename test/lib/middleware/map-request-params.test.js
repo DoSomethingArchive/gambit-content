@@ -27,15 +27,16 @@ const mapRequestParams = rewire('../../../lib/middleware/map-request-params');
 const sandbox = sinon.sandbox.create();
 
 // stubs
-const loggerStub = () => true;
 const stathatStub = () => true;
 const getKeywordStub = Promise.resolve(stubs.getJSONstub('fetchKeyword'));
 const getBroadcastStub = Promise.resolve(stubs.getJSONstub('fetchBroadcast'));
 
 // Setup!
 test.beforeEach((t) => {
-  sandbox.stub(logger, 'info').returns(loggerStub);
+  stubs.stubLogger(sandbox, logger);
   sandbox.stub(stathat, 'postStat').returns(stathatStub);
+  sandbox.stub(helpers, 'getKeyword').returns(getKeywordStub);
+  sandbox.stub(helpers, 'getBroadcast').returns(getBroadcastStub);
 
   // setup req, res mocks
   t.context.req = httpMocks.createRequest();
@@ -51,8 +52,6 @@ test.afterEach((t) => {
 
 test('mapRequestParams should strip emojies from the args param when mapping', async (t) => {
   // setup
-  sandbox.stub(helpers, 'getKeyword').returns(getKeywordStub);
-  sandbox.stub(helpers, 'getBroadcast').returns(getBroadcastStub);
   const next = sinon.stub();
   const middleware = mapRequestParams(config);
   const emojiStripParam = config.emojiStripParam;
@@ -70,38 +69,32 @@ test('mapRequestParams should strip emojies from the args param when mapping', a
   next.should.have.been.called;
 });
 
-test('mapRequestParams should populate the broadcast object and campaignId when it gets a broadcast_id', async (t) => {
+test('mapRequestParams should populate the contentful broadcast object and campaignId when it gets a broadcast_id', async (t) => {
   // setup
-  sandbox.stub(helpers, 'getKeyword').returns(getKeywordStub);
-  sandbox.stub(helpers, 'getBroadcast').returns(getBroadcastStub);
-  const getCampaign = mapRequestParams.__get__('getCampaignFromContentfulObject');
   const next = sinon.stub();
   const middleware = mapRequestParams(config);
   const broadcastObject = stubs.getJSONstub('fetchBroadcast');
-  const campaign = getCampaign(broadcastObject);
+  const campaign = broadcastObject.fields.campaign.fields;
   t.context.req[config.containerProperty].broadcast_id = stubs.getBroadcastId();
 
   // test
   await middleware(t.context.req, t.context.res, next);
-  t.context.req.broadcastContentfulObject.should.be.equal(broadcastObject);
+  t.context.req.contentfulObjects.broadcast.should.be.equal(broadcastObject);
   t.context.req.campaignId.should.be.equal(campaign.campaignId);
   next.should.have.been.called;
 });
 
-test('mapRequestParams should populate the keyword object and campaignId from the keyword if no broadcast_id is found', async (t) => {
+test('mapRequestParams should populate the contentful keyword object and campaignId from the keyword if no broadcast_id is found', async (t) => {
   // setup
-  sandbox.stub(helpers, 'getKeyword').returns(getKeywordStub);
-  sandbox.stub(helpers, 'getBroadcast').returns(getBroadcastStub);
-  const getCampaign = mapRequestParams.__get__('getCampaignFromContentfulObject');
   const next = sinon.stub();
   const middleware = mapRequestParams(config);
   const keywordObject = stubs.getJSONstub('fetchKeyword');
-  const campaign = getCampaign(keywordObject);
+  const campaign = keywordObject.fields.campaign.fields;
   t.context.req[config.containerProperty].keyword = stubs.getKeyword();
 
   // test
   await middleware(t.context.req, t.context.res, next);
-  t.context.req.keywordContentfulObject.should.be.equal(keywordObject);
+  t.context.req.contentfulObjects.keyword.should.be.equal(keywordObject);
   t.context.req.campaignId.should.be.equal(campaign.campaignId);
   next.should.have.been.called;
 });
