@@ -12,6 +12,7 @@ const logger = require('winston');
 
 const config = require('../../../config/middleware/chatbot/user-incoming-message');
 const helpers = require('../../../lib/helpers');
+const stubs = require('../../utils/stubs');
 
 // setup "x.should.y" assertion style
 chai.should();
@@ -24,14 +25,11 @@ const userIncomingMessage = require('../../../lib/middleware/user-incoming-messa
 const sandbox = sinon.sandbox.create();
 
 // stubs
-const loggerStub = underscore.noop;
-
-// stubs
 const unprocessableEntityStub = () => true;
 
 // Setup!
 test.beforeEach((t) => {
-  sandbox.stub(logger, 'info').returns(loggerStub);
+  stubs.stubLogger(sandbox, logger);
 
   // setup req, res mocks
   t.context.req = httpMocks.createRequest();
