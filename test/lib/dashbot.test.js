@@ -62,13 +62,14 @@ test('dashbot should not post statistics if apiKey is undefined', async () => {
   Dashbot.handleError.should.have.been.called;
 });
 
-// TODO: Nock is breaking on wercker, investigate why.
-test.skip('dashbot should call handleSuccess on successful post', async () => {
+test('dashbot should call handleSuccess on successful post', async () => {
   // setup
   const dashbot = new Dashbot(config);
   const msgType = 'test';
   nock(config.url)
-    .post(`?${querystring.stringify(dashbot.getQuery(msgType))}`, {})
+    .post('', {})
+    // nock will match any query params
+    .query(true)
     .reply(201, 'testing, is all good');
 
   // test
