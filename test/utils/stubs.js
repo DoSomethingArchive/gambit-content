@@ -8,7 +8,7 @@ const underscore = require('underscore');
 module.exports = {
   stubLogger: function stubLogger(sandbox, logger) {
     sandbox.stub(logger, 'warn').returns(underscore.noop);
-    // sandbox.stub(logger, 'error').returns(underscore.noop);
+    sandbox.stub(logger, 'error').returns(underscore.noop);
     sandbox.stub(logger, 'debug').returns(underscore.noop);
     sandbox.stub(logger, 'info').returns(underscore.noop);
   },
