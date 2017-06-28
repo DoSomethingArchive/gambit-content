@@ -4,9 +4,7 @@
 require('dotenv').config();
 const test = require('ava');
 const chai = require('chai');
-// const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
-// const httpMocks = require('node-mocks-http');
 const request = require('supertest');
 
 // setup "x.should.y" assertion style
