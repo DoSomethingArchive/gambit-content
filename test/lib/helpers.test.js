@@ -88,18 +88,6 @@ test('handlePhoenixPostError should send error response', (t) => {
   helpers.sendErrorResponse.should.have.been.calledWith(t.context.res, error);
 });
 
-test('handlePhoenixPostError should end conversation with error if API response is false', (t) => {
-  // setup
-  // TODO: This is quite brittle, this especific error should at least be in a config file, not
-  // harcoded in helpers code.
-  const error = { status: 500, message: 'API response is false' };
-  sandbox.stub(helpers, 'endConversationWithError');
-
-  // test
-  helpers.handlePhoenixPostError(t.context.req, t.context.res, error);
-  helpers.endConversationWithError.should.have.been.called;
-});
-
 // replacePhoenixCampaignVars
 test('replacePhoenixCampaignVars', async () => {
   const phoenixCampaign = stubs.getPhoenixCampaign();
