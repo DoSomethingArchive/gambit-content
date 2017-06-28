@@ -1,14 +1,13 @@
 'use strict';
 
 // Third party modules
-const newrelic = require('newrelic');
 const express = require('express');
 const logger = require('winston');
 
 // Application modules
 const helpers = require('../../lib/helpers');
 
-// config modules
+// configs
 const requiredParamsConf = require('../../config/middleware/chatbot/required-params');
 const userIncomingMessageConf = require('../../config/middleware/chatbot/user-incoming-message');
 const mapParamsConf = require('../../config/middleware/chatbot/map-request-params');
@@ -17,16 +16,16 @@ const mapParamsConf = require('../../config/middleware/chatbot/map-request-param
 const requiredParamsMiddleware = require('../../lib/middleware/required-params');
 const userIncomingMessageMiddleware = require('../../lib/middleware/user-incoming-message');
 const mapRequestParamsMiddleware = require('../../lib/middleware/map-request-params');
-const lookUpUserMiddleware = require('../../lib/middleware/user-get');
+const getUserMiddleware = require('../../lib/middleware/user-get');
 const createNewUserIfNotFoundMiddleware = require('../../lib/middleware/user-create');
 const processBroadcastConversationMiddleware = require('../../lib/middleware/broadcast');
-const getPhoenixCampaignMiddleware = require('../../lib/middleware/campaign-get');
+const getPhoenixCampaignMiddleware = require('../../lib/middleware/phoenix-campaign-get');
+const getSignupMiddleware = require('../../lib/middleware/signup-get');
+const createNewSignupIfNotFoundMiddleware = require('../../lib/middleware/signup-create');
+const validateRequestMiddleware = require('../../lib/middleware/validate');
 
 // Router
 const router = express.Router(); // eslint-disable-line new-cap
-
-// Models.
-const Signup = require('../models/Signup');
 
 /**
  * Check for required parameters,
@@ -36,15 +35,15 @@ router.use(requiredParamsMiddleware(requiredParamsConf));
 router.use(userIncomingMessageMiddleware(userIncomingMessageConf));
 router.use(mapRequestParamsMiddleware(mapParamsConf));
 
-/**
- * Check if DS User exists for given mobile number.
- */
-router.use(lookUpUserMiddleware());
-
-/**
- * Create DS User for given mobile number if we didn't find one.
- */
-router.use(createNewUserIfNotFoundMiddleware());
+router.use(
+  /**
+   * Check if DS User exists for given mobile number.
+   */
+  getUserMiddleware(),
+  /**
+   * Create DS User for given mobile number if we didn't find one.
+   */
+  createNewUserIfNotFoundMiddleware());
 
 /**
  * Checks if request is a negative response to a broadcast
@@ -56,57 +55,20 @@ router.use(processBroadcastConversationMiddleware());
  */
 router.use(getPhoenixCampaignMiddleware());
 
-/**
- * Check DS API for existing Signup.
- */
-router.use((req, res, next) => {
-  Signup.lookupCurrent(req.user, req.campaign)
-    .then((signup) => {
-      if (req.timedout) {
-        return helpers.sendTimeoutResponse(res);
-      }
-      if (signup) {
-        req.signup = signup; // eslint-disable-line no-param-reassign
-      }
-
-      return next();
-    })
-    .catch(err => helpers.sendErrorResponse(res, err));
-});
+router.use(
+  /**
+   * Check DS Phoenix API for existing Signup.
+   */
+  getSignupMiddleware(),
+  /**
+   * If Signup wasn't found, post Signup to DS Phoenix API.
+   */
+  createNewSignupIfNotFoundMiddleware());
 
 /**
- * If Signup wasn't found, post Signup to DS API.
+ * Run sanity checks
  */
-router.use((req, res, next) => {
-  if (req.signup) {
-    return next();
-  }
-
-  return Signup.post(req.user, req.campaign, req.keyword, req.broadcast_id)
-    .then((signup) => {
-      if (req.timedout) {
-        return helpers.sendTimeoutResponse(res);
-      }
-      req.signup = signup; // eslint-disable-line no-param-reassign
-
-      return next();
-    })
-    .catch(err => helpers.handlePhoenixPostError(req, res, err));
-});
-
-/**
- * Sanity check: make sure there's a Signup.
- */
-router.use((req, res, next) => {
-  if (!req.signup) {
-    return helpers.sendResponse(res, 500, 'req.signup is undefined');
-  }
-
-  logger.verbose(`user:${req.user._id} campaign:${req.campaign.id} signup:${req.signup._id}`);
-  newrelic.addCustomParameters({ signupId: req.signup._id });
-
-  return next();
-});
+router.use(validateRequestMiddleware());
 
 /**
  * Check for non-reportback conversation messages first for sending reply message.
@@ -230,9 +192,7 @@ router.post('/', (req, res, next) => {
 router.post('/', (req, res) => {
   req.signup.postDraftReportbackSubmission()
     .then(() => {
-      if (req.timedout) {
-        return helpers.sendTimeoutResponse(res);
-      }
+      helpers.handleTimeout(req, res);
 
       return helpers.continueConversationWithMessageType(req, res, 'menu_completed');
     })

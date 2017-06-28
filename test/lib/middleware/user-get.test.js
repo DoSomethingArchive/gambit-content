@@ -27,7 +27,6 @@ const getUser = require('../../../lib/middleware/user-get');
 const sandbox = sinon.sandbox.create();
 
 // stubs
-const loggerStub = underscore.noop;
 const newrelicStub = underscore.noop;
 const handleTimeoutStub = underscore.noop;
 const sendErrorResponseStub = underscore.noop;
@@ -38,7 +37,7 @@ const trackUserMessageInDashbotStub = underscore.noop;
 
 // Setup!
 test.beforeEach((t) => {
-  sandbox.stub(logger, 'info').returns(loggerStub);
+  stubs.stubLogger(sandbox, logger);
   sandbox.stub(newrelic, 'addCustomParameters').returns(newrelicStub);
   sandbox.stub(helpers, 'trackUserMessageInDashbot').returns(trackUserMessageInDashbotStub);
   sandbox.stub(helpers, 'handleTimeout').returns(handleTimeoutStub);

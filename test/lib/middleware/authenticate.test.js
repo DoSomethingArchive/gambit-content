@@ -8,9 +8,11 @@ const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
 const httpMocks = require('node-mocks-http');
 const logger = require('winston');
+const underscore = require('underscore');
 
 const stathat = require('../../../lib/stathat');
 const config = require('../../../config/middleware/authenticate');
+const stubs = require('../../utils/stubs');
 
 // setup "x.should.y" assertion style
 chai.should();
@@ -23,13 +25,11 @@ const authenticateRequest = require('../../../lib/middleware/authenticate');
 const sandbox = sinon.sandbox.create();
 
 // stubs
-const loggerStub = () => true;
-const stathatStub = () => true;
+const stathatStub = underscore.noop;
 
 // Setup!
 test.beforeEach((t) => {
-  sandbox.stub(logger, 'info').returns(loggerStub);
-  sandbox.stub(logger, 'warn').returns(loggerStub);
+  stubs.stubLogger(sandbox, logger);
   sandbox.stub(stathat, 'postStat').returns(stathatStub);
 
   // setup res mock

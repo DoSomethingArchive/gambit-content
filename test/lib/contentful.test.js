@@ -45,8 +45,7 @@ const contentfulAPIStub = {
 
 // Setup!
 test.beforeEach(() => {
-  sandbox.stub(logger, 'error');
-  sandbox.stub(logger, 'debug');
+  stubs.stubLogger(sandbox, logger);
   sandbox.stub(stathat, 'postStat');
   sandbox.stub(contentfulAPI, 'createClient')
     .returns(contentfulAPIStub);
