@@ -6,6 +6,8 @@ const logger = require('winston');
 
 // Application modules
 const helpers = require('../../lib/helpers');
+const ReplyDispatcher = require('../../lib/conversation/reply-dispatcher');
+const replies = require('../../lib/conversation/replies');
 
 // configs
 const requiredParamsConf = require('../../config/middleware/chatbot/required-params');
@@ -23,9 +25,12 @@ const getPhoenixCampaignMiddleware = require('../../lib/middleware/phoenix-campa
 const getSignupMiddleware = require('../../lib/middleware/signup-get');
 const createNewSignupIfNotFoundMiddleware = require('../../lib/middleware/signup-create');
 const validateRequestMiddleware = require('../../lib/middleware/validate');
+const processUserSupportConversationMiddleware = require('../../lib/middleware/user-support-conversation');
 
 // Router
 const router = express.Router(); // eslint-disable-line new-cap
+
+const replyDispatcher = new ReplyDispatcher();
 
 /**
  * Check for required parameters,
@@ -70,16 +75,22 @@ router.use(
  */
 router.use(validateRequestMiddleware());
 
+
+/**
+ * Conversation Processing
+ */
+
+router.use(
+
+  /**
+   * If the user texts the support command we will process this request here
+   */
+  processUserSupportConversationMiddleware());
+
 /**
  * Check for non-reportback conversation messages first for sending reply message.
  */
 router.post('/', (req, res, next) => {
-  if (helpers.isCommand(req.incoming_message, 'member_support')) {
-    return helpers.endConversationWithMessageType(req, res, 'member_support');
-  }
-
-  req.isNewConversation = req.keyword || req.broadcast_id; // eslint-disable-line no-param-reassign
-
   // If user is reporting back, skip to next.
   if (req.signup.draft_reportback_submission) {
     return next();
@@ -87,24 +98,24 @@ router.post('/', (req, res, next) => {
 
   if (helpers.isCommand(req.incoming_message, 'reportback')) {
     return req.signup.createDraftReportbackSubmission()
-      .then(() => helpers.continueConversationWithMessageType(req, res, 'ask_quantity'))
+      .then(() => replyDispatcher.execute(replies.askQuantity({ req, res })))
       .catch(err => helpers.sendErrorResponse(res, err));
   }
 
   // If member has completed this campaign:
   if (req.signup.reportback) {
     if (req.isNewConversation) {
-      return helpers.continueConversationWithMessageType(req, res, 'menu_completed');
+      return replyDispatcher.execute(replies.menuCompleted({ req, res }));
     }
     // Otherwise member didn't text back a Reportback or Member Support command.
-    return helpers.continueConversationWithMessageType(req, res, 'invalid_cmd_completed');
+    return replyDispatcher.execute(replies.invalidCmdCompleted({ req, res }));
   }
 
   if (req.isNewConversation) {
-    return helpers.continueConversationWithMessageType(req, res, 'menu_signedup_gambit');
+    return replyDispatcher.execute(replies.menuSignedUp({ req, res }));
   }
 
-  return helpers.continueConversationWithMessageType(req, res, 'invalid_cmd_signedup');
+  return replyDispatcher.execute(replies.invalidCmdSignedup({ req, res }));
 });
 
 /**
@@ -117,40 +128,40 @@ router.post('/', (req, res, next) => {
 
   if (!draft.quantity) {
     if (req.isNewConversation) {
-      return helpers.continueConversationWithMessageType(req, res, 'ask_quantity');
+      return replyDispatcher.execute(replies.askQuantity({ req, res }));
     }
     if (!helpers.isValidReportbackQuantity(input)) {
-      return helpers.continueConversationWithMessageType(req, res, 'invalid_quantity');
+      return replyDispatcher.execute(replies.invalidQuantity({ req, res }));
     }
 
     draft.quantity = Number(input);
 
     return draft.save()
-      .then(() => helpers.continueConversationWithMessageType(req, res, 'ask_photo'))
+      .then(() => replyDispatcher.execute(replies.askPhoto({ req, res })))
       .catch(err => helpers.sendErrorResponse(res, err));
   }
 
   if (!draft.photo) {
     if (req.isNewConversation) {
-      return helpers.continueConversationWithMessageType(req, res, 'ask_photo');
+      return replyDispatcher.execute(replies.askPhoto({ req, res }));
     }
     if (!req.incoming_image_url) {
-      return helpers.continueConversationWithMessageType(req, res, 'no_photo_sent');
+      return replyDispatcher.execute(replies.noPhotoSent({ req, res }));
     }
 
     draft.photo = req.incoming_image_url;
 
     return draft.save()
-      .then(() => helpers.continueConversationWithMessageType(req, res, 'ask_caption'))
+      .then(() => replyDispatcher.execute(replies.askCaption({ req, res })))
       .catch(err => helpers.sendErrorResponse(res, err));
   }
 
   if (!draft.caption) {
     if (req.isNewConversation) {
-      return helpers.continueConversationWithMessageType(req, res, 'ask_caption');
+      return replyDispatcher.execute(replies.askCaption({ req, res }));
     }
     if (!helpers.isValidReportbackText(input)) {
-      return helpers.continueConversationWithMessageType(req, res, 'invalid_caption');
+      return replyDispatcher.execute(replies.invalidCaption({ req, res }));
     }
 
     draft.caption = helpers.trimReportbackText(input);
@@ -159,7 +170,7 @@ router.post('/', (req, res, next) => {
       .then(() => {
         // If member hasn't submitted a reportback yet, ask for why_participated.
         if (!req.signup.total_quantity_submitted) {
-          return helpers.continueConversationWithMessageType(req, res, 'ask_why_participated');
+          return replyDispatcher.execute(replies.askWhyParticipated({ req, res }));
         }
 
         // Otherwise skip to post reportback to DS API.
@@ -170,10 +181,10 @@ router.post('/', (req, res, next) => {
 
   if (!draft.why_participated) {
     if (req.isNewConversation) {
-      return helpers.continueConversationWithMessageType(req, res, 'ask_why_participated');
+      return replyDispatcher.execute(replies.askWhyParticipated({ req, res }));
     }
     if (!helpers.isValidReportbackText(input)) {
-      return helpers.continueConversationWithMessageType(req, res, 'invalid_why_participated');
+      return replyDispatcher.execute(replies.invalidWhyParticipated({ req, res }));
     }
 
     draft.why_participated = helpers.trimReportbackText(input);
@@ -194,7 +205,7 @@ router.post('/', (req, res) => {
     .then(() => {
       helpers.handleTimeout(req, res);
 
-      return helpers.continueConversationWithMessageType(req, res, 'menu_completed');
+      return replyDispatcher.execute(replies.menuCompleted({ req, res }));
     })
     .catch(err => helpers.handlePhoenixPostError(req, res, err));
 });
