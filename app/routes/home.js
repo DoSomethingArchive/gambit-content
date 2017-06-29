@@ -1,7 +1,7 @@
 'use strict';
 
 const express = require('express');
-const stathat = require('stathat');
+const stathat = require('../../lib/stathat.js');
 
 const router = express.Router();
 

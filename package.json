@@ -1,6 +1,6 @@
 {
   "name": "gambit",
-  "version": "4.5.1",
+  "version": "4.5.2",
   "description": "A DoSomething.org chatbot",
   "license": "MIT",
   "repository": {
@@ -47,6 +47,7 @@
     "body-parser": "^1.9.2",
     "connect-timeout": "^1.8.0",
     "contentful": "^3.8.0",
+    "dotenv": "^4.0.0",
     "emoji-strip": "^1.0.1",
     "express": "^4.10.2",
     "file-exists": "^4.0.0",
@@ -82,6 +83,7 @@
     "nyc": "^10.2.0",
     "rewire": "^2.5.2",
     "sinon": "^2.1.0",
-    "sinon-chai": "^2.9.0"
+    "sinon-chai": "^2.9.0",
+    "supertest": "^3.0.0"
   }
 }

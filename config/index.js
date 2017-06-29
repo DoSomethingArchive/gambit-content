@@ -3,8 +3,10 @@
 const underscore = require('underscore');
 const configExists = require('file-exists');
 
-const environment = process.env.NODE_ENV || 'development';
-const envConfigPath = `${__dirname}/env/${environment}`;
+// Load environment dependent config variables
+const localEnv = process.env.NODE_ENV || 'development';
+const environment = localEnv.toLowerCase();
+const envConfigPath = `${__dirname}/env/${environment}.js`;
 let envConfig = {};
 
 if (configExists.sync(envConfigPath)) {
@@ -12,6 +14,7 @@ if (configExists.sync(envConfigPath)) {
   envConfig = require(envConfigPath);
 }
 
+// Default config variables
 const defaultConfig = {
   environment,
   port: process.env.PORT || 5000,
