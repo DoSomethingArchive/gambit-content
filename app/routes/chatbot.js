@@ -30,8 +30,6 @@ const processUserSupportConversationMiddleware = require('../../lib/middleware/u
 // Router
 const router = express.Router(); // eslint-disable-line new-cap
 
-const replyDispatcher = new ReplyDispatcher();
-
 /**
  * Check for required parameters,
  * parse incoming params, and add/log helper variables.
@@ -98,24 +96,24 @@ router.post('/', (req, res, next) => {
 
   if (helpers.isCommand(req.incoming_message, 'reportback')) {
     return req.signup.createDraftReportbackSubmission()
-      .then(() => replyDispatcher.execute(replies.askQuantity({ req, res })))
+      .then(() => ReplyDispatcher.execute(replies.askQuantity({ req, res })))
       .catch(err => helpers.sendErrorResponse(res, err));
   }
 
   // If member has completed this campaign:
   if (req.signup.reportback) {
     if (req.isNewConversation) {
-      return replyDispatcher.execute(replies.menuCompleted({ req, res }));
+      return ReplyDispatcher.execute(replies.menuCompleted({ req, res }));
     }
     // Otherwise member didn't text back a Reportback or Member Support command.
-    return replyDispatcher.execute(replies.invalidCmdCompleted({ req, res }));
+    return ReplyDispatcher.execute(replies.invalidCmdCompleted({ req, res }));
   }
 
   if (req.isNewConversation) {
-    return replyDispatcher.execute(replies.menuSignedUp({ req, res }));
+    return ReplyDispatcher.execute(replies.menuSignedUp({ req, res }));
   }
 
-  return replyDispatcher.execute(replies.invalidCmdSignedup({ req, res }));
+  return ReplyDispatcher.execute(replies.invalidCmdSignedup({ req, res }));
 });
 
 /**
@@ -128,40 +126,40 @@ router.post('/', (req, res, next) => {
 
   if (!draft.quantity) {
     if (req.isNewConversation) {
-      return replyDispatcher.execute(replies.askQuantity({ req, res }));
+      return ReplyDispatcher.execute(replies.askQuantity({ req, res }));
     }
     if (!helpers.isValidReportbackQuantity(input)) {
-      return replyDispatcher.execute(replies.invalidQuantity({ req, res }));
+      return ReplyDispatcher.execute(replies.invalidQuantity({ req, res }));
     }
 
     draft.quantity = Number(input);
 
     return draft.save()
-      .then(() => replyDispatcher.execute(replies.askPhoto({ req, res })))
+      .then(() => ReplyDispatcher.execute(replies.askPhoto({ req, res })))
       .catch(err => helpers.sendErrorResponse(res, err));
   }
 
   if (!draft.photo) {
     if (req.isNewConversation) {
-      return replyDispatcher.execute(replies.askPhoto({ req, res }));
+      return ReplyDispatcher.execute(replies.askPhoto({ req, res }));
     }
     if (!req.incoming_image_url) {
-      return replyDispatcher.execute(replies.noPhotoSent({ req, res }));
+      return ReplyDispatcher.execute(replies.noPhotoSent({ req, res }));
     }
 
     draft.photo = req.incoming_image_url;
 
     return draft.save()
-      .then(() => replyDispatcher.execute(replies.askCaption({ req, res })))
+      .then(() => ReplyDispatcher.execute(replies.askCaption({ req, res })))
       .catch(err => helpers.sendErrorResponse(res, err));
   }
 
   if (!draft.caption) {
     if (req.isNewConversation) {
-      return replyDispatcher.execute(replies.askCaption({ req, res }));
+      return ReplyDispatcher.execute(replies.askCaption({ req, res }));
     }
     if (!helpers.isValidReportbackText(input)) {
-      return replyDispatcher.execute(replies.invalidCaption({ req, res }));
+      return ReplyDispatcher.execute(replies.invalidCaption({ req, res }));
     }
 
     draft.caption = helpers.trimReportbackText(input);
@@ -170,7 +168,7 @@ router.post('/', (req, res, next) => {
       .then(() => {
         // If member hasn't submitted a reportback yet, ask for why_participated.
         if (!req.signup.total_quantity_submitted) {
-          return replyDispatcher.execute(replies.askWhyParticipated({ req, res }));
+          return ReplyDispatcher.execute(replies.askWhyParticipated({ req, res }));
         }
 
         // Otherwise skip to post reportback to DS API.
@@ -181,10 +179,10 @@ router.post('/', (req, res, next) => {
 
   if (!draft.why_participated) {
     if (req.isNewConversation) {
-      return replyDispatcher.execute(replies.askWhyParticipated({ req, res }));
+      return ReplyDispatcher.execute(replies.askWhyParticipated({ req, res }));
     }
     if (!helpers.isValidReportbackText(input)) {
-      return replyDispatcher.execute(replies.invalidWhyParticipated({ req, res }));
+      return ReplyDispatcher.execute(replies.invalidWhyParticipated({ req, res }));
     }
 
     draft.why_participated = helpers.trimReportbackText(input);
@@ -205,7 +203,7 @@ router.post('/', (req, res) => {
     .then(() => {
       helpers.handleTimeout(req, res);
 
-      return replyDispatcher.execute(replies.menuCompleted({ req, res }));
+      return ReplyDispatcher.execute(replies.menuCompleted({ req, res }));
     })
     .catch(err => helpers.handlePhoenixPostError(req, res, err));
 });
