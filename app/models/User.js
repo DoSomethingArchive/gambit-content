@@ -28,6 +28,7 @@ const userSchema = new mongoose.Schema({
   first_name: String,
   // Campaign the user is currently participating in via chatbot.
   current_campaign: Number,
+  last_outbound_template: String,
 
 });
 
@@ -156,6 +157,12 @@ userSchema.methods.postDashbotIncoming = function (message) {
 
 userSchema.methods.postDashbotOutgoing = function (gambitMessageType) {
   this.postDashbot('outgoing', gambitMessageType);
+};
+
+userSchema.methods.setLastOutboundTemplate = function (messageTemplate) {
+  this.last_outbound_template = messageTemplate;
+
+  return this.save();
 };
 
 module.exports = mongoose.model('users', userSchema);
