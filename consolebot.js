@@ -17,11 +17,11 @@ const rl = readline.createInterface({
 // http://patorjk.com/software/taag/#p=display&f=ANSI%20Shadow&t=Gambit
 console.log('');
 console.log('');
-console.log(' ██████╗  █████╗ ███╗   ███╗██████╗ ██╗████████╗'.bold.magenta)
-console.log('██╔════╝ ██╔══██╗████╗ ████║██╔══██╗██║╚══██╔══╝'.bold.magenta)
-console.log('██║  ███╗███████║██╔████╔██║██████╔╝██║   ██║   '.bold.magenta)
-console.log('██║   ██║██╔══██║██║╚██╔╝██║██╔══██╗██║   ██║   '.bold.magenta)
-console.log('╚██████╔╝██║  ██║██║ ╚═╝ ██║██████╔╝██║   ██║   '.bold.magenta)
+console.log(' ██████╗  █████╗ ███╗   ███╗██████╗ ██╗████████╗'.bold.magenta);
+console.log('██╔════╝ ██╔══██╗████╗ ████║██╔══██╗██║╚══██╔══╝'.bold.magenta);
+console.log('██║  ███╗███████║██╔████╔██║██████╔╝██║   ██║   '.bold.magenta);
+console.log('██║   ██║██╔══██║██║╚██╔╝██║██╔══██╗██║   ██║   '.bold.magenta);
+console.log('╚██████╔╝██║  ██║██║ ╚═╝ ██║██████╔╝██║   ██║   '.bold.magenta);
 console.log(' ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚═════╝ ╚═╝   ╚═╝   '.bold.magenta);
 console.log('');
 console.log('');
@@ -31,7 +31,7 @@ rl.prompt();
 
 rl.on('line', (cmd) => {
   // Post to our local chatbot endpoint to chat.
-  return superagent
+  superagent
     .post(`http://localhost:${config.port}/v1/chatbot`)
     .set('x-gambit-api-key', config.apiKey)
     .send({
