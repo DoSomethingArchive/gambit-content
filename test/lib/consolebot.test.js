@@ -81,7 +81,7 @@ test('consolebot start should call prompt', () => {
   consolebot.prompt.should.have.been.called;
 });
 
-test('consolebot post should call reply', async () => {
+test('consolebot post should call reply on success', async () => {
   // setup
   const consolebot = new Consolebot(config);
   sandbox.spy(consolebot, 'reply');
@@ -94,6 +94,27 @@ test('consolebot post should call reply', async () => {
     .reply(200, {
       success: {
         message: 'Howdy.',
+      },
+    });
+
+  // test
+  await consolebot.post(msgType);
+  consolebot.reply.should.have.been.called;
+});
+
+test('consolebot post should call reply on error', async () => {
+  // setup
+  const consolebot = new Consolebot(config);
+  sandbox.spy(consolebot, 'reply');
+
+  const msgType = 'hello!';
+  nock(config.url)
+    .post('', {})
+    // nock will match any query params
+    .query(true)
+    .reply(500, {
+      error: {
+        message: 'Epic Fail :<',
       },
     });
 
