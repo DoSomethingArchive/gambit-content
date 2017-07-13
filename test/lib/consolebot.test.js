@@ -55,9 +55,37 @@ test('consolebot should respond to reply', () => {
   consolebot.should.respondTo('reply');
 });
 
-test('consolebot should call print on post', async () => {
+test('consolebot reply should call print', () => {
+  const consolebot = new Consolebot(config);
+  consolebot.reply('Hi again!');
+  Consolebot.print.should.have.been.called;
+});
+
+test('consolebot reply should call prompt', () => {
+  const consolebot = new Consolebot(config);
+  sandbox.spy(consolebot, 'prompt');
+  consolebot.reply('what up');
+  consolebot.prompt.should.have.been.called;
+});
+
+test('consolebot start should call print', () => {
+  const consolebot = new Consolebot(config);
+  consolebot.start();
+  Consolebot.print.should.have.been.called;
+});
+
+test('consolebot start should call prompt', () => {
+  const consolebot = new Consolebot(config);
+  sandbox.spy(consolebot, 'prompt');
+  consolebot.start();
+  consolebot.prompt.should.have.been.called;
+});
+
+test('consolebot post should call reply', async () => {
   // setup
   const consolebot = new Consolebot(config);
+  sandbox.spy(consolebot, 'reply');
+
   const msgType = 'hello!';
   nock(config.url)
     .post('', {})
@@ -71,5 +99,5 @@ test('consolebot should call print on post', async () => {
 
   // test
   await consolebot.post(msgType);
-  Consolebot.print.should.have.been.called;
+  consolebot.reply.should.have.been.called;
 });
