@@ -21,7 +21,6 @@ const defaultConfig = {
   webConcurrency: process.env.WEB_CONCURRENCY || 1,
   dbUri: process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder',
   apiKey: process.env.GAMBIT_API_KEY || 'totallysecret',
-  consoleBotPhone: process.env.GAMBIT_CONSOLEBOT_PHONE || 'consolebot',
 };
 
 const configVars = underscore.extend({}, defaultConfig, envConfig);
