@@ -46,10 +46,12 @@ test('consolebot should respond to post', () => {
   const consolebot = new Consolebot(config);
   consolebot.should.respondTo('post');
 });
+
 test('consolebot should respond to start', () => {
   const consolebot = new Consolebot(config);
   consolebot.should.respondTo('start');
 });
+
 test('consolebot should respond to reply', () => {
   const consolebot = new Consolebot(config);
   consolebot.should.respondTo('reply');
@@ -86,10 +88,9 @@ test('consolebot post should call reply on success', async () => {
   const consolebot = new Consolebot(config);
   sandbox.spy(consolebot, 'reply');
 
-  const msgType = 'hello!';
+  const text = 'hello!';
   nock(config.url)
     .post('', {})
-    // nock will match any query params
     .query(true)
     .reply(200, {
       success: {
@@ -98,7 +99,7 @@ test('consolebot post should call reply on success', async () => {
     });
 
   // test
-  await consolebot.post(msgType);
+  await consolebot.post(text);
   consolebot.reply.should.have.been.called;
 });
 
@@ -107,10 +108,9 @@ test('consolebot post should call reply on error', async () => {
   const consolebot = new Consolebot(config);
   sandbox.spy(consolebot, 'reply');
 
-  const msgType = 'hello!';
+  const text = 'hi!';
   nock(config.url)
     .post('', {})
-    // nock will match any query params
     .query(true)
     .reply(500, {
       error: {
@@ -118,7 +118,6 @@ test('consolebot post should call reply on error', async () => {
       },
     });
 
-  // test
-  await consolebot.post(msgType);
+  await consolebot.post(text);
   consolebot.reply.should.have.been.called;
 });

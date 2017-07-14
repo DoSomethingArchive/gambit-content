@@ -1,7 +1,7 @@
 'use strict';
 
 require('dotenv').config();
-const appConfig = require('../');
+const appConfig = require('../../');
 
 const configVars = {
   apiKey: appConfig.apiKey,
