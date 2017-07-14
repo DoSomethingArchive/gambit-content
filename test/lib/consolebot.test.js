@@ -10,6 +10,7 @@ const sinonChai = require('sinon-chai');
 const httpMocks = require('node-mocks-http');
 const sinon = require('sinon');
 const nock = require('nock');
+const underscore = require('underscore');
 
 const readline = require('readline');
 
@@ -50,6 +51,15 @@ test.afterEach((t) => {
 });
 
 // Tests
+test('consolebot should throw error when config.phone is undefined', (t) => {
+  const testConfig = underscore.extend({}, config, {
+    phone: undefined,
+  });
+//  const consolebot = () => new Consolebot(testConfig);
+  const error = t.throws(() => new Consolebot(testConfig), Error);
+  t.is(error.message, 'phone undefined');
+});
+
 test('consolebot should respond to post', () => {
   const consolebot = new Consolebot(config);
   consolebot.should.respondTo('post');

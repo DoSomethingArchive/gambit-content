@@ -2,5 +2,10 @@
 
 const Consolebot = require('./lib/consolebot');
 
-const bot = new Consolebot();
-bot.start();
+try {
+  const bot = new Consolebot();
+  bot.start();
+} catch (err) {
+  Consolebot.print('Epic fail:', err.message);
+  process.exit(0);
+}
