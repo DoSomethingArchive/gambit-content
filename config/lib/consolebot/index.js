@@ -1,10 +1,13 @@
 'use strict';
 
+const path = require('path');
+
 require('dotenv').config();
 const appConfig = require('../../');
 
 const configVars = {
   apiKey: appConfig.apiKey,
+  introFilePath: path.resolve(__dirname, 'intro.txt'),
   phone: process.env.GAMBIT_CONSOLEBOT_PHONE || 'consolebot',
   prompt: process.env.GAMBIT_CONSOLEBOT_PROMPT || 'You>',
   replyPrefix: process.env.GAMBIT_CONSOLEBOT_REPLY_PREFIX || 'Bot>',

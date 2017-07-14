@@ -11,6 +11,8 @@ const httpMocks = require('node-mocks-http');
 const sinon = require('sinon');
 const nock = require('nock');
 
+const readline = require('readline');
+
 const stubs = require('../utils/stubs.js');
 const config = require('../../config/lib/consolebot');
 
@@ -57,34 +59,33 @@ test('consolebot should respond to reply', () => {
   consolebot.should.respondTo('reply');
 });
 
-test('consolebot reply should call print', () => {
+test('constructor should call readline.createInterface', () => {
+  sandbox.spy(readline, 'createInterface');
+  const consolebot = new Consolebot(config); // eslint-disable-line no-unused-vars
+  readline.createInterface.should.have.been.called;
+});
+
+test('reply should call print', () => {
   const consolebot = new Consolebot(config);
   consolebot.reply('Hi again!');
   Consolebot.print.should.have.been.called;
 });
 
-test('consolebot reply should call prompt', () => {
+test('reply should call prompt', () => {
   const consolebot = new Consolebot(config);
   sandbox.spy(consolebot, 'prompt');
   consolebot.reply('what up');
   consolebot.prompt.should.have.been.called;
 });
 
-test('consolebot start should call print', () => {
+test('start should call readline.createInterface', () => {
   const consolebot = new Consolebot(config);
+  sandbox.spy(readline, 'createInterface');
   consolebot.start();
-  Consolebot.print.should.have.been.called;
+  readline.createInterface.should.have.been.called;
 });
 
-test('consolebot start should call prompt', () => {
-  const consolebot = new Consolebot(config);
-  sandbox.spy(consolebot, 'prompt');
-  consolebot.start();
-  consolebot.prompt.should.have.been.called;
-});
-
-test('consolebot post should call reply on success', async () => {
-  // setup
+test('post should call reply on success', async () => {
   const consolebot = new Consolebot(config);
   sandbox.spy(consolebot, 'reply');
 
@@ -104,7 +105,6 @@ test('consolebot post should call reply on success', async () => {
 });
 
 test('consolebot post should call reply on error', async () => {
-  // setup
   const consolebot = new Consolebot(config);
   sandbox.spy(consolebot, 'reply');
 
