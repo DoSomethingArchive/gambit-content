@@ -49,6 +49,11 @@ test('consolebot should respond to post', () => {
   consolebot.should.respondTo('post');
 });
 
+test('consolebot should respond to prompt', () => {
+  const consolebot = new Consolebot(config);
+  consolebot.should.respondTo('prompt');
+});
+
 test('consolebot should respond to start', () => {
   const consolebot = new Consolebot(config);
   consolebot.should.respondTo('start');
