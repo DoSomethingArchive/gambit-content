@@ -159,8 +159,16 @@ userSchema.methods.postDashbotOutgoing = function (gambitMessageType) {
   this.postDashbot('outgoing', gambitMessageType);
 };
 
-userSchema.methods.setLastOutboundTemplate = function (messageTemplate) {
-  this.last_outbound_template = messageTemplate;
+/**
+ * @param {string} messageTemplate
+ * @param {number} campaignId
+ */
+userSchema.methods.updateConversation = function (outboundTemplate, campaignId) {
+  this.last_outbound_template = outboundTemplate;
+
+  if (campaignId && campaignId !== this.current_campaign) {
+    this.current_campaign = campaignId;
+  }
 
   return this.save();
 };
