@@ -28,22 +28,28 @@ const sandbox = sinon.sandbox.create();
 const Consolebot = require('../../lib/consolebot');
 
 // Setup
+const defaultMaxListeners = process.stdin.getMaxListeners();
+
 test.beforeEach((t) => {
   stubs.stubLogger(sandbox, logger);
   sandbox.spy(Consolebot, 'print');
 
-  // setup req, res mocks
   t.context.req = httpMocks.createRequest();
   t.context.res = httpMocks.createResponse();
+
+  // Each test usually adds a console bot instance, aka another listener.
+  // Bump this to avoid MaxListenersExceededWarning.
+  process.stdin.setMaxListeners(defaultMaxListeners + 1);
 });
 
-// Cleanup
 test.afterEach((t) => {
   // reset stubs, spies, and mocks
   sandbox.restore();
   t.context = {};
+  process.stdin.setMaxListeners(defaultMaxListeners);
 });
 
+// Tests
 test('consolebot should respond to post', () => {
   const consolebot = new Consolebot(config);
   consolebot.should.respondTo('post');
