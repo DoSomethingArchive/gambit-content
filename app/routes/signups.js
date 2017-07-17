@@ -10,11 +10,12 @@ const contentful = require('../../lib/contentful');
 const helpers = require('../../lib/helpers');
 const phoenix = require('../../lib/phoenix');
 const stathat = require('../../lib/stathat');
+const ReplyDispatcher = require('../../lib/conversation/reply-dispatcher');
+const replies = require('../../lib/conversation/replies');
+
 const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
 const Signup = require('../models/Signup');
 const User = require('../models/User');
-
-const OUTGOING_MESSAGE_TYPE = 'menu_signedup_external';
 
 /**
  * Validate required body parameters.
@@ -52,7 +53,11 @@ router.use((req, res, next) => {
         return helpers.sendTimeoutResponse(res);
       }
 
-      req.signup = signup; // eslint-disable-line no-param-reassign
+      /* eslint-disable no-param-reassign */
+      req.signup = signup;
+      req.campaignId = req.signup.campaign;
+      req.userId = req.signup.user;
+      /* eslint-enable no-param-reassign */
 
       return next();
     })
@@ -63,7 +68,7 @@ router.use((req, res, next) => {
  * Check that Signup is for an active Campaign.
  */
 router.use((req, res, next) => {
-  phoenix.fetchCampaign(req.signup.campaign)
+  phoenix.fetchCampaign(req.campaignId)
     .then((phoenixCampaign) => {
       if (req.timedout) {
         return helpers.sendTimeoutResponse(res);
@@ -75,7 +80,7 @@ router.use((req, res, next) => {
       }
 
       req.campaign = phoenixCampaign; // eslint-disable-line no-param-reassign
-      newrelic.addCustomParameters({ campaignId: req.campaign.id });
+      newrelic.addCustomParameters({ campaignId: req.campaignId });
 
       return next();
     })
@@ -86,14 +91,14 @@ router.use((req, res, next) => {
  * Check that Campaign has published keywords.
  */
 router.use((req, res, next) => {
-  contentful.fetchKeywordsForCampaignId(req.campaign.id)
+  contentful.fetchKeywordsForCampaignId(req.campaignId)
     .then((keywords) => {
       if (req.timedout) {
         return helpers.sendTimeoutResponse(res);
       }
 
       if (keywords.length === 0) {
-        const msg = `Campaign ${req.campaign.id} does not have any Gambit keywords.`;
+        const msg = `Campaign ${req.campaignId} does not have any Gambit keywords.`;
         return helpers.sendUnproccessibleEntityResponse(res, msg);
       }
 
@@ -106,7 +111,7 @@ router.use((req, res, next) => {
  * Check that the Signup User has a mobile number.
  */
 router.use((req, res, next) => {
-  User.lookup('id', req.signup.user)
+  User.lookup('id', req.userId)
     .then((user) => {
       if (req.timedout) {
         return helpers.sendTimeoutResponse(res);
@@ -116,38 +121,11 @@ router.use((req, res, next) => {
       }
 
       req.user = user; // eslint-disable-line no-param-reassign
-      newrelic.addCustomParameters({ userId: req.user.id });
+      newrelic.addCustomParameters({ userId: req.userId });
 
       return next();
     })
     .catch(err => helpers.sendErrorResponse(res, err));
-});
-
-/**
- * Render the External Signup Message.
- */
-router.use((req, res, next) => {
-  contentful.renderMessageForPhoenixCampaign(req.campaign, OUTGOING_MESSAGE_TYPE)
-    .then((message) => {
-      if (req.timedout) {
-        return helpers.sendTimeoutResponse(res);
-      }
-
-      req.signupMessage = helpers.addSenderPrefix(message); // eslint-disable-line no-param-reassign
-
-      return next();
-    })
-    .catch(err => helpers.sendErrorResponse(res, err));
-});
-
-/**
- * Set User's current campaign to the Signup campaign.
- * TODO: Refactor to set current_campaign upon user.postMobileCommonsProfileUpdate success.
- */
-router.use((req, res, next) => {
-  req.user.current_campaign = req.campaign.id; // eslint-disable-line no-param-reassign
-  req.user.save();
-  next();
 });
 
 /**
@@ -157,17 +135,12 @@ router.post('/', (req, res) => {
   if (req.timedout) {
     return helpers.sendTimeoutResponse(res);
   }
-  // TODO: Promisify postMobileCommonsProfileUpdate and send success if we know the
-  // Mobile Commons Profile Update request succeeded.
-  try {
-    const oip = process.env.MOBILECOMMONS_OIP_CHATBOT;
-    req.user.postMobileCommonsProfileUpdate(oip, req.signupMessage);
-    req.user.postDashbotOutgoing(OUTGOING_MESSAGE_TYPE);
 
-    return helpers.sendResponse(res, 200, req.signupMessage);
-  } catch (err) {
-    return helpers.sendErrorResponse(res, err);
-  }
+  // Set req.client to use when ReplyDispatcher creates a BotRequest model.
+  // @see lib/middleware/map-request-params.
+  req.client = 'signups-api';
+
+  return ReplyDispatcher.execute(replies.externalSignupMenu({ req, res }));
 });
 
 module.exports = router;
