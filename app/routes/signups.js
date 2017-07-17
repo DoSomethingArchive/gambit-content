@@ -17,20 +17,24 @@ const ClosedCampaignError = require('../exceptions/ClosedCampaignError');
 const Signup = require('../models/Signup');
 const User = require('../models/User');
 
+// Config
+const requiredParamsConf = require('../../config/middleware/signups/required-params');
+
+// Middleware
+const requiredParamsMiddleware = require('../../lib/middleware/required-params');
+
+
+/**
+ * Validate required body parameters.
+ */
+router.use(requiredParamsMiddleware(requiredParamsConf));
+
 /**
  * Validate required body parameters.
  */
 router.use((req, res, next) => {
   stathat.postStat('route: v1/signups');
   logger.debug(`signups post:${JSON.stringify(req.body)}`);
-
-  if (!req.body.id) {
-    return helpers.sendUnproccessibleEntityResponse(res, 'Missing required id.');
-  }
-
-  if (!req.body.source) {
-    return helpers.sendUnproccessibleEntityResponse(res, 'Missing required source.');
-  }
 
   newrelic.addCustomParameters({ signupId: req.body.id });
   const source = req.body.source;
