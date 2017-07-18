@@ -114,6 +114,15 @@ router.get('/:id', (req, res) => {
     .catch(err => helpers.sendErrorResponse(res, err));
 });
 
+// Config
+const requiredParamsConf = require('../../config/middleware/campaigns/required-params');
+
+// Middleware
+const requiredParamsMiddleware = require('../../lib/middleware/required-params');
+
+// Check for required body params.
+router.use(requiredParamsMiddleware(requiredParamsConf));
+
 /**
  * POST /:id/message: Sends SMS message to given mobile with the given Campaign and message type.
  *
@@ -128,12 +137,6 @@ router.post('/:id/message', (req, res, next) => {
   req.messageType = req.body.type;
   /* eslint-enable no-param-reassign */
 
-  if (!req.campaignId) {
-    return helpers.sendUnproccessibleEntityResponse(res, 'Missing required campaign id.');
-  }
-  if (!req.phone) {
-    return helpers.sendUnproccessibleEntityResponse(res, 'Missing required phone parameter.');
-  }
   if (!req.messageType) {
     return helpers.sendUnproccessibleEntityResponse(res, 'Missing required type parameter.');
   }
