@@ -41,7 +41,6 @@
   "dependencies": {
     "@dosomething/northstar-js": "git://github.com/DoSomething/northstar-js.git",
     "@dosomething/phoenix-js": "git://github.com/DoSomething/phoenix-js.git",
-    "@newrelic/native-metrics": "^2.1.0",
     "aws-sdk": "2.36.0",
     "bluebird": "^3.4.6",
     "body-parser": "^1.9.2",
@@ -54,7 +53,7 @@
     "file-exists": "^4.0.0",
     "html-entities": "^1.1.1",
     "mongoose": "~4.6.1",
-    "newrelic": "1.38.x",
+    "newrelic": "2.0.0",
     "node-request-retry": "^1.0.0",
     "path": "~0.4.9",
     "request": "2.34.x",
