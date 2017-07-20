@@ -57,7 +57,7 @@ botRequestSchema.statics.log = function (req, botType, msgType, msg) {
     data.user_id = req.user._id;
   }
   if (req.campaign) {
-    data.campaign_id = req.campaign._id;
+    data.campaign_id = req.campaign.id;
   }
   data.bot_type = botType;
   data.bot_response_type = msgType;
@@ -69,7 +69,7 @@ botRequestSchema.statics.log = function (req, botType, msgType, msg) {
 
       return doc;
     })
-    .catch(err => logger.err(`BotRequest error:${err.message}`));
+    .catch(err => logger.error(`BotRequest error:${err.message}`));
 };
 
 module.exports = mongoose.model('bot_requests', botRequestSchema);

@@ -28,6 +28,12 @@ const userSchema = new mongoose.Schema({
   first_name: String,
   // Campaign the user is currently participating in via chatbot.
   current_campaign: Number,
+  signup_status: {
+    type: String,
+    // Eventually we'll be adding other values here like 'prompt, 'declined' to build out handling
+    // No or Invalid responses to a Ask Signup Message Template message (broadcasts, campaign menu).
+    enum: ['doing'],
+  },
   last_outbound_template: String,
 
 });
@@ -159,8 +165,17 @@ userSchema.methods.postDashbotOutgoing = function (gambitMessageType) {
   this.postDashbot('outgoing', gambitMessageType);
 };
 
-userSchema.methods.setLastOutboundTemplate = function (messageTemplate) {
-  this.last_outbound_template = messageTemplate;
+/**
+ * @param {string} messageTemplate
+ * @param {number} campaignId
+ */
+userSchema.methods.updateConversation = function (outboundTemplate, campaignId) {
+  this.last_outbound_template = outboundTemplate;
+
+  if (campaignId && campaignId !== this.current_campaign) {
+    this.current_campaign = campaignId;
+    this.signup_status = 'doing';
+  }
 
   return this.save();
 };
