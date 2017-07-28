@@ -140,3 +140,30 @@ test('consolebot post should call reply on error', async () => {
   await consolebot.post(consolebotPostArgs);
   consolebot.reply.should.have.been.called;
 });
+
+const testbot = new Consolebot(config);
+
+test('consolebot parseInput should return an object with args when no command found', (t) => {
+  const testString = 'hi';
+  const expected = {
+    args: testString,
+  };
+  t.deepEqual(testbot.parseInput(testString), expected);
+});
+
+test('consolebot parseInput should return an object with keyword when keyword command', (t) => {
+  const testKeyword = 'hi';
+  const testString = `keyword:${testKeyword}`;
+  const expected = {
+    keyword: testKeyword,
+  };
+  t.deepEqual(testbot.parseInput(testString), expected);
+});
+
+test('consolebot parseInput should return an object with mms_image_url when photo command', (t) => {
+  const testString = 'photo';
+  const expected = {
+    mms_image_url: config.photoUrl,
+  };
+  t.deepEqual(testbot.parseInput(testString), expected);
+});
