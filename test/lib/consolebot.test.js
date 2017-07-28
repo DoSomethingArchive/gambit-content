@@ -14,10 +14,10 @@ const underscore = require('underscore');
 
 const readline = require('readline');
 
-const stubs = require('../utils/stubs.js');
-const config = require('../../config/lib/consolebot');
-
 // stubs
+const stubs = require('../utils/stubs.js');
+
+const consolebotPostArgs = stubs.consolebot.getPostArgs();
 
 // setup "x.should.y" assertion style
 chai.should();
@@ -26,6 +26,7 @@ chai.use(sinonChai);
 const sandbox = sinon.sandbox.create();
 
 // Module to test
+const config = require('../../config/lib/consolebot');
 const Consolebot = require('../../lib/consolebot');
 
 // Setup
@@ -109,7 +110,6 @@ test('post should call reply on success', async () => {
   const consolebot = new Consolebot(config);
   sandbox.spy(consolebot, 'reply');
 
-  const text = 'hello!';
   nock(config.url)
     .post('', {})
     .query(true)
@@ -120,7 +120,7 @@ test('post should call reply on success', async () => {
     });
 
   // test
-  await consolebot.post(text);
+  await consolebot.post(consolebotPostArgs);
   consolebot.reply.should.have.been.called;
 });
 
@@ -128,7 +128,6 @@ test('consolebot post should call reply on error', async () => {
   const consolebot = new Consolebot(config);
   sandbox.spy(consolebot, 'reply');
 
-  const text = 'hi!';
   nock(config.url)
     .post('', {})
     .query(true)
@@ -138,6 +137,6 @@ test('consolebot post should call reply on error', async () => {
       },
     });
 
-  await consolebot.post(text);
+  await consolebot.post(consolebotPostArgs);
   consolebot.reply.should.have.been.called;
 });
