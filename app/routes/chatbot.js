@@ -2,11 +2,6 @@
 
 const express = require('express');
 
-// Application modules
-const helpers = require('../../lib/helpers');
-const ReplyDispatcher = require('../../lib/conversation/reply-dispatcher');
-const replies = require('../../lib/conversation/replies');
-
 // configs
 const requiredParamsConf = require('../../config/middleware/chatbot/required-params');
 const userIncomingMessageConf = require('../../config/middleware/chatbot/user-incoming-message');
@@ -30,6 +25,7 @@ const draftSubmissionQuantityMiddleware = require('../../lib/middleware/draft-qu
 const draftSubmissionPhotoMiddleware = require('../../lib/middleware/draft-photo');
 const draftSubmissionCaptionMiddleware = require('../../lib/middleware/draft-caption');
 const draftSubmissionWhyParticipatedMiddleware = require('../../lib/middleware/draft-why-participated');
+const postDraftSubmissionMiddleware = require('../../lib/middleware/draft-completed');
 
 // Router
 const router = express.Router(); // eslint-disable-line new-cap
@@ -110,14 +106,6 @@ router.use(draftSubmissionWhyParticipatedMiddleware());
 /**
  * Post complete submission to the DS Phoenix API.
  */
-router.post('/', (req, res) => {
-  req.signup.postDraftReportbackSubmission()
-    .then(() => {
-      helpers.handleTimeout(req, res);
-
-      return ReplyDispatcher.execute(replies.menuCompleted({ req, res }));
-    })
-    .catch(err => helpers.handlePhoenixPostError(req, res, err));
-});
+router.use(postDraftSubmissionMiddleware());
 
 module.exports = router;
