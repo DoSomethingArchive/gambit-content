@@ -1,8 +1,6 @@
 'use strict';
 
-// Third party modules
 const express = require('express');
-const logger = require('winston');
 
 // Application modules
 const helpers = require('../../lib/helpers');
@@ -31,6 +29,7 @@ const sendSignupMenuIfDraftNotFoundMiddleware = require('../../lib/middleware/si
 const draftSubmissionQuantityMiddleware = require('../../lib/middleware/draft-quantity');
 const draftSubmissionPhotoMiddleware = require('../../lib/middleware/draft-photo');
 const draftSubmissionCaptionMiddleware = require('../../lib/middleware/draft-caption');
+const draftSubmissionWhyParticipatedMiddleware = require('../../lib/middleware/draft-why-participated');
 
 // Router
 const router = express.Router(); // eslint-disable-line new-cap
@@ -106,35 +105,10 @@ router.use(sendSignupMenuIfDraftNotFoundMiddleware());
 router.use(draftSubmissionQuantityMiddleware());
 router.use(draftSubmissionPhotoMiddleware());
 router.use(draftSubmissionCaptionMiddleware());
+router.use(draftSubmissionWhyParticipatedMiddleware());
 
 /**
- * Find message type to reply with based on current Reportback Submission and data submitted in req.
- */
-router.post('/', (req, res, next) => {
-  const draft = req.signup.draft_reportback_submission;
-  const input = req.incoming_message;
-  logger.debug(`draft_reportback_submission:${draft._id}`);
-
-  if (!draft.why_participated) {
-    if (req.isNewConversation) {
-      return ReplyDispatcher.execute(replies.askWhyParticipated({ req, res }));
-    }
-    if (!helpers.isValidReportbackText(input)) {
-      return ReplyDispatcher.execute(replies.invalidWhyParticipated({ req, res }));
-    }
-
-    draft.why_participated = helpers.trimReportbackText(input);
-
-    return draft.save()
-      .then(() => next())
-      .catch(err => helpers.sendErrorResponse(res, err));
-  }
-
-  return next();
-});
-
-/**
- * If we've made it this far, time to submit the completed draft reportback submission.
+ * Post complete submission to the DS Phoenix API.
  */
 router.post('/', (req, res) => {
   req.signup.postDraftReportbackSubmission()
