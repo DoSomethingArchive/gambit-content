@@ -30,7 +30,7 @@ const createDraftSubmissionMiddleware = require('../../lib/middleware/draft-crea
 const sendSignupMenuIfDraftNotFoundMiddleware = require('../../lib/middleware/signup-menu');
 const draftSubmissionQuantityMiddleware = require('../../lib/middleware/draft-quantity');
 const draftSubmissionPhotoMiddleware = require('../../lib/middleware/draft-photo');
-
+const draftSubmissionCaptionMiddleware = require('../../lib/middleware/draft-caption');
 
 // Router
 const router = express.Router(); // eslint-disable-line new-cap
@@ -105,7 +105,7 @@ router.use(sendSignupMenuIfDraftNotFoundMiddleware());
  */
 router.use(draftSubmissionQuantityMiddleware());
 router.use(draftSubmissionPhotoMiddleware());
-
+router.use(draftSubmissionCaptionMiddleware());
 
 /**
  * Find message type to reply with based on current Reportback Submission and data submitted in req.
@@ -114,29 +114,6 @@ router.post('/', (req, res, next) => {
   const draft = req.signup.draft_reportback_submission;
   const input = req.incoming_message;
   logger.debug(`draft_reportback_submission:${draft._id}`);
-
-  if (!draft.caption) {
-    if (req.isNewConversation) {
-      return ReplyDispatcher.execute(replies.askCaption({ req, res }));
-    }
-    if (!helpers.isValidReportbackText(input)) {
-      return ReplyDispatcher.execute(replies.invalidCaption({ req, res }));
-    }
-
-    draft.caption = helpers.trimReportbackText(input);
-
-    return draft.save()
-      .then(() => {
-        // If member hasn't submitted a reportback yet, ask for why_participated.
-        if (!req.signup.total_quantity_submitted) {
-          return ReplyDispatcher.execute(replies.askWhyParticipated({ req, res }));
-        }
-
-        // Otherwise skip to post reportback to DS API.
-        return next();
-      })
-      .catch(err => helpers.sendErrorResponse(res, err));
-  }
 
   if (!draft.why_participated) {
     if (req.isNewConversation) {
