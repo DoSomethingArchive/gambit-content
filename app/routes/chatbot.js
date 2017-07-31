@@ -26,6 +26,8 @@ const getSignupMiddleware = require('../../lib/middleware/signup-get');
 const createNewSignupIfNotFoundMiddleware = require('../../lib/middleware/signup-create');
 const validateRequestMiddleware = require('../../lib/middleware/validate');
 const processUserSupportConversationMiddleware = require('../../lib/middleware/user-support-conversation');
+const createDraftSubmissionMiddleware = require('../../lib/middleware/draft-create');
+const sendSignupMenuMiddleware = require('../../lib/middleware/send-signup-menu');
 
 // Router
 const router = express.Router(); // eslint-disable-line new-cap
@@ -86,35 +88,14 @@ router.use(
   processUserSupportConversationMiddleware());
 
 /**
- * Check for non-reportback conversation messages first for sending reply message.
+ * Checks Signup for existing draft, or creates draft when User has completed the Campaign.
  */
-router.post('/', (req, res, next) => {
-  // If user is reporting back, skip to next.
-  if (req.signup.draft_reportback_submission) {
-    return next();
-  }
+router.use(createDraftSubmissionMiddleware());
 
-  if (helpers.isCommand(req.incoming_message, 'reportback')) {
-    return req.signup.createDraftReportbackSubmission()
-      .then(() => ReplyDispatcher.execute(replies.askQuantity({ req, res })))
-      .catch(err => helpers.sendErrorResponse(res, err));
-  }
-
-  // If member has completed this campaign:
-  if (req.signup.reportback) {
-    if (req.isNewConversation) {
-      return ReplyDispatcher.execute(replies.menuCompleted({ req, res }));
-    }
-    // Otherwise member didn't text back a Reportback or Member Support command.
-    return ReplyDispatcher.execute(replies.invalidCmdCompleted({ req, res }));
-  }
-
-  if (req.isNewConversation) {
-    return ReplyDispatcher.execute(replies.menuSignedUp({ req, res }));
-  }
-
-  return ReplyDispatcher.execute(replies.invalidCmdSignedup({ req, res }));
-});
+/**
+ * If there's no Draft, send the Signup Menus.
+ */
+router.use(sendSignupMenuMiddleware());
 
 /**
  * Find message type to reply with based on current Reportback Submission and data submitted in req.
