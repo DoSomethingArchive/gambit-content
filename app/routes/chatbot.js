@@ -20,7 +20,8 @@ const createNewSignupIfNotFoundMiddleware = require('../../lib/middleware/signup
 const validateRequestMiddleware = require('../../lib/middleware/validate');
 const processUserSupportConversationMiddleware = require('../../lib/middleware/user-support-conversation');
 const createDraftSubmissionMiddleware = require('../../lib/middleware/draft-create');
-const sendSignupMenuIfDraftNotFoundMiddleware = require('../../lib/middleware/signup-menu');
+const completedMenuMiddleware = require('../../lib/middleware/menu-completed');
+const doingMenuMiddleware = require('../../lib/middleware/menu-doing');
 const draftSubmissionQuantityMiddleware = require('../../lib/middleware/draft-quantity');
 const draftSubmissionPhotoMiddleware = require('../../lib/middleware/draft-photo');
 const draftSubmissionCaptionMiddleware = require('../../lib/middleware/draft-caption');
@@ -91,9 +92,10 @@ router.use(
 router.use(createDraftSubmissionMiddleware());
 
 /**
- * If there's no Draft, send the Signup Menus.
+ * If there's no Draft, send the relevant Menus.
  */
-router.use(sendSignupMenuIfDraftNotFoundMiddleware());
+router.use(completedMenuMiddleware());
+router.use(doingMenuMiddleware());
 
 /**
  * Collect data for our Reportback Submission.
