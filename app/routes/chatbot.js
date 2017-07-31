@@ -27,7 +27,10 @@ const createNewSignupIfNotFoundMiddleware = require('../../lib/middleware/signup
 const validateRequestMiddleware = require('../../lib/middleware/validate');
 const processUserSupportConversationMiddleware = require('../../lib/middleware/user-support-conversation');
 const createDraftSubmissionMiddleware = require('../../lib/middleware/draft-create');
-const sendSignupMenuMiddleware = require('../../lib/middleware/send-signup-menu');
+const sendSignupMenuIfDraftNotFoundMiddleware = require('../../lib/middleware/signup-menu');
+const draftSubmissionQuantityMiddleware = require('../../lib/middleware/draft-quantity');
+const draftSubmissionPhotoMiddleware = require('../../lib/middleware/draft-photo');
+
 
 // Router
 const router = express.Router(); // eslint-disable-line new-cap
@@ -95,7 +98,14 @@ router.use(createDraftSubmissionMiddleware());
 /**
  * If there's no Draft, send the Signup Menus.
  */
-router.use(sendSignupMenuMiddleware());
+router.use(sendSignupMenuIfDraftNotFoundMiddleware());
+
+/**
+ * Collect data for our Reportback Submission.
+ */
+router.use(draftSubmissionQuantityMiddleware());
+router.use(draftSubmissionPhotoMiddleware());
+
 
 /**
  * Find message type to reply with based on current Reportback Submission and data submitted in req.
@@ -104,36 +114,6 @@ router.post('/', (req, res, next) => {
   const draft = req.signup.draft_reportback_submission;
   const input = req.incoming_message;
   logger.debug(`draft_reportback_submission:${draft._id}`);
-
-  if (!draft.quantity) {
-    if (req.isNewConversation) {
-      return ReplyDispatcher.execute(replies.askQuantity({ req, res }));
-    }
-    if (!helpers.isValidReportbackQuantity(input)) {
-      return ReplyDispatcher.execute(replies.invalidQuantity({ req, res }));
-    }
-
-    draft.quantity = Number(input);
-
-    return draft.save()
-      .then(() => ReplyDispatcher.execute(replies.askPhoto({ req, res })))
-      .catch(err => helpers.sendErrorResponse(res, err));
-  }
-
-  if (!draft.photo) {
-    if (req.isNewConversation) {
-      return ReplyDispatcher.execute(replies.askPhoto({ req, res }));
-    }
-    if (!req.incoming_image_url) {
-      return ReplyDispatcher.execute(replies.noPhotoSent({ req, res }));
-    }
-
-    draft.photo = req.incoming_image_url;
-
-    return draft.save()
-      .then(() => ReplyDispatcher.execute(replies.askCaption({ req, res })))
-      .catch(err => helpers.sendErrorResponse(res, err));
-  }
 
   if (!draft.caption) {
     if (req.isNewConversation) {
