@@ -39,16 +39,16 @@ test.beforeEach((t) => {
   t.context.req = httpMocks.createRequest();
   t.context.res = httpMocks.createResponse();
 
-  // Each test usually adds a console bot instance, aka another listener.
-  // Bump this to avoid MaxListenersExceededWarning.
-  process.stdin.setMaxListeners(defaultMaxListeners + 1);
+  // Set unlimited to avoid MaxListenersExceededWarning.
+  // @see https://stackoverflow.com/a/26176922/1470725
+  require('events').EventEmitter.defaultMaxListeners = 0;
 });
 
 test.afterEach((t) => {
   // reset stubs, spies, and mocks
   sandbox.restore();
   t.context = {};
-  process.stdin.setMaxListeners(defaultMaxListeners);
+  require('events').EventEmitter.defaultMaxListeners = defaultMaxListeners;
 });
 
 // Tests
