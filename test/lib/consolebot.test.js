@@ -14,10 +14,10 @@ const underscore = require('underscore');
 
 const readline = require('readline');
 
-const stubs = require('../utils/stubs.js');
-const config = require('../../config/lib/consolebot');
-
 // stubs
+const stubs = require('../utils/stubs.js');
+
+const consolebotPostArgs = stubs.consolebot.getPostArgs();
 
 // setup "x.should.y" assertion style
 chai.should();
@@ -26,6 +26,7 @@ chai.use(sinonChai);
 const sandbox = sinon.sandbox.create();
 
 // Module to test
+const config = require('../../config/lib/consolebot');
 const Consolebot = require('../../lib/consolebot');
 
 // Setup
@@ -38,16 +39,16 @@ test.beforeEach((t) => {
   t.context.req = httpMocks.createRequest();
   t.context.res = httpMocks.createResponse();
 
-  // Each test usually adds a console bot instance, aka another listener.
-  // Bump this to avoid MaxListenersExceededWarning.
-  process.stdin.setMaxListeners(defaultMaxListeners + 1);
+  // Set unlimited to avoid MaxListenersExceededWarning.
+  // @see https://stackoverflow.com/a/26176922/1470725
+  require('events').EventEmitter.defaultMaxListeners = 0;
 });
 
 test.afterEach((t) => {
   // reset stubs, spies, and mocks
   sandbox.restore();
   t.context = {};
-  process.stdin.setMaxListeners(defaultMaxListeners);
+  require('events').EventEmitter.defaultMaxListeners = defaultMaxListeners;
 });
 
 // Tests
@@ -109,7 +110,6 @@ test('post should call reply on success', async () => {
   const consolebot = new Consolebot(config);
   sandbox.spy(consolebot, 'reply');
 
-  const text = 'hello!';
   nock(config.url)
     .post('', {})
     .query(true)
@@ -120,7 +120,7 @@ test('post should call reply on success', async () => {
     });
 
   // test
-  await consolebot.post(text);
+  await consolebot.post(consolebotPostArgs);
   consolebot.reply.should.have.been.called;
 });
 
@@ -128,7 +128,6 @@ test('consolebot post should call reply on error', async () => {
   const consolebot = new Consolebot(config);
   sandbox.spy(consolebot, 'reply');
 
-  const text = 'hi!';
   nock(config.url)
     .post('', {})
     .query(true)
@@ -138,6 +137,33 @@ test('consolebot post should call reply on error', async () => {
       },
     });
 
-  await consolebot.post(text);
+  await consolebot.post(consolebotPostArgs);
   consolebot.reply.should.have.been.called;
+});
+
+const testbot = new Consolebot(config);
+
+test('consolebot parseInput should return an object with args when no command found', (t) => {
+  const testString = 'hi';
+  const expected = {
+    args: testString,
+  };
+  t.deepEqual(testbot.parseInput(testString), expected);
+});
+
+test('consolebot parseInput should return an object with keyword when keyword command', (t) => {
+  const testKeyword = 'hi';
+  const testString = `keyword:${testKeyword}`;
+  const expected = {
+    keyword: testKeyword,
+  };
+  t.deepEqual(testbot.parseInput(testString), expected);
+});
+
+test('consolebot parseInput should return an object with mms_image_url when photo command', (t) => {
+  const testString = 'photo';
+  const expected = {
+    mms_image_url: config.photoUrl,
+  };
+  t.deepEqual(testbot.parseInput(testString), expected);
 });

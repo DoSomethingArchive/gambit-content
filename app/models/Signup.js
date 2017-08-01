@@ -151,7 +151,7 @@ signupSchema.statics.post = function (user, campaign, keyword, broadcastId) {
     logger.debug(`Signup.post(${user._id}, ${campaign.id}, ${keyword})`);
     const postData = {
       source: postSource,
-      uid: user.phoenix_id,
+      northstar_id: user._id,
     };
 
     return phoenix.client.Campaigns.signup(campaign.id, postData)
@@ -240,7 +240,7 @@ signupSchema.methods.postDraftReportbackSubmission = function () {
     const submission = signup.draft_reportback_submission;
     const data = {
       source: postSource,
-      uid: signup.user.phoenix_id,
+      northstar_id: signup.user._id,
       quantity: submission.quantity,
       // Although we strip emoji in our chatbot router in pull#910, some submissions may have emoji
       // saved before we deployed Gambit version 4.3.0.
