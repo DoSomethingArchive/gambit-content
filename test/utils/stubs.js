@@ -33,6 +33,27 @@ module.exports = {
   getKeywordContentfulObject: function getKeywordContentfulObject() {
     return {};
   },
+  // Mocks a Signup populated with a draft Reportback Submission.
+  getSignupWithDraft: function getSignupWithDraft() {
+    return {
+      _id: 4036807,
+      __v: 0,
+      user: '597b9ef910707d07c84b00aa',
+      campaign: 7,
+      draft_reportback_submission: module.exports.getDraft,
+    };
+  },
+  getDraft: function getDraft() {
+    return {
+      _id: 'ObjectId("598091807a11380d7ae5ad86")',
+      campaign: 7,
+      user: '597b9ef910707d07c84b00aa',
+      created_at: 'ISODate("2017-08-01T14:30:20.651Z")',
+      __v: 0,
+      quantity: 2,
+      photo: 'https://www.wired.com/wp-content/uploads/2015/03/The-X-Files1-1024x768.jpg',
+    };
+  },
   middleware: {
     getUser: {
       getUserFromLookup: function getUserFromLookup() {
