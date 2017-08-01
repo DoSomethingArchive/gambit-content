@@ -103,6 +103,13 @@ module.exports = {
       },
     };
   },
+  consolebot: {
+    getPostArgs: function getPostArgs() {
+      return {
+        args: 'hi',
+      };
+    },
+  },
 
   /**
    * This function returns mocks of the response that contentful sends to Gambit when queriyng for
