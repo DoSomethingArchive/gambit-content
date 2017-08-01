@@ -240,9 +240,7 @@ signupSchema.methods.postDraftReportbackSubmission = function () {
     const submission = signup.draft_reportback_submission;
     const data = {
       source: postSource,
-      // @TODO: Fix this hack, we should post northstar_id.
-      // @see https://github.com/DoSomething/phoenix/issues/7484#issuecomment-319146570
-      uid: signup.user._id,
+      northstar_id: signup.user._id,
       quantity: submission.quantity,
       // Although we strip emoji in our chatbot router in pull#910, some submissions may have emoji
       // saved before we deployed Gambit version 4.3.0.
