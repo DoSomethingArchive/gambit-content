@@ -24,6 +24,7 @@ const sandbox = sinon.sandbox.create();
 
 // Stubs
 const signupLookupStub = Promise.resolve(stubs.getSignupWithDraft());
+const signupLookupNotFoundStub = Promise.resolve(false);
 
 // Setup!
 test.beforeEach((t) => {
@@ -50,5 +51,18 @@ test('getSignup should inject signup, draftSubmission into the req object', asyn
   await middleware(t.context.req, t.context.res, next);
   t.context.req.signup.should.be.eql(signup);
   t.context.req.draftSubmission.should.be.eql(signup.draft_reportback_submission);
+  next.should.have.been.called;
+});
+
+test('getSignup should resolve to false if a Signup was not found', async (t) => {
+  // setup
+  const next = sinon.stub();
+  const middleware = getSignup();
+  sandbox.stub(Signup, 'lookupCurrent').returns(signupLookupNotFoundStub);
+
+  // test
+  await middleware(t.context.req, t.context.res, next);
+  chai.should().not.exist(t.context.req.signup);
+  chai.should().not.exist(t.context.req.draftSubmission);
   next.should.have.been.called;
 });
