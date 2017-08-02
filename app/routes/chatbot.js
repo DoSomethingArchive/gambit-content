@@ -1,13 +1,6 @@
 'use strict';
 
-// Third party modules
 const express = require('express');
-const logger = require('winston');
-
-// Application modules
-const helpers = require('../../lib/helpers');
-const ReplyDispatcher = require('../../lib/conversation/reply-dispatcher');
-const replies = require('../../lib/conversation/replies');
 
 // configs
 const requiredParamsConf = require('../../config/middleware/chatbot/required-params');
@@ -26,6 +19,14 @@ const getSignupMiddleware = require('../../lib/middleware/signup-get');
 const createNewSignupIfNotFoundMiddleware = require('../../lib/middleware/signup-create');
 const validateRequestMiddleware = require('../../lib/middleware/validate');
 const processUserSupportConversationMiddleware = require('../../lib/middleware/user-support-conversation');
+const createDraftSubmissionMiddleware = require('../../lib/middleware/draft-create');
+const completedMenuMiddleware = require('../../lib/middleware/menu-completed');
+const doingMenuMiddleware = require('../../lib/middleware/menu-doing');
+const draftSubmissionQuantityMiddleware = require('../../lib/middleware/draft-quantity');
+const draftSubmissionPhotoMiddleware = require('../../lib/middleware/draft-photo');
+const draftSubmissionCaptionMiddleware = require('../../lib/middleware/draft-caption');
+const draftSubmissionWhyParticipatedMiddleware = require('../../lib/middleware/draft-why-participated');
+const postDraftSubmissionMiddleware = require('../../lib/middleware/draft-completed');
 
 // Router
 const router = express.Router(); // eslint-disable-line new-cap
@@ -86,126 +87,27 @@ router.use(
   processUserSupportConversationMiddleware());
 
 /**
- * Check for non-reportback conversation messages first for sending reply message.
+ * Checks Signup for existing draft, or creates draft when User has completed the Campaign.
  */
-router.post('/', (req, res, next) => {
-  // If user is reporting back, skip to next.
-  if (req.signup.draft_reportback_submission) {
-    return next();
-  }
-
-  if (helpers.isCommand(req.incoming_message, 'reportback')) {
-    return req.signup.createDraftReportbackSubmission()
-      .then(() => ReplyDispatcher.execute(replies.askQuantity({ req, res })))
-      .catch(err => helpers.sendErrorResponse(res, err));
-  }
-
-  // If member has completed this campaign:
-  if (req.signup.reportback) {
-    if (req.isNewConversation) {
-      return ReplyDispatcher.execute(replies.menuCompleted({ req, res }));
-    }
-    // Otherwise member didn't text back a Reportback or Member Support command.
-    return ReplyDispatcher.execute(replies.invalidCmdCompleted({ req, res }));
-  }
-
-  if (req.isNewConversation) {
-    return ReplyDispatcher.execute(replies.menuSignedUp({ req, res }));
-  }
-
-  return ReplyDispatcher.execute(replies.invalidCmdSignedup({ req, res }));
-});
+router.use(createDraftSubmissionMiddleware());
 
 /**
- * Find message type to reply with based on current Reportback Submission and data submitted in req.
+ * If there's no Draft, send the relevant Menus.
  */
-router.post('/', (req, res, next) => {
-  const draft = req.signup.draft_reportback_submission;
-  const input = req.incoming_message;
-  logger.debug(`draft_reportback_submission:${draft._id}`);
-
-  if (!draft.quantity) {
-    if (req.isNewConversation) {
-      return ReplyDispatcher.execute(replies.askQuantity({ req, res }));
-    }
-    if (!helpers.isValidReportbackQuantity(input)) {
-      return ReplyDispatcher.execute(replies.invalidQuantity({ req, res }));
-    }
-
-    draft.quantity = Number(input);
-
-    return draft.save()
-      .then(() => ReplyDispatcher.execute(replies.askPhoto({ req, res })))
-      .catch(err => helpers.sendErrorResponse(res, err));
-  }
-
-  if (!draft.photo) {
-    if (req.isNewConversation) {
-      return ReplyDispatcher.execute(replies.askPhoto({ req, res }));
-    }
-    if (!req.incoming_image_url) {
-      return ReplyDispatcher.execute(replies.noPhotoSent({ req, res }));
-    }
-
-    draft.photo = req.incoming_image_url;
-
-    return draft.save()
-      .then(() => ReplyDispatcher.execute(replies.askCaption({ req, res })))
-      .catch(err => helpers.sendErrorResponse(res, err));
-  }
-
-  if (!draft.caption) {
-    if (req.isNewConversation) {
-      return ReplyDispatcher.execute(replies.askCaption({ req, res }));
-    }
-    if (!helpers.isValidReportbackText(input)) {
-      return ReplyDispatcher.execute(replies.invalidCaption({ req, res }));
-    }
-
-    draft.caption = helpers.trimReportbackText(input);
-
-    return draft.save()
-      .then(() => {
-        // If member hasn't submitted a reportback yet, ask for why_participated.
-        if (!req.signup.total_quantity_submitted) {
-          return ReplyDispatcher.execute(replies.askWhyParticipated({ req, res }));
-        }
-
-        // Otherwise skip to post reportback to DS API.
-        return next();
-      })
-      .catch(err => helpers.sendErrorResponse(res, err));
-  }
-
-  if (!draft.why_participated) {
-    if (req.isNewConversation) {
-      return ReplyDispatcher.execute(replies.askWhyParticipated({ req, res }));
-    }
-    if (!helpers.isValidReportbackText(input)) {
-      return ReplyDispatcher.execute(replies.invalidWhyParticipated({ req, res }));
-    }
-
-    draft.why_participated = helpers.trimReportbackText(input);
-
-    return draft.save()
-      .then(() => next())
-      .catch(err => helpers.sendErrorResponse(res, err));
-  }
-
-  return next();
-});
+router.use(completedMenuMiddleware());
+router.use(doingMenuMiddleware());
 
 /**
- * If we've made it this far, time to submit the completed draft reportback submission.
+ * Collect data for our Reportback Submission.
  */
-router.post('/', (req, res) => {
-  req.signup.postDraftReportbackSubmission()
-    .then(() => {
-      helpers.handleTimeout(req, res);
+router.use(draftSubmissionQuantityMiddleware());
+router.use(draftSubmissionPhotoMiddleware());
+router.use(draftSubmissionCaptionMiddleware());
+router.use(draftSubmissionWhyParticipatedMiddleware());
 
-      return ReplyDispatcher.execute(replies.menuCompleted({ req, res }));
-    })
-    .catch(err => helpers.handlePhoenixPostError(req, res, err));
-});
+/**
+ * Post complete submission to the DS Phoenix API.
+ */
+router.use(postDraftSubmissionMiddleware());
 
 module.exports = router;
