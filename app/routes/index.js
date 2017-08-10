@@ -3,6 +3,7 @@
 // Routes
 const campaignsRoute = require('./campaigns');
 const chatbotRoute = require('./chatbot');
+const receiveMessageRoute = require('./receive-message');
 const signupsRoute = require('./signups');
 const statusRoute = require('./status');
 const homeRoute = require('./home');
@@ -30,5 +31,6 @@ module.exports = function init(app) {
   app.use('/v1/status', statusRoute);
   app.use('/v1/campaigns', campaignsRoute);
   app.use('/v1/chatbot', chatbotRoute);
+  app.use('/v1/receive-message', receiveMessageRoute);
   app.use('/v1/signups', signupsRoute);
 };
