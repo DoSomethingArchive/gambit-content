@@ -29,8 +29,16 @@ module.exports = function init(app) {
   regGlobalMiddleware(app);
   app.get('/', homeRoute);
   app.use('/v1/status', statusRoute);
+
+  // Provides list of Campaigns currently running on Gambit.
   app.use('/v1/campaigns', campaignsRoute);
+
+  // Receives inbound message from Mobile Commons mData.
   app.use('/v1/chatbot', chatbotRoute);
+
+  // Receives inbound message from Gambit Conversations service.
   app.use('/v1/receive-message', receiveMessageRoute);
+
+  // Sends external Signup message to a User for a Campaign.
   app.use('/v1/signups', signupsRoute);
 };
