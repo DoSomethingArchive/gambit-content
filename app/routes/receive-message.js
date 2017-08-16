@@ -3,22 +3,19 @@
 const express = require('express');
 
 // configs
-const requiredParamsConf = require('../../config/middleware/chatbot/required-params');
-const userIncomingMessageConf = require('../../config/middleware/chatbot/user-incoming-message');
-const mapParamsConf = require('../../config/middleware/chatbot/map-request-params');
+const requiredParamsConf = require('../../config/middleware/receive-message/required-params');
+const mapParamsConf = require('../../config/middleware/receive-message/map-request-params');
 
 // Middleware
 const requiredParamsMiddleware = require('../../lib/middleware/required-params');
-const userIncomingMessageMiddleware = require('../../lib/middleware/user-incoming-message');
 const mapRequestParamsMiddleware = require('../../lib/middleware/map-request-params');
+const receiveMessageMiddleware = require('../../lib/middleware/receive-message');
 const getUserMiddleware = require('../../lib/middleware/user-get');
 const createNewUserIfNotFoundMiddleware = require('../../lib/middleware/user-create');
-const processBroadcastConversationMiddleware = require('../../lib/middleware/broadcast');
 const getPhoenixCampaignMiddleware = require('../../lib/middleware/phoenix-campaign-get');
 const getSignupMiddleware = require('../../lib/middleware/signup-get');
 const createNewSignupIfNotFoundMiddleware = require('../../lib/middleware/signup-create');
 const validateRequestMiddleware = require('../../lib/middleware/validate');
-const processUserSupportConversationMiddleware = require('../../lib/middleware/user-support-conversation');
 const createDraftSubmissionMiddleware = require('../../lib/middleware/draft-create');
 const completedMenuMiddleware = require('../../lib/middleware/menu-completed');
 const doingMenuMiddleware = require('../../lib/middleware/menu-doing');
@@ -36,8 +33,9 @@ const router = express.Router(); // eslint-disable-line new-cap
  * parse incoming params, and add/log helper variables.
  */
 router.use(requiredParamsMiddleware(requiredParamsConf));
-router.use(userIncomingMessageMiddleware(userIncomingMessageConf));
 router.use(mapRequestParamsMiddleware(mapParamsConf));
+router.use(receiveMessageMiddleware());
+
 
 router.use(
   /**
@@ -48,11 +46,6 @@ router.use(
    * Create DS User for given mobile number if we didn't find one.
    */
   createNewUserIfNotFoundMiddleware());
-
-/**
- * Checks if request is a negative response to a broadcast
- */
-router.use(processBroadcastConversationMiddleware());
 
 /**
  * Load Campaign from DS Phoenix API.
@@ -74,17 +67,6 @@ router.use(
  */
 router.use(validateRequestMiddleware());
 
-
-/**
- * Conversation Processing
- */
-
-router.use(
-
-  /**
-   * If the user texts the support command we will process this request here
-   */
-  processUserSupportConversationMiddleware());
 
 /**
  * Checks Signup for existing draft, or creates draft when User has completed the Campaign.
