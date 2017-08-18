@@ -131,6 +131,32 @@ module.exports = {
       };
     },
   },
+  conversation: {
+    getChatbotRequestArgs: function getChatbotRequestArgs(user) {
+      return {
+        req: {
+          user,
+          client: 'mobilecommons',
+        },
+      };
+    },
+    getRecieveMessageRequestArgs: function getRecieveMessageRequestArgs(user) {
+      return {
+        req: {
+          user,
+          client: 'gambit-conversations',
+        },
+      };
+    },
+    getSignupsRequestArgs: function getSignupsRequestArgs(user) {
+      return {
+        req: {
+          user,
+          client: 'signups-api',
+        },
+      };
+    },
+  },
 
   /**
    * This function returns mocks of the response that contentful sends to Gambit when queriyng for
