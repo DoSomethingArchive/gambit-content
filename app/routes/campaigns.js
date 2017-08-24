@@ -16,7 +16,6 @@ const helpers = require('../../lib/helpers');
 const mobilecommons = require('../../lib/mobilecommons');
 const phoenix = require('../../lib/phoenix');
 const stathat = require('../../lib/stathat');
-const User = require('../models/User');
 
 /**
  * Queries Phoenix, Contentful, and Mongo to render an object for a given Campaign id.
@@ -196,23 +195,6 @@ router.post('/:id/message', (req, res, next) => {
       }
 
       req.messageBody = helpers.addSenderPrefix(message); // eslint-disable-line no-param-reassign
-
-      return next();
-    })
-    .catch(err => helpers.sendErrorResponse(res, err));
-});
-
-/**
- * Load the user to track outgoing message.
- */
-router.post('/:id/message', (req, res, next) => {
-  User.lookup('mobile', req.body.phone)
-    .then((user) => {
-      if (req.timedout) {
-        return helpers.sendTimeoutResponse(res);
-      }
-
-      user.postDashbotOutgoing(req.messageType);
 
       return next();
     })
