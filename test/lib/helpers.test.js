@@ -254,47 +254,6 @@ test('getBroadcast should send Error response when it fails retrieving a broadca
   helpers.sendErrorResponse.should.have.been.called;
 });
 
-// trackUserMessageInDashbot
-test('trackUserMessageInDashbot should post dashbot incoming by default', (t) => {
-  // setup
-  const user = userFactory.getValidUser();
-  sandbox.stub(user, 'postDashbotIncoming');
-  sandbox.stub(user, 'postDashbotOutgoing');
-  t.context.req.user = user;
-
-  // test
-  helpers.trackUserMessageInDashbot(t.context.req);
-  user.postDashbotIncoming.should.have.been.called;
-});
-
-test('trackUserMessageInDashbot should post dashbot outgoing if there is a broadcast_id set in the request', (t) => {
-  // setup
-  t.context.req.broadcast_id = stubs.getBroadcastId();
-  const user = userFactory.getValidUser();
-  sandbox.stub(user, 'postDashbotIncoming');
-  sandbox.stub(user, 'postDashbotOutgoing');
-  t.context.req.user = user;
-
-  // test
-  helpers.trackUserMessageInDashbot(t.context.req);
-  user.postDashbotOutgoing.should.have.been.called;
-});
-
-test('trackUserMessageInDashbot should not track request if its a retry request', (t) => {
-  // setup
-  t.context.req.retryCount = 1;
-  const user = userFactory.getValidUser();
-  sandbox.stub(user, 'postDashbotIncoming');
-  sandbox.stub(user, 'postDashbotOutgoing');
-  t.context.req.user = user;
-
-  // test
-  helpers.trackUserMessageInDashbot(t.context.req);
-  user.postDashbotOutgoing.should.not.have.been.called;
-  user.postDashbotIncoming.should.not.have.been.called;
-});
-
-
 // addSenderPrefix
 test('addSenderPrefix', () => {
   const prefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
