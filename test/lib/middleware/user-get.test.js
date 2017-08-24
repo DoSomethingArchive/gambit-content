@@ -33,13 +33,11 @@ const sendErrorResponseStub = underscore.noop;
 const userLookupStub = Promise.resolve(stubs.middleware.getUser.getUserFromLookup());
 const userLookupFailStub = Promise.reject({ status: 500 });
 const userLookupNotFoundStub = Promise.reject({ status: 404 });
-const trackUserMessageInDashbotStub = underscore.noop;
 
 // Setup!
 test.beforeEach((t) => {
   stubs.stubLogger(sandbox, logger);
   sandbox.stub(newrelic, 'addCustomParameters').returns(newrelicStub);
-  sandbox.stub(helpers, 'trackUserMessageInDashbot').returns(trackUserMessageInDashbotStub);
   sandbox.stub(helpers, 'handleTimeout').returns(handleTimeoutStub);
 
   // setup req, res mocks

@@ -11,7 +11,6 @@ const helpers = require('../../lib/helpers');
 const mobilecommons = require('../../lib/mobilecommons');
 const northstar = require('../../lib/northstar');
 const stathat = require('../../lib/stathat');
-const Dashbot = require('../../lib/dashbot');
 
 /**
  * Schema.
@@ -134,35 +133,6 @@ userSchema.methods.postMobileCommonsProfileUpdate = function (oip, msgTxt) {
   };
 
   return mobilecommons.profile_update(this.mobilecommons_id, this.mobile, oip, data);
-};
-
-/**
- * Posts given messageText to the Dashbot API with given dashbotMessageType.
- * @see https://www.dashbot.io/sdk/generic.
- *
- * @param {number} dashbotMessageType - Expected values: 'incoming' | 'outgoing'
- * @param {string} messageText - text to track in Dashbot
- */
-userSchema.methods.postDashbot = function (dashbotMessageType, messageText) {
-  const dashbot = new Dashbot();
-
-  const logMessage = `user.postDashbot:${dashbotMessageType} ${this._id}:${messageText}`;
-  logger.debug(logMessage);
-
-  const data = {
-    userId: this._id,
-    text: messageText,
-  };
-
-  return dashbot.post(dashbotMessageType, data);
-};
-
-userSchema.methods.postDashbotIncoming = function (message) {
-  this.postDashbot('incoming', message);
-};
-
-userSchema.methods.postDashbotOutgoing = function (gambitMessageType) {
-  this.postDashbot('outgoing', gambitMessageType);
 };
 
 /**
