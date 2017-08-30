@@ -31,5 +31,11 @@ module.exports = {
     member_support: 'memberSupportMessage',
     campaign_closed: 'campaignClosedMessage',
     error_occurred: 'errorOccurredMessage',
+    ask_signup: 'askSignupMessage',
+    declined_signup: 'declinedSignupMessage',
+    invalid_ask_signup: 'invalidSignupResponseMessage',
+    ask_continue: 'askContinueMessage',
+    declined_continue: 'declinedContinueMessage',
+    invalid_ask_continue: 'invalidContinueResponseMessage',
   },
 };
