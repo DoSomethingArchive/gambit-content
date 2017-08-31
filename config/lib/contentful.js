@@ -12,7 +12,7 @@ module.exports = {
    *  in Contentful, which is based on the order in
    *  which our end user will see the messages.
    *
-   *  { message_type: 'campaignMessageField'}
+   *  { message_template: 'campaignMessageField'}
    */
   campaignFields: {
     menu_signedup_gambit: 'gambitSignupMenuMessage',
