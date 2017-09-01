@@ -421,3 +421,15 @@ test('mapCampaignIds should return an array', async () => {
     }
   });
 });
+
+
+test('getFieldNameForCampaignMessageTemplate should return a config.campaignFields value', (t) => {
+  // setup
+  const contentfulConfig = require('../../config/lib/contentful');
+  const template = 'askPhotoMessage';
+  const fieldName = contentfulConfig.campaignFields[template];
+
+  // test
+  const result = contentful.getFieldNameForCampaignMessageTemplate(template);
+  t.deepEqual(result, fieldName);
+});
