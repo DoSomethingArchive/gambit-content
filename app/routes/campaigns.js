@@ -38,9 +38,9 @@ function fetchCampaign(id, renderMessages) {
 
         return false;
       })
-      .then((renderedMessages) => {
-        if (renderedMessages) {
-          campaign.messages = renderedMessages;
+      .then((renderedTemplates) => {
+        if (renderedTemplates) {
+          campaign.templates = renderedTemplates;
         }
 
         return contentful.fetchKeywordsForCampaignId(id);
