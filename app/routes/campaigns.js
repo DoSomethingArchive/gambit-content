@@ -33,7 +33,7 @@ function fetchCampaign(id, renderMessages) {
         campaign.status = phoenixCampaign.status;
         campaign.current_run = phoenixCampaign.currentCampaignRun.id;
         if (renderMessages === true) {
-          return contentful.renderAllMessagesForPhoenixCampaign(phoenixCampaign);
+          return contentful.renderAllTemplatesForPhoenixCampaign(phoenixCampaign);
         }
 
         return false;
@@ -97,7 +97,7 @@ router.get('/:id', (req, res) => {
       return contentful.fetchCampaign(campaignId);
     })
     // TODO: Querying Contentful again here to get its sys.id. We could avoid this extra query
-    // by refactoring contentful.renderAllMessagesForPhoenixCampaign to optionally accept a loaded
+    // by refactoring contentful.renderAllTemplatesForPhoenixCampaign to optionally accept a loaded
     // Contentful campaign.
     .then((contentfulCampaign) => {
       const spaceId = process.env.CONTENTFUL_SPACE_ID;

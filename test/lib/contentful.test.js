@@ -37,7 +37,7 @@ const campaignStub = Promise.resolve(stubs.contentful.getEntries('campaign'));
 const defaultCampaignStub = Promise.resolve(stubs.contentful.getEntries('default-campaign'));
 const campaignWithOverridesStub = Promise.resolve(stubs.contentful.getEntries('campaign-with-overrides'));
 const keywordsForCampaignStub = Promise.resolve(stubs.contentful.getEntries('keyword-for-campaign'));
-const getAllTemplatesForCampaignIdStub = Promise.resolve(stubs.contentful.getAllTemplatesForCampaignId());
+const templatesForCampaignIdStub = Promise.resolve(stubs.contentful.getAllTemplatesForCampaignId());
 const failStub = Promise.reject({ status: 500 });
 const contentfulAPIStub = {
   getEntries: () => {},
@@ -379,27 +379,27 @@ test('getAllTemplatesForCampaignId should throw when fetchCampaign fails', async
   }
 });
 
-// renderAllMessagesForPhoenixCampaign
-test('renderAllMessagesForPhoenixCampaign should inject a rendered property to each campaign field', async () => {
+// renderAllTemplatesForPhoenixCampaign
+test('renderAllTemplatesForPhoenixCampaign should inject a rendered property to each campaign field', async () => {
   // setup
   const renderedMessageStub = 'rendered!';
-  sandbox.stub(contentful, 'getAllTemplatesForCampaignId').returns(getAllTemplatesForCampaignIdStub);
+  sandbox.stub(contentful, 'getAllTemplatesForCampaignId').returns(templatesForCampaignIdStub);
   sandbox.stub(helpers, 'replacePhoenixCampaignVars').returns(Promise.resolve(renderedMessageStub));
 
   // test
-  const fields = await contentful.renderAllMessagesForPhoenixCampaign(stubs.getPhoenixCampaign());
+  const fields = await contentful.renderAllTemplatesForPhoenixCampaign(stubs.getPhoenixCampaign());
   Object.keys(fields).forEach((fieldName) => {
     fields[fieldName].rendered.should.be.equal(renderedMessageStub);
   });
 });
 
-test('renderAllMessagesForPhoenixCampaign should return and error if getAllTemplatesForCampaignId fails', async () => {
+test('renderAllTemplatesForPhoenixCampaign should return and error if getAllTemplatesForCampaignId fails', async () => {
   // setup
   sandbox.stub(contentful, 'getAllTemplatesForCampaignId').returns(failStub);
 
   // test
   try {
-    await contentful.renderAllMessagesForPhoenixCampaign(stubs.getPhoenixCampaign());
+    await contentful.renderAllTemplatesForPhoenixCampaign(stubs.getPhoenixCampaign());
   } catch (error) {
     error.status.should.be.equal(500);
   }
