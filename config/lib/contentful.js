@@ -10,9 +10,9 @@ module.exports = {
    *  The sequence we define properties here determines the order they appear
    *  in GET Gambit Campaigns API response. Should match the sequence defined
    *  in Contentful, which is based on the order in
-   *  which our end user will see the messages.
+   *  which our end user will see the templates.
    *
-   *  { message_template: 'campaignMessageField'}
+   *  { message_template: 'contentfulCampaignField'}
    */
   campaignFields: {
     menu_signedup_gambit: 'gambitSignupMenuMessage',

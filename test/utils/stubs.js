@@ -231,7 +231,7 @@ module.exports = {
   },
   contentful: {
 
-    getAllFieldsForCampaign: function getAllFieldsForCampaign() {
+    getAllTemplatesForCampaignId: function getAllTemplatesForCampaignId() {
       return module.exports.getJSONstub('all-campaign-fields');
     },
 
