@@ -46,7 +46,7 @@ curl -X "POST" "http://localhost:5000/v1/chatbot" \
   "success": {
     "code": 200,
     "message": "Picking up where you left off on Bumble Bands...\n\nSend your best pic of you and the 33 bumble bands you created.",
-    "template": "askPhotoMessage"
+    "template": "askPhoto"
   }
 }
 ```

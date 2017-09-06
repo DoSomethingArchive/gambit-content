@@ -243,7 +243,7 @@ async () => {
 
   // test
   // TODO: Find a way to not hard code the message type here
-  const message = await contentful.fetchMessageForCampaignId(stubs.getCampaignId(), 'menu_signedup_gambit');
+  const message = await contentful.fetchMessageForCampaignId(stubs.getCampaignId(), 'gambitSignupMenu');
   expect(message).to.be.undefined;
 });
 
@@ -261,7 +261,7 @@ test('fetchMessageForCampaignId should return null when no campaign is returned 
 
   // test
   // TODO: Find a way to not hard code the message type here
-  const message = await contentful.fetchMessageForCampaignId(stubs.getCampaignId(), 'menu_signedup_gambit');
+  const message = await contentful.fetchMessageForCampaignId(stubs.getCampaignId(), 'gambitSignupMenu');
   expect(message).to.be.null;
 });
 
@@ -272,7 +272,7 @@ test('fetchMessageForCampaignId should return error when it fails', async () => 
 
   // test
   // TODO: Find a way to not hard code the message type here
-  const error = await contentful.fetchMessageForCampaignId(stubs.getCampaignId(), 'menu_signedup_gambit');
+  const error = await contentful.fetchMessageForCampaignId(stubs.getCampaignId(), 'gambitSignupMenu');
   error.status.should.be.equal(500);
 });
 
@@ -285,7 +285,7 @@ test('renderMessageForPhoenixCampaign should return rendered override message', 
     getEntries: sinon.stub().returns(campaignWithOverridesStub),
   });
   // test
-  const msg = await contentful.renderMessageForPhoenixCampaign(campaign, 'menu_signedup_gambit');
+  const msg = await contentful.renderMessageForPhoenixCampaign(campaign, 'gambitSignupMenu');
   contentful.fetchMessageForCampaignId.should.have.been.calledOnce;
   msg.should.not.be.empty;
 });
@@ -304,7 +304,7 @@ test('renderMessageForPhoenixCampaign should return default message if there is 
     getEntries: stub,
   });
   // test
-  const msg = await contentful.renderMessageForPhoenixCampaign(campaign, 'menu_signedup_gambit');
+  const msg = await contentful.renderMessageForPhoenixCampaign(campaign, 'gambitSignupMenu');
   contentful.fetchMessageForCampaignId.should.have.been.calledTwice;
   helpers.replacePhoenixCampaignVars.should.have.been.calledOnce;
   msg.should.not.be.empty;
@@ -339,7 +339,7 @@ async () => {
   sandbox.stub(contentful, 'fetchMessageForCampaignId').returns(failStub);
   // test
   try {
-    await contentful.renderMessageForPhoenixCampaign(campaign, 'menu_signedup_gambit');
+    await contentful.renderMessageForPhoenixCampaign(campaign, 'gambitSignupMenu');
   } catch (error) {
     error.status.should.be.equal(500);
   }
