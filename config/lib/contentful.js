@@ -10,26 +10,34 @@ module.exports = {
    *  The sequence we define properties here determines the order they appear
    *  in GET Gambit Campaigns API response. Should match the sequence defined
    *  in Contentful, which is based on the order in
-   *  which our end user will see the messages.
+   *  which our end user will see the templates.
    *
-   *  { message_type: 'campaignMessageField'}
+   *  { templateName: 'contentfulCampaignFieldName'}
    */
   campaignFields: {
-    menu_signedup_gambit: 'gambitSignupMenuMessage',
-    menu_signedup_external: 'externalSignupMenuMessage',
-    invalid_cmd_signedup: 'invalidSignupMenuCommandMessage',
-    ask_quantity: 'askQuantityMessage',
-    invalid_quantity: 'invalidQuantityMessage',
-    ask_photo: 'askPhotoMessage',
-    no_photo_sent: 'invalidPhotoMessage',
-    ask_caption: 'askCaptionMessage',
-    ask_why_participated: 'askWhyParticipatedMessage',
-    menu_completed: 'completedMenuMessage',
-    invalid_cmd_completed: 'invalidCompletedMenuCommandMessage',
+    gambitSignupMenu: 'gambitSignupMenuMessage',
+    externalSignupMenu: 'externalSignupMenuMessage',
+    invalidSignupMenuCommand: 'invalidSignupMenuCommandMessage',
+    askQuantity: 'askQuantityMessage',
+    invalidQuantity: 'invalidQuantityMessage',
+    askPhoto: 'askPhotoMessage',
+    invalidPhoto: 'invalidPhotoMessage',
+    askCaption: 'askCaptionMessage',
+    askWhyParticipated: 'askWhyParticipatedMessage',
+    completedMenu: 'completedMenuMessage',
+    invalidCompletedMenuCommand: 'invalidCompletedMenuCommandMessage',
+    memberSupport: 'memberSupportMessage',
+    campaignClosed: 'campaignClosedMessage',
+    errorOccurred: 'errorOccurredMessage',
+    askSignup: 'askSignupMessage',
+    declinedSignup: 'declinedSignupMessage',
+    invalidAskSignupResponse: 'invalidSignupResponseMessage',
+    askContinue: 'askContinueMessage',
+    declinedContinue: 'declinedContinueMessage',
+    invalidAskContinueResponse: 'invalidContinueResponseMessage',
+    // TODO: Remove these when Conversations goes live.
+    // They won't be used anymore, so we didn't bother to rename these.
     scheduled_relative_to_signup_date: 'scheduledRelativeToSignupDateMessage',
     scheduled_relative_to_reportback_date: 'scheduledRelativeToReportbackDateMessage',
-    member_support: 'memberSupportMessage',
-    campaign_closed: 'campaignClosedMessage',
-    error_occurred: 'errorOccurredMessage',
   },
 };

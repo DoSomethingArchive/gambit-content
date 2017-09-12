@@ -93,12 +93,12 @@ test('replacePhoenixCampaignVars', async () => {
   const phoenixCampaign = stubs.getPhoenixCampaign();
   let renderedMessage = '';
   // signedup through gambit
-  const signedupGambitMsg = stubs.getDefaultContenfulCampaignMessage('menu_signedup_gambit');
+  const signedupGambitMsg = stubs.getDefaultContenfulCampaignMessage('gambitSignupMenu');
   renderedMessage = await helpers
     .replacePhoenixCampaignVars(signedupGambitMsg, phoenixCampaign);
   renderedMessage.should.have.string(phoenixCampaign.facts.problem);
   // invalid sign up command
-  const invalidSignedupCmdMsg = stubs.getDefaultContenfulCampaignMessage('invalid_cmd_signedup');
+  const invalidSignedupCmdMsg = stubs.getDefaultContenfulCampaignMessage('invalidSignupMenuCommand');
   renderedMessage = await helpers
   .replacePhoenixCampaignVars(invalidSignedupCmdMsg, phoenixCampaign);
   renderedMessage.should.have.string('Sorry, I didn\'t understand that.');
@@ -122,7 +122,7 @@ test('replacePhoenixCampaignVars failure to retrieve keywords should throw', asy
   const phoenixCampaign = stubs.getPhoenixCampaign();
   // will trigger fetchKeywordsForCampaignIdStubFail stub
   phoenixCampaign.id = 'fail';
-  const memberSupportMsg = stubs.getDefaultContenfulCampaignMessage('member_support');
+  const memberSupportMsg = stubs.getDefaultContenfulCampaignMessage('memberSupport');
 
   await t.throws(helpers.replacePhoenixCampaignVars(memberSupportMsg, phoenixCampaign));
   contentful.fetchKeywordsForCampaignId.should.have.been.called;
@@ -138,7 +138,7 @@ test('replacePhoenixCampaignVars with no message should return empty string', as
 test('replacePhoenixCampaignVars on a campaign object missing reportbackInfo should throw', async (t) => {
   const phoenixCampaign = stubs.getPhoenixCampaign();
   delete phoenixCampaign.reportbackInfo;
-  const memberSupportMsg = stubs.getDefaultContenfulCampaignMessage('menu_signedup_gambit');
+  const memberSupportMsg = stubs.getDefaultContenfulCampaignMessage('gambitSignupMenu');
   await t.throws(helpers.replacePhoenixCampaignVars(memberSupportMsg, phoenixCampaign));
 });
 

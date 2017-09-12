@@ -44,7 +44,8 @@ curl -X "POST" "http://localhost:5000/v1/chatbot" \
 {
   "success": {
     "code": 200,
-    "message": "Nice job! YOU deserve a Mirror Message for all the notes you posted. We've got you down for 97 messages posted. Have you posted more? Text START."
+    "message": "Nice job! YOU deserve a Mirror Message for all the notes you posted. We've got you down for 97 messages posted. Have you posted more? Text START.",
+    "template": "completedMenu"
   }
 }
 ```
