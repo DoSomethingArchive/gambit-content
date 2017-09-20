@@ -93,17 +93,17 @@ signupSchema.statics.lookupById = function (id) {
 
 /**
  * Gets current Signup for given User / Campaign from DS API, stores if found. Returns false if not.
- * @param {User} user - User model.
+ * @param {string} userId
  * @param {Campaign} campaign - Phoenix Campaign object.
  */
-signupSchema.statics.lookupCurrent = function (user, campaign) {
+signupSchema.statics.lookupCurrent = function (userId, campaign) {
   const model = this;
   const statName = 'phoenix: GET signups';
 
   return new Promise((resolve, reject) => {
-    logger.debug(`Signup.lookupCurrent(${user._id}, ${campaign.id})`);
+    logger.debug(`Signup.lookupCurrent(${userId}, ${campaign.id})`);
 
-    return phoenix.client.Signups.index({ user: user._id, campaigns: campaign.id })
+    return phoenix.client.Signups.index({ user: userId, campaigns: campaign.id })
       .then((phoenixSignups) => {
         stathat.postStat(`${statName} 200`);
 
@@ -137,21 +137,21 @@ signupSchema.statics.lookupCurrent = function (user, campaign) {
 
 /**
  * Posts Signup to DS API.
- * @param {User} user - User model.
+ * @param {string} userId
  * @param {Campaign} campaign - Phoenix Campaign object.
  * @param {string} keyword - Keyword used to trigger Campaign Signup.
  * @param {number} broadcastId
  * @return {Promise}
  */
-signupSchema.statics.post = function (user, campaign, keyword, broadcastId) {
+signupSchema.statics.post = function (userId, campaign, keyword, broadcastId) {
   const model = this;
   const statName = 'phoenix: POST signups';
 
   return new Promise((resolve, reject) => {
-    logger.debug(`Signup.post(${user._id}, ${campaign.id}, ${keyword})`);
+    logger.debug(`Signup.post(${userId}, ${campaign.id}, ${keyword})`);
     const postData = {
       source: postSource,
-      northstar_id: user._id,
+      northstar_id: userId,
     };
 
     return phoenix.client.Campaigns.signup(campaign.id, postData)
@@ -164,7 +164,7 @@ signupSchema.statics.post = function (user, campaign, keyword, broadcastId) {
 
         const data = {
           campaign: campaign.id,
-          user: user._id,
+          user: userId,
         };
         if (keyword) {
           data.keyword = keyword;
