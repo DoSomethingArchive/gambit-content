@@ -94,16 +94,16 @@ signupSchema.statics.lookupById = function (id) {
 /**
  * Gets current Signup for given User / Campaign from DS API, stores if found. Returns false if not.
  * @param {string} userId
- * @param {Campaign} campaign - Phoenix Campaign object.
+ * @param {number} campaignId.
  */
-signupSchema.statics.lookupCurrent = function (userId, campaign) {
+signupSchema.statics.lookupCurrent = function (userId, campaignId) {
   const model = this;
   const statName = 'phoenix: GET signups';
 
   return new Promise((resolve, reject) => {
-    logger.debug(`Signup.lookupCurrent(${userId}, ${campaign.id})`);
+    logger.debug(`Signup.lookupCurrent(${userId}, ${campaignId})`);
 
-    return phoenix.client.Signups.index({ user: userId, campaigns: campaign.id })
+    return phoenix.client.Signups.index({ user: userId, campaigns: campaignId })
       .then((phoenixSignups) => {
         stathat.postStat(`${statName} 200`);
 
@@ -138,23 +138,23 @@ signupSchema.statics.lookupCurrent = function (userId, campaign) {
 /**
  * Posts Signup to DS API.
  * @param {string} userId
- * @param {Campaign} campaign - Phoenix Campaign object.
+ * @param {number} campaignId
  * @param {string} keyword - Keyword used to trigger Campaign Signup.
  * @param {number} broadcastId
  * @return {Promise}
  */
-signupSchema.statics.post = function (userId, campaign, keyword, broadcastId) {
+signupSchema.statics.post = function (userId, campaignId, keyword, broadcastId) {
   const model = this;
   const statName = 'phoenix: POST signups';
 
   return new Promise((resolve, reject) => {
-    logger.debug(`Signup.post(${userId}, ${campaign.id}, ${keyword})`);
+    logger.debug(`Signup.post(${userId}, ${campaignId}, ${keyword})`);
     const postData = {
       source: postSource,
       northstar_id: userId,
     };
 
-    return phoenix.client.Campaigns.signup(campaign.id, postData)
+    return phoenix.client.Campaigns.signup(campaignId, postData)
       .then((signupId) => {
         stathat.postStat(`${statName} 200`);
         if (keyword) {
@@ -163,7 +163,7 @@ signupSchema.statics.post = function (userId, campaign, keyword, broadcastId) {
         logger.info(`Signup.post created signup:${signupId}`);
 
         const data = {
-          campaign: campaign.id,
+          campaign: campaignId,
           user: userId,
         };
         if (keyword) {
