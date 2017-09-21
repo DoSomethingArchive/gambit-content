@@ -29,18 +29,14 @@ test.after.always(() => {
 test('Should fail if request does not include a valid api key', async () => {
   await request(app)
     .post(chatbotRoutePath)
-    .then((response) => {
-      response.status.should.be.equal(403);
-    });
+    .expect(403);
 });
 
 test('Should fail if request doesn\'t include all required params', async () => {
   await request(app)
     .post(chatbotRoutePath)
     .set('x-gambit-api-key', stubs.getAPIKey())
-    .then((response) => {
-      response.status.should.be.equal(422);
-    });
+    .expect(422);
 });
 
 test('Should fail when no incomming message is detected', async () => {
@@ -48,9 +44,5 @@ test('Should fail when no incomming message is detected', async () => {
     .post(chatbotRoutePath)
     .set('x-gambit-api-key', stubs.getAPIKey())
     .send({ phone: stubs.getPhoneNumber() })
-    .then((response) => {
-      response.status.should.be.equal(422);
-    });
+    .expect(422);
 });
-
-// If user is not found respond with an error
