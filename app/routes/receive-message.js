@@ -9,8 +9,6 @@ const mapParamsConf = require('../../config/middleware/receive-message/map-reque
 // Middleware
 const requiredParamsMiddleware = require('../../lib/middleware/required-params');
 const mapRequestParamsMiddleware = require('../../lib/middleware/map-request-params');
-const getUserMiddleware = require('../../lib/middleware/user-get');
-const createNewUserIfNotFoundMiddleware = require('../../lib/middleware/user-create');
 const getPhoenixCampaignMiddleware = require('../../lib/middleware/phoenix-campaign-get');
 const getSignupMiddleware = require('../../lib/middleware/signup-get');
 const createNewSignupIfNotFoundMiddleware = require('../../lib/middleware/signup-create');
@@ -33,16 +31,6 @@ const router = express.Router(); // eslint-disable-line new-cap
  */
 router.use(requiredParamsMiddleware(requiredParamsConf));
 router.use(mapRequestParamsMiddleware(mapParamsConf));
-
-router.use(
-  /**
-   * Check if DS User exists for given mobile number.
-   */
-  getUserMiddleware(),
-  /**
-   * Create DS User for given mobile number if we didn't find one.
-   */
-  createNewUserIfNotFoundMiddleware());
 
 /**
  * Load Campaign from DS Phoenix API.
