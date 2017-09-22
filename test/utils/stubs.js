@@ -7,7 +7,7 @@ const underscore = require('underscore');
 
 module.exports = {
   getNorthstarAPIBaseUri: function getNorthstarAPIBaseUri() {
-    return process.env.DS_NORTHSTAR_API_BASEURI || 'https://northstar-thor.dosomething.org/v1';
+    return process.env.DS_NORTHSTAR_API_BASEURI || 'https://northstar-fake.dosomething.org/v1';
   },
   stubLogger: function stubLogger(sandbox, logger) {
     sandbox.stub(logger, 'warn').returns(underscore.noop);
