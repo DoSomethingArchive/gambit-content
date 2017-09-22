@@ -12,7 +12,7 @@ const stubs = require('../../../test/utils/stubs');
 const userFactory = require('../../utils/factories/user');
 
 // Stubs
-const user = userFactory.getValidUser();
+const user = userFactory.getUser();
 const chatbotArgs = stubs.conversation.getChatbotRequestArgs(user);
 const receiveMessageArgs = stubs.conversation.getRecieveMessageRequestArgs(user);
 const signupsArgs = stubs.conversation.getSignupsRequestArgs(user);

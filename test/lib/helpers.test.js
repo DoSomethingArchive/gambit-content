@@ -152,7 +152,7 @@ test('sendTimeoutResponse', (t) => {
 
 test('getCampaignIdFromUser should return user\'s current_campaign', (t) => {
   // setup
-  const user = userFactory.getValidUser();
+  const user = userFactory.getUser();
   t.context.req.user = user;
 
   // test
@@ -162,7 +162,7 @@ test('getCampaignIdFromUser should return user\'s current_campaign', (t) => {
 
 test('getCampaignIdFromUser should send a 500 error response if user has no current_campaign', (t) => {
   // setup
-  const user = userFactory.getValidUser();
+  const user = userFactory.getUser();
   user.current_campaign = undefined;
   t.context.req.user = user;
 

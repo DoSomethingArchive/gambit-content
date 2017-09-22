@@ -57,7 +57,7 @@ test('validateRequest should call next if all validations past', (t) => {
   // setup
   const next = sinon.stub();
   const middleware = validateRequest();
-  t.context.req.user = userFactory.getValidUser();
+  t.context.req.user = userFactory.getUser();
   t.context.req.signup = signupFactory.getValidSignup();
   t.context.req.campaign = stubs.getJSONstub('campaign', 'phoenix');
 
