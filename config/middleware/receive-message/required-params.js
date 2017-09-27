@@ -4,7 +4,7 @@ const configVars = {};
 
 configVars.containerProperty = 'body';
 configVars.requiredParams = [
-  'phone',
   'campaignId',
+  'userId',
 ];
 module.exports = configVars;
