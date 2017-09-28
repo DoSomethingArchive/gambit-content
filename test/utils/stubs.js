@@ -6,11 +6,17 @@
 const underscore = require('underscore');
 
 module.exports = {
+  getNorthstarAPIBaseUri: function getNorthstarAPIBaseUri() {
+    return process.env.DS_NORTHSTAR_API_BASEURI || 'https://northstar-fake.dosomething.org/v1';
+  },
   stubLogger: function stubLogger(sandbox, logger) {
     sandbox.stub(logger, 'warn').returns(underscore.noop);
     sandbox.stub(logger, 'error').returns(underscore.noop);
     sandbox.stub(logger, 'debug').returns(underscore.noop);
     sandbox.stub(logger, 'info').returns(underscore.noop);
+  },
+  getAPIKey: function getAPIKey() {
+    return process.env.GAMBIT_API_KEY || 'totallysecret';
   },
   getCampaignId: function getCampaignId() {
     return 2299;

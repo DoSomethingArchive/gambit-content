@@ -12,5 +12,6 @@ configVars.paramsMap = {
   campaignId: 'campaignId',
   text: 'incoming_message',
   mediaUrl: 'incoming_image_url',
+  userId: 'userId',
 };
 module.exports = configVars;
