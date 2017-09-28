@@ -18,8 +18,8 @@ Name | Type | Description
 
 Name | Type | Description
 --- | --- | ---
-`phone` | `string` | **Required.** Mobile number that sent incoming message.
-`campaignId` | `string` | **Required.** Mobile number that sent incoming message.
+`userId` | `string` | **Required.** Northstar Id of User that sent incoming message.
+`campaignId` | `string` | **Required.** Campaign User has signed up for.
 `text` | `string` | Incoming text sent.
 `mediaUrl` | `string` | Incoming image sent.
 `keyword` | `string` | Campaign Signup keyword, if triggered
@@ -31,7 +31,7 @@ Name | Type | Description
 curl -X "POST" "http://localhost:5000/v1/chatbot" \
      -H "x-gambit-api-key: totallysecret" \
      -H "Content-Type: application/x-www-form-urlencoded; charset=utf-8" \
-     --data-urlencode "phone=5555555511" \
+     --data-urlencode "userId=59abca4200707d62db575a3b" \
      --data-urlencode "text=I love rock and roll"
      --data-urlencode "campaignId=7" \
 ```
