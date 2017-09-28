@@ -54,10 +54,10 @@ curl -X "POST" "http://localhost:5000/v1/chatbot" \
       },
       "totalQuantitySubmitted": 453,
       "draftReportbackSubmission": {
-        "photo": "https://i.ytimg.com/vi/w6DW4i-mfbA/hqdefault.jpg",
         "id": "59cd5df31e1b4b2cc1ffe208",
         "v": 0,
         "quantity": 700,
+        "photo": "https://i.ytimg.com/vi/w6DW4i-mfbA/hqdefault.jpg",
         "createdAt": "2017-09-28T20:38:44.103Z"
       },
       "user": {
@@ -65,8 +65,8 @@ curl -X "POST" "http://localhost:5000/v1/chatbot" \
       }
     },
     "reply": {
-      "text": "@dev Got it! Now text back a caption for your photo (think Instagram)! Keep it short & sweet, under 60 characters please.",
-      "template": "askCaption"
+      "text": "@dev Sorry, I didn't understand that.\n\nGot it! Now text back a caption for your photo (think Instagram)! Keep it short & sweet, under 60 characters please.",
+      "template": "invalidCaption"
     }
   }
 }
