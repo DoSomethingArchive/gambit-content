@@ -49,20 +49,24 @@ curl -X "POST" "http://localhost:5000/v1/chatbot" \
         "id": 6620
       },
       "keyword": "dunkbot",
-      "reportback": 4037166,
-      "totalQuantitySubmitted": 44,
+      "reportback": {
+        "id": 4037166
+      },
+      "totalQuantitySubmitted": 453,
       "draftReportbackSubmission": {
-        "quantity": 453,
-        "id": "59cd56554fc8e92a6ce84b1c",
-        "createdAt": "2017-09-28T20:06:04.711Z"
+        "photo": "https://i.ytimg.com/vi/w6DW4i-mfbA/hqdefault.jpg",
+        "id": "59cd5df31e1b4b2cc1ffe208",
+        "v": 0,
+        "quantity": 700,
+        "createdAt": "2017-09-28T20:38:44.103Z"
       },
       "user": {
         "id": "59cd4c1910707d778633e30f"
       }
     },
     "reply": {
-      "text": "@dev Nice! Send your best pic of you and the 453 dunks you done.",
-      "template": "askPhoto"
+      "text": "@dev Got it! Now text back a caption for your photo (think Instagram)! Keep it short & sweet, under 60 characters please.",
+      "template": "askCaption"
     }
   }
 }
