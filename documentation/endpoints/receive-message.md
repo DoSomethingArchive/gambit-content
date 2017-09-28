@@ -42,12 +42,31 @@ curl -X "POST" "http://localhost:5000/v1/chatbot" \
 
 ```
 {
-  "success": {
-    "code": 200,
-    "message": "Nice job! YOU deserve a Mirror Message for all the notes you posted. We've got you down for 97 messages posted. Have you posted more? Text START.",
-    "template": "completedMenu"
+  "data": {
+    "signup": {
+      "id": 4037166,
+      "campaign": {
+        "id": 6620
+      },
+      "keyword": "dunkbot",
+      "reportback": 4037166,
+      "totalQuantitySubmitted": 44,
+      "draftReportbackSubmission": {
+        "quantity": 453,
+        "id": "59cd56554fc8e92a6ce84b1c",
+        "createdAt": "2017-09-28T20:06:04.711Z"
+      },
+      "user": {
+        "id": "59cd4c1910707d778633e30f"
+      }
+    },
+    "reply": {
+      "text": "@dev Nice! Send your best pic of you and the 453 dunks you done.",
+      "template": "askPhoto"
+    }
   }
 }
+
 ```
 
 </p></details>
