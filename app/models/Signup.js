@@ -120,7 +120,6 @@ signupSchema.statics.lookupCurrent = function (userId, campaignId) {
         logger.verbose(`Signup.lookCurrent found signup:${data._id}`);
 
         return model.findOneAndUpdate({ _id: data._id }, data, helpers.upsertOptions())
-          .populate('user')
           .populate('draft_reportback_submission')
           .exec();
       })
@@ -240,7 +239,7 @@ signupSchema.methods.postDraftReportbackSubmission = function () {
     const submission = signup.draft_reportback_submission;
     const data = {
       source: postSource,
-      northstar_id: signup.user._id,
+      northstar_id: signup.user,
       quantity: submission.quantity,
       // Although we strip emoji in our chatbot router in pull#910, some submissions may have emoji
       // saved before we deployed Gambit version 4.3.0.
