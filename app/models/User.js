@@ -16,25 +16,10 @@ const stathat = require('../../lib/stathat');
  * Schema.
  */
 const userSchema = new mongoose.Schema({
-
   _id: { type: String, index: true },
-  // TODO: Not sure we need this index
   mobile: { type: String, index: true },
-  phoenix_id: Number,
   mobilecommons_id: Number,
-  email: String,
-  role: String,
-  first_name: String,
-  // Campaign the user is currently participating in via chatbot.
   current_campaign: Number,
-  signup_status: {
-    type: String,
-    // Eventually we'll be adding other values here like 'prompt, 'declined' to build out handling
-    // No or Invalid responses to a Ask Signup Message Template message (broadcasts, campaign menu).
-    enum: ['doing'],
-  },
-  last_outbound_template: String,
-
 });
 
 /**
@@ -44,11 +29,7 @@ function parseNorthstarUser(northstarUser) {
   const data = {
     _id: northstarUser.id,
     mobile: northstarUser.mobile,
-    first_name: northstarUser.firstName,
-    email: northstarUser.email,
-    phoenix_id: northstarUser.drupalID,
     mobilecommons_id: northstarUser.mobilecommonsID,
-    role: northstarUser.role,
   };
 
   return data;
@@ -136,16 +117,10 @@ userSchema.methods.postMobileCommonsProfileUpdate = function (oip, msgTxt) {
 };
 
 /**
- * @param {string} messageTemplate
  * @param {number} campaignId
  */
-userSchema.methods.updateConversation = function (outboundTemplate, campaignId) {
-  this.last_outbound_template = outboundTemplate;
-
-  if (campaignId && campaignId !== this.current_campaign) {
-    this.current_campaign = campaignId;
-    this.signup_status = 'doing';
-  }
+userSchema.methods.updateCurrentCampaign = function (campaignId) {
+  this.current_campaign = campaignId;
 
   return this.save();
 };

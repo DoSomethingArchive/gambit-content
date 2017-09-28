@@ -42,12 +42,35 @@ curl -X "POST" "http://localhost:5000/v1/chatbot" \
 
 ```
 {
-  "success": {
-    "code": 200,
-    "message": "Nice job! YOU deserve a Mirror Message for all the notes you posted. We've got you down for 97 messages posted. Have you posted more? Text START.",
-    "template": "completedMenu"
+  "data": {
+    "signup": {
+      "id": 4037166,
+      "campaign": {
+        "id": 6620
+      },
+      "keyword": "dunkbot",
+      "reportback": {
+        "id": 4037166
+      },
+      "totalQuantitySubmitted": 453,
+      "draftReportbackSubmission": {
+        "id": "59cd5df31e1b4b2cc1ffe208",
+        "v": 0,
+        "quantity": 700,
+        "photo": "https://i.ytimg.com/vi/w6DW4i-mfbA/hqdefault.jpg",
+        "createdAt": "2017-09-28T20:38:44.103Z"
+      },
+      "user": {
+        "id": "59cd4c1910707d778633e30f"
+      }
+    },
+    "reply": {
+      "text": "@dev Sorry, I didn't understand that.\n\nGot it! Now text back a caption for your photo (think Instagram)! Keep it short & sweet, under 60 characters please.",
+      "template": "invalidCaption"
+    }
   }
 }
+
 ```
 
 </p></details>
