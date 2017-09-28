@@ -44,6 +44,7 @@
     "aws-sdk": "2.36.0",
     "bluebird": "^3.4.6",
     "body-parser": "^1.9.2",
+    "camelcase-keys-deep": "^0.1.0",
     "colors": "^1.1.2",
     "connect-timeout": "^1.8.0",
     "contentful": "^3.8.0",
