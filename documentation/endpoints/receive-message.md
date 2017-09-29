@@ -28,12 +28,12 @@ Name | Type | Description
 <details><summary>**Example Request**</summary><p>
 
 ```
-curl -X "POST" "http://localhost:5000/v1/chatbot" \
+curl -X "POST" "http://localhost:5000/v1/receive-message" \
      -H "x-gambit-api-key: totallysecret" \
      -H "Content-Type: application/x-www-form-urlencoded; charset=utf-8" \
-     --data-urlencode "userId=59abca4200707d62db575a3b" \
+     --data-urlencode "userId=59cd4c1910707d778633e30f" \
      --data-urlencode "text=I love rock and roll"
-     --data-urlencode "campaignId=7" \
+     --data-urlencode "campaignId=6620" \
 ```
 
 </p></details>
@@ -43,34 +43,23 @@ curl -X "POST" "http://localhost:5000/v1/chatbot" \
 ```
 {
   "data": {
+    "replyTemplate": "invalidCompletedMenuCommand",
     "signup": {
       "id": 4037166,
       "campaign": {
         "id": 6620
       },
+      "user": {
+        "id": "59cd4c1910707d778633e30f"
+      },
       "keyword": "dunkbot",
       "reportback": {
         "id": 4037166
       },
-      "totalQuantitySubmitted": 453,
-      "draftReportbackSubmission": {
-        "id": "59cd5df31e1b4b2cc1ffe208",
-        "v": 0,
-        "quantity": 700,
-        "photo": "https://i.ytimg.com/vi/w6DW4i-mfbA/hqdefault.jpg",
-        "createdAt": "2017-09-28T20:38:44.103Z"
-      },
-      "user": {
-        "id": "59cd4c1910707d778633e30f"
-      }
-    },
-    "reply": {
-      "text": "@dev Sorry, I didn't understand that.\n\nGot it! Now text back a caption for your photo (think Instagram)! Keep it short & sweet, under 60 characters please.",
-      "template": "invalidCaption"
+      "totalQuantitySubmitted": 4
     }
   }
 }
-
 ```
 
 </p></details>
