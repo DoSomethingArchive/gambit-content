@@ -117,7 +117,7 @@ signupSchema.statics.lookupCurrent = function (userId, campaignId) {
         }
 
         const data = parsePhoenixSignup(currentSignup);
-        logger.verbose(`Signup.lookCurrent found signup:${data._id}`);
+        logger.info(`Signup.lookCurrent found signup:${data._id}`);
 
         return model.findOneAndUpdate({ _id: data._id }, data, helpers.upsertOptions())
           .populate('draft_reportback_submission')
