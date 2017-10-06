@@ -13,8 +13,6 @@ const helpers = require('../../lib/helpers');
 const phoenix = require('../../lib/phoenix');
 const stathat = require('../../lib/stathat');
 
-const postSource = process.env.DS_API_POST_SOURCE || 'sms-mobilecommons';
-
 /**
  * Schema.
  */
@@ -142,18 +140,18 @@ signupSchema.statics.lookupCurrent = function (userId, campaignId) {
  * @param {number} broadcastId
  * @return {Promise}
  */
-signupSchema.statics.post = function (userId, campaignId, keyword, broadcastId) {
+signupSchema.statics.createSignupForReq = function (req) {
   const model = this;
   const statName = 'phoenix: POST signups';
+  const keyword = req.keyword;
+  const userId = req.userId;
+  const campaignId = req.campaignId;
+  const broadcastId = req.broadcastId;
 
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.post(${userId}, ${campaignId}, ${keyword})`);
-    const postData = {
-      source: postSource,
-      northstar_id: userId,
-    };
 
-    return phoenix.client.Campaigns.signup(campaignId, postData)
+    return phoenix.postSignupForReq(req)
       .then((signupId) => {
         stathat.postStat(`${statName} 200`);
         if (keyword) {
@@ -238,7 +236,7 @@ signupSchema.methods.postDraftReportbackSubmission = function () {
   return new Promise((resolve, reject) => {
     const submission = signup.draft_reportback_submission;
     const data = {
-      source: postSource,
+      source: phoenix.getPostSource(),
       northstar_id: signup.user,
       quantity: submission.quantity,
       // Although we strip emoji in our chatbot router in pull#910, some submissions may have emoji
