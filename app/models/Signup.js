@@ -11,6 +11,7 @@ const logger = require('winston');
 const ReportbackSubmission = require('./ReportbackSubmission');
 const helpers = require('../../lib/helpers');
 const phoenix = require('../../lib/phoenix');
+const rogue = require('../../lib/rogue');
 const stathat = require('../../lib/stathat');
 
 /**
@@ -134,10 +135,19 @@ signupSchema.statics.lookupCurrent = function (userId, campaignId) {
 
 /**
  * Posts Signup to DS API.
- * @param {string} userId
- * @param {number} campaignId
- * @param {string} keyword - Keyword used to trigger Campaign Signup.
- * @param {number} broadcastId
+ * @param {object} req - Express request
+ * @return {Promise}
+ */
+function postSignupForReq(req) {
+  if (rogue.isEnabled()) {
+    return rogue.postSignupForReq(req);
+  }
+  return phoenix.postSignupForReq(req);
+}
+
+/**
+ * Posts Signup to DS API and creates Signup model.
+ * @param {object} req - Express request
  * @return {Promise}
  */
 signupSchema.statics.createSignupForReq = function (req) {
@@ -151,8 +161,15 @@ signupSchema.statics.createSignupForReq = function (req) {
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.post(${userId}, ${campaignId}, ${keyword})`);
 
-    return phoenix.postSignupForReq(req)
-      .then((signupId) => {
+    return postSignupForReq(req)
+      .then((signup) => {
+        // Phoenix returns a numeric Signup ID:
+        let signupId = signup;
+        // Rogue returns a Signup object:
+        if (isNaN(signupId)) {
+          signupId = signup.id;
+        }
+
         stathat.postStat(`${statName} 200`);
         if (keyword) {
           stathat.postStat(`signup: ${keyword}`);
