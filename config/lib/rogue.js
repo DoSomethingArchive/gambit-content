@@ -1,6 +1,6 @@
 'use strict';
 
-const enabled = process.env.DS_ROGUE_ENABLED === 'true';
+const helpers = require('../../lib/helpers');
 
 module.exports = {
   apiKeyHeader: 'X-DS-Rogue-API-Key',
@@ -8,5 +8,6 @@ module.exports = {
     baseUri: process.env.DS_ROGUE_API_BASEURI,
     apiKey: process.env.DS_ROGUE_API_KEY,
   },
-  enabled,
+  enabled: process.env.DS_ROGUE_ENABLED === 'true',
+  source: helpers.getCampaignActivitySource(),
 };

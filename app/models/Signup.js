@@ -134,18 +134,6 @@ signupSchema.statics.lookupCurrent = function (userId, campaignId) {
 };
 
 /**
- * Posts Signup to DS API.
- * @param {object} req - Express request
- * @return {Promise}
- */
-function postSignupForReq(req) {
-  if (rogue.isEnabled()) {
-    return rogue.postSignupForReq(req);
-  }
-  return phoenix.postSignupForReq(req);
-}
-
-/**
  * Posts Signup to DS API and creates Signup model.
  * @param {object} req - Express request
  * @return {Promise}
@@ -161,14 +149,16 @@ signupSchema.statics.createSignupForReq = function (req) {
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.post(${userId}, ${campaignId}, ${keyword})`);
 
-    return postSignupForReq(req)
+    let promise;
+    if (rogue.isEnabled()) {
+      promise = rogue.postSignupForReq(req);
+    } else {
+      promise = phoenix.postSignupForReq(req);
+    }
+
+    return promise
       .then((signup) => {
-        // Phoenix returns a numeric Signup ID:
-        let signupId = signup;
-        // Rogue returns a Signup object:
-        if (isNaN(signupId)) {
-          signupId = signup.id;
-        }
+        const signupId = signup.data.signup_id;
 
         stathat.postStat(`${statName} 200`);
         if (keyword) {
