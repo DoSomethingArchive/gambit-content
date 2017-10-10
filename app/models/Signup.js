@@ -149,7 +149,7 @@ signupSchema.statics.createSignupForReq = function (req) {
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.post(${userId}, ${campaignId}, ${keyword})`);
 
-    return rogue.postSignupForReq(req)
+    return rogue.createSignupForReq(req)
       .then((signup) => {
         const signupId = signup.data.signup_id;
 
