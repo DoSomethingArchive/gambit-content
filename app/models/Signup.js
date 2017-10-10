@@ -243,7 +243,7 @@ signupSchema.methods.postDraftReportbackSubmission = function () {
   return new Promise((resolve, reject) => {
     const submission = signup.draft_reportback_submission;
     const data = {
-      source: phoenix.getPostSource(),
+      source: helpers.getCampaignActivitySource(),
       northstar_id: signup.user,
       quantity: submission.quantity,
       // Although we strip emoji in our chatbot router in pull#910, some submissions may have emoji
