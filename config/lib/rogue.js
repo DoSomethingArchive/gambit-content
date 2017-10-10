@@ -8,6 +8,5 @@ module.exports = {
     baseUri: process.env.DS_ROGUE_API_BASEURI,
     apiKey: process.env.DS_ROGUE_API_KEY,
   },
-  enabled: process.env.DS_ROGUE_ENABLED === 'true',
   source: helpers.getCampaignActivitySource(),
 };

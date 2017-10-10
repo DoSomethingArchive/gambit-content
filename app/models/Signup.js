@@ -149,14 +149,7 @@ signupSchema.statics.createSignupForReq = function (req) {
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.post(${userId}, ${campaignId}, ${keyword})`);
 
-    let promise;
-    if (rogue.isEnabled()) {
-      promise = rogue.postSignupForReq(req);
-    } else {
-      promise = phoenix.postSignupForReq(req);
-    }
-
-    return promise
+    return rogue.postSignupForReq(req)
       .then((signup) => {
         const signupId = signup.data.signup_id;
 
