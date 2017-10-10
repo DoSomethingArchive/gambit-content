@@ -11,9 +11,8 @@ const logger = require('winston');
 const ReportbackSubmission = require('./ReportbackSubmission');
 const helpers = require('../../lib/helpers');
 const phoenix = require('../../lib/phoenix');
+const rogue = require('../../lib/rogue');
 const stathat = require('../../lib/stathat');
-
-const postSource = process.env.DS_API_POST_SOURCE || 'sms-mobilecommons';
 
 /**
  * Schema.
@@ -135,26 +134,32 @@ signupSchema.statics.lookupCurrent = function (userId, campaignId) {
 };
 
 /**
- * Posts Signup to DS API.
- * @param {string} userId
- * @param {number} campaignId
- * @param {string} keyword - Keyword used to trigger Campaign Signup.
- * @param {number} broadcastId
+ * Posts Signup to DS API and creates Signup model.
+ * @param {object} req - Express request
  * @return {Promise}
  */
-signupSchema.statics.post = function (userId, campaignId, keyword, broadcastId) {
+signupSchema.statics.createSignupForReq = function (req) {
   const model = this;
   const statName = 'phoenix: POST signups';
+  const keyword = req.keyword;
+  const userId = req.userId;
+  const campaignId = req.campaignId;
+  const broadcastId = req.broadcastId;
 
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.post(${userId}, ${campaignId}, ${keyword})`);
-    const postData = {
-      source: postSource,
-      northstar_id: userId,
-    };
 
-    return phoenix.client.Campaigns.signup(campaignId, postData)
-      .then((signupId) => {
+    let promise;
+    if (rogue.isEnabled()) {
+      promise = rogue.postSignupForReq(req);
+    } else {
+      promise = phoenix.postSignupForReq(req);
+    }
+
+    return promise
+      .then((signup) => {
+        const signupId = signup.data.signup_id;
+
         stathat.postStat(`${statName} 200`);
         if (keyword) {
           stathat.postStat(`signup: ${keyword}`);
@@ -238,7 +243,7 @@ signupSchema.methods.postDraftReportbackSubmission = function () {
   return new Promise((resolve, reject) => {
     const submission = signup.draft_reportback_submission;
     const data = {
-      source: postSource,
+      source: helpers.getCampaignActivitySource(),
       northstar_id: signup.user,
       quantity: submission.quantity,
       // Although we strip emoji in our chatbot router in pull#910, some submissions may have emoji
