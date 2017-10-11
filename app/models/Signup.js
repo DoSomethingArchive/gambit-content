@@ -94,14 +94,16 @@ signupSchema.statics.lookupById = function (id) {
  */
 signupSchema.statics.lookupCurrent = function (userId, campaignRunId) {
   const model = this;
-  const statName = 'rogue: GET signups';
 
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.lookupCurrent(${userId}, ${campaignRunId})`);
 
     return rogue.fetchActivityForUserIdAndCampaignRunId(userId, campaignRunId)
       .then((res) => {
-        stathat.postStat(`${statName} 200`);
+        if (res.data.length < 1) {
+          return resolve(false);
+        }
+
         const signupData = parseActivityResponse(res);
         const signupId = signupData.id;
         logger.info(`Signup.lookupCurrent signup:${signupId}`);
@@ -112,7 +114,6 @@ signupSchema.statics.lookupCurrent = function (userId, campaignRunId) {
       })
       .then(signupDoc => resolve(signupDoc))
       .catch((err) => {
-        stathat.postStatWithError(statName, err);
         const scope = err;
         scope.message = `Signup.lookupCurrent error:${err.message}`;
 
