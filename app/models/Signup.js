@@ -48,7 +48,7 @@ const signupSchema = new mongoose.Schema({
  * @param {object} activityData - Rogue API response.data
  * @return {object}
  */
-function parseActivityResponse(activityData) {
+function parseActivityData(activityData) {
   const data = activityData[0];
   const result = {
     id: data.signup_id,
@@ -78,7 +78,7 @@ signupSchema.statics.lookupById = function (id) {
         if (res.data.length < 1) {
           throw new Error(notFoundMessage);
         }
-        const signupData = parseActivityResponse(res.data);
+        const signupData = parseActivityData(res.data);
         const signupId = signupData.id;
 
         return model.findOneAndUpdate({ _id: signupId }, signupData, upsertOptions).exec();
@@ -114,7 +114,7 @@ signupSchema.statics.lookupCurrentSignupForReq = function (req) {
           return resolve(false);
         }
 
-        const signupData = parseActivityResponse(res);
+        const signupData = parseActivityData(res.data);
         const signupId = signupData.id;
         logger.info(`Signup.lookupCurrent signup:${signupId}`);
 
