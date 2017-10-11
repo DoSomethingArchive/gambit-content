@@ -53,6 +53,7 @@
     "express": "^4.10.2",
     "file-exists": "^4.0.0",
     "html-entities": "^1.1.1",
+    "ip": "^1.1.5",
     "mongoose": "~4.6.1",
     "newrelic": "2.0.0",
     "node-request-retry": "^1.0.0",
