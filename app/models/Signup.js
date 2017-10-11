@@ -5,7 +5,6 @@
  */
 const mongoose = require('mongoose');
 const Promise = require('bluebird');
-const emojiStrip = require('emoji-strip');
 const logger = require('winston');
 
 const ReportbackSubmission = require('./ReportbackSubmission');
@@ -226,35 +225,19 @@ signupSchema.methods.createDraftReportbackSubmission = function () {
 /**
  * Posts Signup Draft Reportback Submission to DS API and updates Submission and Signup accordingly.
  */
-signupSchema.methods.postDraftReportbackSubmission = function () {
+signupSchema.methods.createPostForReq = function (req) {
   const signup = this;
-  logger.debug(`Signup.postDraftReportbackSubmission signup:${JSON.stringify(signup)}`);
+  const submission = signup.draft_reportback_submission;
+  logger.debug(`Signup.createPostForReq signup:${this._id}`);
 
   const dateSubmitted = Date.now();
   const statName = 'phoenix: POST reportbacks';
 
   return new Promise((resolve, reject) => {
-    const submission = signup.draft_reportback_submission;
-    const data = {
-      source: helpers.getCampaignActivitySource(),
-      northstar_id: signup.user,
-      quantity: submission.quantity,
-      // Although we strip emoji in our chatbot router in pull#910, some submissions may have emoji
-      // saved before we deployed Gambit version 4.3.0.
-      // We can eventually move this once we clear out all stuck Reportback Submissions, as it's
-      // already been done for new submissions created after deployment of 4.3.0.
-      caption: emojiStrip(submission.caption),
-      file_url: submission.photo,
-    };
-    if (submission.why_participated) {
-      data.why_participated = emojiStrip(submission.why_participated);
-    }
-    logger.debug(`Signup.postDraftReportbackSubmission data:${JSON.stringify(data)}`);
-
-    return phoenix.client.Campaigns.reportback(signup.campaign, data)
-      .then((reportbackId) => {
+    rogue.createPostForReq(req)
+      .then((res) => {
+        const reportbackId = res.data.id;
         stathat.postStat(`${statName} 200`);
-        logger.info(`phoenix.client.Campaigns.reportback:${reportbackId}`);
 
         signup.reportback = reportbackId;
         signup.total_quantity_submitted = Number(submission.quantity);
@@ -278,7 +261,7 @@ signupSchema.methods.postDraftReportbackSubmission = function () {
         submission.save();
 
         const scope = err;
-        scope.message = `Signup.postDraftReportbackSubmission error:${err.message}`;
+        scope.message = `Signup.createPostForReq error:${err.message}`;
 
         return reject(scope);
       });
