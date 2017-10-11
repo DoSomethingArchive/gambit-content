@@ -78,16 +78,6 @@ test.afterEach((t) => {
  * Tests
  */
 
-// handlePhoenixPostError
-test('handlePhoenixPostError should send error response', (t) => {
-  // setup
-  const error = { status: 500, message: 'error' };
-
-  // test
-  helpers.handlePhoenixPostError(t.context.req, t.context.res, error);
-  helpers.sendErrorResponse.should.have.been.calledWith(t.context.res, error);
-});
-
 // replacePhoenixCampaignVars
 test('replacePhoenixCampaignVars', async () => {
   const phoenixCampaign = stubs.getPhoenixCampaign();
