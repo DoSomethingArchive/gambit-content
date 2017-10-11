@@ -6,5 +6,5 @@ module.exports = {
     baseUri: process.env.DS_ROGUE_API_BASEURI,
     apiKey: process.env.DS_ROGUE_API_KEY,
   },
-  source: process.env.DS_API_POST_SOURCE || 'sms-mobilecommons',
+  source: process.env.DS_API_POST_SOURCE || 'sms',
 };
