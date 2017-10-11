@@ -9,9 +9,10 @@ const logger = require('winston');
 
 const ReportbackSubmission = require('./ReportbackSubmission');
 const helpers = require('../../lib/helpers');
-const phoenix = require('../../lib/phoenix');
 const rogue = require('../../lib/rogue');
 const stathat = require('../../lib/stathat');
+
+const upsertOptions = helpers.upsertOptions();
 
 /**
  * Schema.
@@ -42,6 +43,11 @@ const signupSchema = new mongoose.Schema({
 
 });
 
+/**
+ * Parses a Rogue Activity response to return data for a Signup model.
+ * @param {object} res - Rogue API response
+ * @return {object}
+ */
 function parseActivityResponse(res) {
   const data = res.data[0];
   const result = {
@@ -50,6 +56,7 @@ function parseActivityResponse(res) {
     campaign: data.campaign_id,
     total_quantity_submitted: data.quantity,
   };
+  logger.verbose('parseActivityResponse', result);
 
   return result;
 }
@@ -60,22 +67,19 @@ function parseActivityResponse(res) {
  */
 signupSchema.statics.lookupById = function (id) {
   const model = this;
-  const statName = 'phoenix: GET signups/{id}';
 
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.lookupById:${id}`);
 
-    return phoenix.client.Signups.get(id)
-      .then((phoenixSignup) => {
-        stathat.postStat(`${statName} 200`);
-        logger.debug(`phoenix.Signups.get:${id} success`);
-        const data = parsePhoenixSignup(phoenixSignup);
+    return rogue.fetchActivityForSignupId(id)
+      .then((res) => {
+        const signupData = parseActivityResponse(res);
+        const signupId = signupData.id;
 
-        return model.findOneAndUpdate({ _id: id }, data, helpers.upsertOptions()).exec();
+        return model.findOneAndUpdate({ _id: signupId }, signupData, upsertOptions).exec();
       })
       .then(signupDoc => resolve(signupDoc))
       .catch((err) => {
-        stathat.postStatWithError(statName, err);
         const scope = err;
         scope.message = `Signup.lookupById error:${err.message}`;
         return reject(scope);
@@ -101,9 +105,8 @@ signupSchema.statics.lookupCurrent = function (userId, campaignRunId) {
         const signupData = parseActivityResponse(res);
         const signupId = signupData.id;
         logger.info(`Signup.lookupCurrent signup:${signupId}`);
-        logger.verbose('Signup.lookupCurrent', { signupData });
 
-        return model.findOneAndUpdate({ _id: signupId }, signupData, helpers.upsertOptions())
+        return model.findOneAndUpdate({ _id: signupId }, signupData, upsertOptions)
           .populate('draft_reportback_submission')
           .exec();
       })
