@@ -92,8 +92,10 @@ signupSchema.statics.lookupById = function (id) {
  * @param {string} userId
  * @param {number} campaignId.
  */
-signupSchema.statics.lookupCurrent = function (userId, campaignRunId) {
+signupSchema.statics.lookupCurrentSignupForReq = function (req) {
   const model = this;
+  const userId = req.userId;
+  const campaignRunId = req.campaign.currentCampaignRun.id;
 
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.lookupCurrent(${userId}, ${campaignRunId})`);
