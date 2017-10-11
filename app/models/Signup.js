@@ -131,7 +131,6 @@ signupSchema.statics.lookupCurrentSignupForReq = function (req) {
  */
 signupSchema.statics.createSignupForReq = function (req) {
   const model = this;
-  const statName = 'phoenix: POST signups';
   const keyword = req.keyword;
   const userId = req.userId;
   const campaignId = req.campaignId;
@@ -143,8 +142,6 @@ signupSchema.statics.createSignupForReq = function (req) {
     return rogue.createSignupForReq(req)
       .then((signup) => {
         const signupId = signup.data.signup_id;
-
-        stathat.postStat(`${statName} 200`);
         if (keyword) {
           stathat.postStat(`signup: ${keyword}`);
         }
@@ -168,7 +165,6 @@ signupSchema.statics.createSignupForReq = function (req) {
       })
       .then(signupDoc => resolve(signupDoc))
       .catch((err) => {
-        stathat.postStatWithError(statName, err);
         const scope = err;
         scope.message = `Signup.post error:${err.message}`;
 
@@ -221,15 +217,12 @@ signupSchema.methods.createPostForReq = function (req) {
   const signup = this;
   const submission = signup.draft_reportback_submission;
   logger.debug(`Signup.createPostForReq signup:${this._id}`);
-
   const dateSubmitted = Date.now();
-  const statName = 'phoenix: POST reportbacks';
 
   return new Promise((resolve, reject) => {
     rogue.createPostForReq(req)
       .then((res) => {
         const reportbackId = res.data.id;
-        stathat.postStat(`${statName} 200`);
 
         signup.reportback = reportbackId;
         signup.total_quantity_submitted = Number(submission.quantity);
