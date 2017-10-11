@@ -45,11 +45,11 @@ const signupSchema = new mongoose.Schema({
 
 /**
  * Parses a Rogue Activity response to return data for a Signup model.
- * @param {object} res - Rogue API response
+ * @param {object} activityData - Rogue API response.data
  * @return {object}
  */
-function parseActivityResponse(res) {
-  const data = res.data[0];
+function parseActivityResponse(activityData) {
+  const data = activityData[0];
   const result = {
     id: data.signup_id,
     user: data.northstar_id,
@@ -67,13 +67,18 @@ function parseActivityResponse(res) {
  */
 signupSchema.statics.lookupById = function (id) {
   const model = this;
+  const notFoundMessage = 'No activity results for signup_id';
 
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.lookupById:${id}`);
 
     return rogue.fetchActivityForSignupId(id)
       .then((res) => {
-        const signupData = parseActivityResponse(res);
+        // Because we get a success response with no results, throw an error to return a 404.
+        if (res.data.length < 1) {
+          throw new Error(notFoundMessage);
+        }
+        const signupData = parseActivityResponse(res.data);
         const signupId = signupData.id;
 
         return model.findOneAndUpdate({ _id: signupId }, signupData, upsertOptions).exec();
@@ -81,6 +86,9 @@ signupSchema.statics.lookupById = function (id) {
       .then(signupDoc => resolve(signupDoc))
       .catch((err) => {
         const scope = err;
+        if (err.message === notFoundMessage) {
+          scope.status = 404;
+        }
         scope.message = `Signup.lookupById error:${err.message}`;
         return reject(scope);
       });
