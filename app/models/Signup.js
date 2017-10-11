@@ -42,22 +42,16 @@ const signupSchema = new mongoose.Schema({
 
 });
 
-function parsePhoenixSignup(phoenixSignup) {
-  const data = {
-    _id: Number(phoenixSignup.id),
-    user: phoenixSignup.user,
-    campaign: Number(phoenixSignup.campaign),
+function parseActivityResponse(res) {
+  const data = res.data[0];
+  const result = {
+    id: data.signup_id,
+    user: data.northstar_id,
+    campaign: data.campaign_id,
+    total_quantity_submitted: data.quantity,
   };
-  // Only set if this was called from postSignup(req).
-  if (phoenixSignup.keyword) {
-    data.keyword = phoenixSignup.keyword;
-  }
-  if (phoenixSignup.reportback) {
-    data.reportback = Number(phoenixSignup.reportback.id);
-    data.total_quantity_submitted = phoenixSignup.reportback.quantity;
-  }
 
-  return data;
+  return result;
 }
 
 /**
@@ -94,30 +88,22 @@ signupSchema.statics.lookupById = function (id) {
  * @param {string} userId
  * @param {number} campaignId.
  */
-signupSchema.statics.lookupCurrent = function (userId, campaignId) {
+signupSchema.statics.lookupCurrent = function (userId, campaignRunId) {
   const model = this;
-  const statName = 'phoenix: GET signups';
+  const statName = 'rogue: GET signups';
 
   return new Promise((resolve, reject) => {
-    logger.debug(`Signup.lookupCurrent(${userId}, ${campaignId})`);
+    logger.debug(`Signup.lookupCurrent(${userId}, ${campaignRunId})`);
 
-    return phoenix.client.Signups.index({ user: userId, campaigns: campaignId })
-      .then((phoenixSignups) => {
+    return rogue.fetchActivityForUserIdAndCampaignRunId(userId, campaignRunId)
+      .then((res) => {
         stathat.postStat(`${statName} 200`);
+        const signupData = parseActivityResponse(res);
+        const signupId = signupData.id;
+        logger.info(`Signup.lookupCurrent signup:${signupId}`);
+        logger.verbose('Signup.lookupCurrent', { signupData });
 
-        if (phoenixSignups.length < 1) {
-          return resolve(false);
-        }
-
-        const currentSignup = phoenixSignups.find(signup => signup.campaignRun.current);
-        if (!currentSignup) {
-          return resolve(false);
-        }
-
-        const data = parsePhoenixSignup(currentSignup);
-        logger.info(`Signup.lookCurrent found signup:${data._id}`);
-
-        return model.findOneAndUpdate({ _id: data._id }, data, helpers.upsertOptions())
+        return model.findOneAndUpdate({ _id: signupId }, signupData, helpers.upsertOptions())
           .populate('draft_reportback_submission')
           .exec();
       })
