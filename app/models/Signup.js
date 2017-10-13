@@ -9,9 +9,10 @@ const logger = require('winston');
 
 const ReportbackSubmission = require('./ReportbackSubmission');
 const helpers = require('../../lib/helpers');
-const phoenix = require('../../lib/phoenix');
 const rogue = require('../../lib/rogue');
 const stathat = require('../../lib/stathat');
+
+const upsertOptions = helpers.upsertOptions();
 
 /**
  * Schema.
@@ -42,22 +43,22 @@ const signupSchema = new mongoose.Schema({
 
 });
 
-function parsePhoenixSignup(phoenixSignup) {
-  const data = {
-    _id: Number(phoenixSignup.id),
-    user: phoenixSignup.user,
-    campaign: Number(phoenixSignup.campaign),
+/**
+ * Parses a Rogue Activity response to return data for a Signup model.
+ * @param {object} activityData - Rogue API response.data
+ * @return {object}
+ */
+function parseActivityData(activityData) {
+  const data = activityData[0];
+  const result = {
+    id: data.signup_id,
+    user: data.northstar_id,
+    campaign: data.campaign_id,
+    total_quantity_submitted: data.quantity,
   };
-  // Only set if this was called from postSignup(req).
-  if (phoenixSignup.keyword) {
-    data.keyword = phoenixSignup.keyword;
-  }
-  if (phoenixSignup.reportback) {
-    data.reportback = Number(phoenixSignup.reportback.id);
-    data.total_quantity_submitted = phoenixSignup.reportback.quantity;
-  }
+  logger.verbose('parseActivityResponse', result);
 
-  return data;
+  return result;
 }
 
 /**
@@ -66,23 +67,28 @@ function parsePhoenixSignup(phoenixSignup) {
  */
 signupSchema.statics.lookupById = function (id) {
   const model = this;
-  const statName = 'phoenix: GET signups/{id}';
+  const notFoundMessage = 'No activity results for signup_id';
 
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.lookupById:${id}`);
 
-    return phoenix.client.Signups.get(id)
-      .then((phoenixSignup) => {
-        stathat.postStat(`${statName} 200`);
-        logger.debug(`phoenix.Signups.get:${id} success`);
-        const data = parsePhoenixSignup(phoenixSignup);
+    return rogue.fetchActivityForSignupId(id)
+      .then((res) => {
+        // Because we get a success response with no results, throw an error to return a 404.
+        if (res.data.length < 1) {
+          throw new Error(notFoundMessage);
+        }
+        const signupData = parseActivityData(res.data);
+        const signupId = signupData.id;
 
-        return model.findOneAndUpdate({ _id: id }, data, helpers.upsertOptions()).exec();
+        return model.findOneAndUpdate({ _id: signupId }, signupData, upsertOptions).exec();
       })
       .then(signupDoc => resolve(signupDoc))
       .catch((err) => {
-        stathat.postStatWithError(statName, err);
         const scope = err;
+        if (err.message === notFoundMessage) {
+          scope.status = 404;
+        }
         scope.message = `Signup.lookupById error:${err.message}`;
         return reject(scope);
       });
@@ -94,36 +100,30 @@ signupSchema.statics.lookupById = function (id) {
  * @param {string} userId
  * @param {number} campaignId.
  */
-signupSchema.statics.lookupCurrent = function (userId, campaignId) {
+signupSchema.statics.lookupCurrentSignupForReq = function (req) {
   const model = this;
-  const statName = 'phoenix: GET signups';
+  const userId = req.userId;
+  const campaignRunId = req.campaign.currentCampaignRun.id;
 
   return new Promise((resolve, reject) => {
-    logger.debug(`Signup.lookupCurrent(${userId}, ${campaignId})`);
+    logger.debug(`Signup.lookupCurrent(${userId}, ${campaignRunId})`);
 
-    return phoenix.client.Signups.index({ user: userId, campaigns: campaignId })
-      .then((phoenixSignups) => {
-        stathat.postStat(`${statName} 200`);
-
-        if (phoenixSignups.length < 1) {
+    return rogue.fetchActivityForUserIdAndCampaignRunId(userId, campaignRunId)
+      .then((res) => {
+        if (res.data.length < 1) {
           return resolve(false);
         }
 
-        const currentSignup = phoenixSignups.find(signup => signup.campaignRun.current);
-        if (!currentSignup) {
-          return resolve(false);
-        }
+        const signupData = parseActivityData(res.data);
+        const signupId = signupData.id;
+        logger.info(`Signup.lookupCurrent signup:${signupId}`);
 
-        const data = parsePhoenixSignup(currentSignup);
-        logger.info(`Signup.lookCurrent found signup:${data._id}`);
-
-        return model.findOneAndUpdate({ _id: data._id }, data, helpers.upsertOptions())
+        return model.findOneAndUpdate({ _id: signupId }, signupData, upsertOptions)
           .populate('draft_reportback_submission')
           .exec();
       })
       .then(signupDoc => resolve(signupDoc))
       .catch((err) => {
-        stathat.postStatWithError(statName, err);
         const scope = err;
         scope.message = `Signup.lookupCurrent error:${err.message}`;
 
@@ -139,7 +139,6 @@ signupSchema.statics.lookupCurrent = function (userId, campaignId) {
  */
 signupSchema.statics.createSignupForReq = function (req) {
   const model = this;
-  const statName = 'phoenix: POST signups';
   const keyword = req.keyword;
   const userId = req.userId;
   const campaignId = req.campaignId;
@@ -151,8 +150,6 @@ signupSchema.statics.createSignupForReq = function (req) {
     return rogue.createSignupForReq(req)
       .then((signup) => {
         const signupId = signup.data.signup_id;
-
-        stathat.postStat(`${statName} 200`);
         if (keyword) {
           stathat.postStat(`signup: ${keyword}`);
         }
@@ -176,7 +173,6 @@ signupSchema.statics.createSignupForReq = function (req) {
       })
       .then(signupDoc => resolve(signupDoc))
       .catch((err) => {
-        stathat.postStatWithError(statName, err);
         const scope = err;
         scope.message = `Signup.post error:${err.message}`;
 
@@ -229,15 +225,12 @@ signupSchema.methods.createPostForReq = function (req) {
   const signup = this;
   const submission = signup.draft_reportback_submission;
   logger.debug(`Signup.createPostForReq signup:${this._id}`);
-
   const dateSubmitted = Date.now();
-  const statName = 'phoenix: POST reportbacks';
 
   return new Promise((resolve, reject) => {
     rogue.createPostForReq(req)
       .then((res) => {
         const reportbackId = res.data.id;
-        stathat.postStat(`${statName} 200`);
 
         signup.reportback = reportbackId;
         signup.total_quantity_submitted = Number(submission.quantity);
