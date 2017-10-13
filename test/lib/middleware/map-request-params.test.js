@@ -50,25 +50,6 @@ test.afterEach((t) => {
   t.context = {};
 });
 
-test('mapRequestParams should strip emojies from the args param when mapping', async (t) => {
-  // setup
-  const next = sinon.stub();
-  const middleware = mapRequestParams(config);
-  const emojiStripParam = config.emojiStripParam;
-  const toLowerCaseParam = config.lowercaseParam;
-  const prefix = 'catdot!';
-  const emojiStripValue = `${prefix}🐱🐶`;
-  const toLowerCaseValue = 'DOSOMETHING';
-  t.context.req[config.containerProperty][emojiStripParam] = emojiStripValue;
-  t.context.req[config.containerProperty][toLowerCaseParam] = toLowerCaseValue;
-
-  // test
-  await middleware(t.context.req, t.context.res, next);
-  t.context.req[config.paramsMap[emojiStripParam]].should.be.equal(prefix);
-  t.context.req[config.paramsMap[toLowerCaseParam]].should.be.equal(toLowerCaseValue.toLowerCase());
-  next.should.have.been.called;
-});
-
 test('mapRequestParams should populate the contentful broadcast object and campaignId when it gets a broadcast_id', async (t) => {
   // setup
   const next = sinon.stub();
