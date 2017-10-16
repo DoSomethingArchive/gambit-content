@@ -30,15 +30,16 @@ module.exports = {
     invalidCompletedMenuCommand: 'invalidCompletedMenuCommandMessage',
     memberSupport: 'memberSupportMessage',
     campaignClosed: 'campaignClosedMessage',
-    errorOccurred: 'errorOccurredMessage',
     askSignup: 'askSignupMessage',
     declinedSignup: 'declinedSignupMessage',
     invalidAskSignupResponse: 'invalidSignupResponseMessage',
     askContinue: 'askContinueMessage',
     declinedContinue: 'declinedContinueMessage',
     invalidAskContinueResponse: 'invalidContinueResponseMessage',
-    // TODO: Remove these when Conversations goes live.
-    // They won't be used anymore, so we didn't bother to rename these.
+    // TODO: When Conversation goes live, we'll either be removing these to send messages from
+    // Customer.io, or we'll want to rename them to camelCase if we send Relative Reminders via
+    // Conversations POST /send-message.
+    // @see https://github.com/DoSomething/gambit-conversations/issues/79
     scheduled_relative_to_signup_date: 'scheduledRelativeToSignupDateMessage',
     scheduled_relative_to_reportback_date: 'scheduledRelativeToReportbackDateMessage',
   },
