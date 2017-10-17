@@ -1,7 +1,7 @@
 {
   "name": "gambit",
-  "version": "4.8.1",
-  "description": "A DoSomething.org chatbot",
+  "version": "4.8.2",
+  "description": "The DoSomething.org chatbot service for campaigns and their activity.",
   "license": "MIT",
   "repository": {
     "type": "git",
