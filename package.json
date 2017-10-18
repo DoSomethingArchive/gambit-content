@@ -40,7 +40,6 @@
   },
   "dependencies": {
     "@dosomething/northstar-js": "1.0.0",
-    "@dosomething/phoenix-js": "git://github.com/DoSomething/phoenix-js.git",
     "aws-sdk": "2.36.0",
     "bluebird": "^3.4.6",
     "body-parser": "^1.9.2",
