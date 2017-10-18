@@ -116,12 +116,9 @@ module.exports = {
       title: 'Two Books Blue Books',
       tagline: 'Host a Dr. Seuss book drive to benefit kids in family shelters.',
       status: 'active',
-      uri: 'https://thor.dosomething.org/api/v1/campaigns/2299',
-      type: 'campaign',
       currentCampaignRun: { id: '6441' },
       reportbackInfo: {
         confirmationMessage: 'Thanks for running your book drive!',
-        copy: 'Submit your pic to us, and do it now. You did it well, so tell us how!',
         noun: 'Books',
         verb: 'Collected',
       },
@@ -266,5 +263,10 @@ module.exports = {
     const path = `../stubs/${category}/`;
     const result = require(`${path}${name}.json`);
     return result;
+  },
+  phoenix: {
+    getCampaign: function getCampaign() {
+      return module.exports.getJSONstub('campaign', 'phoenix');
+    },
   },
 };
