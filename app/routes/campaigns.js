@@ -18,19 +18,18 @@ const stathat = require('../../lib/stathat');
 
 /**
  * Queries Phoenix, Contentful, and Mongo to render an object for a given Campaign id.
- * If renderMessages is set to true, includes all rendered messages as a messages property.
+ * TODO: Refactor this monster chain into middleware.
+ * @see https://github.com/DoSomething/gambit/issues/983
  */
 function fetchCampaign(id) {
-  const campaign = { id };
+  let campaign;
 
   return new Promise((resolve, reject) => {
     logger.debug(`campaigns.fetchCampaign:${id}`);
 
     return phoenix.fetchCampaign(id)
       .then((phoenixCampaign) => {
-        campaign.title = phoenixCampaign.title;
-        campaign.status = phoenixCampaign.status;
-        campaign.current_run = phoenixCampaign.currentCampaignRun.id;
+        campaign = phoenixCampaign;
 
         return contentful.renderAllTemplatesForPhoenixCampaign(phoenixCampaign);
       })

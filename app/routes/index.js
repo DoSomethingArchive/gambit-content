@@ -31,10 +31,10 @@ module.exports = function init(app) {
   app.get('/', homeRoute);
   app.use('/v1/status', statusRoute);
 
-  // Provides Gambit keywords and tempaltes for a single Phoenix Campaign.
+  // Provides keywords and templates for a single Campaign.
   app.use('/v1/campaigns/:campaignId', campaignsRoute);
 
-  // Provides list of Phoenix Campaigns currently running on Gambit.
+  // Provides list of Campaigns configured for Gambit.
   app.use('/v1/campaigns', campaignsIndexRoute);
 
   // Receives inbound message from Mobile Commons mData.
