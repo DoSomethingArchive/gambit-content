@@ -36,7 +36,6 @@ const broadcastStub = Promise.resolve(stubs.contentful.getEntries('broadcast'));
 const campaignStub = Promise.resolve(stubs.contentful.getEntries('campaign'));
 const defaultCampaignStub = Promise.resolve(stubs.contentful.getEntries('default-campaign'));
 const campaignWithOverridesStub = Promise.resolve(stubs.contentful.getEntries('campaign-with-overrides'));
-const keywordsForCampaignStub = Promise.resolve(stubs.contentful.getEntries('keyword-for-campaign'));
 const templatesForCampaignIdStub = Promise.resolve(stubs.contentful.getAllTemplatesForCampaignId());
 const failStub = Promise.reject({ status: 500 });
 const contentfulAPIStub = {
@@ -181,52 +180,6 @@ test('fetchKeywords should call contentfulError when it fails', async () => {
 
   // test
   await contentful.fetchKeywords();
-  contentful.contentfulError.should.have.been.called;
-});
-
-// fetchCampaignIdsWithKeywords
-test('fetchCampaignIdsWithKeywords should retrieve all contentful keywords', async () => {
-  // setup
-  sandbox.stub(contentful, 'fetchKeywords').returns(allKeywordsStub);
-  sandbox.spy(contentful, 'mapCampaignIds');
-
-  // test
-  await contentful.fetchCampaignIdsWithKeywords();
-  contentful.fetchKeywords.should.have.been.called;
-  contentful.mapCampaignIds.should.have.been.called;
-});
-
-test('fetchCampaignIdsWithKeywords should return error when it fails', async () => {
-  // setup
-  sandbox.stub(contentful, 'fetchKeywords').returns(failStub);
-  sandbox.spy(contentful, 'mapCampaignIds');
-
-  await contentful.fetchCampaignIdsWithKeywords();
-  contentful.mapCampaignIds.should.not.have.been.called;
-});
-
-// fetchKeywordsForCampaignId
-test('fetchKeywordsForCampaignId should format keywords when successful', async () => {
-  // setup
-  sandbox.spy(contentful, 'formatKeywordFromResponse');
-  contentful.__set__('client', {
-    getEntries: sinon.stub().returns(keywordsForCampaignStub),
-  });
-
-  // test
-  await contentful.fetchKeywordsForCampaignId(stubs.getCampaignId());
-  contentful.formatKeywordFromResponse.should.have.been.called;
-});
-
-test('fetchKeywordsForCampaignId should call contentfulError when it fails', async () => {
-  // setup
-  sandbox.spy(contentful, 'contentfulError');
-  contentful.__set__('client', {
-    getEntries: sinon.stub().returns(failStub),
-  });
-
-  // test
-  await contentful.fetchKeywordsForCampaignId(stubs.getCampaignId());
   contentful.contentfulError.should.have.been.called;
 });
 
@@ -404,24 +357,6 @@ test('renderAllTemplatesForPhoenixCampaign should return and error if getAllTemp
     error.status.should.be.equal(500);
   }
 });
-
-// mapCampaignIds
-test('mapCampaignIds should return an array', async () => {
-  // setup
-  contentful.__set__('client', {
-    getEntries: sinon.stub().returns(allKeywordsStub),
-  });
-  const formattedKeywords = await contentful.fetchKeywords();
-
-  // test
-  const mapped = contentful.mapCampaignIds(formattedKeywords);
-  formattedKeywords.forEach((keywordObject) => {
-    if (keywordObject.campaign.fields.campaignId) {
-      mapped.should.include(keywordObject.campaign.fields.campaignId);
-    }
-  });
-});
-
 
 test('getFieldNameForCampaignMessageTemplate should return a config.campaignFields value', (t) => {
   // setup
