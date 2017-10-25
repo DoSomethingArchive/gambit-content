@@ -8,10 +8,17 @@ GET /v1/campaigns
 
 Returns index of Campaigns with published keywords.
 
+
+**Parameters**
+
+Name | Type | Description
+--- | --- | ---
+`exclude` | `string` | If `true`, exclude querying for Mobile Commons Groups (To be deprecated post-TGM).
+
 <details><summary>**Example Request**</summary><p>
 
 ```
-curl http://localhost:5000/v1/campaigns \
+curl http://localhost:5000/v1/campaigns?exclude=true \
   -H "Accept: application/json" \
   -H "Content-Type: application/json" \
 ```
@@ -21,56 +28,33 @@ curl http://localhost:5000/v1/campaigns \
 <details><summary>**Example Response**</summary><p>
 
 ```
-{
   "data": [
     {
-      "id": "46",
-      "title": "Don't Be a Sucker",
-      "status": "closed",
-      "keywords": [
-        {
-          "keyword": "SUCKERBOT"
-        }
-      ],
-      "current_run": 7547,
-      "mobilecommons_group_doing": 284005,
-      "mobilecommons_group_completed": 284011
-    },
-    {
-      "id": "2070",
-      "title": "Bumble Bands",
+      "id": 2710,
+      "title": "#SuperStressFace",
       "status": "active",
       "keywords": [
-        {
-          "keyword": "BUMBLEBOT"
-        },
-        {
-          "keyword": "BEESBOT"
-        }
+        "STRESSBOT"
       ]
     },
     {
-      "id": "3590",
-      "title": "Shower Songs",
+      "id": 1524,
+      "title": "Bubble Breaks",
       "status": "active",
       "keywords": [
-        {
-          "keyword": "SHOWERBOT"
-        }
+        "BUBBLEBOT"
       ]
     },
     {
-      "id": "7483",
-      "title": "Rinse, Recycle, Repeat",
+      "id": 6620,
+      "title": "Dunk You Very Much",
       "status": "active",
       "keywords": [
-        {
-          "keyword": "RINSEBOT"
-        }
+        "DUNKBOT",
+        "DUNKINTIME"
       ]
-    }
+    },
   ]
-}
 ```
 
 </p></details>
@@ -81,10 +65,9 @@ curl http://localhost:5000/v1/campaigns \
 GET /v1/campaigns/:id
 ```
 
-Returns a single Campaign, and its rendered Gambit messages in a `messages` object property.
+Returns a single Campaign, and its rendered templates for Gambit usage.
 
-The keys defined in the `messages` object correspond to fields on the Contentful Campaign content
-type, e.g `askCaptionMessage`. Each field property contains an object with properties:
+A Campaign's `templates` properties are rendered from the fields values defined on a Campaign's corresponding Contentful Campaign. Each `templates` property is an object with properties:
 
 * `override` -- boolean specifying whether the `raw` value is defined on the entry for the
 given Campaign ID, or the default Campaign
@@ -105,26 +88,36 @@ curl http://localhost:5000/v1/campaigns/7483 \
 ```
 {
   "data": {
-    "id": "7483",
+    "id": 7483,
     "title": "Rinse, Recycle, Repeat",
+    "tagline": "Make a recycling bin to make it easier to recycle empty beauty products.",
     "status": "active",
+    "currentCampaignRun": {
+      "id": 7549
+    },
+    "reportbackInfo": {
+      "confirmationMessage": "Thanks for helping to keep #empties out of landfills! You'll receive an email shortly with a free shipping label so you can send your empties to TerraCycle to be upcycled.",
+      "noun": "bins",
+      "verb": "decorated"
+    },
+    "facts": {
+      "problem": "Nearly half of Americans don’t regularly recycle their beauty and personal care products. That’s a major reason these items account for a significant amount of landfill waste."
+    },
     "templates": {
       "gambitSignupMenu": {
         "override": true,
-        "raw": "Great - it's simple: Keep beauty and personal care products out of landfills by making fun and creative recycling bins for the bathroom! \n\nThis action should take between 10 - 20 mins. Make it colorful so friends and family won't forget to recycle their bathroom empties. \n\nWhen you're done, text START to share a photo of your bin and you'll be entered to win a $5000 scholarship!",
+        "raw": "Great - it's simple: Keep beauty and personal care products out of landfills by making fun and creative recycling bins for the bathroom! \n\nThis action should take between 10 - 20 mins. Make it colorful so friends and family won't forget to recycle their bathroom empties. \n\nWhen you're done, text {{cmd_reportback}} to share a photo of your bin and you'll be entered to win a $5000 scholarship!",
         "rendered": "Great - it's simple: Keep beauty and personal care products out of landfills by making fun and creative recycling bins for the bathroom! \n\nThis action should take between 10 - 20 mins. Make it colorful so friends and family won't forget to recycle their bathroom empties. \n\nWhen you're done, text START to share a photo of your bin and you'll be entered to win a $5000 scholarship!"
       },
       "externalSignupMenu": {
         "override": true,
         "raw": "Thanks for joining {{title}}!\n\nNearly half of Americans don’t regularly recycle their beauty and personal care products. That’s a major reason these items account for a significant amount of landfill waste.\n\nThe solution is simple: Make fun and creative bins for bathrooms.\n\nOnce you have created some bathroom recycling bins, take a pic to prove it! Then text {{cmd_reportback}} to share it with us!",
-        "rendered": "Thanks for joining Rinse Recycle Repeat!\n\nNearly half of Americans don’t regularly recycle their beauty and personal care products. That’s a major reason these items account for a significant amount of landfill waste.\n\nThe solution is simple: Make fun and creative bins for bathrooms.\n\nOnce you have created some bathroom recycling bins, take a pic to prove it! Then text P to share it with us!"
+        "rendered": "Thanks for joining Rinse Recycle Repeat!\n\nNearly half of Americans don’t regularly recycle their beauty and personal care products. That’s a major reason these items account for a significant amount of landfill waste.\n\nThe solution is simple: Make fun and creative bins for bathrooms.\n\nOnce you have created some bathroom recycling bins, take a pic to prove it! Then text START to share it with us!"
       },
       ...
     },
     "keywords": [
-      {
-        "keyword": "RINSEBOT"
-      }
+      "RINSEBOT"
     ],
     "contentfulUri": "https://app.contentful.com/spaces/pupp3tSl0Th/entries/3tUIp8oqTemqaSOKqGwIe6"
   }
