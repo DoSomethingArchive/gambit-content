@@ -105,7 +105,7 @@ test('replacePhoenixCampaignVars a message that makes a contentful request to ge
     .replacePhoenixCampaignVars(relativeToSignUpMsg, phoenixCampaign);
 
   contentful.fetchKeywordsForCampaignId.should.have.been.called;
-  renderedMessage.should.have.string(keywords[0].keyword);
+  renderedMessage.should.have.string(keywords[0]);
 });
 
 test('replacePhoenixCampaignVars failure to retrieve keywords should throw', async (t) => {
