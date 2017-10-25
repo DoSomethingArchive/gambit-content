@@ -2,6 +2,7 @@
 
 // Routes
 const campaignsRoute = require('./campaigns');
+const campaignsIndexRoute = require('./campaigns-index');
 const chatbotRoute = require('./chatbot');
 const receiveMessageRoute = require('./receive-message');
 const signupsRoute = require('./signups');
@@ -30,8 +31,11 @@ module.exports = function init(app) {
   app.get('/', homeRoute);
   app.use('/v1/status', statusRoute);
 
-  // Provides list of Campaigns currently running on Gambit.
-  app.use('/v1/campaigns', campaignsRoute);
+  // Provides keywords and templates for a single Campaign.
+  app.use('/v1/campaigns/:campaignId', campaignsRoute);
+
+  // Provides list of Campaigns configured for Gambit.
+  app.use('/v1/campaigns', campaignsIndexRoute);
 
   // Receives inbound message from Mobile Commons mData.
   app.use('/v1/chatbot', chatbotRoute);

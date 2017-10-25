@@ -1,31 +1,16 @@
 # API
 
+Endpoint                                       | Functionality                                           
+---------------------------------------------- | --------------------------------------------------------
+`GET /v1/campaigns` | [Retrieve all Gambit Campaigns](endpoints/campaigns.md#retrieve-all-campaigns)
+`GET /v1/campaigns/:id` | [Retrieve a single Gambit Campaign](endpoints/campaigns.md#retrieve-a-campaigns)
+`POST /v1/receive-message` | [Receive a Gambit Campaign Signup Message](endpoints/receive-message.md)
 
-## Chatbot
+
+## To be deprecated
 
 Endpoint                                       | Functionality                                           
 ---------------------------------------------- | --------------------------------------------------------
-`POST /v1/chatbot` | [CampaignBot chat](endpoints/chatbot.md)
-
-
-
-## Campaigns
-
-Endpoint                                       | Functionality                                           
----------------------------------------------- | --------------------------------------------------------
-`GET /v1/campaigns` | [Retrieve all campaigns](endpoints/campaigns.md#retrieve-all-campaigns)
-`GET /v1/campaigns/:id` | [Retrieve a campaign](endpoints/campaigns.md#retrieve-a-campaigns)
-`GET /v1/campaigns/:id/messages` | [Send a campaign message](endpoints/campaigns.md#send-a-campaign-message)
-
-## Receive Message
-
-Endpoint                                       | Functionality                                           
----------------------------------------------- | --------------------------------------------------------
-`POST /v1/receive-message` | [Receive Signup Message](endpoints/receive-message.md)
-
-
-## Signups
-
-Endpoint                                       | Functionality                                           
----------------------------------------------- | --------------------------------------------------------
-`POST /v1/signups` | [Post existing signup](endpoints/signups.md)
+`POST /v1/campaigns/:id/messages` | [Sends a Campaign template message via Mobile Commons](endpoints/campaigns.md#send-a-campaign-message) -- To be deprecated by Conversations `POST /send-message`
+`POST /v1/chatbot` | [Receives Mobile Commons mData request and sends reply via Mobile Commons](endpoints/chatbot.md) -- To be deprecated by Conversations `POST /receive-message`
+`POST /v1/signups` | [Sends externalSignupMenu template via Mobile Commons to Signup User for Signup Campaign](endpoints/signups.md) -- To be deprecated by Conversations `POST /send-message`
