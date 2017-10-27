@@ -1,6 +1,6 @@
 {
   "name": "gambit",
-  "version": "4.9.0",
+  "version": "4.9.1",
   "description": "The DoSomething.org chatbot service for campaigns and their activity.",
   "license": "MIT",
   "repository": {
@@ -36,7 +36,7 @@
     ]
   },
   "engines": {
-    "node": "6.11.3"
+    "node": "6.11.5"
   },
   "dependencies": {
     "@dosomething/northstar-js": "1.0.0",

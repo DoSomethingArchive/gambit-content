@@ -1,10 +1,13 @@
 'use strict';
 
 // Routes
-const campaignsRoute = require('./campaigns');
 const campaignsIndexRoute = require('./campaigns-index');
-const chatbotRoute = require('./chatbot');
+const campaignsSingleRoute = require('./campaigns-single');
 const receiveMessageRoute = require('./receive-message');
+
+// To be deprecated:
+const chatbotRoute = require('./chatbot');
+const sendMessageRoute = require('./campaigns');
 const signupsRoute = require('./signups');
 const statusRoute = require('./status');
 const homeRoute = require('./home');
@@ -31,8 +34,10 @@ module.exports = function init(app) {
   app.get('/', homeRoute);
   app.use('/v1/status', statusRoute);
 
+  app.use('/v1/campaigns/:campaignId/message', sendMessageRoute);
+
   // Provides keywords and templates for a single Campaign.
-  app.use('/v1/campaigns/:campaignId', campaignsRoute);
+  app.use('/v1/campaigns/:campaignId', campaignsSingleRoute);
 
   // Provides list of Campaigns configured for Gambit.
   app.use('/v1/campaigns', campaignsIndexRoute);
