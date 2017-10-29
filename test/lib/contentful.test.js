@@ -36,7 +36,6 @@ const broadcastStub = Promise.resolve(stubs.contentful.getEntries('broadcast'));
 const campaignStub = Promise.resolve(stubs.contentful.getEntries('campaign'));
 const defaultCampaignStub = Promise.resolve(stubs.contentful.getEntries('default-campaign'));
 const campaignWithOverridesStub = Promise.resolve(stubs.contentful.getEntries('campaign-with-overrides'));
-const templatesForCampaignIdStub = Promise.resolve(stubs.contentful.getAllTemplatesForCampaignId());
 const failStub = Promise.reject({ status: 500 });
 const contentfulAPIStub = {
   getEntries: () => {},
@@ -299,23 +298,24 @@ async () => {
   contentful.fetchMessageForCampaignId.should.have.been.calledOnce;
 });
 
-/*
+
 // fetchDefaultAndOverrideContentfulCampaignsForCampaignId
 test('fetchDefaultAndOverrideContentfulCampaignsForCampaignId should return object with default and override properties', async () => {
   // setup
   sandbox.spy(contentful, 'fetchCampaigns');
   const stub = sinon.stub();
-  stub.onCall(0).returns([]);
+  stub.onCall(0).returns(campaignStub);
   contentful.__set__('client', {
-    getEntries: sinon.stub(),
+    getEntries: stub,
   });
 
   // test
-  const res = await contentful.fetchDefaultAndOverrideContentfulCampaignsForCampaignId(stubs.getCampaignId());
+  const campaignId = stubs.getCampaignId();
+  const res = await contentful.fetchDefaultAndOverrideContentfulCampaignsForCampaignId(campaignId);
   contentful.fetchCampaigns.should.have.been.called;
   res.should.include.keys(['default', 'override']);
 });
-*/
+
 
 test('fetchDefaultAndOverrideContentfulCampaignsForCampaignId should throw when fetchCampaign fails', async () => {
   // setup
@@ -329,35 +329,6 @@ test('fetchDefaultAndOverrideContentfulCampaignsForCampaignId should throw when 
   }
 });
 
-/**
-// TODO: Move this into middleware test for lib/middleware/campaigns-single/render-templates
-
-// renderAllTemplatesForPhoenixCampaign
-test('renderAllTemplatesForPhoenixCampaign should inject a rendered property to each campaign field', async () => {
-  // setup
-  const renderedMessageStub = 'rendered!';
-  sandbox.stub(contentful, 'getAllTemplatesForCampaignId').returns(templatesForCampaignIdStub);
-  sandbox.stub(helpers, 'replacePhoenixCampaignVars').returns(Promise.resolve(renderedMessageStub));
-
-  // test
-  const fields = await contentful.renderAllTemplatesForPhoenixCampaign(stubs.getPhoenixCampaign());
-  Object.keys(fields).forEach((fieldName) => {
-    fields[fieldName].rendered.should.be.equal(renderedMessageStub);
-  });
-});
-
-test('renderAllTemplatesForPhoenixCampaign should return and error if getAllTemplatesForCampaignId fails', async () => {
-  // setup
-  sandbox.stub(contentful, 'getAllTemplatesForCampaignId').returns(failStub);
-
-  // test
-  try {
-    await contentful.renderAllTemplatesForPhoenixCampaign(stubs.getPhoenixCampaign());
-  } catch (error) {
-    error.status.should.be.equal(500);
-  }
-});
-*/
 
 test('getFieldNameForCampaignMessageTemplate should return a config.campaignFields value', (t) => {
   // setup

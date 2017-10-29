@@ -2,7 +2,7 @@
   "sys": {
     "type": "Array"
   },
-  "total": 1,
+  "total": 2,
   "skip": 0,
   "limit": 100,
   "items": [
@@ -31,6 +31,33 @@
       },
       "fields": {
         "campaignId": "2299"
+      }
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "owik07lyerdj"
+          }
+        },
+        "id": "98Oy1FcaR2EiaMieicaool",
+        "type": "Entry",
+        "createdAt": "2017-02-15T19:19:34.100Z",
+        "updatedAt": "2017-02-15T19:19:34.100Z",
+        "revision": 1,
+        "contentType": {
+          "sys": {
+            "type": "Link",
+            "linkType": "ContentType",
+            "id": "campaign"
+          }
+        },
+        "locale": "en-US"
+      },
+      "fields": {
+        "campaignId": "default"
       }
     }
   ]

@@ -126,8 +126,8 @@ test('replacePhoenixCampaignVars with no message should return empty string', ()
 test('replacePhoenixCampaignVars on a campaign object missing reportbackInfo should throw', (t) => {
   const phoenixCampaign = stubs.getPhoenixCampaign();
   delete phoenixCampaign.reportbackInfo;
-  const memberSupportMsg = stubs.getDefaultContenfulCampaignMessage('gambitSignupMenu');
-  const error = t.throws(() => helpers.replacePhoenixCampaignVars(memberSupportMsg, phoenixCampaign));
+  const text = stubs.getDefaultContenfulCampaignMessage('gambitSignupMenu');
+  t.throws(() => helpers.replacePhoenixCampaignVars(text, phoenixCampaign));
 });
 
 // sendTimeoutResponse
