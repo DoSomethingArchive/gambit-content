@@ -299,38 +299,38 @@ async () => {
   contentful.fetchMessageForCampaignId.should.have.been.calledOnce;
 });
 
-// getAllTemplatesForCampaignId
-test('getAllTemplatesForCampaignId should return fields with raw and override properties', async () => {
+/*
+// fetchDefaultAndOverrideContentfulCampaignsForCampaignId
+test('fetchDefaultAndOverrideContentfulCampaignsForCampaignId should return object with default and override properties', async () => {
   // setup
-  sandbox.spy(contentful, 'fetchCampaign');
+  sandbox.spy(contentful, 'fetchCampaigns');
   const stub = sinon.stub();
-  // return a campaign with no overrides
-  stub.onCall(0).returns(campaignWithOverridesStub);
-  // return the default campaign in contentful wich has all default overrides
-  stub.onCall(1).returns(defaultCampaignStub);
+  stub.onCall(0).returns([]);
   contentful.__set__('client', {
-    getEntries: stub,
+    getEntries: sinon.stub(),
   });
 
   // test
-  const fields = await contentful.getAllTemplatesForCampaignId(stubs.getCampaignId());
-  contentful.fetchCampaign.should.have.been.calledTwice;
-  Object.keys(fields).forEach((fieldName) => {
-    fields[fieldName].should.include.keys(['raw', 'override']);
-  });
+  const res = await contentful.fetchDefaultAndOverrideContentfulCampaignsForCampaignId(stubs.getCampaignId());
+  contentful.fetchCampaigns.should.have.been.called;
+  res.should.include.keys(['default', 'override']);
 });
+*/
 
-test('getAllTemplatesForCampaignId should throw when fetchCampaign fails', async () => {
+test('fetchDefaultAndOverrideContentfulCampaignsForCampaignId should throw when fetchCampaign fails', async () => {
   // setup
-  sandbox.stub(contentful, 'fetchCampaign').returns(failStub);
+  sandbox.stub(contentful, 'fetchCampaigns').returns(failStub);
 
   // test
   try {
-    await contentful.getAllTemplatesForCampaignId(stubs.getCampaignId());
+    await contentful.fetchDefaultAndOverrideContentfulCampaignsForCampaignId(stubs.getCampaignId());
   } catch (error) {
     error.status.should.be.equal(500);
   }
 });
+
+/**
+// TODO: Move this into middleware test for lib/middleware/campaigns-single/render-templates
 
 // renderAllTemplatesForPhoenixCampaign
 test('renderAllTemplatesForPhoenixCampaign should inject a rendered property to each campaign field', async () => {
@@ -357,6 +357,7 @@ test('renderAllTemplatesForPhoenixCampaign should return and error if getAllTemp
     error.status.should.be.equal(500);
   }
 });
+*/
 
 test('getFieldNameForCampaignMessageTemplate should return a config.campaignFields value', (t) => {
   // setup
