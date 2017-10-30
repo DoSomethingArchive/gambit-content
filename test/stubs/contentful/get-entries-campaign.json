@@ -30,7 +30,9 @@
         "locale": "en-US"
       },
       "fields": {
-        "campaignId": "2299"
+        "campaignId": "2299",
+        "askSignupMessage": "Want to make a little moment with a big impact?",
+        "askQuantityMessage": "Jolly good, how many photos did you post?"
       }
     },
     {
@@ -57,7 +59,9 @@
         "locale": "en-US"
       },
       "fields": {
-        "campaignId": "default"
+        "campaignId": "default",
+        "askSignupMessage": "\n\n{{fact_problem}}\n\nWant to signup for {{title}}?",
+        "askQuantityMessage": "How many {{rb_noun}} did you {{rb_verb>}}?"
       }
     }
   ]
