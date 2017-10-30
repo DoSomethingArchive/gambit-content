@@ -96,40 +96,38 @@ test('replacePhoenixCampaignVars', async () => {
   // TODO: test more messages!
 });
 
-test('replacePhoenixCampaignVars a message that makes a contentful request to get keywords', async () => {
+test('findAndReplaceKeywordVarForCampaignId a message that makes a contentful request to get keywords', async () => {
   const keywords = stubs.contentful.getKeywords();
   let renderedMessage = '';
   const phoenixCampaign = stubs.getPhoenixCampaign();
   const relativeToSignUpMsg = stubs.getDefaultContenfulCampaignMessage('scheduled_relative_to_signup_date');
   renderedMessage = await helpers
-    .replacePhoenixCampaignVars(relativeToSignUpMsg, phoenixCampaign);
+    .findAndReplaceKeywordVarForCampaignId(relativeToSignUpMsg, phoenixCampaign.id);
 
   contentful.fetchKeywordsForCampaignId.should.have.been.called;
   renderedMessage.should.have.string(keywords[0]);
 });
 
-test('replacePhoenixCampaignVars failure to retrieve keywords should throw', async (t) => {
-  const phoenixCampaign = stubs.getPhoenixCampaign();
+test('findAndReplaceKeywordVarForCampaignId failure to retrieve keywords should throw', async (t) => {
   // will trigger fetchKeywordsForCampaignIdStubFail stub
-  phoenixCampaign.id = 'fail';
+  const campaignId = 'fail';
   const memberSupportMsg = stubs.getDefaultContenfulCampaignMessage('memberSupport');
 
-  await t.throws(helpers.replacePhoenixCampaignVars(memberSupportMsg, phoenixCampaign));
+  await t.throws(helpers.findAndReplaceKeywordVarForCampaignId(memberSupportMsg, campaignId));
   contentful.fetchKeywordsForCampaignId.should.have.been.called;
 });
 
-test('replacePhoenixCampaignVars with no message should return empty string', async () => {
+test('replacePhoenixCampaignVars with no message should return empty string', () => {
   const phoenixCampaign = stubs.getPhoenixCampaign();
-  const renderedMessage = await helpers
-    .replacePhoenixCampaignVars(undefined, phoenixCampaign);
+  const renderedMessage = helpers.replacePhoenixCampaignVars(undefined, phoenixCampaign);
   renderedMessage.should.equal('');
 });
 
-test('replacePhoenixCampaignVars on a campaign object missing reportbackInfo should throw', async (t) => {
+test('replacePhoenixCampaignVars on a campaign object missing reportbackInfo should throw', (t) => {
   const phoenixCampaign = stubs.getPhoenixCampaign();
   delete phoenixCampaign.reportbackInfo;
-  const memberSupportMsg = stubs.getDefaultContenfulCampaignMessage('gambitSignupMenu');
-  await t.throws(helpers.replacePhoenixCampaignVars(memberSupportMsg, phoenixCampaign));
+  const text = stubs.getDefaultContenfulCampaignMessage('gambitSignupMenu');
+  t.throws(() => helpers.replacePhoenixCampaignVars(text, phoenixCampaign));
 });
 
 // sendTimeoutResponse

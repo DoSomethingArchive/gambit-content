@@ -1,12 +1,12 @@
 # Campaigns
 
-## Retrieve Campaigns running on Gambit
+## Retrieve all Campaigns
 
 ```
 GET /v1/campaigns
 ```
 
-Returns index of Campaigns with published keywords.
+Returns a list of Campaigns that have Gambit keywords available.
 
 
 **Parameters**
