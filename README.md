@@ -5,15 +5,20 @@ Gambit is the internal DoSomething.org API used to send/receive messages to and 
 
 ### Getting Started
 
-Install Node, MongoDB, and the Heroku toolbelt.
+Install Node, MongoDB, redis, and the Heroku toolbelt.
 
 Next, fork and clone this repository. To run Gambit locally:
-* `sudo mongod`
+* Mongo should be runing.
+  * Run `mongo`.
+  * If error, Run `sudo mongod`.
+* Redis should be running.
+  * Run `redis-cli ping`. You should get `PONG` as a response.
+  * If error, make sure you have installed redis using `brew` and started the service.
 * `npm install`
 * `npm run all-tests` Make sure all tests pass
 * `heroku local` from your Gambit directory
 
-#### Docker
+#### Docker (deprecated)
 
 Gambit can also be installed via Docker:
 
