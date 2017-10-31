@@ -50,8 +50,6 @@ configVars.mongooseConnection = require('./mongoose')({
 /**
  * Redis Cache setup
  */
-configVars.redisClient = require('./redis')({
-  redisUrl: configVars.redisUrl,
-});
+configVars.redisClient = require('./redis')();
 
 module.exports = configVars;
