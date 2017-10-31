@@ -1,6 +1,7 @@
 box: node:6.11
 services:
   - id: mongo
+  - id: redis
 build:
   steps:
     - npm-install
