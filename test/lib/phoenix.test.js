@@ -31,24 +31,28 @@ test.afterEach(() => {
   sandbox.restore();
 });
 
-test('phoenix should respond to fetchCampaign', () => {
-  phoenix.should.respondTo('fetchCampaign');
+test('phoenix should respond to fetchCampaignById', () => {
+  phoenix.should.respondTo('fetchCampaignById');
+});
+
+test('phoenix should respond to getCampaignById', () => {
+  phoenix.should.respondTo('getCampaignById');
 });
 
 test('phoenix should respond to isClosedCampaign', () => {
   phoenix.should.respondTo('isClosedCampaign');
 });
 
-test('phoenix.fetchCampaign should call parsePhoenixCampaign on successt', async () => {
+test('phoenix.fetchCampaignById should call parsePhoenixCampaign on successt', async () => {
   nock(baseUri)
     .get(/$/)
     .reply(200, stubs.phoenix.getCampaign());
 
-  await phoenix.fetchCampaign(campaignId);
+  await phoenix.fetchCampaignById(campaignId);
   phoenix.parsePhoenixCampaign.should.have.been.called;
 });
 
-test('phoenix.fetchCampaign should call parsePhoenixError on error', async () => {
+test('phoenix.fetchCampaignById should call parsePhoenixError on error', async () => {
   const message = 'Miley';
   const status = 500;
   nock(baseUri)
@@ -56,7 +60,7 @@ test('phoenix.fetchCampaign should call parsePhoenixError on error', async () =>
     .reply(status, { error: { message } });
 
   try {
-    await phoenix.fetchCampaign(campaignId);
+    await phoenix.fetchCampaignById(campaignId);
   } catch (error) {
     error.status.should.be.equal(status);
   }
