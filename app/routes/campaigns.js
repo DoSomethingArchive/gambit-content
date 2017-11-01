@@ -46,7 +46,7 @@ router.post('/', (req, res, next) => {
  * Fetch Campaign from Phoenix API and validate its Campaign Status active.
  */
 router.post('/', (req, res, next) => {
-  phoenix.fetchCampaign(req.campaignId)
+  phoenix.getCampaignById(req.campaignId)
     .then((phoenixCampaign) => {
       if (req.timedout) {
         return helpers.sendTimeoutResponse(res);
