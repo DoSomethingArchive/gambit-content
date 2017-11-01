@@ -10,13 +10,20 @@ if (process.env.REDIS_PORT_6379_TCP_ADDR) {
   redisUrl = `redis://${process.env.REDIS_PORT_6379_TCP_ADDR}:${process.env.REDIS_PORT_6379_TCP_PORT}`;
 }
 
+let redisClient;
+
 module.exports = function getRedisClient() {
-  const client = redis.createClient(redisUrl);
+  if (!redisClient) {
+    redisClient = redis.createClient(redisUrl);
+    redisClient.on('error', (error) => {
+      logger.error(`redisClient connection error: ${error}`);
+      redisClient.quit();
+      throw error;
+    });
 
-  client.on('error', (error) => {
-    logger.error(`Redis connection error: ${error}`);
-    throw error;
-  });
-
-  return client;
+    redisClient.on('reconnecting', () => {
+      logger.debug('redisClient is reconnecting');
+    });
+  }
+  return redisClient;
 };
