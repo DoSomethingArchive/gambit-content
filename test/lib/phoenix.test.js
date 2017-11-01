@@ -43,7 +43,7 @@ test('phoenix should respond to isClosedCampaign', () => {
   phoenix.should.respondTo('isClosedCampaign');
 });
 
-test('phoenix.fetchCampaignById should call parsePhoenixCampaign on successt', async () => {
+test('phoenix.fetchCampaignById should call parsePhoenixCampaign on success', async () => {
   nock(baseUri)
     .get(/$/)
     .reply(200, stubs.phoenix.getCampaign());
