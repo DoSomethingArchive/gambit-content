@@ -72,7 +72,7 @@ router.use((req, res, next) => {
  * Check that Signup is for an active Campaign.
  */
 router.use((req, res, next) => {
-  phoenix.fetchCampaign(req.campaignId)
+  phoenix.getCampaignById(req.campaignId)
     .then((phoenixCampaign) => {
       if (req.timedout) {
         return helpers.sendTimeoutResponse(res);
