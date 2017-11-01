@@ -47,9 +47,4 @@ configVars.mongooseConnection = require('./mongoose')({
   dbUri: configVars.dbUri,
 });
 
-/**
- * Redis Cache setup
- */
-configVars.redisClient = require('./redis')();
-
 module.exports = configVars;

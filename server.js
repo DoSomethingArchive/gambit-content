@@ -90,19 +90,17 @@ function start(processId) {
     next();
   });
 
-  config.redisClient.on('ready', () => {
-    config.mongooseConnection
-      .then(() => {
-        logger.info(`config.mongooseConnection.connection.readyState:${config.mongooseConnection.connection.readyState}`);
-        return app.listen(config.port, () => {
-          logger.info(`Gambit is listening on port:${config.port} env:${config.environment}.`);
-        });
-      })
-      .catch((error) => {
-        logger.error(`Gambit could not connect to port:${config.port} env:${config.environment}.`);
-        logger.error(error.message);
+  config.mongooseConnection
+    .then(() => {
+      logger.info(`config.mongooseConnection.connection.readyState:${config.mongooseConnection.connection.readyState}`);
+      return app.listen(config.port, () => {
+        logger.info(`Gambit is listening on port:${config.port} env:${config.environment}.`);
       });
-  });
+    })
+    .catch((error) => {
+      logger.error(`Gambit could not connect to port:${config.port} env:${config.environment}.`);
+      logger.error(error.message);
+    });
 }
 
 // Initialize Concurrency
