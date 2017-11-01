@@ -8,13 +8,6 @@ GET /v1/campaigns
 
 Returns a list of Campaigns that have Gambit keywords available.
 
-
-**Parameters**
-
-Name | Type | Description
---- | --- | ---
-`exclude` | `string` | If `true`, exclude querying for Mobile Commons Groups (To be deprecated post-TGM).
-
 <details><summary>**Example Request**</summary><p>
 
 ```
