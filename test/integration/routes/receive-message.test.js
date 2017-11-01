@@ -10,7 +10,7 @@ const mongoose = require('mongoose');
 
 const stubs = require('../../utils/stubs');
 
-const chatbotRoutePath = '/v1/chatbot';
+const receiveMessageRoutePath = '/v1/receive-message';
 
 // setup "x.should.y" assertion style
 chai.should();
@@ -28,21 +28,21 @@ test.after.always(() => {
 
 test('Should fail if request does not include a valid api key', async () => {
   await request(app)
-    .post(chatbotRoutePath)
+    .post(receiveMessageRoutePath)
     .expect(403);
 });
 
 test('Should fail if request doesn\'t include all required params', async () => {
   await request(app)
-    .post(chatbotRoutePath)
+    .post(receiveMessageRoutePath)
     .set('x-gambit-api-key', stubs.getAPIKey())
     .expect(422);
 });
 
-test('Should fail when no incomming message is detected', async () => {
+test('Should fail when no incoming message is detected', async () => {
   await request(app)
-    .post(chatbotRoutePath)
+    .post(receiveMessageRoutePath)
     .set('x-gambit-api-key', stubs.getAPIKey())
-    .send({ phone: stubs.getPhoneNumber() })
+    .send({ userId: stubs.getUserId() })
     .expect(422);
 });
