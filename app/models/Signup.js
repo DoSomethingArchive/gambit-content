@@ -110,7 +110,7 @@ signupSchema.statics.createSignupForReq = function (req) {
   const broadcastId = req.broadcastId;
 
   return new Promise((resolve, reject) => {
-    logger.debug(`Signup.post(${userId}, ${campaignId}, ${keyword})`);
+    logger.debug(`Signup.createSignupForReq(${userId}, ${campaignId}, ${keyword})`);
 
     return rogue.createSignupForReq(req)
       .then((signup) => {
@@ -118,7 +118,7 @@ signupSchema.statics.createSignupForReq = function (req) {
         if (keyword) {
           stathat.postStat(`signup: ${keyword}`);
         }
-        logger.info(`Signup.post created signup:${signupId}`);
+        logger.info(`Signup.createSignupForReq created signup:${signupId}`);
 
         const data = {
           campaign: campaignId,
@@ -132,14 +132,13 @@ signupSchema.statics.createSignupForReq = function (req) {
         }
 
         return model.findOneAndUpdate({ _id: signupId }, data, helpers.upsertOptions())
-          .populate('user')
           .populate('draft_reportback_submission')
           .exec();
       })
       .then(signupDoc => resolve(signupDoc))
       .catch((err) => {
         const scope = err;
-        scope.message = `Signup.post error:${err.message}`;
+        scope.message = `Signup.createSignupForReq error:${err.message}`;
 
         return reject(scope);
       });
