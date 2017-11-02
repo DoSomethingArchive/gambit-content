@@ -1,6 +1,6 @@
 {
-  "name": "gambit",
-  "version": "4.11.0",
+  "name": "gambit-campaigns",
+  "version": "5.0.0",
   "description": "The DoSomething.org chatbot service for campaigns and their activity.",
   "license": "MIT",
   "repository": {
