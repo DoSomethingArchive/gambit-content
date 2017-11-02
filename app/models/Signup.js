@@ -26,7 +26,6 @@ const signupSchema = new mongoose.Schema({
   user: {
     type: String,
     index: true,
-    ref: 'users',
   },
   campaign: Number,
   keyword: String,
