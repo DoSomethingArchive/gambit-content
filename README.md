@@ -1,7 +1,7 @@
 [![wercker status](https://app.wercker.com/status/3e08a89169eeafef8ec020a9ceafe204/s/master "wercker status")](https://app.wercker.com/project/byKey/3e08a89169eeafef8ec020a9ceafe204) [![codecov](https://codecov.io/gh/DoSomething/gambit/branch/develop/graph/badge.svg)](https://codecov.io/gh/DoSomething/gambit)
 
-# Gambit
-Gambit is the internal DoSomething.org API used to send/receive messages to and from Mobile Commons, enabling DoSomething Members to complete Campaigns over SMS. Gambit is built using [Express](http://expressjs.com/) and [MongoDB](https://www.mongodb.com).
+# Gambit Campaigns
+Gambit Campaigns is an internal DoSomething.org service for completing Campaigns via [Gambit Conversations](https://github.com/dosomething/gambit-conversations) Gambit Campaigns is built using [Express](http://expressjs.com/) and [MongoDB](https://www.mongodb.com).
 
 ### Getting Started
 
@@ -18,18 +18,8 @@ Next, fork and clone this repository. To run Gambit locally:
 * `npm run all-tests` Make sure all tests pass
 * `heroku local` from your Gambit directory
 
-#### Docker (deprecated)
-
-Gambit can also be installed via Docker:
-
-1. `git clone`
-2. `docker-compose up`
-
-All apps are executed by `Foreman` to handle process management & mimic Heroku.
-`Nodemon` will autoreload the server when a file changes.
-The compose file defines env variables for connection details & network mapping.
 
 ### License
-&copy;2017 DoSomething.org. Gambit is free software, and may be redistributed under the terms specified
+&copy;2017 DoSomething.org. Gambit Campaigns is free software, and may be redistributed under the terms specified
 in the [LICENSE](https://github.com/DoSomething/gambit/blob/dev/LICENSE) file. The name and logo for
 DoSomething.org are trademarks of Do Something, Inc and may not be used without permission.
