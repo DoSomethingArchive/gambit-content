@@ -1,13 +1,13 @@
 [![wercker status](https://app.wercker.com/status/3e08a89169eeafef8ec020a9ceafe204/s/master "wercker status")](https://app.wercker.com/project/byKey/3e08a89169eeafef8ec020a9ceafe204) [![codecov](https://codecov.io/gh/DoSomething/gambit/branch/develop/graph/badge.svg)](https://codecov.io/gh/DoSomething/gambit)
 
 # Gambit Campaigns
-Gambit Campaigns is an internal DoSomething.org service for completing Campaigns via [Gambit Conversations](https://github.com/dosomething/gambit-conversations) Gambit Campaigns is built using [Express](http://expressjs.com/) and [MongoDB](https://www.mongodb.com).
+Gambit Campaigns is an internal DoSomething.org service for completing Campaigns via [Gambit Conversations](https://github.com/dosomething/gambit-conversations). Gambit Campaigns is built using [Express](http://expressjs.com/) and [MongoDB](https://www.mongodb.com).
 
 ### Getting Started
 
 Install Node, MongoDB, redis, and the Heroku toolbelt.
 
-Next, fork and clone this repository. To run Gambit locally:
+Next, fork and clone this repository. To run Gambit Campaigns locally:
 * Mongo should be running.
   * Run `mongo`.
   * If error, Run `sudo mongod`.
@@ -16,7 +16,7 @@ Next, fork and clone this repository. To run Gambit locally:
   * If error, make sure you have installed redis using `brew` and started the service.
 * `npm install`
 * `npm run all-tests` Make sure all tests pass
-* `heroku local` from your Gambit directory
+* `heroku local` from your Gambit Campaigns directory
 
 
 ### License
