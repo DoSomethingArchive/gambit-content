@@ -12,7 +12,6 @@ const logger = require('winston');
 
 const stubs = require('../../utils/stubs');
 const helpers = require('../../../lib/helpers');
-const userFactory = require('../../utils/factories/user');
 const signupFactory = require('../../utils/factories/signup');
 
 // setup "x.should.y" assertion style
@@ -57,7 +56,6 @@ test('validateRequest should call next if all validations past', (t) => {
   // setup
   const next = sinon.stub();
   const middleware = validateRequest();
-  t.context.req.user = userFactory.getUser();
   t.context.req.signup = signupFactory.getValidSignup();
   t.context.req.campaign = stubs.getJSONstub('campaign', 'phoenix');
 
