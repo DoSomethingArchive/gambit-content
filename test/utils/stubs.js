@@ -33,6 +33,9 @@ module.exports = {
   getProfileId: function getProfileId() {
     return 5559108329;
   },
+  getUserId: function getUserId() {
+    return '597b9ef910707d07c84b00aa';
+  },
   getPhoneNumber: function getPhoneNumber() {
     return '5559108329';
   },

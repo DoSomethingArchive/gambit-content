@@ -8,13 +8,6 @@ GET /v1/campaigns
 
 Returns a list of Campaigns that have Gambit keywords available.
 
-
-**Parameters**
-
-Name | Type | Description
---- | --- | ---
-`exclude` | `string` | If `true`, exclude querying for Mobile Commons Groups (To be deprecated post-TGM).
-
 <details><summary>**Example Request**</summary><p>
 
 ```
@@ -120,46 +113,6 @@ curl http://localhost:5000/v1/campaigns/7483 \
       "RINSEBOT"
     ],
     "contentfulUri": "https://app.contentful.com/spaces/pupp3tSl0Th/entries/3tUIp8oqTemqaSOKqGwIe6"
-  }
-}
-```
-
-</p></details>
-
-## Send a campaign message
-
-```
-POST /v1/campaigns/:id/message
-```
-
-Returns either an `error` or `success` object.
-
-**Parameters**
-
-Name | Type | Description
---- | --- | ---
-`phone` | `string` | **Required.** Mobile number to send the campaign message.
-`type`  | `string` | <div>**Required.** The campaign message type.</div><div>Supported types are: `scheduled_relative_to_signup_date`, `scheduled_relative_to_reportback_date`</div>
-
-<details><summary>**Example Request**</summary><p>
-
-```
-curl http://localhost:5000/v1/campaigns/2900/message \
-     -H "x-gambit-api-key: totallysecret" \
-     -H "Accept: application/json" \
-     -H "Content-Type: application/json" \
-     -d '{"phone": "5555555511", "type": "scheduled_relative_to_signup_date"}'
-```
-
-</p></details>
-
-<details><summary>**Example Response**</summary><p>
-
-```
-{
-  "success": {
-    "code": 200,
-    "message": "@dev: Have you completed Get Lucky yet?  \n\nIf you have created some fortune tellers, take a pic to prove it and text back LUCKYBOT"
   }
 }
 ```

@@ -1,6 +1,6 @@
 {
-  "name": "gambit",
-  "version": "4.11.0",
+  "name": "gambit-campaigns",
+  "version": "5.0.0",
   "description": "The DoSomething.org chatbot service for campaigns and their activity.",
   "license": "MIT",
   "repository": {
@@ -9,6 +9,7 @@
   },
   "scripts": {
     "test": "NODE_ENV=test ava --serial",
+    "test-fast": "NODE_ENV=test ava --serial --fast",
     "all-tests": "npm run lint && npm run coverage",
     "coverage": "NODE_ENV=test nyc --all ava --serial",
     "html-coverage-report": "nyc report --reporter=html",
