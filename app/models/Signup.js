@@ -62,40 +62,6 @@ function parseActivityData(activityData) {
 }
 
 /**
- * Get given Signup ID from DS API then store.
- * @param {number} id - DS Signup id.
- */
-signupSchema.statics.lookupById = function (id) {
-  const model = this;
-  const notFoundMessage = 'No activity results for signup_id';
-
-  return new Promise((resolve, reject) => {
-    logger.debug(`Signup.lookupById:${id}`);
-
-    return rogue.fetchActivityForSignupId(id)
-      .then((res) => {
-        // Because we get a success response with no results, throw an error to return a 404.
-        if (res.data.length < 1) {
-          throw new Error(notFoundMessage);
-        }
-        const signupData = parseActivityData(res.data);
-        const signupId = signupData.id;
-
-        return model.findOneAndUpdate({ _id: signupId }, signupData, upsertOptions).exec();
-      })
-      .then(signupDoc => resolve(signupDoc))
-      .catch((err) => {
-        const scope = err;
-        if (err.message === notFoundMessage) {
-          scope.status = 404;
-        }
-        scope.message = `Signup.lookupById error:${err.message}`;
-        return reject(scope);
-      });
-  });
-};
-
-/**
  * Gets current Signup for given User / Campaign from DS API, stores if found. Returns false if not.
  * @param {string} userId
  * @param {number} campaignId.
