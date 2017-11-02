@@ -26,7 +26,6 @@ const signupSchema = new mongoose.Schema({
   user: {
     type: String,
     index: true,
-    ref: 'users',
   },
   campaign: Number,
   keyword: String,
@@ -60,40 +59,6 @@ function parseActivityData(activityData) {
 
   return result;
 }
-
-/**
- * Get given Signup ID from DS API then store.
- * @param {number} id - DS Signup id.
- */
-signupSchema.statics.lookupById = function (id) {
-  const model = this;
-  const notFoundMessage = 'No activity results for signup_id';
-
-  return new Promise((resolve, reject) => {
-    logger.debug(`Signup.lookupById:${id}`);
-
-    return rogue.fetchActivityForSignupId(id)
-      .then((res) => {
-        // Because we get a success response with no results, throw an error to return a 404.
-        if (res.data.length < 1) {
-          throw new Error(notFoundMessage);
-        }
-        const signupData = parseActivityData(res.data);
-        const signupId = signupData.id;
-
-        return model.findOneAndUpdate({ _id: signupId }, signupData, upsertOptions).exec();
-      })
-      .then(signupDoc => resolve(signupDoc))
-      .catch((err) => {
-        const scope = err;
-        if (err.message === notFoundMessage) {
-          scope.status = 404;
-        }
-        scope.message = `Signup.lookupById error:${err.message}`;
-        return reject(scope);
-      });
-  });
-};
 
 /**
  * Gets current Signup for given User / Campaign from DS API, stores if found. Returns false if not.
@@ -145,7 +110,7 @@ signupSchema.statics.createSignupForReq = function (req) {
   const broadcastId = req.broadcastId;
 
   return new Promise((resolve, reject) => {
-    logger.debug(`Signup.post(${userId}, ${campaignId}, ${keyword})`);
+    logger.debug(`Signup.createSignupForReq(${userId}, ${campaignId}, ${keyword})`);
 
     return rogue.createSignupForReq(req)
       .then((signup) => {
@@ -153,7 +118,7 @@ signupSchema.statics.createSignupForReq = function (req) {
         if (keyword) {
           stathat.postStat(`signup: ${keyword}`);
         }
-        logger.info(`Signup.post created signup:${signupId}`);
+        logger.info(`Signup.createSignupForReq created signup:${signupId}`);
 
         const data = {
           campaign: campaignId,
@@ -167,14 +132,13 @@ signupSchema.statics.createSignupForReq = function (req) {
         }
 
         return model.findOneAndUpdate({ _id: signupId }, data, helpers.upsertOptions())
-          .populate('user')
           .populate('draft_reportback_submission')
           .exec();
       })
       .then(signupDoc => resolve(signupDoc))
       .catch((err) => {
         const scope = err;
-        scope.message = `Signup.post error:${err.message}`;
+        scope.message = `Signup.createSignupForReq error:${err.message}`;
 
         return reject(scope);
       });
