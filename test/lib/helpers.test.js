@@ -19,7 +19,6 @@ const sinon = require('sinon');
 const stubs = require('../../test/utils/stubs');
 const contentful = require('../../lib/contentful.js');
 const stathat = require('../../lib/stathat');
-const userFactory = require('../utils/factories/user');
 
 // Module to test
 const helpers = require('../../lib/helpers');
@@ -136,27 +135,6 @@ test('sendTimeoutResponse', (t) => {
   helpers.sendTimeoutResponse(t.context.res);
   helpers.sendResponse.should.have.been.called;
   t.context.res.status.should.have.been.calledWith(504);
-});
-
-test('getCampaignIdFromUser should return user\'s current_campaign', (t) => {
-  // setup
-  const user = userFactory.getUser();
-  t.context.req.user = user;
-
-  // test
-  const campaignId = helpers.getCampaignIdFromUser(t.context.req, t.context.res);
-  campaignId.should.be.equal(user.current_campaign);
-});
-
-test('getCampaignIdFromUser should send a 500 error response if user has no current_campaign', (t) => {
-  // setup
-  const user = userFactory.getUser();
-  user.current_campaign = undefined;
-  t.context.req.user = user;
-
-  // test
-  helpers.getCampaignIdFromUser(t.context.req, t.context.res);
-  helpers.sendResponse.should.have.been.calledWith(t.context.res, 500);
 });
 
 // getKeyword
