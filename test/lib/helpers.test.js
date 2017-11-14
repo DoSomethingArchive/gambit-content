@@ -237,20 +237,6 @@ test('getFirstWord should return null if no message is passed', () => {
   expect(result).to.be.null;
 });
 
-// isYesResponse
-test('isYesResponse', () => {
-  const validResponses = stubs.helpers.getValidYesResponses();
-  const invalidResponses = stubs.helpers.getInvalidYesResponses();
-
-  validResponses.forEach((response) => {
-    helpers.isYesResponse(response).should.be.true;
-  });
-
-  invalidResponses.forEach((response) => {
-    helpers.isYesResponse(response).should.be.false;
-  });
-});
-
 // isValidReportbackQuantity
 test('isValidReportbackQuantity', () => {
   helpers.isValidReportbackQuantity(2).should.be.true;
