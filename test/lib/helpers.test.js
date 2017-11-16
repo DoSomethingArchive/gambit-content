@@ -27,9 +27,6 @@ const helpers = require('../../lib/helpers');
 const fetchKeywordStub = Promise.resolve(stubs.getJSONstub('fetchKeyword'));
 const fetchKeywordStubEmpty = Promise.resolve('');
 const fetchKeywordStubFail = Promise.reject(false);
-const fetchBroadcastStub = Promise.resolve(stubs.getJSONstub('fetchBroadcast'));
-const fetchBroadcastStubEmpty = Promise.resolve('');
-const fetchBroadcastStubFail = Promise.reject(false);
 const fetchKeywordsForCampaignIdStub = () => Promise.resolve(stubs.contentful.getKeywords());
 const fetchKeywordsForCampaignIdStubFail = () => Promise.reject({ status: 500 });
 const cryptoCreateHmacStub = {
@@ -190,36 +187,6 @@ test('getKeyword should send an unprocessable entity error response when environ
   helpers.sendUnproccessibleEntityResponse.should.have.been.called;
 });
 
-// getBroadcast
-test('getBroadcast should return a promise that will resolve in a broadcast when found', async (t) => {
-  // setup
-  sandbox.stub(contentful, 'fetchBroadcast').returns(fetchBroadcastStub);
-
-  // test
-  const broadcast = await helpers.getBroadcast(t.context.req, t.context.res);
-  helpers.sendResponse.should.not.have.been.called;
-  broadcast.should.not.be.empty;
-});
-
-test('getBroadcast should send a 404 response when no broadcast is found', async (t) => {
-  // setup
-  sandbox.stub(contentful, 'fetchBroadcast').returns(fetchBroadcastStubEmpty);
-
-  // test
-  await helpers.getBroadcast(t.context.req, t.context.res);
-  helpers.sendResponse.should.have.been.calledWith(t.context.res, 404);
-});
-
-
-test('getBroadcast should send Error response when it fails retrieving a broadcast', async (t) => {
-  // setup
-  sandbox.stub(contentful, 'fetchBroadcast').returns(fetchBroadcastStubFail);
-
-  // test
-  await helpers.getBroadcast(t.context.req, t.context.res);
-  helpers.sendErrorResponse.should.have.been.called;
-});
-
 // addSenderPrefix
 test('addSenderPrefix', () => {
   const prefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
@@ -235,20 +202,6 @@ test('addSenderPrefix', () => {
 test('getFirstWord should return null if no message is passed', () => {
   const result = helpers.getFirstWord(undefined);
   expect(result).to.be.null;
-});
-
-// isYesResponse
-test('isYesResponse', () => {
-  const validResponses = stubs.helpers.getValidYesResponses();
-  const invalidResponses = stubs.helpers.getInvalidYesResponses();
-
-  validResponses.forEach((response) => {
-    helpers.isYesResponse(response).should.be.true;
-  });
-
-  invalidResponses.forEach((response) => {
-    helpers.isYesResponse(response).should.be.false;
-  });
 });
 
 // isValidReportbackQuantity

@@ -64,17 +64,6 @@ module.exports = {
     };
   },
   helpers: {
-    getValidYesResponses: function getValidYesResponses() {
-      const yesResponses = process.env.GAMBIT_YES_RESPONSES || '';
-      return yesResponses.split(',');
-    },
-    getInvalidYesResponses: function getInvalidYesResponses() {
-      const invalidResponses = [
-        'nah', 'ss', 'abs', 'def',
-        'hell', 'tamales', 'definitely not',
-      ];
-      return invalidResponses;
-    },
     getValidCommandValues: function getValidCommandValues() {
       return {
         member_support: process.env.GAMBIT_CMD_MEMBER_SUPPORT || 'Q',
