@@ -6,8 +6,6 @@ const missingRequiredVars = [];
 const vars = [
   'GAMBIT_CMD_MEMBER_SUPPORT',
   'GAMBIT_CMD_REPORTBACK',
-  'MOBILECOMMONS_OIP_AGENTVIEW',
-  'MOBILECOMMONS_OIP_CHATBOT',
 ];
 
 function logMissingVar(name) {
