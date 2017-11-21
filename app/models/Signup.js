@@ -81,7 +81,7 @@ signupSchema.statics.lookupCurrentSignupForReq = function (req) {
 
         const signupData = parseActivityData(res.data);
         const signupId = signupData.id;
-        logger.info(`Signup.lookupCurrent signup:${signupId}`);
+        logger.info('Signup.lookupCurrent', { signupId });
 
         return model.findOneAndUpdate({ _id: signupId }, signupData, upsertOptions)
           .populate('draft_reportback_submission')
