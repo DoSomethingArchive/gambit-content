@@ -8,7 +8,6 @@ const Promise = require('bluebird');
 const test = require('ava');
 const chai = require('chai');
 const expect = require('chai').expect;
-const crypto = require('crypto');
 const newrelic = require('newrelic');
 const logger = require('winston');
 const sinonChai = require('sinon-chai');
@@ -24,16 +23,8 @@ const stathat = require('../../lib/stathat');
 const helpers = require('../../lib/helpers');
 
 // Stub functions
-const fetchKeywordStub = Promise.resolve(stubs.getJSONstub('fetchKeyword'));
-const fetchKeywordStubEmpty = Promise.resolve('');
-const fetchKeywordStubFail = Promise.reject(false);
 const fetchKeywordsForCampaignIdStub = () => Promise.resolve(stubs.contentful.getKeywords());
 const fetchKeywordsForCampaignIdStubFail = () => Promise.reject({ status: 500 });
-const cryptoCreateHmacStub = {
-  update() { return this; },
-  digest() { return this; },
-  substring() { return this; },
-};
 
 // setup "x.should.y" assertion style
 chai.should();
@@ -52,7 +43,6 @@ test.beforeEach((t) => {
     .returns(Promise.resolve([]));
   sandbox.stub(newrelic, 'addCustomParameters');
   sandbox.stub(stathat, 'postStat');
-  sandbox.stub(crypto, 'createHmac').returns(cryptoCreateHmacStub);
 
   // setup spies
   sandbox.spy(helpers, 'sendErrorResponse');
@@ -134,70 +124,6 @@ test('sendTimeoutResponse', (t) => {
   t.context.res.status.should.have.been.calledWith(504);
 });
 
-// getKeyword
-test('getKeyword should return a promise that will resolve in a keyword when found', async (t) => {
-  // setup
-  sandbox.stub(contentful, 'fetchKeyword').returns(fetchKeywordStub);
-  sandbox.spy(helpers, 'sendUnproccessibleEntityResponse');
-  t.context.req.app = {
-    get: sinon.stub().returns('thor'),
-  };
-
-  // test
-  const keyword = await helpers.getKeyword(t.context.req, t.context.res);
-  helpers.sendResponse.should.not.have.been.called;
-  helpers.sendUnproccessibleEntityResponse.should.not.have.been.called;
-  keyword.should.not.be.empty;
-});
-
-test('getKeyword should send a 404 response when no broadcast is found', async (t) => {
-  // setup
-  sandbox.stub(contentful, 'fetchKeyword').returns(fetchKeywordStubEmpty);
-  t.context.req.app = {
-    get: sinon.stub().returns('thor'),
-  };
-
-  // test
-  await helpers.getKeyword(t.context.req, t.context.res);
-  helpers.sendResponse.should.have.been.calledWith(t.context.res, 404);
-});
-
-
-test('getKeyword should send Error response when it fails retrieving a broadcast', async (t) => {
-  // setup
-  sandbox.stub(contentful, 'fetchKeyword').returns(fetchKeywordStubFail);
-
-  // test
-  await helpers.getKeyword(t.context.req, t.context.res);
-  helpers.sendErrorResponse.should.have.been.called;
-});
-
-test('getKeyword should send an unprocessable entity error response when environments don\'t match for keyword', async (t) => {
-  // setup
-
-  // The fetchKeywordStub response is a thor environment keyword
-  sandbox.stub(contentful, 'fetchKeyword').returns(fetchKeywordStub);
-  sandbox.spy(helpers, 'sendUnproccessibleEntityResponse');
-  t.context.req.app = {
-    get: sinon.stub().returns('test'),
-  };
-
-  // test
-  await helpers.getKeyword(t.context.req, t.context.res);
-  helpers.sendUnproccessibleEntityResponse.should.have.been.called;
-});
-
-// addSenderPrefix
-test('addSenderPrefix', () => {
-  const prefix = process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX;
-  const text = 'taco';
-  const string = `${prefix} ${text}`;
-  helpers.addSenderPrefix(text).should.be.equal(string);
-
-  process.env.GAMBIT_CHATBOT_RESPONSE_PREFIX = '';
-  helpers.addSenderPrefix(text).should.be.equal(text);
-});
-
 // getFirstWord
 test('getFirstWord should return null if no message is passed', () => {
   const result = helpers.getFirstWord(undefined);
@@ -219,12 +145,6 @@ test('isValidReportbackText', () => {
   helpers.isValidReportbackText('123').should.be.false;
   helpers.isValidReportbackText('hi     ').should.be.false;
   helpers.isValidReportbackText('').should.be.false;
-});
-
-// generatePassword
-test('generatePassword', () => {
-  helpers.generatePassword('taco');
-  crypto.createHmac.should.have.been.calledWithExactly('sha1', process.env.DS_API_PASSWORD_KEY);
 });
 
 // isCommand
