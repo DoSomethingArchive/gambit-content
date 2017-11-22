@@ -16,6 +16,7 @@ const sinon = require('sinon');
 
 // App Modules
 const stubs = require('../../test/utils/stubs');
+const signupFactory = require('../utils/factories/signup');
 const contentful = require('../../lib/contentful.js');
 const stathat = require('../../lib/stathat');
 
@@ -117,11 +118,25 @@ test('replacePhoenixCampaignVars on a campaign object missing reportbackInfo sho
 });
 
 // sendResponseForSignup
-test('sendResponseForSignup', (t) => {
+test('sendResponseForSignup should call signup.formatForApi', (t) => {
   sandbox.spy(t.context.res, 'send');
-  sandbox.spy(helpers, 'formatSignupResponse');
-  helpers.sendResponseForSignup(t.context.res);
-  helpers.formatSignupResponse.should.have.been.called;
+  const signup = signupFactory.getValidSignup();
+  sandbox.stub(signup, 'formatForApi').returns({ id: signup.id });
+  t.context.req.signup = signup;
+
+  helpers.sendResponseForSignup(t.context.res, signup);
+  signup.formatForApi.should.have.been.called;
+  t.context.res.send.should.have.been.called;
+});
+
+test('sendResponseForSignup should not call signup.formatForApi if signup arg undefined', (t) => {
+  sandbox.spy(t.context.res, 'send');
+  const signup = signupFactory.getValidSignup();
+  sandbox.stub(signup, 'formatForApi').returns({ id: signup.id });
+  t.context.req.signup = signup;
+
+  helpers.sendResponseForSignup(t.context.res, null);
+  signup.formatForApi.should.not.have.been.called;
   t.context.res.send.should.have.been.called;
 });
 
