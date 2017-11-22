@@ -8,19 +8,19 @@ const mapParamsConf = require('../../config/middleware/receive-message/map-reque
 
 // Middleware
 const requiredParamsMiddleware = require('../../lib/middleware/required-params');
-const mapRequestParamsMiddleware = require('../../lib/middleware/map-request-params');
-const getPhoenixCampaignMiddleware = require('../../lib/middleware/phoenix-campaign-get');
-const getSignupMiddleware = require('../../lib/middleware/signup-get');
-const createNewSignupIfNotFoundMiddleware = require('../../lib/middleware/signup-create');
-const validateRequestMiddleware = require('../../lib/middleware/validate');
-const createDraftSubmissionMiddleware = require('../../lib/middleware/draft-create');
-const completedMenuMiddleware = require('../../lib/middleware/menu-completed');
-const doingMenuMiddleware = require('../../lib/middleware/menu-doing');
-const draftSubmissionQuantityMiddleware = require('../../lib/middleware/draft-quantity');
-const draftSubmissionPhotoMiddleware = require('../../lib/middleware/draft-photo');
-const draftSubmissionCaptionMiddleware = require('../../lib/middleware/draft-caption');
-const draftSubmissionWhyParticipatedMiddleware = require('../../lib/middleware/draft-why-participated');
-const postDraftSubmissionMiddleware = require('../../lib/middleware/draft-completed');
+const mapRequestParamsMiddleware = require('../../lib/middleware/receive-message/map-request-params');
+const getPhoenixCampaignMiddleware = require('../../lib/middleware/receive-message/phoenix-campaign-get');
+const getSignupMiddleware = require('../../lib/middleware/receive-message/signup-get');
+const createNewSignupIfNotFoundMiddleware = require('../../lib/middleware/receive-message/signup-create');
+const validateRequestMiddleware = require('../../lib/middleware/receive-message/validate');
+const createDraftSubmissionMiddleware = require('../../lib/middleware/receive-message/draft-create');
+const completedMenuMiddleware = require('../../lib/middleware/receive-message/menu-completed');
+const doingMenuMiddleware = require('../../lib/middleware/receive-message/menu-doing');
+const draftSubmissionQuantityMiddleware = require('../../lib/middleware/receive-message/draft-quantity');
+const draftSubmissionPhotoMiddleware = require('../../lib/middleware/receive-message/draft-photo');
+const draftSubmissionCaptionMiddleware = require('../../lib/middleware/receive-message/draft-caption');
+const draftSubmissionWhyParticipatedMiddleware = require('../../lib/middleware/receive-message/draft-why-participated');
+const postDraftSubmissionMiddleware = require('../../lib/middleware/receive-message/draft-completed');
 
 // Router
 const router = express.Router(); // eslint-disable-line new-cap
