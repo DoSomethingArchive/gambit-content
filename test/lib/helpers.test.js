@@ -116,6 +116,15 @@ test('replacePhoenixCampaignVars on a campaign object missing reportbackInfo sho
   t.throws(() => helpers.replacePhoenixCampaignVars(text, phoenixCampaign));
 });
 
+// sendResponseForSignup
+test('sendResponseForSignup', (t) => {
+  sandbox.spy(t.context.res, 'send');
+  sandbox.spy(helpers, 'formatSignupResponse');
+  helpers.sendResponseForSignup(t.context.res);
+  helpers.formatSignupResponse.should.have.been.called;
+  t.context.res.send.should.have.been.called;
+});
+
 // sendTimeoutResponse
 test('sendTimeoutResponse', (t) => {
   sandbox.spy(t.context.res, 'status');
