@@ -88,35 +88,12 @@ module.exports = {
       },
     };
   },
-  consolebot: {
-    getPostArgs: function getPostArgs() {
-      return {
-        args: 'hi',
-      };
-    },
-  },
   conversation: {
-    getChatbotRequestArgs: function getChatbotRequestArgs(user) {
-      return {
-        req: {
-          user,
-          client: 'mobilecommons',
-        },
-      };
-    },
     getRecieveMessageRequestArgs: function getRecieveMessageRequestArgs(user) {
       return {
         req: {
           user,
           client: 'gambit-conversations',
-        },
-      };
-    },
-    getSignupsRequestArgs: function getSignupsRequestArgs(user) {
-      return {
-        req: {
-          user,
-          client: 'signups-api',
         },
       };
     },

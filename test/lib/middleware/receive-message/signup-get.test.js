@@ -10,16 +10,16 @@ const httpMocks = require('node-mocks-http');
 const underscore = require('underscore');
 const Promise = require('bluebird');
 
-const helpers = require('../../../lib/helpers');
-const Signup = require('../../../app/models/Signup');
-const stubs = require('../../utils/stubs');
+const helpers = require('../../../../lib/helpers');
+const Signup = require('../../../../app/models/Signup');
+const stubs = require('../../../utils/stubs');
 
 // setup "x.should.y" assertion style
 chai.should();
 chai.use(sinonChai);
 
 // module to be tested
-const getSignup = require('../../../lib/middleware/signup-get');
+const getSignup = require('../../../../lib/middleware/receive-message/signup-get');
 
 // sinon sandbox object
 const sandbox = sinon.sandbox.create();
