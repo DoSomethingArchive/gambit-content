@@ -88,17 +88,6 @@ module.exports = {
       },
     };
   },
-  conversation: {
-    getRecieveMessageRequestArgs: function getRecieveMessageRequestArgs(user) {
-      return {
-        req: {
-          user,
-          client: 'gambit-conversations',
-        },
-      };
-    },
-  },
-
   /**
    * This function returns mocks of the response that contentful sends to Gambit when queriyng for
    * the default messages for each category here.
