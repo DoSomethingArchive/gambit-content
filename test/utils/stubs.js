@@ -63,49 +63,7 @@ module.exports = {
       photo: 'https://www.wired.com/wp-content/uploads/2015/03/The-X-Files1-1024x768.jpg',
     };
   },
-  middleware: {
-    getUser: {
-      getUserFromLookup: function getUserFromLookup() {
-        return {
-          _id: '58d2b8fe10707d6d21713c55',
-          __v: 0,
-          mobile: '555910832',
-          first_name: 'john',
-          email: 'johnsnow@secretemailclient.com',
-          phoenix_id: 1654968,
-          mobilecommons_id: null,
-          role: 'user',
-          current_campaign: 2299,
-        };
-      },
-    },
-    createNewUser: {
-      getUserFromPost: function getUserFromPost() {
-        return {
-          _id: '58d2b8fe10707d6d21713c55',
-          __v: 0,
-          mobile: '555910832',
-          first_name: 'john',
-          email: 'johnsnow@secretemailclient.com',
-          phoenix_id: 1654968,
-          mobilecommons_id: null,
-          role: 'user',
-        };
-      },
-    },
-  },
   helpers: {
-    getValidYesResponses: function getValidYesResponses() {
-      const yesResponses = process.env.GAMBIT_YES_RESPONSES || '';
-      return yesResponses.split(',');
-    },
-    getInvalidYesResponses: function getInvalidYesResponses() {
-      const invalidResponses = [
-        'nah', 'ss', 'abs', 'def',
-        'hell', 'tamales', 'definitely not',
-      ];
-      return invalidResponses;
-    },
     getValidCommandValues: function getValidCommandValues() {
       return {
         member_support: process.env.GAMBIT_CMD_MEMBER_SUPPORT || 'Q',
@@ -130,40 +88,6 @@ module.exports = {
       },
     };
   },
-  consolebot: {
-    getPostArgs: function getPostArgs() {
-      return {
-        args: 'hi',
-      };
-    },
-  },
-  conversation: {
-    getChatbotRequestArgs: function getChatbotRequestArgs(user) {
-      return {
-        req: {
-          user,
-          client: 'mobilecommons',
-        },
-      };
-    },
-    getRecieveMessageRequestArgs: function getRecieveMessageRequestArgs(user) {
-      return {
-        req: {
-          user,
-          client: 'gambit-conversations',
-        },
-      };
-    },
-    getSignupsRequestArgs: function getSignupsRequestArgs(user) {
-      return {
-        req: {
-          user,
-          client: 'signups-api',
-        },
-      };
-    },
-  },
-
   /**
    * This function returns mocks of the response that contentful sends to Gambit when queriyng for
    * the default messages for each category here.

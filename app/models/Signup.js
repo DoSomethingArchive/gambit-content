@@ -5,6 +5,8 @@
  */
 const mongoose = require('mongoose');
 const Promise = require('bluebird');
+const underscore = require('underscore');
+const camelCaseKeys = require('camelcase-keys-deep');
 const logger = require('winston');
 
 const ReportbackSubmission = require('./ReportbackSubmission');
@@ -81,7 +83,7 @@ signupSchema.statics.lookupCurrentSignupForReq = function (req) {
 
         const signupData = parseActivityData(res.data);
         const signupId = signupData.id;
-        logger.info(`Signup.lookupCurrent signup:${signupId}`);
+        logger.info('Signup.lookupCurrent', { signupId });
 
         return model.findOneAndUpdate({ _id: signupId }, signupData, upsertOptions)
           .populate('draft_reportback_submission')
@@ -223,6 +225,41 @@ signupSchema.methods.createPostForReq = function (req) {
         return reject(scope);
       });
   });
+};
+
+/**
+ * Returns formatted object to use in API responses.
+ */
+signupSchema.methods.formatForApi = function () {
+  const draft = this.draft_reportback_submission;
+  let draftId;
+  if (draft && draft._id) {
+    draftId = draft._id.toString();
+  }
+
+  const signupObject = this.toObject();
+  const omitKeys = ['__v'];
+  const formattedSignup = camelCaseKeys(underscore.omit(signupObject, omitKeys));
+  formattedSignup.id = Number(formattedSignup.id);
+
+  if (draft) {
+    const draftObject = formattedSignup.draftReportbackSubmission;
+    // We don't need to repeat the Campaign property inside our draft Reportback Submission, it's
+    // defined on the Signup.
+    omitKeys.push('campaign');
+    formattedSignup.draftReportbackSubmission = underscore.omit(draftObject, omitKeys);
+    // A Mongo ObjectId gets converted to an id object, we just want an ID string.
+    formattedSignup.draftReportbackSubmission.id = draftId;
+  }
+
+  // Return ID properties as objects instead.
+  formattedSignup.campaign = { id: formattedSignup.campaign };
+  formattedSignup.user = { id: formattedSignup.user };
+  if (formattedSignup.reportback) {
+    formattedSignup.reportback = { id: formattedSignup.reportback };
+  }
+
+  return formattedSignup;
 };
 
 module.exports = mongoose.model('signups', signupSchema);
