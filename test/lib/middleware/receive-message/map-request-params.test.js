@@ -10,8 +10,8 @@ const httpMocks = require('node-mocks-http');
 const logger = require('winston');
 const rewire = require('rewire');
 
-const stubs = require('../../utils/stubs');
-const config = require('../../../config/middleware/receive-message/map-request-params');
+const stubs = require('../../../utils/stubs');
+const config = require('../../../../config/middleware/receive-message/map-request-params');
 
 const userId = stubs.getUserId();
 const campaignId = stubs.getCampaignId();
@@ -21,7 +21,7 @@ chai.should();
 chai.use(sinonChai);
 
 // module to be tested
-const mapRequestParams = rewire('../../../lib/middleware/map-request-params');
+const mapRequestParams = rewire('../../../../lib/middleware/receive-message/map-request-params');
 
 // sinon sandbox object
 const sandbox = sinon.sandbox.create();

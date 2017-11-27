@@ -10,16 +10,16 @@ const httpMocks = require('node-mocks-http');
 const logger = require('winston');
 // const underscore = require('underscore');
 
-const stubs = require('../../utils/stubs');
-const helpers = require('../../../lib/helpers');
-const signupFactory = require('../../utils/factories/signup');
+const stubs = require('../../../utils/stubs');
+const helpers = require('../../../../lib/helpers');
+const signupFactory = require('../../../utils/factories/signup');
 
 // setup "x.should.y" assertion style
 chai.should();
 chai.use(sinonChai);
 
 // module to be tested
-const validateRequest = require('../../../lib/middleware/validate');
+const validateRequest = require('../../../../lib/middleware/receive-message/validate');
 
 // sinon sandbox object
 const sandbox = sinon.sandbox.create();
