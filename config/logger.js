@@ -4,7 +4,7 @@ const logger = require('winston');
 
 const WINSTON_LEVEL = process.env.LOGGING_LEVEL || 'info';
 
-module.exports = function init(options) {
+module.exports = function init() {
   logger.configure({
     transports: [
       new logger.transports.Console({
