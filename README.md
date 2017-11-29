@@ -1,4 +1,4 @@
-[![wercker status](https://app.wercker.com/status/3e08a89169eeafef8ec020a9ceafe204/s/master "wercker status")](https://app.wercker.com/project/byKey/3e08a89169eeafef8ec020a9ceafe204) [![codecov](https://codecov.io/gh/DoSomething/gambit/branch/develop/graph/badge.svg)](https://codecov.io/gh/DoSomething/gambit)
+[![wercker status](https://app.wercker.com/status/3e08a89169eeafef8ec020a9ceafe204/s/master "wercker status")](https://app.wercker.com/project/byKey/3e08a89169eeafef8ec020a9ceafe204) [![codecov](https://codecov.io/gh/DoSomething/gambit-campaigns/branch/master/graph/badge.svg)](https://codecov.io/gh/DoSomething/gambit-campaigns)
 
 # Gambit Campaigns
 Gambit Campaigns is an internal DoSomething.org service for completing Campaigns via [Gambit Conversations](https://github.com/dosomething/gambit-conversations). Gambit Campaigns is built using [Express](http://expressjs.com/) and [MongoDB](https://www.mongodb.com).
@@ -21,5 +21,5 @@ Next, fork and clone this repository. To run Gambit Campaigns locally:
 
 ### License
 &copy;2017 DoSomething.org. Gambit Campaigns is free software, and may be redistributed under the terms specified
-in the [LICENSE](https://github.com/DoSomething/gambit/blob/dev/LICENSE) file. The name and logo for
+in the [LICENSE](https://github.com/DoSomething/gambit-campaigns/blob/dev/LICENSE) file. The name and logo for
 DoSomething.org are trademarks of Do Something, Inc and may not be used without permission.
