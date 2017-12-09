@@ -50,6 +50,7 @@ test('isValidQuantity() validations', () => {
   reportbackHelper.isValidQuantity('1.1').should.be.false;
   reportbackHelper.isValidQuantity(' 1.1').should.be.false;
   reportbackHelper.isValidQuantity(' 1.1 ').should.be.false;
+  reportbackHelper.isValidQuantity(' 0.9 ').should.be.false;
   // any text should not pass
   reportbackHelper.isValidQuantity('a').should.be.false;
   reportbackHelper.isValidQuantity(' 1a').should.be.false;
