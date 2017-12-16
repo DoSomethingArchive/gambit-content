@@ -2,11 +2,11 @@
 
 # Gambit Campaigns
 Gambit Campaigns is a [Gambit Conversations](https://github.com/dosomething/gambit-conversations) microservice used for:
-* Receiving Gambit Conversation messages that should submit User Campaign activity to [Rogue](https://github.com/dosomething/rogue)
+* Receiving inbound Gambit Conversation messages and posting User Campaign activity to [Rogue](https://github.com/dosomething/rogue)
 * Querying Contentful to provide a list of Campaigns and Signup keywords currently available on Gambit
 * Querying Contentful to provide Gambit message content for an individual Campaign
 
-.Gambit Campaigns is built using [Express](http://expressjs.com/) and [MongoDB](https://www.mongodb.com).
+Gambit Campaigns is built using [Express](http://expressjs.com/) and [MongoDB](https://www.mongodb.com).
 
 ### Installation
 
