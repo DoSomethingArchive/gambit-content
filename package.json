@@ -37,7 +37,7 @@
     ]
   },
   "engines": {
-    "node": "6.11.5"
+    "node": "6.12.x"
   },
   "dependencies": {
     "aws-sdk": "2.36.0",
