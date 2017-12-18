@@ -154,23 +154,6 @@ test('getFirstWord should return null if no message is passed', () => {
   expect(result).to.be.null;
 });
 
-// isValidReportbackQuantity
-test('isValidReportbackQuantity', () => {
-  helpers.isValidReportbackQuantity(2).should.be.true;
-  helpers.isValidReportbackQuantity('2').should.be.true;
-  helpers.isValidReportbackQuantity('2 ').should.be.true;
-  helpers.isValidReportbackQuantity('a2').should.be.NaN;
-});
-
-// isValidReportbackText
-test('isValidReportbackText', () => {
-  helpers.isValidReportbackText('i am valid').should.be.true;
-  helpers.isValidReportbackText('no').should.be.false;
-  helpers.isValidReportbackText('123').should.be.false;
-  helpers.isValidReportbackText('hi     ').should.be.false;
-  helpers.isValidReportbackText('').should.be.false;
-});
-
 // isCommand
 test('isCommand should return true when incoming message and command are valid Gambit commands', () => {
   const commandsObject = stubs.helpers.getValidCommandValues();
@@ -233,14 +216,4 @@ test('upsertOptions helper', () => {
   const opts = helpers.upsertOptions();
   opts.upsert.should.be.true;
   opts.new.should.be.true;
-});
-
-// trimReportbackText
-test('trimReportbackText', () => {
-  const text = 'This is a caption';
-  helpers.trimReportbackText(text).should.be.equal(text);
-
-  const longText = 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem.';
-  const trimmed = 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium qu...';
-  helpers.trimReportbackText(longText).should.be.equal(trimmed);
 });

@@ -4,8 +4,14 @@
 /* eslint-disable import/no-dynamic-require */
 
 const underscore = require('underscore');
+const Chance = require('chance');
+
+const chance = new Chance();
 
 module.exports = {
+  getRandomString: function getRandomString(length) {
+    return chance.string({ length: length || 5 });
+  },
   getNorthstarAPIBaseUri: function getNorthstarAPIBaseUri() {
     return process.env.DS_NORTHSTAR_API_BASEURI || 'https://northstar-fake.dosomething.org/v1';
   },
