@@ -1,10 +1,15 @@
 [![wercker status](https://app.wercker.com/status/3e08a89169eeafef8ec020a9ceafe204/s/master "wercker status")](https://app.wercker.com/project/byKey/3e08a89169eeafef8ec020a9ceafe204) [![codecov](https://codecov.io/gh/DoSomething/gambit-campaigns/branch/master/graph/badge.svg)](https://codecov.io/gh/DoSomething/gambit-campaigns)
 
 # Gambit Campaigns
-Gambit Campaigns is a [Gambit Conversations](https://github.com/dosomething/gambit-conversations) microservice used for:
-* Receiving inbound Gambit Conversation messages and posting User Campaign activity to [Rogue](https://github.com/dosomething/rogue)
-* Querying Contentful to provide a list of Campaigns and Signup keywords currently available on Gambit
-* Querying Contentful to provide Gambit message content for an individual Campaign
+
+Gambit Campaigns is a [Gambit Conversations](https://github.com/dosomething/gambit-conversations) microservice for:
+
+* Storing User Campaign activity from an inbound message, and posting it to [Rogue](https://github.com/dosomething/gambit-campaigns/wiki/rogue).
+
+* Querying Contentful for a list of active Keywords and Campaigns available running on Gambit.
+
+* Querying [Phoenix Ashes](https://github.com/DoSomething/gambit-campaigns/wiki/Admin#available-variables) for Campaign data used in Gambit message templates.
+
 
 Gambit Campaigns is built using [Express](http://expressjs.com/) and [MongoDB](https://www.mongodb.com).
 
@@ -28,6 +33,6 @@ Gambit Campaigns is built using [Express](http://expressjs.com/) and [MongoDB](h
 
 
 ### License
-&copy;2017 DoSomething.org. Gambit Campaigns is free software, and may be redistributed under the terms specified
+&copy;2018 DoSomething.org. Gambit Campaigns is free software, and may be redistributed under the terms specified
 in the [LICENSE](https://github.com/DoSomething/gambit-campaigns/blob/dev/LICENSE) file. The name and logo for
 DoSomething.org are trademarks of Do Something, Inc and may not be used without permission.
