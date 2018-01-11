@@ -11,7 +11,8 @@ Gambit Campaigns is a [Gambit Conversations](https://github.com/dosomething/gamb
 * Querying [Phoenix Ashes](https://github.com/DoSomething/gambit-campaigns/wiki/Admin#available-variables) for Campaign data used in Gambit message templates.
 
 
-Gambit Campaigns is built using [Express](http://expressjs.com/) and [MongoDB](https://www.mongodb.com).
+Gambit Campaigns is built using [Express](http://expressjs.com/), [MongoDB](https://www.mongodb.com), and [Redis](https://redis.io/).
+
 
 ### Installation
 
