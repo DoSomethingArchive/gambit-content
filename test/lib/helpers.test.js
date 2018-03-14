@@ -73,11 +73,11 @@ test('replacePhoenixCampaignVars', async () => {
   const signedupGambitMsg = stubs.getDefaultContenfulCampaignMessage('gambitSignupMenu');
   renderedMessage = await helpers
     .replacePhoenixCampaignVars(signedupGambitMsg, phoenixCampaign);
-  renderedMessage.should.have.string(phoenixCampaign.facts.problem);
+  renderedMessage.should.have.string(phoenixCampaign.title);
   // invalid sign up command
   const invalidSignedupCmdMsg = stubs.getDefaultContenfulCampaignMessage('invalidSignupMenuCommand');
   renderedMessage = await helpers
-  .replacePhoenixCampaignVars(invalidSignedupCmdMsg, phoenixCampaign);
+    .replacePhoenixCampaignVars(invalidSignedupCmdMsg, phoenixCampaign);
   renderedMessage.should.have.string('Sorry, I didn\'t understand that.');
 
   // TODO: test more messages!
@@ -108,13 +108,6 @@ test('replacePhoenixCampaignVars with no message should return empty string', ()
   const phoenixCampaign = stubs.getPhoenixCampaign();
   const renderedMessage = helpers.replacePhoenixCampaignVars(undefined, phoenixCampaign);
   renderedMessage.should.equal('');
-});
-
-test('replacePhoenixCampaignVars on a campaign object missing reportbackInfo should throw', (t) => {
-  const phoenixCampaign = stubs.getPhoenixCampaign();
-  delete phoenixCampaign.reportbackInfo;
-  const text = stubs.getDefaultContenfulCampaignMessage('gambitSignupMenu');
-  t.throws(() => helpers.replacePhoenixCampaignVars(text, phoenixCampaign));
 });
 
 // sendResponseForSignup
