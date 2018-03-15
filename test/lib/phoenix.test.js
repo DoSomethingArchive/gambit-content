@@ -8,7 +8,7 @@ const sinonChai = require('sinon-chai');
 const sinon = require('sinon');
 const nock = require('nock');
 
-// app modules
+const campaignHelper = require('../../lib/helpers/campaign');
 const stubs = require('../../test/utils/stubs');
 const config = require('../../config/lib/phoenix');
 
@@ -23,7 +23,8 @@ const sandbox = sinon.sandbox.create();
 const phoenix = require('../../lib/phoenix');
 
 test.beforeEach(() => {
-  sandbox.spy(phoenix, 'parsePhoenixCampaign');
+  sandbox.stub(campaignHelper, 'parseCampaign')
+    .returns({ id: stubs.getCampaignId() });
   sandbox.spy(phoenix, 'parsePhoenixError');
 });
 
@@ -49,7 +50,7 @@ test('phoenix.fetchCampaignById should call parsePhoenixCampaign on success', as
     .reply(200, stubs.phoenix.getCampaign());
 
   await phoenix.fetchCampaignById(campaignId);
-  phoenix.parsePhoenixCampaign.should.have.been.called;
+  campaignHelper.parseCampaign.should.have.been.called;
 });
 
 test('phoenix.fetchCampaignById should call parsePhoenixError on error', async () => {

@@ -1,172 +1,25 @@
 {
   "data": {
-    "id": "2299",
-    "title": "Two Books Blue Books",
-    "campaign_runs": {
-      "current": {
-        "en": {
-          "id": "6441",
-          "start_date": "2015-08-27 00:00:00"
-        }
-      },
-      "past": [
-        
-      ]
-    },
-    "language": {
-      "language_code": "en",
-      "prefix": "us"
-    },
-    "translations": {
-      "original": "en",
-      "en": {
-        "language_code": "en",
-        "prefix": "us"
-      }
-    },
-    "tagline": "Host a Dr. Seuss book drive to benefit kids in family shelters.",
-    "status": "active",
+    "id": "5LrwzAQA9OGkAkciu4GUAy",
+    "legacyCampaignId": "8038",
+    "legacyCampaignRunId": "8039",
     "type": "campaign",
-    "created_at": "1402932693",
-    "updated_at": "1508298360",
-    "time_commitment": 10,
-    "cover_image": {
-      "default": {
-        "uri": "https://thor.dosomething.org/sites/default/files/styles/300x300/public/images/TwoBooksBlueBooks_hero_square.jpg?itok=NodbbPi1",
-        "sizes": {
-          "landscape": {
-            "uri": "https://thor.dosomething.org/sites/default/files/styles/1440x810/public/images/TwoBooksBlueBooks_hero_landscape.jpg?itok=MJPts5Ty"
-          },
-          "square": {
-            "uri": "https://thor.dosomething.org/sites/default/files/styles/300x300/public/images/TwoBooksBlueBooks_hero_square.jpg?itok=NodbbPi1"
-          }
-        },
-        "type": "image",
-        "dark_background": true
-      },
-      "alternate": null
+    "template": "mosaic",
+    "title": "#SaveTheMascots",
+    "slug": "savethemascots",
+    "status": null,
+    "endDate": {
+      "date": "2018-04-30 23:59:00.000000",
+      "timezone_type": 1,
+      "timezone": "-05:00"
     },
-    "staff_pick": false,
-    "competition": false,
-    "facts": {
-      "problem": "In some low-income neighborhoods, there is only one book for every 300 children.",
-      "solution": "Students with easy access to books tend to score higher on achievement tests. ",
-      "sources": [
-        {
-          "formatted": "<p>Addy, Sophia, William Engelhardt, and Curtis Skinner. \"Basic Facts About Low-income Children, Children Under 18 Years, 2011.\" 2013</p>\n"
-        },
-        {
-          "formatted": "<p>Susan Neuman, Access for All: Closing the Book Gap for Children in Early Education, International Reading Association, (2001)</p>\n"
-        }
-      ]
-    },
-    "solutions": {
-      "copy": {
-        "raw": "Access to books greatly increases a student's chance of success in school! ",
-        "formatted": "<p>Access to books greatly increases a student's chance of success in school!</p>\n"
-      },
-      "support_copy": {
-        "raw": "So why Dr. Seuss? Because he’s the man with the plan, the plan to familiarize young readers with valuable literary devices, like alliteration, metaphor, symbolism and, of course, rhyme!",
-        "formatted": "<p>So why Dr. Seuss? Because he’s the man with the plan, the plan to familiarize young readers with valuable literary devices, like alliteration, metaphor, symbolism and, of course, rhyme!</p>\n"
-      }
-    },
-    "pre_step": {
-      "header": "Start the Drive! ",
-      "copy": {
-        "raw": "Always keep an eye on your inventory to ensure all the books make it to the family shelter. You don't want any Grinch stealing Christmas -- er, books.",
-        "formatted": "<p>Always keep an eye on your inventory to ensure all the books make it to the family shelter. You don't want any Grinch stealing Christmas -- er, books.</p>\n"
-      }
-    },
-    "latest_news": {
-      "latest_news": null
-    },
-    "causes": {
-      "primary": {
-        "id": "2",
-        "name": "education"
-      },
-      "secondary": [
-        {
-          "id": "2",
-          "name": "education"
-        }
-      ]
-    },
-    "action_types": {
-      "primary": {
-        "id": "7",
-        "name": "donate something"
-      },
-      "secondary": [
-        {
-          "id": "7",
-          "name": "donate something"
-        }
-      ]
-    },
-    "action_guides": [
-      {
-        "id": "2322",
-        "title": "Family Shelters Script",
-        "subtitle": null,
-        "description": "This script for calling family shelters",
-        "intro": {
-          "title": null,
-          "copy": {
-            "raw": "Use this script to guide your conversation with the local family shelter that'll receive your donations:\r\n\r\n\r\nHi (name of shelter), My name is __________ . I go to school at ____________. We were looking to donate Dr. Seuss books to your organization, and had a few questions.  \r\n\r\n1.\tWhere and when should we donate items? (If donation time falls during school hours, ask if they can make an exception for a time after the school day that would be acceptable.)  \r\n2.\tIs there a limit to the amount of books we can donate, and if so, what is that quantity?  \r\n3.\tDo you need us to fill out any paperwork before we donate, and if so, where can I find those forms?  \r\n4.\tAre there any other things that you need from us before we hold our drive?  \r\n5.\tIs there a way I should reach you other than this number if we have any other questions?  \r\n\r\nThank you for your assistance, and we’re looking forward to working with you! We’ll give a call the day before the planned drop-off/pick-up to make sure everything is set. My phone number is ____________ in case you need to contact me.  \r\nTake care, and we’ll see you soon!  \r\n\r\n...No YOU hang up. Ok byeeeeee. \r\n",
-            "formatted": "<p>Use this script to guide your conversation with the local family shelter that'll receive your donations:</p>\n\n<p>Hi (name of shelter), My name is __________ . I go to school at ____________. We were looking to donate Dr. Seuss books to your organization, and had a few questions.</p>\n\n<ol>\n<li>Where and when should we donate items? (If donation time falls during school hours, ask if they can make an exception for a time after the school day that would be acceptable.)  </li>\n<li>Is there a limit to the amount of books we can donate, and if so, what is that quantity?  </li>\n<li>Do you need us to fill out any paperwork before we donate, and if so, where can I find those forms?  </li>\n<li>Are there any other things that you need from us before we hold our drive?  </li>\n<li>Is there a way I should reach you other than this number if we have any other questions?  </li>\n</ol>\n\n<p>Thank you for your assistance, and we’re looking forward to working with you! We’ll give a call the day before the planned drop-off/pick-up to make sure everything is set. My phone number is ____________ in case you need to contact me.<br />\nTake care, and we’ll see you soon!</p>\n\n<p>...No YOU hang up. Ok byeeeeee.</p>\n"
-          }
-        },
-        "additional_text": {
-          "title": null,
-          "copy": null
-        },
-        "created_at": "1403016998",
-        "updated_at": "1446067420"
-      }
-    ],
-    "attachments": [
-      
-    ],
-    "issue": {
-      "id": "720",
-      "name": "achievement gap"
-    },
-    "tags": [
-      {
-        "id": "1302",
-        "name": "crafts"
-      }
-    ],
-    "timing": {
-      "high_season": {
-        "start": "2015-02-15T00:00:00+0000",
-        "end": "2015-03-15T00:00:00+0000"
-      },
-      "low_season": null
-    },
-    "services": {
-      "mobile_commons": {
-        "opt_in_path_id": null,
-        "friends_opt_in_path_id": null
-      },
-      "mailchimp": {
-        "grouping_id": null,
-        "group_name": null
-      }
-    },
-    "affiliates": {
-      "partners": [
-        
-      ]
-    },
-    "reportback_info": {
-      "copy": "Submit your pic to us, and do it now. You did it well, so tell us how!",
-      "confirmation_message": "Thanks for running your book drive!",
-      "noun": "Books",
-      "verb": "Collected"
-    },
-    "uri": "https://thor.dosomething.org/api/v1/campaigns/2299",
-    "magic_link_copy": null
+    "callToAction": "Tag your school to help us make every college campus tobacco-free!",
+    "tagline": "Tag your school to help us make every college campus tobacco-free!",
+    "blurb": "",
+    "coverImage": {
+      "description": null,
+      "url": "https://images.ctfassets.net/81iqaqpfd8fy/23SezyWgGwSSu6IkWaCA2w/393aef189a42bba9e0aca2d91fb97fad/8D3A9015.jpg",
+      "landscapeUrl": "https://images.ctfassets.net/81iqaqpfd8fy/23SezyWgGwSSu6IkWaCA2w/393aef189a42bba9e0aca2d91fb97fad/8D3A9015.jpg?w=1440&h=620&fm=jpg&fit=fill"
+    }
   }
 }
