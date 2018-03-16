@@ -50,6 +50,7 @@
     "camelcase-keys-deep": "^0.1.0",
     "connect-timeout": "^1.8.0",
     "contentful": "^3.8.0",
+    "date-fns": "^1.29.0",
     "dotenv": "^4.0.0",
     "express": "^4.10.2",
     "file-exists": "^4.0.0",

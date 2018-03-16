@@ -24,7 +24,7 @@ const phoenix = require('../../lib/phoenix');
 
 test.beforeEach(() => {
   sandbox.stub(campaignHelper, 'parseCampaign')
-    .returns({ id: stubs.getCampaignId() });
+    .returns({ id: campaignId });
   sandbox.spy(phoenix, 'parsePhoenixError');
 });
 

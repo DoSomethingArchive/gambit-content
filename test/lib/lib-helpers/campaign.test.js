@@ -9,9 +9,13 @@ const chai = require('chai');
 const logger = require('winston');
 const sinonChai = require('sinon-chai');
 const sinon = require('sinon');
+const underscore = require('underscore');
+const dateFns = require('date-fns');
 
 // App Modules
 const stubs = require('../../utils/stubs');
+
+const campaign = stubs.phoenix.getCampaign().data;
 
 // Config
 const config = require('../../../config/lib/helpers/campaign');
@@ -19,36 +23,43 @@ const config = require('../../../config/lib/helpers/campaign');
 // Module to test
 const campaignHelper = require('../../../lib/helpers/campaign');
 
-// setup "x.should.y" assertion style
 chai.should();
 chai.use(sinonChai);
 
 const sandbox = sinon.sandbox.create();
 
-// Setup!
 test.beforeEach(() => {
   stubs.stubLogger(sandbox, logger);
+  sandbox.stub(dateFns, 'parse')
+    .returns(underscore.noop);
 });
 
-// Cleanup!
 test.afterEach(() => {
-  // reset stubs, spies, and mocks
   sandbox.restore();
 });
 
-/**
- * Tests
- */
-
 // parseStatus
-test('parseStatus() validations', () => {
-  const closedStatus = config.statuses.closed;
-  // if status property exists, it should be returned
-  const randomStatus = 'winter';
-  const legacyCampaign = {
-    status: randomStatus,
-  };
-  campaignHelper.parseStatus(legacyCampaign).should.equal(randomStatus);
-  // If status or endDate undefined, should be closed
-  campaignHelper.parseStatus({}).should.equal(closedStatus);
+test('parseStatus returns active status value if campaign not isClosed', () => {
+  sandbox.stub(campaignHelper, 'isClosed')
+    .returns(false);
+  campaignHelper.parseStatus(campaign).should.equal(config.statuses.active);
+});
+
+test('parseStatus returns closed status value if campaign isClosed', () => {
+  sandbox.stub(campaignHelper, 'isClosed')
+    .returns(true);
+  campaignHelper.parseStatus(campaign).should.equal(config.statuses.closed);
+});
+
+// isEndDatePast
+test('isEndDatePast returns false if campaign.endDate is not inPast', () => {
+  sandbox.stub(dateFns, 'isPast')
+    .returns(false);
+  campaignHelper.isEndDatePast(campaign).should.equal(false);
+});
+
+test('isEndDatePast returns true if campaign.endDate is inPast', () => {
+  sandbox.stub(dateFns, 'isPast')
+    .returns(true);
+  campaignHelper.isEndDatePast(campaign).should.equal(true);
 });
