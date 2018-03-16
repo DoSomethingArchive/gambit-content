@@ -38,17 +38,13 @@ test.afterEach(() => {
   sandbox.restore();
 });
 
-// parseStatus
-test('parseStatus returns active status value if campaign not isClosed', () => {
-  sandbox.stub(campaignHelper, 'isClosed')
-    .returns(false);
-  campaignHelper.parseStatus(campaign).should.equal(config.statuses.active);
-});
-
-test('parseStatus returns closed status value if campaign isClosed', () => {
-  sandbox.stub(campaignHelper, 'isClosed')
-    .returns(true);
-  campaignHelper.parseStatus(campaign).should.equal(config.statuses.closed);
+// isClosed
+test('isClosed validations', () => {
+  // If status property exists, check against config.statuses
+  campaignHelper.isClosed({ status: config.statuses.closed }).should.equal(true);
+  campaignHelper.isClosed({ status: config.statuses.active }).should.equal(false);
+  // If status and endDate undefined, isClosed
+  campaignHelper.isClosed({}).should.equal(true);
 });
 
 // isEndDatePast
@@ -63,3 +59,17 @@ test('isEndDatePast returns true if campaign.endDate is inPast', () => {
     .returns(true);
   campaignHelper.isEndDatePast(campaign).should.equal(true);
 });
+
+// parseStatus
+test('parseStatus returns active status value if campaign not isClosed', () => {
+  sandbox.stub(campaignHelper, 'isClosed')
+    .returns(false);
+  campaignHelper.parseStatus(campaign).should.equal(config.statuses.active);
+});
+
+test('parseStatus returns closed status value if campaign isClosed', () => {
+  sandbox.stub(campaignHelper, 'isClosed')
+    .returns(true);
+  campaignHelper.parseStatus(campaign).should.equal(config.statuses.closed);
+});
+
