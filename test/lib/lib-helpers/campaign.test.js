@@ -73,3 +73,18 @@ test('parseStatus returns closed status value if campaign isClosed', () => {
   campaignHelper.parseStatus(campaign).should.equal(config.statuses.closed);
 });
 
+// parseCampaign
+test('parseCampaign validations', (t) => {
+  const mockStatus = 'active';
+  sandbox.stub(campaignHelper, 'parseStatus')
+    .returns(mockStatus);
+
+  const result = campaignHelper.parseCampaign(campaign);
+  result.id.should.equal(Number(campaign.legacyCampaignId));
+  result.title.should.equal(campaign.title);
+  result.tagline.should.equal(campaign.tagline);
+  campaignHelper.parseStatus.should.have.been.called;
+  result.status.should.equal(mockStatus);
+  t.deepEqual(result.endDate, campaign.endDate);
+  result.currentCampaignRun.id.should.equal(Number(campaign.legacyCampaignRunId));
+});
