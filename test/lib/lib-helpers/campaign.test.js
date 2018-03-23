@@ -44,7 +44,7 @@ test('isClosed validations', () => {
   campaignHelper.isClosed({ status: config.statuses.closed }).should.equal(true);
   campaignHelper.isClosed({ status: config.statuses.active }).should.equal(false);
   // If status and endDate undefined, isClosed
-  campaignHelper.isClosed({}).should.equal(true);
+  campaignHelper.isClosed({}).should.equal(false);
 });
 
 // isEndDatePast
