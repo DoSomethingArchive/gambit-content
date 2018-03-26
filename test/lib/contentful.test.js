@@ -177,8 +177,8 @@ test('parseDefaultAndOverrideCampaignsResponse validations', (t) => {
   result.override.should.deep.equal(campaignWithOverridesStub);
 });
 
-// fetchDefaultAndOverrideContentfulCampaignsForCampaignId
-test('fetchDefaultAndOverrideContentfulCampaignsForCampaignId should return object with default and override properties', async () => {
+// fetchDefaultAndOverrideCampaignsForCampaignId
+test('fetchDefaultAndOverrideCampaignsForCampaignId should return object with default and override properties', async () => {
   // setup
   sandbox.spy(contentful, 'fetchCampaigns');
   const stub = sinon.stub();
@@ -189,19 +189,20 @@ test('fetchDefaultAndOverrideContentfulCampaignsForCampaignId should return obje
 
   // test
   const campaignId = stubs.getCampaignId();
-  const res = await contentful.fetchDefaultAndOverrideContentfulCampaignsForCampaignId(campaignId);
+  const res = await contentful.fetchDefaultAndOverrideCampaignsForCampaignId(campaignId);
   contentful.fetchCampaigns.should.have.been.called;
   res.should.include.keys(['default', 'override']);
 });
 
 
-test('fetchDefaultAndOverrideContentfulCampaignsForCampaignId should throw when fetchCampaign fails', async () => {
+test('fetchDefaultAndOverrideCampaignsForCampaignId should throw when fetchCampaign fails', async () => {
   // setup
-  sandbox.stub(contentful, 'fetchCampaigns').returns(failStub);
+  sandbox.stub(contentful, 'fetchCampaigns')
+    .returns(failStub);
 
   // test
   try {
-    await contentful.fetchDefaultAndOverrideContentfulCampaignsForCampaignId(stubs.getCampaignId());
+    await contentful.fetchDefaultAndOverrideCampaignsForCampaignId(stubs.getCampaignId());
   } catch (error) {
     error.status.should.be.equal(500);
   }
