@@ -1,6 +1,6 @@
 {
   "name": "gambit-campaigns",
-  "version": "5.0.4",
+  "version": "5.0.5",
   "description": "The DoSomething.org chatbot service for campaigns and their activity.",
   "license": "MIT",
   "repository": {
@@ -40,8 +40,9 @@
     "node": "6.12.x"
   },
   "dependencies": {
+    "async": "^2.6.0",
     "aws-sdk": "2.36.0",
-    "bluebird": "^3.4.6",
+    "bluebird": "3.4.6",
     "body-parser": "^1.9.2",
     "cacheman": "^2.2.1",
     "cacheman-redis": "^1.1.2",
@@ -53,8 +54,8 @@
     "file-exists": "^4.0.0",
     "html-entities": "^1.1.1",
     "ip": "^1.1.5",
-    "mongoose": "~4.6.1",
-    "newrelic": "2.0.0",
+    "mongoose": "4.6.8",
+    "newrelic": "3.2.0",
     "node-request-retry": "^1.0.0",
     "path": "~0.4.9",
     "redis": "^2.8.0",
@@ -72,7 +73,7 @@
   "devDependencies": {
     "@dosomething/eslint-config": "^2.0.0",
     "ava": "^0.19.1",
-    "bluebird": "^3.5.0",
+    "bluebird": "3.4.6",
     "chai": "^3.5.0",
     "chance": "^1.0.9",
     "codecov": "^2.1.0",
