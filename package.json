@@ -38,7 +38,7 @@
   },
   "engines": {
     "node": "6.12.x",
-    "npm": "3.10.x"
+    "npm": "5.8.0"
   },
   "dependencies": {
     "async": "^2.6.0",
