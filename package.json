@@ -1,6 +1,6 @@
 {
   "name": "gambit-campaigns",
-  "version": "5.0.5",
+  "version": "5.0.6",
   "description": "The DoSomething.org chatbot service for campaigns and their activity.",
   "license": "MIT",
   "repository": {
@@ -37,7 +37,8 @@
     ]
   },
   "engines": {
-    "node": "6.12.x"
+    "node": "6.12.x",
+    "npm": "5.8.0"
   },
   "dependencies": {
     "async": "^2.6.0",
