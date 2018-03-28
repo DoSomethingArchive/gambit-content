@@ -78,8 +78,11 @@ test('parseCampaign validations', (t) => {
   const mockStatus = 'active';
   sandbox.stub(campaignHelper, 'parseStatus')
     .returns(mockStatus);
+  sandbox.stub(campaignHelper, 'parseAshesCampaign')
+    .returns(underscore.noop);
 
   const result = campaignHelper.parseCampaign(campaign);
+  campaignHelper.parseAshesCampaign.should.not.have.been.called;
   result.id.should.equal(Number(campaign.legacyCampaignId));
   result.title.should.equal(campaign.title);
   result.tagline.should.equal(campaign.tagline);
@@ -87,4 +90,30 @@ test('parseCampaign validations', (t) => {
   result.status.should.equal(mockStatus);
   t.deepEqual(result.endDate, campaign.endDate);
   result.currentCampaignRun.id.should.equal(Number(campaign.legacyCampaignRunId));
+});
+
+test('parseCampaign should return parseAshesCampaign if useAshes arg is true', () => {
+  const mockResult = { id: stubs.getCampaignId() };
+  sandbox.stub(campaignHelper, 'parseStatus')
+    .returns(underscore.noop);
+  sandbox.stub(campaignHelper, 'parseAshesCampaign')
+    .returns(mockResult);
+
+  const result = campaignHelper.parseCampaign(campaign, true);
+  campaignHelper.parseAshesCampaign.should.have.been.called;
+  campaignHelper.parseStatus.should.not.have.been.called;
+  result.should.equal(mockResult);
+});
+
+// parseAshesCampaign
+test('parseAshesCampaign validations', () => {
+  const ashesCampaign = stubs.phoenix.getAshesCampaign().data;
+  const languageCode = ashesCampaign.language.language_code;
+  const result = campaignHelper.parseAshesCampaign(ashesCampaign);
+  result.id.should.equal(Number(ashesCampaign.id));
+  result.title.should.equal(ashesCampaign.title);
+  result.tagline.should.equal(ashesCampaign.tagline);
+  result.status.should.equal(ashesCampaign.status);
+  const runId = Number(ashesCampaign.campaign_runs.current[languageCode].id);
+  result.currentCampaignRun.id.should.equal(runId);
 });
