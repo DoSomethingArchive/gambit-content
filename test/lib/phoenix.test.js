@@ -45,12 +45,16 @@ test('phoenix should respond to isClosedCampaign', () => {
 });
 
 test('phoenix.fetchCampaignById should call parsePhoenixCampaign on success', async () => {
+  const campaignStub = stubs.phoenix.getCampaign();
   nock(baseUri)
     .get(/$/)
-    .reply(200, stubs.phoenix.getCampaign());
+    .reply(200, campaignStub);
+  const mockUseAshesResult = true;
+  sandbox.stub(config, 'useAshes')
+    .returns(mockUseAshesResult);
 
   await phoenix.fetchCampaignById(campaignId);
-  campaignHelper.parseCampaign.should.have.been.called;
+  campaignHelper.parseCampaign.should.have.been.calledWith(campaignStub.data, mockUseAshesResult);
 });
 
 test('phoenix.fetchCampaignById should call parsePhoenixError on error', async () => {
