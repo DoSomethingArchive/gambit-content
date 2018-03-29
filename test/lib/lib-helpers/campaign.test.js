@@ -19,6 +19,7 @@ const campaign = stubs.phoenix.getCampaign().data;
 
 // Config
 const config = require('../../../config/lib/helpers/campaign');
+const phoenixConfig = require('../../../config/lib/phoenix');
 
 // Module to test
 const campaignHelper = require('../../../lib/helpers/campaign');
@@ -47,17 +48,17 @@ test('isClosed validations', () => {
   campaignHelper.isClosed({}).should.equal(false);
 });
 
-// isEndDatePast
-test('isEndDatePast returns false if campaign.endDate is not inPast', () => {
+// hasEnded
+test('hasEnded returns false if campaign.endDate not isPast', () => {
   sandbox.stub(dateFns, 'isPast')
     .returns(false);
-  campaignHelper.isEndDatePast(campaign).should.equal(false);
+  campaignHelper.hasEnded(campaign).should.equal(false);
 });
 
-test('isEndDatePast returns true if campaign.endDate is inPast', () => {
+test('hasEnded returns true if campaign.endDate isPast', () => {
   sandbox.stub(dateFns, 'isPast')
     .returns(true);
-  campaignHelper.isEndDatePast(campaign).should.equal(true);
+  campaignHelper.hasEnded(campaign).should.equal(true);
 });
 
 // parseStatus
@@ -80,6 +81,8 @@ test('parseCampaign validations', (t) => {
     .returns(mockStatus);
   sandbox.stub(campaignHelper, 'parseAshesCampaign')
     .returns(underscore.noop);
+  sandbox.stub(phoenixConfig, 'useAshes')
+    .returns(false);
 
   const result = campaignHelper.parseCampaign(campaign);
   campaignHelper.parseAshesCampaign.should.not.have.been.called;
@@ -92,21 +95,23 @@ test('parseCampaign validations', (t) => {
   result.currentCampaignRun.id.should.equal(Number(campaign.legacyCampaignRunId));
 });
 
-test('parseCampaign should return parseAshesCampaign if useAshes arg is true', () => {
+test('parseCampaign should return parseAshesCampaign if phoenixConfig.useAshes', () => {
   const mockResult = { id: stubs.getCampaignId() };
   sandbox.stub(campaignHelper, 'parseStatus')
     .returns(underscore.noop);
   sandbox.stub(campaignHelper, 'parseAshesCampaign')
     .returns(mockResult);
+  sandbox.stub(phoenixConfig, 'useAshes')
+    .returns(true);
 
-  const result = campaignHelper.parseCampaign(campaign, true);
+  const result = campaignHelper.parseCampaign(campaign);
   campaignHelper.parseAshesCampaign.should.have.been.called;
   campaignHelper.parseStatus.should.not.have.been.called;
   result.should.equal(mockResult);
 });
 
 // parseAshesCampaign
-test('parseAshesCampaign validations', () => {
+test('parseAshesCampaign returns an object with parsed properties from arg', () => {
   const ashesCampaign = stubs.phoenix.getAshesCampaign().data;
   const languageCode = ashesCampaign.language.language_code;
   const result = campaignHelper.parseAshesCampaign(ashesCampaign);

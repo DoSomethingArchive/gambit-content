@@ -49,12 +49,9 @@ test('phoenix.fetchCampaignById should call parsePhoenixCampaign on success', as
   nock(baseUri)
     .get(/$/)
     .reply(200, campaignStub);
-  const mockUseAshesResult = true;
-  sandbox.stub(config, 'useAshes')
-    .returns(mockUseAshesResult);
 
   await phoenix.fetchCampaignById(campaignId);
-  campaignHelper.parseCampaign.should.have.been.calledWith(campaignStub.data, mockUseAshesResult);
+  campaignHelper.parseCampaign.should.have.been.calledWith(campaignStub.data);
 });
 
 test('phoenix.fetchCampaignById should call parsePhoenixError on error', async () => {
