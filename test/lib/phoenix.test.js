@@ -36,22 +36,8 @@ test('phoenix should respond to fetchCampaignById', () => {
   phoenix.should.respondTo('fetchCampaignById');
 });
 
-test('phoenix should respond to getCampaignById', () => {
-  phoenix.should.respondTo('getCampaignById');
-});
-
 test('phoenix should respond to isClosedCampaign', () => {
   phoenix.should.respondTo('isClosedCampaign');
-});
-
-test('phoenix.fetchCampaignById should call parsePhoenixCampaign on success', async () => {
-  const campaignStub = stubs.phoenix.getCampaign();
-  nock(baseUri)
-    .get(/$/)
-    .reply(200, campaignStub);
-
-  await phoenix.fetchCampaignById(campaignId);
-  campaignHelper.parseCampaign.should.have.been.calledWith(campaignStub.data);
 });
 
 test('phoenix.fetchCampaignById should call parsePhoenixError on error', async () => {
