@@ -8,7 +8,7 @@ const sinonChai = require('sinon-chai');
 const sinon = require('sinon');
 const nock = require('nock');
 
-// app modules
+const campaignHelper = require('../../lib/helpers/campaign');
 const stubs = require('../../test/utils/stubs');
 const config = require('../../config/lib/phoenix');
 
@@ -23,7 +23,8 @@ const sandbox = sinon.sandbox.create();
 const phoenix = require('../../lib/phoenix');
 
 test.beforeEach(() => {
-  sandbox.spy(phoenix, 'parsePhoenixCampaign');
+  sandbox.stub(campaignHelper, 'parseCampaign')
+    .returns({ id: campaignId });
   sandbox.spy(phoenix, 'parsePhoenixError');
 });
 
@@ -44,12 +45,13 @@ test('phoenix should respond to isClosedCampaign', () => {
 });
 
 test('phoenix.fetchCampaignById should call parsePhoenixCampaign on success', async () => {
+  const campaignStub = stubs.phoenix.getCampaign();
   nock(baseUri)
     .get(/$/)
-    .reply(200, stubs.phoenix.getCampaign());
+    .reply(200, campaignStub);
 
   await phoenix.fetchCampaignById(campaignId);
-  phoenix.parsePhoenixCampaign.should.have.been.called;
+  campaignHelper.parseCampaign.should.have.been.calledWith(campaignStub.data);
 });
 
 test('phoenix.fetchCampaignById should call parsePhoenixError on error', async () => {

@@ -201,5 +201,8 @@ module.exports = {
     getCampaign: function getCampaign() {
       return module.exports.getJSONstub('campaign', 'phoenix');
     },
+    getAshesCampaign: function getAshesCampaign() {
+      return module.exports.getJSONstub('ashes-campaign', 'phoenix');
+    },
   },
 };
