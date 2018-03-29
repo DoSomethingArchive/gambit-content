@@ -1,5 +1,5 @@
 ---
-  extends: "@dosomething/eslint-config"
+  extends: "@dosomething/eslint-config/nodejs/6.x"
   globals:
     app: true
   parserOptions:
