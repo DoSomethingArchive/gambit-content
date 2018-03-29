@@ -17,9 +17,6 @@ if (useAshes()) {
 }
 
 module.exports = {
-  cache: {
-    ttl: parseInt(process.env.GAMBIT_CAMPAIGNS_CACHE_TTL, 10) || 3600,
-  },
   clientOptions: {
     baseUri,
   },
