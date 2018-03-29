@@ -57,8 +57,7 @@ test.afterEach((t) => {
 });
 
 // createNewClient
-test('createNewClient should create a new contentful client by calling contentful.createClient',
-() => {
+test('createNewClient should create a new contentful client', () => {
   contentful.createNewClient();
   contentfulAPI.createClient.should.have.been.called;
   contentful.getClient().should.respondTo('getEntries');
@@ -84,8 +83,7 @@ test('contentfulError should add the Contentful error prefix to the error object
 });
 
 // fetchSingleEntry
-test('fetchSingleEntry should only get one item from the entries returned by contentful',
-async () => {
+test('fetchSingleEntry should only get one item from the entries returned by contentful', async () => {
   // setup
   sandbox.spy(underscore, 'first');
 
