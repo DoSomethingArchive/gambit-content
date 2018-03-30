@@ -12,11 +12,13 @@ const underscore = require('underscore');
 const stubs = require('../../../utils/stubs');
 const helpers = require('../../../../lib/helpers');
 
+const botConfigStub = stubs.contentful.getEntries('default-campaign').items[0];
+
 chai.should();
 chai.use(sinonChai);
 
 // module to be tested
-const getBotConfig = require('../../../../lib/middleware/campaigns-single/bot-config');
+const getBotConfig = require('../../../../lib/middleware/campaigns-single/bot-config-get');
 
 const sandbox = sinon.sandbox.create();
 
@@ -26,6 +28,7 @@ test.beforeEach((t) => {
   t.context.req = httpMocks.createRequest();
   t.context.req.campaignId = stubs.getCampaignId();
   t.context.req.campaign = stubs.getPhoenixCampaign();
+  t.context.req.botConfig = botConfigStub;
   t.context.res = httpMocks.createResponse();
 });
 
@@ -37,17 +40,12 @@ test.afterEach((t) => {
 test('getBotConfig should inject a botConfig property with fetchByCampaignId result', async (t) => {
   const next = sinon.stub();
   const middleware = getBotConfig();
-  const botConfigStub = { test: 'hello' };
-  const postTypeStub = 'text';
   sandbox.stub(helpers.botConfig, 'fetchByCampaignId')
     .returns(Promise.resolve(botConfigStub));
-  sandbox.stub(helpers.botConfig, 'parsePostTypeFromBotConfig')
-    .returns(postTypeStub);
 
   // test
   await middleware(t.context.req, t.context.res, next);
   t.context.req.botConfig.should.deep.equal(botConfigStub);
-  t.context.req.campaign.botConfig.postType.should.equal(postTypeStub);
   next.should.have.been.called;
   helpers.sendErrorResponse.should.not.have.been.called;
 });

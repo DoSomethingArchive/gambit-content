@@ -12,12 +12,9 @@ const defaultText = {
 };
 
 module.exports = {
-  default: {
-    postType: 'photo',
-  },
+  defaultPostType: 'photo',
   /**
    * Maps each content type that's available as a postTemplate to the Post type it should create.
-   * should create.
    *
    * { contentTypeName: 'postType' }
    */
