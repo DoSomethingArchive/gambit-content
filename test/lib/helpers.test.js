@@ -83,27 +83,6 @@ test('replacePhoenixCampaignVars', async () => {
   // TODO: test more messages!
 });
 
-test('findAndReplaceKeywordVarForCampaignId a message that makes a contentful request to get keywords', async () => {
-  const keywords = stubs.contentful.getKeywords();
-  let renderedMessage = '';
-  const phoenixCampaign = stubs.getPhoenixCampaign();
-  const relativeToSignUpMsg = stubs.getDefaultContenfulCampaignMessage('scheduled_relative_to_signup_date');
-  renderedMessage = await helpers
-    .findAndReplaceKeywordVarForCampaignId(relativeToSignUpMsg, phoenixCampaign.id);
-
-  contentful.fetchKeywordsForCampaignId.should.have.been.called;
-  renderedMessage.should.have.string(keywords[0]);
-});
-
-test('findAndReplaceKeywordVarForCampaignId failure to retrieve keywords should throw', async (t) => {
-  // will trigger fetchKeywordsForCampaignIdStubFail stub
-  const campaignId = 'fail';
-  const memberSupportMsg = stubs.getDefaultContenfulCampaignMessage('memberSupport');
-
-  await t.throws(helpers.findAndReplaceKeywordVarForCampaignId(memberSupportMsg, campaignId));
-  contentful.fetchKeywordsForCampaignId.should.have.been.called;
-});
-
 test('replacePhoenixCampaignVars with no message should return empty string', () => {
   const phoenixCampaign = stubs.getPhoenixCampaign();
   const renderedMessage = helpers.replacePhoenixCampaignVars(undefined, phoenixCampaign);
