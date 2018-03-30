@@ -37,7 +37,7 @@ test('renderTemplates should inject a templates property', (t) => {
   const middleware = renderTemplates();
   sandbox.stub(helpers.botConfig, 'getTemplateNames')
     .returns(['a', 'b', 'c']);
-  sandbox.stub(helpers.botConfig, 'getTemplateFromBotConfig')
+  sandbox.stub(helpers.botConfig, 'getTemplateDataFromBotConfig')
     .returns({});
   sandbox.stub(helpers, 'replacePhoenixCampaignVars')
     .returns('Winter');
