@@ -29,10 +29,6 @@ const sandbox = sinon.sandbox.create();
 // Stubs
 const allKeywordsStub = Promise.resolve(stubs.contentful.getEntries('keywords'));
 const keywordStub = Promise.resolve(stubs.contentful.getEntries('keyword'));
-const fetchCampaignsStub = Promise.resolve(stubs.contentful.getEntries('campaign'));
-const defaultCampaignStub = stubs.contentful.getEntries('default-campaign').items[0];
-const campaignWithOverridesStub = stubs.contentful.getEntries('campaign-with-overrides').items[0];
-
 const failStub = Promise.reject({ status: 500 });
 const contentfulAPIStub = {
   getEntries: () => {},
@@ -151,69 +147,4 @@ test('fetchKeywords should call contentfulError when it fails', async () => {
   // test
   await contentful.fetchKeywords();
   contentful.contentfulError.should.have.been.called;
-});
-
-// parseDefaultAndOverrideCampaignsResponse
-test('parseDefaultAndOverrideCampaignsResponse validations', (t) => {
-  let ids = [];
-  let result = contentful.parseDefaultAndOverrideCampaignsResponse(ids);
-  result.should.deep.equal({});
-
-  ids = [defaultCampaignStub];
-  result = contentful.parseDefaultAndOverrideCampaignsResponse(ids);
-  result.default.should.deep.equal(defaultCampaignStub);
-  t.falsy(result.override);
-
-  ids = [defaultCampaignStub, campaignWithOverridesStub];
-  result = contentful.parseDefaultAndOverrideCampaignsResponse(ids);
-  result.default.should.deep.equal(defaultCampaignStub);
-  result.override.should.deep.equal(campaignWithOverridesStub);
-
-  ids = [campaignWithOverridesStub, defaultCampaignStub];
-  result = contentful.parseDefaultAndOverrideCampaignsResponse(ids);
-  result.default.should.deep.equal(defaultCampaignStub);
-  result.override.should.deep.equal(campaignWithOverridesStub);
-});
-
-// fetchDefaultAndOverrideCampaignsForCampaignId
-test('fetchDefaultAndOverrideCampaignsForCampaignId should return object with default and override properties', async () => {
-  // setup
-  sandbox.spy(contentful, 'fetchCampaigns');
-  const stub = sinon.stub();
-  stub.onCall(0).returns(fetchCampaignsStub);
-  contentful.__set__('client', {
-    getEntries: stub,
-  });
-
-  // test
-  const campaignId = stubs.getCampaignId();
-  const res = await contentful.fetchDefaultAndOverrideCampaignsForCampaignId(campaignId);
-  contentful.fetchCampaigns.should.have.been.called;
-  res.should.include.keys(['default', 'override']);
-});
-
-
-test('fetchDefaultAndOverrideCampaignsForCampaignId should throw when fetchCampaign fails', async () => {
-  // setup
-  sandbox.stub(contentful, 'fetchCampaigns')
-    .returns(failStub);
-
-  // test
-  try {
-    await contentful.fetchDefaultAndOverrideCampaignsForCampaignId(stubs.getCampaignId());
-  } catch (error) {
-    error.status.should.be.equal(500);
-  }
-});
-
-
-test('getFieldNameForCampaignMessageTemplate should return a config.campaignFields value', (t) => {
-  // setup
-  const contentfulConfig = require('../../config/lib/contentful');
-  const template = 'askPhotoMessage';
-  const fieldName = contentfulConfig.campaignFields[template];
-
-  // test
-  const result = contentful.getFieldNameForCampaignMessageTemplate(template);
-  t.deepEqual(result, fieldName);
 });
