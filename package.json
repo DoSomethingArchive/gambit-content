@@ -73,21 +73,21 @@
     "winston": "2.3.x"
   },
   "devDependencies": {
-    "@dosomething/eslint-config": "^2.0.0",
+    "@dosomething/eslint-config": "^3.1.0",
     "ava": "^0.19.1",
     "bluebird": "3.4.6",
     "chai": "^3.5.0",
     "chance": "^1.0.9",
     "codecov": "^2.1.0",
     "dotenv": "^4.0.0",
-    "eslint": "^3.19.0",
-    "eslint-plugin-ava": "^4.2.0",
+    "eslint": "^4.7.0",
+    "eslint-plugin-ava": "^4.2.1",
     "nock": "^9.0.13",
     "node-mocks-http": "^1.6.1",
     "nyc": "^10.2.0",
-    "rewire": "^2.5.2",
-    "sinon": "^2.1.0",
-    "sinon-chai": "^2.9.0",
+    "rewire": "^3.0.2",
+    "sinon": "^2.3.8",
+    "sinon-chai": "^2.12.0",
     "supertest": "^3.0.0"
   }
 }
