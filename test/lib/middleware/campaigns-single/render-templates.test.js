@@ -32,23 +32,19 @@ test.afterEach((t) => {
 });
 
 
-test('renderTemplates should inject a rendered property', (t) => {
+test('renderTemplates should inject a templates property', (t) => {
   // setup
   const middleware = renderTemplates();
-  sandbox.stub(helpers, 'replacePhoenixCampaignVars');
-  const contentfulCampaigns = stubs.contentful.getEntries('campaign').items;
-  t.context.req.campaign = {};
-  t.context.req.contentfulCampaigns = {
-    override: contentfulCampaigns[0],
-    default: contentfulCampaigns[1],
-  };
+  sandbox.stub(helpers.botConfig, 'getTemplateNames')
+    .returns(['a', 'b', 'c']);
+  sandbox.stub(helpers.botConfig, 'getTemplateFromBotConfig')
+    .returns({});
+  t.context.req.campaign = stubs.getPhoenixCampaign();
+  t.context.req.campaign.botConfig = {};
+
 
   // test
   middleware(t.context.req, t.context.res);
-  const templateNames = Object.keys(t.context.req.campaign.templates);
-  templateNames.forEach((templateName) => {
-    const template = t.context.req.campaign.templates[templateName];
-    const properties = ['override', 'raw', 'rendered'];
-    properties.forEach(property => template.should.have.property(property));
-  });
+  t.context.req.campaign.should.have.property('templates');
+  t.context.req.campaign.botConfig.should.have.property('templates');
 });

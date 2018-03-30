@@ -36,11 +36,5 @@ module.exports = {
     askContinue: 'askContinueMessage',
     declinedContinue: 'declinedContinueMessage',
     invalidAskContinueResponse: 'invalidContinueResponseMessage',
-    // TODO: When Conversation goes live, we'll either be removing these to send messages from
-    // Customer.io, or we'll want to rename them to camelCase if we send Relative Reminders via
-    // Conversations POST /send-message.
-    // @see https://github.com/DoSomething/gambit-conversations/issues/79
-    scheduled_relative_to_signup_date: 'scheduledRelativeToSignupDateMessage',
-    scheduled_relative_to_reportback_date: 'scheduledRelativeToReportbackDateMessage',
   },
 };
