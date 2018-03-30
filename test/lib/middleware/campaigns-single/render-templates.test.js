@@ -39,6 +39,8 @@ test('renderTemplates should inject a templates property', (t) => {
     .returns(['a', 'b', 'c']);
   sandbox.stub(helpers.botConfig, 'getTemplateFromBotConfig')
     .returns({});
+  sandbox.stub(helpers, 'replacePhoenixCampaignVars')
+    .returns('Winter');
   t.context.req.campaign = stubs.getPhoenixCampaign();
   t.context.req.campaign.botConfig = {};
 
