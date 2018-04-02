@@ -61,7 +61,7 @@ test('renderTemplates injects a templates object, where properties are objects w
     .returns(mockRenderedText);
   sandbox.stub(helpers.botConfig, 'parsePostTypeFromBotConfig')
     .returns(mockPostType);
-  t.context.req.campaign.botConfig = {};
+  t.context.req.botConfig = {};
 
   middleware(t.context.req, t.context.res);
   t.context.req.campaign.should.have.property('templates');
@@ -77,6 +77,7 @@ test('renderTemplates injects a templates object, where properties are objects w
 
 test('renderTemplates calls sendErrorResponse if an error is caught', (t) => {
   const middleware = renderTemplates();
+  t.context.req.botConfig = {};
   sandbox.stub(helpers.botConfig, 'getTemplateNames')
     .throws();
 
