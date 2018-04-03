@@ -46,7 +46,7 @@ test('getTemplateDataFromBotConfig returns default text when botConfig arg undef
 
   const result = botConfigHelper.getTemplateDataFromBotConfig(null, mockTemplateName);
   botConfigHelper.getDefaultTemplateText.should.have.been.called;
-  botConfigHelper.getTemplateTextFromBotConfig.should.not.have.been.called;
+  botConfigHelper.getTemplateTextFromBotConfig.should.have.been.called;
   result.override.should.equal(false);
   result.raw.should.equal(mockTemplateText);
 });

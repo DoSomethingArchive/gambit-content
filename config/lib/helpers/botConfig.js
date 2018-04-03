@@ -109,7 +109,7 @@ module.exports = {
     },
     invalidAskContinueResponse: {
       fieldName: 'invalidContinueResponseMessage',
-      default: `${defaultText.invalidInput} Did you want to join {{title}}${defaultText.yesNo}`,
+      default: `${defaultText.invalidInput} Did you want to join {{title}}?${defaultText.yesNo}`,
     },
   },
 };
