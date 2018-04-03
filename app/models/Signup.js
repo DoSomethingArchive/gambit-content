@@ -113,8 +113,9 @@ signupSchema.statics.createSignupForReq = function (req) {
 
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.createSignupForReq(${userId}, ${campaignId}, ${keyword})`);
+    const payload = helpers.signup.getDefaultCreatePayloadFromReq(req);
 
-    return rogue.createSignupForReq(req)
+    return rogue.createSignup(payload)
       .then((signup) => {
         const signupId = signup.data.signup_id;
         if (keyword) {
