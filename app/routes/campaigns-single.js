@@ -3,16 +3,16 @@
 const express = require('express');
 
 // Middleware;
-const getPhoenixCampaignMiddleware = require('../../lib/middleware/campaigns-single/phoenix-campaign');
-const getContentfulKeywordsMiddleware = require('../../lib/middleware/campaigns-single/contentful-keywords');
-const getContentfulCampaignsMiddleware = require('../../lib/middleware/campaigns-single/contentful-campaigns');
-const renderTemplatesMiddleware = require('../../lib/middleware/campaigns-single/render-templates');
+const getCampaignMiddleware = require('../../lib/middleware/campaigns-single/campaign-get');
+const getKeywordsMiddleware = require('../../lib/middleware/campaigns-single/keywords-get');
+const getBotConfigMiddleware = require('../../lib/middleware/campaigns-single/bot-config-get');
+const parseBotConfigMiddleware = require('../../lib/middleware/campaigns-single/bot-config-parse');
 
 const router = express.Router({ mergeParams: true });
 
-router.use(getPhoenixCampaignMiddleware());
-router.use(getContentfulKeywordsMiddleware());
-router.use(getContentfulCampaignsMiddleware());
-router.use(renderTemplatesMiddleware());
+router.use(getCampaignMiddleware());
+router.use(getKeywordsMiddleware());
+router.use(getBotConfigMiddleware());
+router.use(parseBotConfigMiddleware());
 
 module.exports = router;
