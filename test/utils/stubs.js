@@ -36,8 +36,8 @@ module.exports = {
   getEnvironment: function getEnvironment() {
     return process.env.NODE_ENV || 'thor';
   },
-  getProfileId: function getProfileId() {
-    return 5559108329;
+  getTemplateName: function getTemplateName() {
+    return 'completedMenu';
   },
   getUserId: function getUserId() {
     return '597b9ef910707d07c84b00aa';

@@ -29,6 +29,7 @@ test.beforeEach((t) => {
     .returns(underscore.noop);
   t.context.req = httpMocks.createRequest();
   t.context.req.campaign = campaign;
+  t.context.req.botConfig = {};
   t.context.res = httpMocks.createResponse();
 });
 
@@ -37,15 +38,6 @@ test.afterEach((t) => {
   t.context = {};
 });
 
-test('parseBotConfig does not call getTemplateNames if botConfig.undefined', (t) => {
-  const middleware = renderTemplates();
-  sandbox.spy(t.context.res, 'send');
-  sandbox.spy(helpers.botConfig, 'getTemplateNames');
-
-  middleware(t.context.req, t.context.res);
-  helpers.botConfig.getTemplateNames.should.not.have.been.called;
-  t.context.res.send.should.have.been.called;
-});
 
 test('renderTemplates injects a templates object, where properties are objects with template data', (t) => {
   const middleware = renderTemplates();
@@ -61,7 +53,7 @@ test('renderTemplates injects a templates object, where properties are objects w
     .returns(mockRenderedText);
   sandbox.stub(helpers.botConfig, 'parsePostTypeFromBotConfig')
     .returns(mockPostType);
-  t.context.req.botConfig = {};
+
 
   middleware(t.context.req, t.context.res);
   t.context.req.campaign.should.have.property('templates');
@@ -77,7 +69,6 @@ test('renderTemplates injects a templates object, where properties are objects w
 
 test('renderTemplates calls sendErrorResponse if an error is caught', (t) => {
   const middleware = renderTemplates();
-  t.context.req.botConfig = {};
   sandbox.stub(helpers.botConfig, 'getTemplateNames')
     .throws();
 
