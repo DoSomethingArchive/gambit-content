@@ -26,11 +26,6 @@ test.afterEach(() => {
   sandbox.restore();
 });
 
-// getTemplateNames
-test('getTemplateNames returns the keys of config.templates', () => {
-  const result = botConfigHelper.getTemplateNames();
-  result.should.deep.equal(Object.keys(config.templates));
-});
 
 // getTemplateDataFromBotConfig
 test('getTemplateDataFromBotConfig returns default text when botConfig arg undefined', () => {
@@ -57,4 +52,16 @@ test('getTemplateDataFromBotConfig returns botConfig text when botConfig overrid
   botConfigHelper.getTemplateTextFromBotConfig.should.have.been.called;
   result.override.should.equal(true);
   result.raw.should.equal(mockTemplateText);
+});
+
+// getTemplateNames
+test('getTemplateNames returns the keys of config.templates', () => {
+  const result = botConfigHelper.getTemplateNames();
+  result.should.deep.equal(Object.keys(config.templates));
+});
+
+// getTemplateTextFromBotConfig
+test('getTemplateTextFromBotConfig returns the botConfig field value for templateName arg', () => {
+  const result = botConfigHelper.getTemplateTextFromBotConfig(botConfigStub, mockTemplateName);
+  result.should.deep.equal(botConfigStub.fields.completedMenuMessage);
 });
