@@ -5,6 +5,7 @@ const chai = require('chai');
 const sinonChai = require('sinon-chai');
 const sinon = require('sinon');
 
+const contentful = require('../../../lib/contentful');
 const stubs = require('../../utils/stubs');
 
 const mockTemplateName = stubs.getTemplateName();
@@ -26,6 +27,15 @@ test.afterEach(() => {
   sandbox.restore();
 });
 
+// fetchByCampaignId
+test('fetchByCampaignId returns contentful.fetchBotConfigByCampaignId', async () => {
+  sandbox.stub(contentful, 'fetchBotConfigByCampaignId')
+    .returns(botConfigStub);
+
+  const result = await botConfigHelper.fetchByCampaignId(stubs.getCampaignId());
+  contentful.fetchBotConfigByCampaignId.should.have.been.called;
+  result.should.equal(botConfigStub);
+});
 
 // getTemplateDataFromBotConfig
 test('getTemplateDataFromBotConfig returns default text when botConfig arg undefined', () => {
