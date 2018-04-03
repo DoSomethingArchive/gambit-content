@@ -70,7 +70,7 @@ function parseActivityData(activityData) {
 signupSchema.statics.lookupCurrentSignupForReq = function (req) {
   const model = this;
   const userId = req.userId;
-  const campaignRunId = req.campaign.currentCampaignRun.id;
+  const campaignRunId = req.campaignRunId;
 
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.lookupCurrent(${userId}, ${campaignRunId})`);

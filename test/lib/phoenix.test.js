@@ -36,10 +36,6 @@ test('phoenix should respond to fetchCampaignById', () => {
   phoenix.should.respondTo('fetchCampaignById');
 });
 
-test('phoenix should respond to isClosedCampaign', () => {
-  phoenix.should.respondTo('isClosedCampaign');
-});
-
 test('phoenix.fetchCampaignById should call parsePhoenixError on error', async () => {
   const message = 'Miley';
   const status = 500;
