@@ -73,6 +73,7 @@ module.exports = {
       __v: 0,
       quantity: 2,
       photo: 'https://www.wired.com/wp-content/uploads/2015/03/The-X-Files1-1024x768.jpg',
+      caption: this.getRandomString(),
     };
   },
   helpers: {
