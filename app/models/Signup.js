@@ -70,7 +70,7 @@ function parseActivityData(activityData) {
 signupSchema.statics.lookupCurrentSignupForReq = function (req) {
   const model = this;
   const userId = req.userId;
-  const campaignRunId = req.campaign.currentCampaignRun.id;
+  const campaignRunId = req.campaignRunId;
 
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.lookupCurrent(${userId}, ${campaignRunId})`);
@@ -110,11 +110,10 @@ signupSchema.statics.createSignupForReq = function (req) {
   const userId = req.userId;
   const campaignId = req.campaignId;
   const broadcastId = req.broadcastId;
+  logger.debug('Signup.createSignupForReq', { userId, campaignId, keyword });
 
   return new Promise((resolve, reject) => {
-    logger.debug(`Signup.createSignupForReq(${userId}, ${campaignId}, ${keyword})`);
-
-    return rogue.createSignupForReq(req)
+    helpers.campaignActivity.createSignupFromReq(req)
       .then((signup) => {
         const signupId = signup.data.signup_id;
         if (keyword) {
@@ -194,10 +193,9 @@ signupSchema.methods.createPostForReq = function (req) {
   const dateSubmitted = Date.now();
 
   return new Promise((resolve, reject) => {
-    rogue.createPostForReq(req)
+    helpers.campaignActivity.createPhotoPostFromReq(req)
       .then((res) => {
         const reportbackId = res.data.id;
-
         signup.reportback = reportbackId;
         signup.total_quantity_submitted = Number(submission.quantity);
         signup.draft_reportback_submission = undefined;

@@ -9,7 +9,6 @@ const mapParamsConf = require('../../config/middleware/receive-message/map-reque
 // Middleware
 const requiredParamsMiddleware = require('../../lib/middleware/required-params');
 const mapRequestParamsMiddleware = require('../../lib/middleware/receive-message/map-request-params');
-const getPhoenixCampaignMiddleware = require('../../lib/middleware/receive-message/phoenix-campaign-get');
 const getSignupMiddleware = require('../../lib/middleware/receive-message/signup-get');
 const createNewSignupIfNotFoundMiddleware = require('../../lib/middleware/receive-message/signup-create');
 const validateRequestMiddleware = require('../../lib/middleware/receive-message/validate');
@@ -31,11 +30,6 @@ const router = express.Router(); // eslint-disable-line new-cap
  */
 router.use(requiredParamsMiddleware(requiredParamsConf));
 router.use(mapRequestParamsMiddleware(mapParamsConf));
-
-/**
- * Load Campaign from DS Phoenix API.
- */
-router.use(getPhoenixCampaignMiddleware());
 
 router.use(
   /**
