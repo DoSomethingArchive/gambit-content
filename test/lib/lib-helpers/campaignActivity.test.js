@@ -14,7 +14,7 @@ const stubs = require('../../utils/stubs');
 const mockDraft = stubs.getDraft();
 
 // Module to test
-const signupHelper = require('../../../lib/helpers/signup');
+const activityHelper = require('../../../lib/helpers/campaignActivity');
 
 chai.should();
 chai.use(sinonChai);
@@ -40,7 +40,7 @@ test.afterEach((t) => {
 
 // getDefaultCreatePayloadFromReq
 test('getDefaultCreatePayloadFromReq returns an object', (t) => {
-  const result = signupHelper.getDefaultCreatePayloadFromReq(t.context.req);
+  const result = activityHelper.getDefaultCreatePayloadFromReq(t.context.req);
   result.campaign_id.should.equal(t.context.req.campaignId);
   result.campaign_run_id.should.equal(t.context.req.campaignRunId);
   result.northstar_id.should.equal(t.context.req.userId);
@@ -49,11 +49,11 @@ test('getDefaultCreatePayloadFromReq returns an object', (t) => {
 
 // getCreatePhotoPostPayloadFromReq
 test('getCreatePhotoPostPayloadFromReq returns an object', (t) => {
-  sandbox.stub(signupHelper, 'getDefaultCreatePayloadFromReq')
+  sandbox.stub(activityHelper, 'getDefaultCreatePayloadFromReq')
     .returns({ userId: stubs.getUserId() });
-  const result = signupHelper.getCreatePhotoPostPayloadFromReq(t.context.req);
-  signupHelper.getDefaultCreatePayloadFromReq.should.have.been.called;
-  result.photo.should.equal(mockDraft.photo);
+  const result = activityHelper.getCreatePhotoPostPayloadFromReq(t.context.req);
+  activityHelper.getDefaultCreatePayloadFromReq.should.have.been.called;
+  result.photoUrl.should.equal(mockDraft.photo);
   result.quantity.should.equal(mockDraft.quantity);
   result.caption.should.equal(mockDraft.caption);
   result.should.not.have.property('why_participated');
