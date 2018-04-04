@@ -27,6 +27,9 @@ module.exports = {
   getCampaignId: function getCampaignId() {
     return 2299;
   },
+  getCampaignRunId: function getCampaignRunId() {
+    return 6677;
+  },
   getBroadcastId: function getBroadcastId() {
     return 1246319;
   },
@@ -35,6 +38,9 @@ module.exports = {
   },
   getEnvironment: function getEnvironment() {
     return process.env.NODE_ENV || 'thor';
+  },
+  getPlatform: function getPlatform() {
+    return 'sms';
   },
   getTemplateName: function getTemplateName() {
     return 'completedMenu';
