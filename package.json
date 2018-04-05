@@ -1,6 +1,6 @@
 {
   "name": "gambit-campaigns",
-  "version": "5.1.0",
+  "version": "5.1.1",
   "description": "The DoSomething.org chatbot service for campaigns and their activity.",
   "license": "MIT",
   "repository": {
@@ -55,7 +55,6 @@
     "express": "^4.10.2",
     "file-exists": "^4.0.0",
     "html-entities": "^1.1.1",
-    "ip": "^1.1.5",
     "mongoose": "4.6.8",
     "newrelic": "3.2.0",
     "node-request-retry": "^1.0.0",
