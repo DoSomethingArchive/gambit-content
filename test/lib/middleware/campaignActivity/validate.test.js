@@ -19,7 +19,7 @@ chai.should();
 chai.use(sinonChai);
 
 // module to be tested
-const validateRequest = require('../../../../lib/middleware/receive-message/validate');
+const validateRequest = require('../../../../lib/middleware/campaignActivity/validate');
 
 // sinon sandbox object
 const sandbox = sinon.sandbox.create();

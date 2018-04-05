@@ -11,7 +11,7 @@ const logger = require('winston');
 const rewire = require('rewire');
 
 const stubs = require('../../../utils/stubs');
-const config = require('../../../../config/middleware/receive-message/map-request-params');
+const config = require('../../../../config/lib/middleware/campaignActivity/map-request-params');
 
 const userId = stubs.getUserId();
 const campaignId = stubs.getCampaignId();
@@ -21,7 +21,7 @@ chai.should();
 chai.use(sinonChai);
 
 // module to be tested
-const mapRequestParams = rewire('../../../../lib/middleware/receive-message/map-request-params');
+const mapRequestParams = rewire('../../../../lib/middleware/campaignActivity/map-request-params');
 
 // sinon sandbox object
 const sandbox = sinon.sandbox.create();

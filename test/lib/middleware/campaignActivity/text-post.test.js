@@ -16,7 +16,7 @@ chai.should();
 chai.use(sinonChai);
 
 // module to be tested
-const textPost = require('../../../../lib/middleware/receive-message/text-post');
+const textPost = require('../../../../lib/middleware/campaignActivity/text-post');
 
 const sandbox = sinon.sandbox.create();
 

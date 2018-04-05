@@ -3,7 +3,7 @@
 Receives an inbound message forwarded from the Gambit Conversations API to create or update a User's Signup for the given `campaignId`. 
 
 ```
-POST /v1/receive-message
+POST /v1/campaignActivity
 ```
 
 **Headers**
@@ -28,7 +28,7 @@ Name | Type | Description
 <details><summary>**Example Request**</summary><p>
 
 ```
-curl -X "POST" "http://localhost:5000/v1/receive-message" \
+curl -X "POST" "http://localhost:5000/v1/campaignActivity" \
      -H "x-gambit-api-key: totallysecret" \
      -H "Content-Type: application/x-www-form-urlencoded; charset=utf-8" \
      --data-urlencode "userId=59cd4c1910707d778633e30f" \
