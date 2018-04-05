@@ -25,6 +25,7 @@ test.beforeEach((t) => {
   stubs.stubLogger(sandbox, logger);
   t.context.req = httpMocks.createRequest();
   t.context.req.userId = stubs.getUserId();
+  t.context.req.incoming_message = stubs.getRandomString();
   t.context.req.campaignId = stubs.getCampaignId();
   t.context.req.campaignRunId = stubs.getCampaignRunId();
   t.context.req.platform = stubs.getPlatform();
@@ -52,9 +53,19 @@ test('getCreatePhotoPostPayloadFromReq returns an object', (t) => {
   sandbox.stub(activityHelper, 'getDefaultCreatePayloadFromReq')
     .returns({ userId: stubs.getUserId() });
   const result = activityHelper.getCreatePhotoPostPayloadFromReq(t.context.req);
+  result.type.should.equal('photo');
   activityHelper.getDefaultCreatePayloadFromReq.should.have.been.called;
   result.photoUrl.should.equal(mockDraft.photo);
   result.quantity.should.equal(mockDraft.quantity);
   result.caption.should.equal(mockDraft.caption);
   result.should.not.have.property('why_participated');
+});
+
+// getCreateTextPostPayloadFromReq
+test('getCreateTextPostPayloadFromReq returns an object', (t) => {
+  sandbox.stub(activityHelper, 'getDefaultCreatePayloadFromReq')
+    .returns({ userId: stubs.getUserId() });
+  const result = activityHelper.getCreateTextPostPayloadFromReq(t.context.req);
+  result.type.should.equal('text');
+  result.text.should.equal(t.context.req.incoming_message);
 });
