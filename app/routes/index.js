@@ -1,8 +1,8 @@
 'use strict';
 
 // Routes
-const campaignsIndexRoute = require('./campaigns-index');
-const campaignsSingleRoute = require('./campaigns-single');
+const campaignsIndexRoute = require('./campaigns/index');
+const campaignsSingleRoute = require('./campaigns/single');
 const receiveMessageRoute = require('./receive-message');
 
 // TODO: Combine these?

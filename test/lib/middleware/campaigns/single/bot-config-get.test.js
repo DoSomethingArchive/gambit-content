@@ -9,8 +9,8 @@ const sinonChai = require('sinon-chai');
 const httpMocks = require('node-mocks-http');
 const underscore = require('underscore');
 
-const stubs = require('../../../utils/stubs');
-const helpers = require('../../../../lib/helpers');
+const stubs = require('../../../../utils/stubs');
+const helpers = require('../../../../../lib/helpers');
 
 const botConfigStub = stubs.contentful.getEntries('default-campaign').items[0];
 
@@ -18,7 +18,7 @@ chai.should();
 chai.use(sinonChai);
 
 // module to be tested
-const getBotConfig = require('../../../../lib/middleware/campaigns-single/bot-config-get');
+const getBotConfig = require('../../../../../lib/middleware/campaigns/single/bot-config-get');
 
 const sandbox = sinon.sandbox.create();
 
