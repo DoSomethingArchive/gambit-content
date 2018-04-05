@@ -42,6 +42,9 @@ module.exports = {
   getPlatform: function getPlatform() {
     return 'sms';
   },
+  getPostId: function getPostId() {
+    return 9040481;
+  },
   getTemplateName: function getTemplateName() {
     return 'completedMenu';
   },

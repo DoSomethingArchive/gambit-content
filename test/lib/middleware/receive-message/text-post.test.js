@@ -10,6 +10,7 @@ const underscore = require('underscore');
 
 const helpers = require('../../../../lib/helpers');
 const replies = require('../../../../lib/replies');
+const stubs = require('../../../utils/stubs');
 
 chai.should();
 chai.use(sinonChai);
@@ -20,6 +21,10 @@ const textPost = require('../../../../lib/middleware/receive-message/text-post')
 const sandbox = sinon.sandbox.create();
 
 test.beforeEach((t) => {
+  sandbox.stub(replies, 'askCaption')
+    .returns(underscore.noop);
+  sandbox.stub(replies, 'invalidCaption')
+    .returns(underscore.noop);
   sandbox.stub(replies, 'menuCompleted')
     .returns(underscore.noop);
   t.context.req = httpMocks.createRequest();
@@ -37,7 +42,64 @@ test('textPost returns next if not a textPost request', async (t) => {
   sandbox.stub(helpers.request, 'isTextPost')
     .returns(false);
 
-  // test
   await middleware(t.context.req, t.context.res, next);
   next.should.have.been.called;
+  replies.askCaption.should.not.have.been.called;
+  replies.invalidCaption.should.not.have.been.called;
+  replies.menuCompleted.should.not.have.been.called;
+});
+
+test('textPost returns askCaption when request.shouldAskNextQuestion', async (t) => {
+  const next = sinon.stub();
+  const middleware = textPost();
+  sandbox.stub(helpers.request, 'isTextPost')
+    .returns(true);
+  sandbox.stub(helpers.request, 'shouldAskNextQuestion')
+    .returns(true);
+
+  await middleware(t.context.req, t.context.res, next);
+  next.should.not.have.been.called;
+  replies.askCaption.should.have.been.calledWith(t.context.req, t.context.res);
+  replies.invalidCaption.should.not.have.been.called;
+  replies.menuCompleted.should.not.have.been.called;
+});
+
+test('textPost returns invalidCaption when request.isValidReportbackText is false', async (t) => {
+  const next = sinon.stub();
+  const middleware = textPost();
+  sandbox.stub(helpers.request, 'isTextPost')
+    .returns(true);
+  sandbox.stub(helpers.request, 'shouldAskNextQuestion')
+    .returns(false);
+  sandbox.stub(helpers.request, 'isValidReportbackText')
+    .returns(true);
+  sandbox.stub(helpers.campaignActivity, 'createTextPostFromReq')
+    .returns(Promise.resolve({ id: stubs.getPostId() }));
+
+  await middleware(t.context.req, t.context.res, next);
+  next.should.not.have.been.called;
+  replies.askCaption.should.not.have.been.calledWith(t.context.req, t.context.res);
+  replies.invalidCaption.should.not.have.been.called;
+  helpers.campaignActivity.createTextPostFromReq.should.have.been.calledWith(t.context.req);
+  replies.menuCompleted.should.have.been.called;
+});
+
+test('textPost returns completedMenu upon createTextPostFromReq success', async (t) => {
+  const next = sinon.stub();
+  const middleware = textPost();
+  sandbox.stub(helpers.request, 'isTextPost')
+    .returns(true);
+  sandbox.stub(helpers.request, 'shouldAskNextQuestion')
+    .returns(false);
+  sandbox.stub(helpers.request, 'isValidReportbackText')
+    .returns(true);
+  sandbox.stub(helpers.campaignActivity, 'createTextPostFromReq')
+    .returns(Promise.resolve({ id: stubs.getPostId() }));
+
+  await middleware(t.context.req, t.context.res, next);
+  next.should.not.have.been.called;
+  replies.askCaption.should.not.have.been.calledWith(t.context.req, t.context.res);
+  replies.invalidCaption.should.not.have.been.called;
+  helpers.campaignActivity.createTextPostFromReq.should.have.been.calledWith(t.context.req);
+  replies.menuCompleted.should.have.been.called;
 });
