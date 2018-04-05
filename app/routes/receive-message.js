@@ -12,6 +12,7 @@ const mapRequestParamsMiddleware = require('../../lib/middleware/receive-message
 const getSignupMiddleware = require('../../lib/middleware/receive-message/signup-get');
 const createNewSignupIfNotFoundMiddleware = require('../../lib/middleware/receive-message/signup-create');
 const validateRequestMiddleware = require('../../lib/middleware/receive-message/validate');
+const textPostMiddleware = require('../../lib/middleware/receive-message/text-post');
 const createDraftSubmissionMiddleware = require('../../lib/middleware/receive-message/draft-create');
 const completedMenuMiddleware = require('../../lib/middleware/receive-message/menu-completed');
 const doingMenuMiddleware = require('../../lib/middleware/receive-message/menu-doing');
@@ -45,6 +46,11 @@ router.use(
  * Run sanity checks
  */
 router.use(validateRequestMiddleware());
+
+/**
+ * Create a text post if this is a text postType request.
+ */
+router.use(textPostMiddleware());
 
 /**
  * Checks Signup for existing draft, or creates draft when User has completed the Campaign.
