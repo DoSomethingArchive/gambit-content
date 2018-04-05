@@ -4,10 +4,7 @@
 const campaignsIndexRoute = require('./campaigns/index');
 const campaignsSingleRoute = require('./campaigns/single');
 const receiveMessageRoute = require('./receive-message');
-
-// TODO: Combine these?
 const statusRoute = require('./status');
-const homeRoute = require('./home');
 
 // middleware config
 const authenticateConfig = require('../../config/middleware/authenticate');
@@ -28,7 +25,7 @@ function regGlobalMiddleware(app) {
 
 module.exports = function init(app) {
   regGlobalMiddleware(app);
-  app.get('/', homeRoute);
+  app.get('/', statusRoute);
   app.use('/v1/status', statusRoute);
 
   // Provides keywords and templates for a single Campaign.
