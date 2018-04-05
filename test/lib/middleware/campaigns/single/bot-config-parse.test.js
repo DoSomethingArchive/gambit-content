@@ -9,8 +9,8 @@ const sinonChai = require('sinon-chai');
 const httpMocks = require('node-mocks-http');
 const underscore = require('underscore');
 
-const stubs = require('../../../utils/stubs');
-const helpers = require('../../../../lib/helpers');
+const stubs = require('../../../../utils/stubs');
+const helpers = require('../../../../../lib/helpers');
 
 const campaign = stubs.getPhoenixCampaign();
 
@@ -19,7 +19,7 @@ chai.should();
 chai.use(sinonChai);
 
 // module to be tested
-const renderTemplates = require('../../../../lib/middleware/campaigns-single/bot-config-parse');
+const renderTemplates = require('../../../../../lib/middleware/campaigns/single/bot-config-parse');
 
 // sinon sandbox object
 const sandbox = sinon.sandbox.create();
