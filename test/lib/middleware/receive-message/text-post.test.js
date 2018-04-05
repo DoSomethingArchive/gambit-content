@@ -52,13 +52,12 @@ test('textPost returns next if not a textPost request', async (t) => {
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
-test('textPost returns askCaption when request.shouldAskNextQuestion', async (t) => {
+test('textPost returns askCaption when request has a keyword', async (t) => {
   const next = sinon.stub();
   const middleware = textPost();
   sandbox.stub(helpers.request, 'isTextPost')
     .returns(true);
-  sandbox.stub(helpers.request, 'isKeyword')
-    .returns(true);
+  t.context.req.keyword = stubs.getKeyword();
 
   await middleware(t.context.req, t.context.res, next);
   next.should.not.have.been.called;
@@ -73,8 +72,6 @@ test('textPost returns invalidCaption when request.isValidReportbackText is fals
   const middleware = textPost();
   sandbox.stub(helpers.request, 'isTextPost')
     .returns(true);
-  sandbox.stub(helpers.request, 'isKeyword')
-    .returns(false);
   sandbox.stub(helpers.request, 'isValidReportbackText')
     .returns(true);
   sandbox.stub(helpers.campaignActivity, 'createTextPostFromReq')
@@ -94,8 +91,6 @@ test('textPost returns completedMenu upon createTextPostFromReq success', async 
   const middleware = textPost();
   sandbox.stub(helpers.request, 'isTextPost')
     .returns(true);
-  sandbox.stub(helpers.request, 'isKeyword')
-    .returns(false);
   sandbox.stub(helpers.request, 'isValidReportbackText')
     .returns(true);
   sandbox.stub(helpers.campaignActivity, 'createTextPostFromReq')
@@ -115,8 +110,6 @@ test('textPost returns sendErrorResponse upon createTextPostFromReq error', asyn
   const middleware = textPost();
   sandbox.stub(helpers.request, 'isTextPost')
     .returns(true);
-  sandbox.stub(helpers.request, 'isKeyword')
-    .returns(false);
   sandbox.stub(helpers.request, 'isValidReportbackText')
     .returns(true);
   const error = new Error('epic fail');

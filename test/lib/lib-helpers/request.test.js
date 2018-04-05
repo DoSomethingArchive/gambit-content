@@ -8,6 +8,8 @@ const sinonChai = require('sinon-chai');
 const sinon = require('sinon');
 const httpMocks = require('node-mocks-http');
 
+const helpers = require('../../../lib/helpers');
+
 // Module to test
 const requestHelper = require('../../../lib/helpers/request');
 
@@ -26,10 +28,24 @@ test.afterEach((t) => {
 });
 
 // isTextPost
-test('isTextPost returns whether req.postType is text', (t) => {
+test('isTextPost returns whether req.keyword', (t) => {
   t.context.req.postType = 'text';
   t.truthy(requestHelper.isTextPost(t.context.req));
   t.context.req.postType = 'photo';
   t.falsy(requestHelper.isTextPost(t.context.req));
 });
 
+// isValidReportbackText
+test('isValidReportbackText returns true if incoming_message is valid text', (t) => {
+  t.context.req.incoming_message = 'text';
+  sandbox.stub(helpers.reportback, 'isValidText')
+    .returns(true);
+  t.truthy(requestHelper.isValidReportbackText(t.context.req));
+});
+
+test('isValidReportbackText returns false is incoming_message is not valid text', (t) => {
+  t.context.req.incoming_message = 'text';
+  sandbox.stub(helpers.reportback, 'isValidText')
+    .returns(false);
+  t.falsy(requestHelper.isValidReportbackText(t.context.req));
+});
