@@ -45,6 +45,9 @@ module.exports = {
   getPost: function getPost() {
     return { id: this.getPostId() };
   },
+  getPostConfigContentType: function getPostConfigContentType() {
+    return 'textPostConfig';
+  },
   getPostId: function getPostId() {
     return 9040481;
   },

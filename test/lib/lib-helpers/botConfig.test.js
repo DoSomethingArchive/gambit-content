@@ -79,6 +79,10 @@ test('getTemplateTextFromBotConfigAndTemplateName returns the botConfig field va
   result.should.deep.equal(botConfig.fields.completedMenuMessage);
 });
 
+test('getTemplateTextFromBotConfigAndTemplateName returns null if botConfig undefined', (t) => {
+  t.falsy(botConfigHelper.getTemplateTextFromBotConfigAndTemplateName(null, templateName));
+});
+
 // getTemplatesFromBotConfig
 test('getTemplatesFromBotConfig returns an object with template names as properties', () => {
   const templateData = { raw: templateText };
