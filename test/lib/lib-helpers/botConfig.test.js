@@ -8,12 +8,9 @@ const sinon = require('sinon');
 const contentful = require('../../../lib/contentful');
 const stubs = require('../../utils/stubs');
 
+const mockBotConfig = stubs.contentful.getEntries('default-campaign').items[0];
 const mockTemplateName = stubs.getTemplateName();
 const mockTemplateText = stubs.getRandomString();
-
-const config = require('../../../config/lib/helpers/botConfig');
-
-const botConfigStub = stubs.contentful.getEntries('default-campaign').items[0];
 
 // Module to test
 const botConfigHelper = require('../../../lib/helpers/botConfig');
@@ -30,48 +27,44 @@ test.afterEach(() => {
 // fetchByCampaignId
 test('fetchByCampaignId returns contentful.fetchBotConfigByCampaignId', async () => {
   sandbox.stub(contentful, 'fetchBotConfigByCampaignId')
-    .returns(botConfigStub);
+    .returns(mockBotConfig);
 
   const result = await botConfigHelper.fetchByCampaignId(stubs.getCampaignId());
   contentful.fetchBotConfigByCampaignId.should.have.been.called;
-  result.should.equal(botConfigStub);
+  result.should.equal(mockBotConfig);
 });
 
 // getTemplateDataFromBotConfig
-test('getTemplateDataFromBotConfig returns default text when botConfig arg undefined', () => {
-  sandbox.stub(botConfigHelper, 'getDefaultTemplateText')
+test('getTemplateFromBotConfigAndTemplateName returns default text when botConfig undefined', () => {
+  sandbox.stub(botConfigHelper, 'getDefaultTextForBotConfigTemplateName')
     .returns(mockTemplateText);
-  sandbox.stub(botConfigHelper, 'getTemplateTextFromBotConfig')
+  sandbox.stub(botConfigHelper, 'getTemplateTextFromBotConfigAndTemplateName')
     .returns(stubs.getRandomString());
 
-  const result = botConfigHelper.getTemplateDataFromBotConfig(null, mockTemplateName);
-  botConfigHelper.getDefaultTemplateText.should.have.been.called;
-  botConfigHelper.getTemplateTextFromBotConfig.should.have.been.called;
+  const result = botConfigHelper.getTemplateFromBotConfigAndTemplateName(null, mockTemplateName);
+  botConfigHelper.getDefaultTextForBotConfigTemplateName.should.have.been.called;
+  botConfigHelper.getTemplateTextFromBotConfigAndTemplateName.should.have.been.called;
   result.override.should.equal(false);
   result.raw.should.equal(mockTemplateText);
 });
 
-test('getTemplateDataFromBotConfig returns botConfig text when botConfig override exists', () => {
-  sandbox.stub(botConfigHelper, 'getDefaultTemplateText')
+test('getTemplateFromBotConfigAndTemplateName returns botConfig text when botConfig override exists', () => {
+  sandbox.stub(botConfigHelper, 'getDefaultTextForBotConfigTemplateName')
     .returns(stubs.getRandomString());
-  sandbox.stub(botConfigHelper, 'getTemplateTextFromBotConfig')
+  sandbox.stub(botConfigHelper, 'getTemplateTextFromBotConfigAndTemplateName')
     .returns(mockTemplateText);
 
-  const result = botConfigHelper.getTemplateDataFromBotConfig(botConfigStub, mockTemplateName);
-  botConfigHelper.getDefaultTemplateText.should.not.have.been.called;
-  botConfigHelper.getTemplateTextFromBotConfig.should.have.been.called;
+  const result = botConfigHelper
+    .getTemplateFromBotConfigAndTemplateName(mockBotConfig, mockTemplateName);
+  botConfigHelper.getDefaultTextForBotConfigTemplateName.should.not.have.been.called;
+  botConfigHelper.getTemplateTextFromBotConfigAndTemplateName.should.have.been.called;
   result.override.should.equal(true);
   result.raw.should.equal(mockTemplateText);
 });
 
-// getTemplateNames
-test('getTemplateNames returns the keys of config.templates', () => {
-  const result = botConfigHelper.getTemplateNames();
-  result.should.deep.equal(Object.keys(config.templates));
-});
-
-// getTemplateTextFromBotConfig
-test('getTemplateTextFromBotConfig returns the botConfig field value for templateName arg', () => {
-  const result = botConfigHelper.getTemplateTextFromBotConfig(botConfigStub, mockTemplateName);
-  result.should.deep.equal(botConfigStub.fields.completedMenuMessage);
+// getTemplateTextFromBotConfigAndTemplateName
+test('getTemplateTextFromBotConfigAndTemplateName returns the botConfig field value for templateName arg', () => {
+  const result = botConfigHelper
+    .getTemplateTextFromBotConfigAndTemplateName(mockBotConfig, mockTemplateName);
+  result.should.deep.equal(mockBotConfig.fields.completedMenuMessage);
 });
