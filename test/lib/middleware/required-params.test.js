@@ -8,7 +8,7 @@ const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
 const httpMocks = require('node-mocks-http');
 
-const config = require('../../../config/middleware/receive-message/required-params');
+const config = require('../../../config/lib/middleware/campaignActivity/required-params');
 const helpers = require('../../../lib/helpers');
 
 // setup "x.should.y" assertion style

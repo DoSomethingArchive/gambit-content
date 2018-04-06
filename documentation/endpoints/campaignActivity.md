@@ -1,9 +1,9 @@
-# Receive Message
+# Campaign Activity
 
-Receives an inbound message forwarded from the Gambit Conversations API to create or update a User's Signup for the given `campaignId`. 
+Receives data from Gambit Conversations that has been parsed as activity for a given User and Cmapaign.
 
 ```
-POST /v1/receive-message
+POST /v1/campaignActivity
 ```
 
 **Headers**
@@ -18,21 +18,27 @@ Name | Type | Description
 
 Name | Type | Description
 --- | --- | ---
-`userId` | `string` | **Required.** Northstar Id of User that sent incoming message.
-`campaignId` | `string` | **Required.** Campaign User has signed up for.
-`text` | `string` | Incoming text sent.
-`mediaUrl` | `string` | Incoming image sent.
-`keyword` | `string` | Campaign Signup keyword, if triggered
-`broadcastId` | `string` | Broadcast ID, if User is responding to a Broadcast
+`userId` | `string` | **Required.** 
+`campaignId` | `string` | **Required.** Campaign that the User has signed up for.
+`campaignRunId` | `string` | **Required.** Campaign Run that the User has signed up for.
+`postType` | `string` | **Required.** Type of Post to submit for the Campaign.
+`platform` | `string` | **Required.** Platform that message was sent from.
+`text` | `string` | Message text.
+`mediaUrl` | `string` | Message media URL.
+`keyword` | `string` | Campaign keyword, if User sent a keyword
+`broadcastId` | `string` | Broadcast Id, if User is responding to a Broadcast
 
 <details><summary>**Example Request**</summary><p>
 
 ```
-curl -X "POST" "http://localhost:5000/v1/receive-message" \
+curl -X "POST" "http://localhost:5000/v1/campaignActivity" \
      -H "x-gambit-api-key: totallysecret" \
      -H "Content-Type: application/x-www-form-urlencoded; charset=utf-8" \
      --data-urlencode "userId=59cd4c1910707d778633e30f" \
      --data-urlencode "text=I love rock and roll"
+     --data-urlencode "postType=text"
+     --data-urlencode "platform=alexa"
+     --data-urlencode "campaignRunId=8873"
      --data-urlencode "campaignId=6620" \
 ```
 

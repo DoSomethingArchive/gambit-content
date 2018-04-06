@@ -11,7 +11,7 @@ const logger = require('winston');
 const underscore = require('underscore');
 
 const stathat = require('../../../lib/stathat');
-const config = require('../../../config/middleware/authenticate');
+const config = require('../../../config/lib/middleware/authenticate');
 const stubs = require('../../utils/stubs');
 
 // setup "x.should.y" assertion style

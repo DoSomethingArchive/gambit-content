@@ -10,7 +10,7 @@ const mongoose = require('mongoose');
 
 const stubs = require('../../utils/stubs');
 
-const receiveMessageRoutePath = '/v1/receive-message';
+const receiveMessageRoutePath = '/v1/campaignActivity';
 
 // setup "x.should.y" assertion style
 chai.should();
