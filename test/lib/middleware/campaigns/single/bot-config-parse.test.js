@@ -50,7 +50,7 @@ test('renderTemplates injects a templates object, where properties are objects w
     .returns({ raw: mockRawText });
   sandbox.stub(helpers, 'replacePhoenixCampaignVars')
     .returns(mockRenderedText);
-  sandbox.stub(helpers.botConfig, 'parsePostTypeFromBotConfig')
+  sandbox.stub(helpers.botConfig, 'getPostTypeFromBotConfig')
     .returns(mockPostType);
 
 

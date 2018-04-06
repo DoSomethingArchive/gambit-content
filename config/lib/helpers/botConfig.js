@@ -14,13 +14,13 @@ const defaultText = {
 module.exports = {
   defaultPostType: 'photo',
   /**
-   * Maps each content type that's available as a postTemplate to the Post type it should create.
+   * Maps each content type that's available as a postConfig to the Post type it should create.
    *
    * { contentTypeName: 'postType' }
    */
-  postTemplatePostTypes: {
-    textPostTemplate: 'text',
-    photoPostTemplate: 'photo',
+  contentTypePostType: {
+    textPostConfig: 'text',
+    photoPostConfig: 'photo',
   },
   /*
    * Maps a conversation message template name with its Contentful field that stores its text, or
