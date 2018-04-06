@@ -8,15 +8,15 @@ const sinonChai = require('sinon-chai');
 const httpMocks = require('node-mocks-http');
 const underscore = require('underscore');
 
-const helpers = require('../../../../lib/helpers');
-const replies = require('../../../../lib/replies');
-const stubs = require('../../../utils/stubs');
+const helpers = require('../../../../../lib/helpers');
+const replies = require('../../../../../lib/replies');
+const stubs = require('../../../../utils/stubs');
 
 chai.should();
 chai.use(sinonChai);
 
 // module to be tested
-const textPost = require('../../../../lib/middleware/campaignActivity/text-post');
+const textPost = require('../../../../../lib/middleware/campaignActivity/text/post-create');
 
 const sandbox = sinon.sandbox.create();
 

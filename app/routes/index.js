@@ -37,6 +37,5 @@ module.exports = function init(app) {
   // Receives inbound message from Gambit Conversations service.
   app.use('/v1/campaignActivity', campaignActivityRoute);
   // TODO: Remove this once we make the switch in Conversations.
-  // TODO: Remove this once we make the switch in Conversations.
   app.use('/v1/receive-message', campaignActivityRoute);
 };

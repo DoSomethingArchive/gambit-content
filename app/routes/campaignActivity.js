@@ -12,15 +12,17 @@ const mapRequestParamsMiddleware = require('../../lib/middleware/campaignActivit
 const getSignupMiddleware = require('../../lib/middleware/campaignActivity/signup-get');
 const createNewSignupIfNotFoundMiddleware = require('../../lib/middleware/campaignActivity/signup-create');
 const validateRequestMiddleware = require('../../lib/middleware/campaignActivity/validate');
-const textPostMiddleware = require('../../lib/middleware/campaignActivity/text-post');
-const createDraftSubmissionMiddleware = require('../../lib/middleware/campaignActivity/draft-create');
-const completedMenuMiddleware = require('../../lib/middleware/campaignActivity/menu-completed');
-const doingMenuMiddleware = require('../../lib/middleware/campaignActivity/menu-doing');
-const draftSubmissionQuantityMiddleware = require('../../lib/middleware/campaignActivity/draft-quantity');
-const draftSubmissionPhotoMiddleware = require('../../lib/middleware/campaignActivity/draft-photo');
-const draftSubmissionCaptionMiddleware = require('../../lib/middleware/campaignActivity/draft-caption');
-const draftSubmissionWhyParticipatedMiddleware = require('../../lib/middleware/campaignActivity/draft-why-participated');
-const postDraftSubmissionMiddleware = require('../../lib/middleware/campaignActivity/draft-completed');
+// Middleware for Text Posts.
+const createTextPostMiddleware = require('../../lib/middleware/campaignActivity/text/post-create');
+// Middleware for Photo Posts.
+const doingMenuMiddleware = require('../../lib/middleware/campaignActivity/photo/menu-doing');
+const createDraftSubmissionMiddleware = require('../../lib/middleware/campaignActivity/photo/draft-create');
+const draftSubmissionQuantityMiddleware = require('../../lib/middleware/campaignActivity/photo/draft-quantity');
+const draftSubmissionPhotoMiddleware = require('../../lib/middleware/campaignActivity/photo/draft-photo');
+const draftSubmissionCaptionMiddleware = require('../../lib/middleware/campaignActivity/photo/draft-caption');
+const draftSubmissionWhyParticipatedMiddleware = require('../../lib/middleware/campaignActivity/photo/draft-why-participated');
+const createPhotoPostMiddleware = require('../../lib/middleware/campaignActivity/photo/post-create');
+const completedMenuMiddleware = require('../../lib/middleware/campaignActivity/photo/menu-completed');
 
 // Router
 const router = express.Router(); // eslint-disable-line new-cap
@@ -48,9 +50,9 @@ router.use(
 router.use(validateRequestMiddleware());
 
 /**
- * Create a text post if this is a text postType request.
+ * Submit a Text Post if request has postType text.
  */
-router.use(textPostMiddleware());
+router.use(createTextPostMiddleware());
 
 /**
  * Checks Signup for existing draft, or creates draft when User has completed the Campaign.
@@ -64,7 +66,7 @@ router.use(completedMenuMiddleware());
 router.use(doingMenuMiddleware());
 
 /**
- * Collect data for our Reportback Submission.
+ * Collect data for a Photo Post.
  */
 router.use(draftSubmissionQuantityMiddleware());
 router.use(draftSubmissionPhotoMiddleware());
@@ -72,8 +74,8 @@ router.use(draftSubmissionCaptionMiddleware());
 router.use(draftSubmissionWhyParticipatedMiddleware());
 
 /**
- * Post complete submission to the DS Phoenix API.
+ * Submit a Photo Post.
  */
-router.use(postDraftSubmissionMiddleware());
+router.use(createPhotoPostMiddleware());
 
 module.exports = router;
