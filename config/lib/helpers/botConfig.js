@@ -18,7 +18,7 @@ module.exports = {
    *
    * { contentTypeName: 'postType' }
    */
-  contentTypePostType: {
+  postTypesByContentType: {
     textPostConfig: 'text',
     photoPostConfig: 'photo',
   },
