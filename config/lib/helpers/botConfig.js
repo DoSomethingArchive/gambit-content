@@ -113,5 +113,19 @@ module.exports = {
         default: `${defaultText.invalidInput} Did you want to join {{title}}?${defaultText.yesNo}`,
       },
     },
+    /**
+     * These templates don't contain defaults because they are required fields in Contentful.
+     */
+    textPostConfig: {
+      askText: {
+        fieldName: 'askTextMessage',
+      },
+      invalidText: {
+        fieldName: 'invalidTextMessage',
+      },
+      completedMenu: {
+        fieldName: 'completedMenuMessage',
+      },
+    },
   },
 };
