@@ -10,7 +10,7 @@ const stubs = require('../../utils/stubs');
 const config = require('../../../config/lib/helpers/botConfig');
 
 const botConfig = stubs.contentful.getEntries('default-campaign').items[0];
-const botConfigTemplates = config.templates.botConfig;
+const botConfigTemplates = config.templatesByContentType.campaign;
 const postConfigContentType = 'textPostConfig';
 const postType = config.postTypesByContentType[postConfigContentType];
 const templateName = stubs.getTemplateName();
@@ -45,7 +45,7 @@ test('getDefaultTextForBotConfigTemplateName returns default for templateName', 
 });
 
 // getTemplateDataFromBotConfig
-test('getTemplateFromBotConfigAndTemplateName returns default text when botConfig undefined', () => {
+test('getTemplateFromEntryAndTemplateName returns default text when field value undefined', () => {
   sandbox.stub(botConfigHelper, 'getDefaultTextForBotConfigTemplateName')
     .returns(templateText);
   sandbox.stub(botConfigHelper, 'getTemplateTextFromBotConfigAndTemplateName')

@@ -51,6 +51,9 @@ module.exports = {
   getPostId: function getPostId() {
     return 9040481;
   },
+  getPostType: function getPostType() {
+    return 'text';
+  },
   getTemplateName: function getTemplateName() {
     return 'memberSupport';
   },

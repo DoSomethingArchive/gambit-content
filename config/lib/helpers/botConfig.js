@@ -21,11 +21,11 @@ module.exports = {
     photoPostConfig: 'photo',
   },
   /*
-   * Maps a conversation message template name with its Contentful field that stores its text, or
-   * the default text to use when a field value doesn't exist.
+   * Maps each content type with a map of templateNames and its corresponding field name and
+   * default text to use, if a field value doesn't exist. Fields without defaults are required.
    */
-  templates: {
-    botConfig: {
+  templatesByContentType: {
+    campaign: {
       memberSupport: {
         fieldName: 'memberSupportMessage',
         default: 'Text back your question and I\'ll try to get back to you within 24 hrs.\n\nIf you want to continue {{title}}, text back {{keyword}}',
