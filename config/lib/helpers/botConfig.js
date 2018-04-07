@@ -1,7 +1,6 @@
 'use strict';
 
 const defaultText = {
-  askQuantity: 'How many have you completed? Be sure to text in a number not a word (i.e. “4”, not “four”)',
   askPhoto: 'Send us your best pic of yourself completing {{title}}.',
   askWhyParticipated: 'Last question: Why was participating in {{title}} important to you? (No need to write an essay, one sentence is good).',
   completedMenu: 'To submit another post for {{title}}, text {{cmd_reportback}}',
@@ -39,14 +38,6 @@ module.exports = {
       invalidSignupMenuCommand: {
         fieldName: 'invalidSignupMenuCommandMessage',
         default: `${defaultText.invalidInput} Text {{cmd_reportback}} to a submit a post for {{campaign.title}}.`,
-      },
-      askQuantity: {
-        fieldName: 'askQuantityMessage',
-        default: defaultText.askQuantity,
-      },
-      invalidQuantity: {
-        fieldName: 'invalidQuantityMessage',
-        default: `Sorry, that isnt a valid number. ${defaultText.askQuantity}`,
       },
       askPhoto: {
         fieldName: 'askPhotoMessage',
@@ -113,9 +104,14 @@ module.exports = {
         default: `${defaultText.invalidInput} Did you want to join {{title}}?${defaultText.yesNo}`,
       },
     },
-    /**
-     * These templates don't contain defaults because they are required fields in Contentful.
-     */
+    photoPostConfig: {
+      askQuantity: {
+        fieldName: 'askQuantityMessage',
+      },
+      invalidQuantity: {
+        fieldName: 'invalidQuantityMessage',
+      },
+    },
     textPostConfig: {
       askText: {
         fieldName: 'askTextMessage',
