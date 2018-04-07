@@ -52,7 +52,7 @@ module.exports = {
     return 9040481;
   },
   getTemplateName: function getTemplateName() {
-    return 'completedMenu';
+    return 'memberSupport';
   },
   getUserId: function getUserId() {
     return '597b9ef910707d07c84b00aa';

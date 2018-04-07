@@ -76,7 +76,7 @@ test('getTemplateFromBotConfigAndTemplateName returns template text when botConf
 test('getTemplateTextFromBotConfigAndTemplateName returns the botConfig field value for templateName arg', () => {
   const result = botConfigHelper
     .getTemplateTextFromBotConfigAndTemplateName(botConfig, templateName);
-  result.should.deep.equal(botConfig.fields.completedMenuMessage);
+  result.should.deep.equal(botConfig.fields.memberSupportMessage);
 });
 
 test('getTemplateTextFromBotConfigAndTemplateName returns null if botConfig undefined', (t) => {
