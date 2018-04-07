@@ -81,38 +81,31 @@ curl http://localhost:5000/v1/campaigns/7483 \
 ```
 {
   "data": {
-    "id": 7483,
-    "title": "Rinse, Recycle, Repeat",
-    "tagline": "Make a recycling bin to make it easier to recycle empty beauty products.",
+    "id": 2900,
+    "title": "Get Lucky",
+    "tagline": "Stash our fortune tellers with tips on using condoms.",
     "status": "active",
     "currentCampaignRun": {
-      "id": 7549
-    },
-    "reportbackInfo": {
-      "confirmationMessage": "Thanks for helping to keep #empties out of landfills! You'll receive an email shortly with a free shipping label so you can send your empties to TerraCycle to be upcycled.",
-      "noun": "bins",
-      "verb": "decorated"
-    },
-    "facts": {
-      "problem": "Nearly half of Americans don’t regularly recycle their beauty and personal care products. That’s a major reason these items account for a significant amount of landfill waste."
-    },
-    "templates": {
-      "gambitSignupMenu": {
-        "override": true,
-        "raw": "Great - it's simple: Keep beauty and personal care products out of landfills by making fun and creative recycling bins for the bathroom! \n\nThis action should take between 10 - 20 mins. Make it colorful so friends and family won't forget to recycle their bathroom empties. \n\nWhen you're done, text {{cmd_reportback}} to share a photo of your bin and you'll be entered to win a $5000 scholarship!",
-        "rendered": "Great - it's simple: Keep beauty and personal care products out of landfills by making fun and creative recycling bins for the bathroom! \n\nThis action should take between 10 - 20 mins. Make it colorful so friends and family won't forget to recycle their bathroom empties. \n\nWhen you're done, text START to share a photo of your bin and you'll be entered to win a $5000 scholarship!"
-      },
-      "externalSignupMenu": {
-        "override": true,
-        "raw": "Thanks for joining {{title}}!\n\nNearly half of Americans don’t regularly recycle their beauty and personal care products. That’s a major reason these items account for a significant amount of landfill waste.\n\nThe solution is simple: Make fun and creative bins for bathrooms.\n\nOnce you have created some bathroom recycling bins, take a pic to prove it! Then text {{cmd_reportback}} to share it with us!",
-        "rendered": "Thanks for joining Rinse Recycle Repeat!\n\nNearly half of Americans don’t regularly recycle their beauty and personal care products. That’s a major reason these items account for a significant amount of landfill waste.\n\nThe solution is simple: Make fun and creative bins for bathrooms.\n\nOnce you have created some bathroom recycling bins, take a pic to prove it! Then text START to share it with us!"
-      },
-      ...
+      "id": 6477
     },
     "keywords": [
-      "RINSEBOT"
+      "LUCKYBOT"
     ],
-    "contentfulUri": "https://app.contentful.com/spaces/pupp3tSl0Th/entries/3tUIp8oqTemqaSOKqGwIe6"
+    "botConfig": {
+      "postType": "text",
+      "templates": {
+        "gambitSignupMenu": {
+          "raw": "Thanks for signing up for {{title}}! Text {{cmd_reportback}} to submit a post.",
+          "override": false,
+          "rendered": "Thanks for signing up for Get Lucky! Text START to submit a post."
+        },
+        "externalSignupMenu": {
+          "raw": "Hi its Freddie from DoSomething! Thanks for signing up for {{title}}! Text {{cmd_reportback}} to submit a post.",
+          "override": false,
+          "rendered": "Hi its Freddie from DoSomething! Thanks for signing up for Get Lucky! Text START to submit a post."
+        },
+      }
+    }
   }
 }
 ```
