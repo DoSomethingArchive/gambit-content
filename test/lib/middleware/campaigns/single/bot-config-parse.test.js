@@ -41,17 +41,16 @@ test.afterEach((t) => {
 
 test('renderTemplates injects a templates object, where properties are objects with template data', (t) => {
   const middleware = renderTemplates();
-  const templateNames = helpers.botConfig.getTemplateNames();
+  const templateNames = [stubs.getTemplateName()];
   const mockPostType = 'photo';
   const mockRawText = stubs.getRandomString();
   const mockRenderedText = stubs.getRandomString();
   sandbox.spy(t.context.res, 'send');
-  sandbox.spy(helpers.botConfig, 'getTemplateNames');
-  sandbox.stub(helpers.botConfig, 'getTemplateDataFromBotConfig')
+  sandbox.stub(helpers.botConfig, 'getTemplateFromBotConfigAndTemplateName')
     .returns({ raw: mockRawText });
   sandbox.stub(helpers, 'replacePhoenixCampaignVars')
     .returns(mockRenderedText);
-  sandbox.stub(helpers.botConfig, 'parsePostTypeFromBotConfig')
+  sandbox.stub(helpers.botConfig, 'getPostTypeFromBotConfig')
     .returns(mockPostType);
 
 
@@ -69,7 +68,7 @@ test('renderTemplates injects a templates object, where properties are objects w
 
 test('renderTemplates calls sendErrorResponse if an error is caught', (t) => {
   const middleware = renderTemplates();
-  sandbox.stub(helpers.botConfig, 'getTemplateNames')
+  sandbox.stub(helpers.botConfig, 'getTemplatesFromBotConfig')
     .throws();
 
   middleware(t.context.req, t.context.res);

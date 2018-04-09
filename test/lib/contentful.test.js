@@ -28,8 +28,10 @@ const sandbox = sinon.sandbox.create();
 
 // Stubs
 const allKeywordsStub = Promise.resolve(stubs.contentful.getEntries('keywords'));
+const botConfigStub = stubs.contentful.getEntries('default-campaign').items[0];
 const keywordStub = Promise.resolve(stubs.contentful.getEntries('keyword'));
 const failStub = Promise.reject({ status: 500 });
+const postConfigContentTypeStub = stubs.getPostConfigContentType();
 const contentfulAPIStub = {
   getEntries: () => {},
 };
@@ -147,4 +149,27 @@ test('fetchKeywords should call contentfulError when it fails', async () => {
   // test
   await contentful.fetchKeywords();
   contentful.contentfulError.should.have.been.called;
+});
+
+// parsePostConfigContentTypeFromBotConfig
+test('parsePostConfigContentTypeFromBotConfig returns content type if botConfig has postConfig', () => {
+  sandbox.stub(contentful, 'getPostConfigFromBotConfig')
+    .returns({});
+  sandbox.stub(contentful, 'parseContentTypeFromEntry')
+    .returns(postConfigContentTypeStub);
+  const result = contentful.parsePostConfigContentTypeFromBotConfig(botConfigStub);
+  result.should.equal(postConfigContentTypeStub);
+});
+
+test('parsePostConfigContentTypeFromBotConfig returns falsy if botConfig does not have postConfig', (t) => {
+  sandbox.stub(contentful, 'getPostConfigFromBotConfig')
+    .returns(null);
+  const result = contentful.parsePostConfigContentTypeFromBotConfig(botConfigStub);
+  t.falsy(result);
+});
+
+// parseContentTypeFromEntry
+test('parseContentTypeFromEntry returns content type name of given entry', () => {
+  const result = contentful.parseContentTypeFromEntry(botConfigStub);
+  result.should.equal('campaign');
 });
