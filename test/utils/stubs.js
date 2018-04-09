@@ -42,6 +42,15 @@ module.exports = {
   getPlatform: function getPlatform() {
     return 'sms';
   },
+  getPost: function getPost() {
+    return { id: this.getPostId() };
+  },
+  getPostConfigContentType: function getPostConfigContentType() {
+    return 'textPostConfig';
+  },
+  getPostId: function getPostId() {
+    return 9040481;
+  },
   getTemplateName: function getTemplateName() {
     return 'completedMenu';
   },
