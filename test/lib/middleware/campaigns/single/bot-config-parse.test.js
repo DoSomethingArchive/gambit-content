@@ -57,12 +57,11 @@ test('renderTemplates injects a templates object, where properties are objects w
   sandbox.spy(t.context.res, 'send');
 
   middleware(t.context.req, t.context.res);
-  t.context.req.campaign.should.have.property('templates');
+  t.context.req.campaign.botConfig.should.have.property('templates');
   t.context.req.campaign.botConfig.postType.should.equal(mockPostType);
-  t.context.req.campaign.botConfig.templates.should.equal(t.context.req.campaign.templates);
   helpers.replacePhoenixCampaignVars.should.have.been.calledWith(mockRawText, campaign);
   templateNames.forEach((name) => {
-    const template = t.context.req.campaign.templates[name];
+    const template = t.context.req.campaign.botConfig.templates[name];
     template.raw.should.equal(mockRawText);
     template.rendered.should.equal(mockRenderedText);
   });
