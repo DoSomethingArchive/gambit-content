@@ -23,9 +23,9 @@ const sandbox = sinon.sandbox.create();
 test.beforeEach((t) => {
   sandbox.stub(helpers, 'sendErrorResponse')
     .returns(underscore.noop);
-  sandbox.stub(replies, 'askCaption')
+  sandbox.stub(replies, 'askText')
     .returns(underscore.noop);
-  sandbox.stub(replies, 'invalidCaption')
+  sandbox.stub(replies, 'invalidText')
     .returns(underscore.noop);
   sandbox.stub(replies, 'menuCompleted')
     .returns(underscore.noop);
@@ -46,13 +46,13 @@ test('textPost returns next if not a textPost request', async (t) => {
 
   await middleware(t.context.req, t.context.res, next);
   next.should.have.been.called;
-  replies.askCaption.should.not.have.been.called;
-  replies.invalidCaption.should.not.have.been.called;
+  replies.askText.should.not.have.been.called;
+  replies.invalidText.should.not.have.been.called;
   replies.menuCompleted.should.not.have.been.called;
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
-test('textPost returns askCaption when request has a keyword', async (t) => {
+test('textPost returns askText when request has a keyword', async (t) => {
   const next = sinon.stub();
   const middleware = textPost();
   sandbox.stub(helpers.request, 'isTextPost')
@@ -61,13 +61,13 @@ test('textPost returns askCaption when request has a keyword', async (t) => {
 
   await middleware(t.context.req, t.context.res, next);
   next.should.not.have.been.called;
-  replies.askCaption.should.have.been.calledWith(t.context.req, t.context.res);
-  replies.invalidCaption.should.not.have.been.called;
+  replies.askText.should.have.been.calledWith(t.context.req, t.context.res);
+  replies.invalidText.should.not.have.been.called;
   replies.menuCompleted.should.not.have.been.called;
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
-test('textPost returns invalidCaption when request.isValidReportbackText is false', async (t) => {
+test('textPost returns invalidText when request.isValidReportbackText is false', async (t) => {
   const next = sinon.stub();
   const middleware = textPost();
   sandbox.stub(helpers.request, 'isTextPost')
@@ -79,8 +79,8 @@ test('textPost returns invalidCaption when request.isValidReportbackText is fals
 
   await middleware(t.context.req, t.context.res, next);
   next.should.not.have.been.called;
-  replies.askCaption.should.not.have.been.calledWith(t.context.req, t.context.res);
-  replies.invalidCaption.should.not.have.been.called;
+  replies.askText.should.not.have.been.calledWith(t.context.req, t.context.res);
+  replies.invalidText.should.not.have.been.called;
   helpers.campaignActivity.createTextPostFromReq.should.have.been.calledWith(t.context.req);
   replies.menuCompleted.should.have.been.called;
   helpers.sendErrorResponse.should.not.have.been.called;
@@ -98,8 +98,8 @@ test('textPost returns completedMenu upon createTextPostFromReq success', async 
 
   await middleware(t.context.req, t.context.res, next);
   next.should.not.have.been.called;
-  replies.askCaption.should.not.have.been.calledWith(t.context.req, t.context.res);
-  replies.invalidCaption.should.not.have.been.called;
+  replies.askText.should.not.have.been.calledWith(t.context.req, t.context.res);
+  replies.invalidText.should.not.have.been.called;
   helpers.campaignActivity.createTextPostFromReq.should.have.been.calledWith(t.context.req);
   replies.menuCompleted.should.have.been.called;
   helpers.sendErrorResponse.should.not.have.been.called;
@@ -118,8 +118,8 @@ test('textPost returns sendErrorResponse upon createTextPostFromReq error', asyn
 
   await middleware(t.context.req, t.context.res, next);
   next.should.not.have.been.called;
-  replies.askCaption.should.not.have.been.calledWith(t.context.req, t.context.res);
-  replies.invalidCaption.should.not.have.been.called;
+  replies.askText.should.not.have.been.calledWith(t.context.req, t.context.res);
+  replies.invalidText.should.not.have.been.called;
   helpers.campaignActivity.createTextPostFromReq.should.have.been.calledWith(t.context.req);
   replies.menuCompleted.should.not.have.been.called;
   helpers.sendErrorResponse.should.have.been.calledWith(t.context.res, error);
