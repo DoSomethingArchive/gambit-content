@@ -44,7 +44,7 @@ module.exports = {
       },
       invalidAskSignupResponse: {
         fieldName: 'invalidSignupResponseMessage',
-        default: `${defaultText.invalidInput} Did you want to join {{title}}${defaultText.yesNo}`,
+        default: `${defaultText.invalidInput} Did you want to join {{title}}?${defaultText.yesNo}`,
       },
       askContinue: {
         fieldName: 'askContinueMessage',
