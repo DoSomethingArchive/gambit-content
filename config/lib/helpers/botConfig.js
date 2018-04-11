@@ -110,14 +110,17 @@ module.exports = {
       },
     },
     textPostConfig: {
-      askText: {
-        fieldName: 'askTextMessage',
+      botSignupConfirmed: {
+        fieldName: 'botSignupConfirmedMessage',
+      },
+      webSignupConfirmed: {
+        fieldName: 'webSignupConfirmedMessage',
       },
       invalidText: {
         fieldName: 'invalidTextMessage',
       },
-      completedMenu: {
-        fieldName: 'completedMenuMessage',
+      textPostCompleted: {
+        fieldName: 'textPostCompletedMessage',
       },
     },
   },
