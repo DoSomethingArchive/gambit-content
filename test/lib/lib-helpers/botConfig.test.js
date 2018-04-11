@@ -26,7 +26,7 @@ chai.use(sinonChai);
 const sandbox = sinon.sandbox.create();
 
 test.beforeEach(() => {
-  sandbox.stub(contentful, 'parseContentTypeFromEntry')
+  sandbox.stub(contentful, 'parseContentTypeFromContentfulEntry')
     .returns(botConfigContentType);
 });
 
@@ -45,50 +45,52 @@ test('fetchByCampaignId returns contentful.fetchBotConfigByCampaignId', async ()
 });
 
 // getDefaultTextForBotConfigTemplateName
-test('getDefaultValueFromEntryAndTemplateName returns default for templateName', () => {
-  const result = botConfigHelper.getDefaultValueFromEntryAndTemplateName(botConfig, templateName);
+test('getDefaultValueFromContentfulEntryAndTemplateName returns default for templateName', () => {
+  const result = botConfigHelper
+    .getDefaultValueFromContentfulEntryAndTemplateName(botConfig, templateName);
   result.should.equal(campaignTemplates[templateName].default);
 });
 
-// getTemplateFromEntryAndTemplateName
-test('getTemplateFromEntryAndTemplateName returns default text when no field value exists', () => {
-  sandbox.stub(botConfigHelper, 'getDefaultValueFromEntryAndTemplateName')
+// getTemplateFromContentfulEntryAndTemplateName
+test('getTemplateFromContentfulEntryAndTemplateName returns default text when no field value exists', () => {
+  sandbox.stub(botConfigHelper, 'getDefaultValueFromContentfulEntryAndTemplateName')
     .returns(templateText);
-  sandbox.stub(botConfigHelper, 'getFieldValueFromEntryAndTemplateName')
+  sandbox.stub(botConfigHelper, 'getFieldValueFromContentfulEntryAndTemplateName')
     .returns(null);
 
-  const result = botConfigHelper.getTemplateFromEntryAndTemplateName(botConfig, templateName);
-  botConfigHelper.getDefaultValueFromEntryAndTemplateName.should.have.been.called;
-  botConfigHelper.getFieldValueFromEntryAndTemplateName.should.have.been.called;
+  const result = botConfigHelper
+    .getTemplateFromContentfulEntryAndTemplateName(botConfig, templateName);
+  botConfigHelper.getDefaultValueFromContentfulEntryAndTemplateName.should.have.been.called;
+  botConfigHelper.getFieldValueFromContentfulEntryAndTemplateName.should.have.been.called;
   result.override.should.equal(false);
   result.raw.should.equal(templateText);
 });
 
-test('getTemplateFromEntryAndTemplateName returns template text when botConfig value exists', () => {
-  sandbox.stub(botConfigHelper, 'getDefaultValueFromEntryAndTemplateName')
+test('getTemplateFromContentfulEntryAndTemplateName returns template text when botConfig value exists', () => {
+  sandbox.stub(botConfigHelper, 'getDefaultValueFromContentfulEntryAndTemplateName')
     .returns(stubs.getRandomString());
-  sandbox.stub(botConfigHelper, 'getFieldValueFromEntryAndTemplateName')
+  sandbox.stub(botConfigHelper, 'getFieldValueFromContentfulEntryAndTemplateName')
     .returns(templateText);
 
   const result = botConfigHelper
-    .getTemplateFromEntryAndTemplateName(botConfig, templateName);
-  botConfigHelper.getDefaultValueFromEntryAndTemplateName.should.not.have.been.called;
-  botConfigHelper.getFieldValueFromEntryAndTemplateName.should.have.been.called;
+    .getTemplateFromContentfulEntryAndTemplateName(botConfig, templateName);
+  botConfigHelper.getDefaultValueFromContentfulEntryAndTemplateName.should.not.have.been.called;
+  botConfigHelper.getFieldValueFromContentfulEntryAndTemplateName.should.have.been.called;
   result.override.should.equal(true);
   result.raw.should.equal(templateText);
 });
 
-// getFieldValueFromEntryAndTemplateName
-test('getFieldValueFromEntryAndTemplateName returns the entry field value for templateName', () => {
+// getFieldValueFromContentfulEntryAndTemplateName
+test('getFieldValueFromContentfulEntryAndTemplateName returns the entry field value for templateName', () => {
   const result = botConfigHelper
-    .getFieldValueFromEntryAndTemplateName(botConfig, templateName);
+    .getFieldValueFromContentfulEntryAndTemplateName(botConfig, templateName);
   result.should.deep.equal(botConfig.fields.memberSupportMessage);
 });
 
 // getTemplatesFromBotConfig
 test('getTemplatesFromBotConfig returns an object with template names as properties', () => {
   const templateData = { raw: templateText };
-  sandbox.stub(botConfigHelper, 'getTemplateFromEntryAndTemplateName')
+  sandbox.stub(botConfigHelper, 'getTemplateFromContentfulEntryAndTemplateName')
     .returns(templateData);
   const result = botConfigHelper.getTemplatesFromBotConfig(botConfig);
   Object.keys(campaignTemplates).forEach((name) => {
