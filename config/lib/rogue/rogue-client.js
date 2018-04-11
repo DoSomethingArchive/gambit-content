@@ -16,6 +16,9 @@ module.exports = {
           tokenHost: process.env.DS_NORTHSTAR_API_OAUTH_TOKEN_HOST,
           tokenPath: process.env.DS_NORTHSTAR_API_OAUTH_TOKEN_PATH,
         },
+        options: {
+          bodyFormat: 'json',
+        },
       },
     },
   },
