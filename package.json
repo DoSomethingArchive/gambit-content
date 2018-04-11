@@ -37,10 +37,11 @@
     ]
   },
   "engines": {
-    "node": "6.12.x",
-    "npm": "5.8.0"
+    "node": "8.11.1",
+    "npm": "5.7.1"
   },
   "dependencies": {
+    "@risingstack/v8-profiler": "^5.7.11",
     "async": "^2.6.0",
     "aws-sdk": "2.36.0",
     "bluebird": "^3.5.1",
@@ -68,23 +69,22 @@
     "superagent": "^2.3.0",
     "throng": "^4.0.0",
     "underscore": "^1.8.3",
-    "v8-profiler": "5.7.0",
     "winston": "2.3.x"
   },
   "devDependencies": {
-    "@dosomething/eslint-config": "^3.1.0",
+    "@dosomething/eslint-config": "^4.0.0",
     "ava": "^0.25.0",
     "chai": "^4.1.2",
-    "chance": "^1.0.9",
+    "chance": "^1.0.13",
     "codecov": "^3.0.0",
-    "eslint": "^4.7.0",
-    "eslint-plugin-ava": "^4.2.1",
+    "eslint": "^4.19.1",
+    "eslint-plugin-ava": "^4.5.1",
     "nock": "^9.0.13",
     "node-mocks-http": "^1.6.1",
     "nyc": "^11.6.0",
     "rewire": "^3.0.2",
-    "sinon": "^2.3.8",
-    "sinon-chai": "^2.12.0",
+    "sinon": "^4.5.0",
+    "sinon-chai": "^3.0.0",
     "supertest": "^3.0.0"
   }
 }
