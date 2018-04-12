@@ -1,8 +1,6 @@
 'use strict';
 
 const defaultText = {
-  askQuantity: 'How many have you completed? Be sure to text in a number not a word (i.e. “4”, not “four”)',
-  askPhoto: 'Send us your best pic of yourself completing {{title}}.',
   askWhyParticipated: 'Last question: Why was participating in {{title}} important to you? (No need to write an essay, one sentence is good).',
   completedMenu: 'To submit another post for {{title}}, text {{cmd_reportback}}',
   declined: 'Text MENU if you\'d like to find a different action to take.',
@@ -23,38 +21,74 @@ module.exports = {
     photoPostConfig: 'photo',
   },
   /*
-   * Maps a conversation message template name with its Contentful field that stores its text, or
-   * the default text to use when a field value doesn't exist.
+   * Maps each content type with a map of templateNames and its corresponding field name and
+   * default text to use, if a field value doesn't exist. Fields without defaults are required.
    */
-  templates: {
-    botConfig: {
+  templatesByContentType: {
+    campaign: {
+      memberSupport: {
+        fieldName: 'memberSupportMessage',
+        default: 'Text back your question and I\'ll try to get back to you within 24 hrs.\n\nIf you want to continue {{title}}, text back {{keyword}}',
+      },
+      campaignClosed: {
+        fieldName: 'campaignClosedMessage',
+        default: 'Sorry, {{title}} is no longer available.\n\nText {{cmd_member_support}} for help.',
+      },
+      askSignup: {
+        fieldName: 'askSignupMessage',
+        default: `{{tagline}}\n\nWant to join {{title}}?${defaultText.yesNo}`,
+      },
+      declinedSignup: {
+        fieldName: 'declinedSignupMessage',
+        default: `Ok! ${defaultText.declined}`,
+      },
+      invalidAskSignupResponse: {
+        fieldName: 'invalidSignupResponseMessage',
+        default: `${defaultText.invalidInput} Did you want to join {{title}}?${defaultText.yesNo}`,
+      },
+      askContinue: {
+        fieldName: 'askContinueMessage',
+        default: `Ready to get back to {{title}}?${defaultText.yesNo}`,
+      },
+      declinedContinue: {
+        fieldName: 'declinedContinueMessage',
+        default: `Right on, we'll check in with you about {{title}} later.\n\n${defaultText.declined}`,
+      },
+      invalidAskContinueResponse: {
+        fieldName: 'invalidContinueResponseMessage',
+        default: `${defaultText.invalidInput} Did you want to join {{title}}?${defaultText.yesNo}`,
+      },
+    },
+    photoPostConfig: {
       gambitSignupMenu: {
         fieldName: 'gambitSignupMenuMessage',
         default: defaultText.signupMenu,
       },
+      // This will get removed once Conversations Signup messages sends botSignupConfirmed.
+      // @see textPostConfig property below.
       externalSignupMenu: {
         fieldName: 'externalSignupMenuMessage',
         default: `Hi its Freddie from DoSomething! ${defaultText.signupMenu}`,
       },
+      webSignupConfirmed: {
+        fieldName: 'gambitSignupMenuMessage',
+        default: defaultText.signupMenu,
+      },
       invalidSignupMenuCommand: {
         fieldName: 'invalidSignupMenuCommandMessage',
-        default: `${defaultText.invalidInput} Text {{cmd_reportback}} to a submit a post for {{campaign.title}}.`,
+        default: `${defaultText.invalidInput} Text {{cmd_reportback}} to a submit a post for {{title}}.`,
       },
       askQuantity: {
         fieldName: 'askQuantityMessage',
-        default: defaultText.askQuantity,
       },
       invalidQuantity: {
         fieldName: 'invalidQuantityMessage',
-        default: `Sorry, that isnt a valid number. ${defaultText.askQuantity}`,
       },
       askPhoto: {
         fieldName: 'askPhotoMessage',
-        default: defaultText.askPhoto,
       },
       invalidPhoto: {
         fieldName: 'invalidPhotoMessage',
-        default: `${defaultText.invalidInput}\n\n${defaultText.askPhoto}`,
       },
       askCaption: {
         fieldName: 'askCaptionMessage',
@@ -80,37 +114,25 @@ module.exports = {
         fieldName: 'invalidCompletedMenuCommandMessage',
         default: `${defaultText.invalidInput}\n\n${defaultText.completedMenu}.`,
       },
-      memberSupport: {
-        fieldName: 'memberSupportMessage',
-        default: 'Text back your question and I\'ll try to get back to you within 24 hrs.\n\nIf you want to continue {{title}}, text back {{keyword}}',
+    },
+    textPostConfig: {
+      botSignupConfirmed: {
+        fieldName: 'botSignupConfirmedMessage',
       },
-      campaignClosed: {
-        fieldName: 'campaignClosedMessage',
-        default: 'Sorry, {{title}} is no longer available.\n\nText {{cmd_member_support}} for help.',
+      // This will eventually get deprecated for webSignupConfirmed once Conversation Signup
+      // messages send the webSignupConfirmed.
+      // @see photoPostConfig above.
+      externalSignupMenu: {
+        fieldName: 'botSignupConfirmedMessage',
       },
-      askSignup: {
-        fieldName: 'askSignupMessage',
-        default: `{{tagline}}\n\nWant to join {{title}}?${defaultText.yesNo}`,
+      webSignupConfirmed: {
+        fieldName: 'webSignupConfirmedMessage',
       },
-      declinedSignup: {
-        fieldName: 'declinedSignupMessage',
-        default: `Ok! ${defaultText.declined}`,
+      invalidText: {
+        fieldName: 'invalidTextMessage',
       },
-      invalidAskSignupResponse: {
-        fieldName: 'invalidSignupResponseMessage',
-        default: `${defaultText.invalidInput} Did you want to join {{title}}${defaultText.yesNo}`,
-      },
-      askContinue: {
-        fieldName: 'askContinueMessage',
-        default: `Ready to get back to {{title}}?${defaultText.yesNo}`,
-      },
-      declinedContinue: {
-        fieldName: 'declinedContinueMessage',
-        default: `Right on, we'll check in with you about {{title}} later.\n\n${defaultText.declined}`,
-      },
-      invalidAskContinueResponse: {
-        fieldName: 'invalidContinueResponseMessage',
-        default: `${defaultText.invalidInput} Did you want to join {{title}}?${defaultText.yesNo}`,
+      textPostCompleted: {
+        fieldName: 'textPostCompletedMessage',
       },
     },
   },
