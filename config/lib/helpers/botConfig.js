@@ -71,7 +71,7 @@ module.exports = {
         default: `Hi its Freddie from DoSomething! ${defaultText.signupMenu}`,
       },
       webSignupConfirmed: {
-        fieldName: 'gambitSignupMenuMessage',
+        fieldName: 'externalSignupMenuMessage',
         default: defaultText.signupMenu,
       },
       invalidSignupMenuCommand: {
