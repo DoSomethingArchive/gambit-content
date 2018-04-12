@@ -64,9 +64,15 @@ module.exports = {
         fieldName: 'gambitSignupMenuMessage',
         default: defaultText.signupMenu,
       },
+      // This will get removed once Conversations Signup messages sends botSignupConfirmed.
+      // @see textPostConfig property below.
       externalSignupMenu: {
         fieldName: 'externalSignupMenuMessage',
         default: `Hi its Freddie from DoSomething! ${defaultText.signupMenu}`,
+      },
+      webSignupConfirmed: {
+        fieldName: 'gambitSignupMenuMessage',
+        default: defaultText.signupMenu,
       },
       invalidSignupMenuCommand: {
         fieldName: 'invalidSignupMenuCommandMessage',
@@ -111,6 +117,12 @@ module.exports = {
     },
     textPostConfig: {
       botSignupConfirmed: {
+        fieldName: 'botSignupConfirmedMessage',
+      },
+      // This will eventually get deprecated for webSignupConfirmed once Conversation Signup
+      // messages send the webSignupConfirmed.
+      // @see photoPostConfig above.
+      externalSignupMenu: {
         fieldName: 'botSignupConfirmedMessage',
       },
       webSignupConfirmed: {
