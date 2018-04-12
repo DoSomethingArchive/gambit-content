@@ -10,7 +10,8 @@ const stubs = require('../../utils/stubs');
 const config = require('../../../config/lib/helpers/botConfig');
 
 const botConfig = stubs.contentful.getEntries('default-campaign').items[0];
-const botConfigTemplates = config.templates.botConfig;
+const campaignTemplates = config.templatesByContentType.campaign;
+const botConfigContentType = 'campaign';
 const postConfigContentType = 'textPostConfig';
 const postType = config.postTypesByContentType[postConfigContentType];
 const templateName = stubs.getTemplateName();
@@ -23,6 +24,11 @@ chai.should();
 chai.use(sinonChai);
 
 const sandbox = sinon.sandbox.create();
+
+test.beforeEach(() => {
+  sandbox.stub(contentful, 'parseContentTypeFromContentfulEntry')
+    .returns(botConfigContentType);
+});
 
 test.afterEach(() => {
   sandbox.restore();
@@ -39,57 +45,55 @@ test('fetchByCampaignId returns contentful.fetchBotConfigByCampaignId', async ()
 });
 
 // getDefaultTextForBotConfigTemplateName
-test('getDefaultTextForBotConfigTemplateName returns default for templateName', () => {
-  const result = botConfigHelper.getDefaultTextForBotConfigTemplateName(templateName);
-  result.should.equal(botConfigTemplates[templateName].default);
+test('getDefaultValueFromContentfulEntryAndTemplateName returns default for templateName', () => {
+  const result = botConfigHelper
+    .getDefaultValueFromContentfulEntryAndTemplateName(botConfig, templateName);
+  result.should.equal(campaignTemplates[templateName].default);
 });
 
-// getTemplateDataFromBotConfig
-test('getTemplateFromBotConfigAndTemplateName returns default text when botConfig undefined', () => {
-  sandbox.stub(botConfigHelper, 'getDefaultTextForBotConfigTemplateName')
+// getTemplateFromContentfulEntryAndTemplateName
+test('getTemplateFromContentfulEntryAndTemplateName returns default text when no field value exists', () => {
+  sandbox.stub(botConfigHelper, 'getDefaultValueFromContentfulEntryAndTemplateName')
     .returns(templateText);
-  sandbox.stub(botConfigHelper, 'getTemplateTextFromBotConfigAndTemplateName')
-    .returns(stubs.getRandomString());
+  sandbox.stub(botConfigHelper, 'getFieldValueFromContentfulEntryAndTemplateName')
+    .returns(null);
 
-  const result = botConfigHelper.getTemplateFromBotConfigAndTemplateName(null, templateName);
-  botConfigHelper.getDefaultTextForBotConfigTemplateName.should.have.been.called;
-  botConfigHelper.getTemplateTextFromBotConfigAndTemplateName.should.have.been.called;
+  const result = botConfigHelper
+    .getTemplateFromContentfulEntryAndTemplateName(botConfig, templateName);
+  botConfigHelper.getDefaultValueFromContentfulEntryAndTemplateName.should.have.been.called;
+  botConfigHelper.getFieldValueFromContentfulEntryAndTemplateName.should.have.been.called;
   result.override.should.equal(false);
   result.raw.should.equal(templateText);
 });
 
-test('getTemplateFromBotConfigAndTemplateName returns template text when botConfig value exists', () => {
-  sandbox.stub(botConfigHelper, 'getDefaultTextForBotConfigTemplateName')
+test('getTemplateFromContentfulEntryAndTemplateName returns template text when botConfig value exists', () => {
+  sandbox.stub(botConfigHelper, 'getDefaultValueFromContentfulEntryAndTemplateName')
     .returns(stubs.getRandomString());
-  sandbox.stub(botConfigHelper, 'getTemplateTextFromBotConfigAndTemplateName')
+  sandbox.stub(botConfigHelper, 'getFieldValueFromContentfulEntryAndTemplateName')
     .returns(templateText);
 
   const result = botConfigHelper
-    .getTemplateFromBotConfigAndTemplateName(botConfig, templateName);
-  botConfigHelper.getDefaultTextForBotConfigTemplateName.should.not.have.been.called;
-  botConfigHelper.getTemplateTextFromBotConfigAndTemplateName.should.have.been.called;
+    .getTemplateFromContentfulEntryAndTemplateName(botConfig, templateName);
+  botConfigHelper.getDefaultValueFromContentfulEntryAndTemplateName.should.not.have.been.called;
+  botConfigHelper.getFieldValueFromContentfulEntryAndTemplateName.should.have.been.called;
   result.override.should.equal(true);
   result.raw.should.equal(templateText);
 });
 
-// getTemplateTextFromBotConfigAndTemplateName
-test('getTemplateTextFromBotConfigAndTemplateName returns the botConfig field value for templateName arg', () => {
+// getFieldValueFromContentfulEntryAndTemplateName
+test('getFieldValueFromContentfulEntryAndTemplateName returns the entry field value for templateName', () => {
   const result = botConfigHelper
-    .getTemplateTextFromBotConfigAndTemplateName(botConfig, templateName);
-  result.should.deep.equal(botConfig.fields.completedMenuMessage);
-});
-
-test('getTemplateTextFromBotConfigAndTemplateName returns null if botConfig undefined', (t) => {
-  t.falsy(botConfigHelper.getTemplateTextFromBotConfigAndTemplateName(null, templateName));
+    .getFieldValueFromContentfulEntryAndTemplateName(botConfig, templateName);
+  result.should.deep.equal(botConfig.fields.memberSupportMessage);
 });
 
 // getTemplatesFromBotConfig
 test('getTemplatesFromBotConfig returns an object with template names as properties', () => {
   const templateData = { raw: templateText };
-  sandbox.stub(botConfigHelper, 'getTemplateFromBotConfigAndTemplateName')
+  sandbox.stub(botConfigHelper, 'getTemplateFromContentfulEntryAndTemplateName')
     .returns(templateData);
   const result = botConfigHelper.getTemplatesFromBotConfig(botConfig);
-  Object.keys(botConfigTemplates).forEach((name) => {
+  Object.keys(campaignTemplates).forEach((name) => {
     result[name].should.deep.equal(templateData);
   });
 });
