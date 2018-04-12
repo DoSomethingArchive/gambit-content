@@ -7,15 +7,15 @@ const defaultText = {
 };
 
 const startCommand = '{{cmd_reportback}}';
-const botSignupConfirmedText = `Thanks for signing up for {{title}}! Text ${startCommand} to submit a post.`;
-const completeAnotherPostText = `To submit another post for {{title}}, text ${startCommand}`;
+const photoPostSignupConfirmedText = `Thanks for signing up for {{title}}! Text ${startCommand} to submit a post.`;
+const completeAnotherPhotoPostText = `To submit another post for {{title}}, text ${startCommand}`;
 const photoPostDefaultText = {
   askWhyParticipated: 'Last question: Why was participating in {{title}} important to you? (No need to write an essay, one sentence is good).',
-  botSignupConfirmed: botSignupConfirmedText,
-  photoPostCompleted: `Great! We've got you down for {{quantity}}. ${completeAnotherPostText}`,
-  photoPostCompletedAutoReply: `${defaultText.invalidInput}\n\n${completeAnotherPostText}`,
+  botSignupConfirmed: photoPostSignupConfirmedText,
+  photoPostCompleted: `Great! We've got you down for {{quantity}}. ${completeAnotherPhotoPostText}`,
+  photoPostCompletedAutoReply: `${defaultText.invalidInput}\n\n${completeAnotherPhotoPostText}`,
   signupConfirmedAutoReply: `${defaultText.invalidInput}\n\nText ${startCommand} when you're ready to submit a post for {{title}}.`,
-  webSignupConfirmed: `Hi it's Freddie from DoSomething!${botSignupConfirmedText}`,
+  webSignupConfirmed: `Hi it's Freddie from DoSomething!${photoPostSignupConfirmedText}`,
 };
 
 module.exports = {
@@ -85,7 +85,7 @@ module.exports = {
         default: photoPostDefaultText.webSignupConfirmed,
       },
       webSignupConfirmed: {
-        fieldName: 'externalSignupMenuMessage',
+        fieldName: 'webSignupConfirmedMessage',
         default: photoPostDefaultText.webSignupConfirmed,
       },
       // To be deprecated once signupConfirmedAutoReply template exists on prod.
