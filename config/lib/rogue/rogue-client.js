@@ -9,8 +9,8 @@ module.exports = {
     clientCredentials: {
       credentials: {
         client: {
-          id: process.env.DS_ROGUE_OAUTH_CLIENT_ID,
-          secret: process.env.DS_ROGUE_OAUTH_CLIENT_SECRET,
+          id: process.env.DS_NORTHSTAR_API_OAUTH_CLIENT_ID,
+          secret: process.env.DS_NORTHSTAR_API_OAUTH_CLIENT_SECRET,
         },
         auth: {
           tokenHost: process.env.DS_NORTHSTAR_API_OAUTH_TOKEN_HOST,
