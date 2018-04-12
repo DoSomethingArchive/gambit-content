@@ -155,7 +155,7 @@ test('fetchKeywords should call contentfulError when it fails', async () => {
 test('parsePostConfigContentTypeFromBotConfig returns content type if botConfig has postConfig', () => {
   sandbox.stub(contentful, 'getPostConfigFromBotConfig')
     .returns({});
-  sandbox.stub(contentful, 'parseContentTypeFromEntry')
+  sandbox.stub(contentful, 'parseContentTypeFromContentfulEntry')
     .returns(postConfigContentTypeStub);
   const result = contentful.parsePostConfigContentTypeFromBotConfig(botConfigStub);
   result.should.equal(postConfigContentTypeStub);
@@ -169,7 +169,7 @@ test('parsePostConfigContentTypeFromBotConfig returns falsy if botConfig does no
 });
 
 // parseContentTypeFromEntry
-test('parseContentTypeFromEntry returns content type name of given entry', () => {
-  const result = contentful.parseContentTypeFromEntry(botConfigStub);
+test('parseContentTypeFromContentfulEntry returns content type name of given entry', () => {
+  const result = contentful.parseContentTypeFromContentfulEntry(botConfigStub);
   result.should.equal('campaign');
 });
