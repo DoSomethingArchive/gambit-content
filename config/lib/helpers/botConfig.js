@@ -1,12 +1,21 @@
 'use strict';
 
 const defaultText = {
-  askWhyParticipated: 'Last question: Why was participating in {{title}} important to you? (No need to write an essay, one sentence is good).',
-  completedMenu: 'To submit another post for {{title}}, text {{cmd_reportback}}',
   declined: 'Text MENU if you\'d like to find a different action to take.',
   invalidInput: 'Sorry, I didn\'t get that.',
-  signupMenu: 'Thanks for signing up for {{title}}! Text {{cmd_reportback}} to submit a post.',
   yesNo: '\n\nYes or No',
+};
+
+const startCommand = '{{cmd_reportback}}';
+const botSignupConfirmedText = `Thanks for signing up for {{title}}! Text ${startCommand} to submit a post.`;
+const completeAnotherPostText = `To submit another post for {{title}}, text ${startCommand}`;
+const photoPostDefaultText = {
+  askWhyParticipated: 'Last question: Why was participating in {{title}} important to you? (No need to write an essay, one sentence is good).',
+  botSignupConfirmed: botSignupConfirmedText,
+  photoPostCompleted: `Great! We've got you down for {{quantity}}. ${completeAnotherPostText}`,
+  photoPostCompletedAutoReply: `${defaultText.invalidInput}\n\n${completeAnotherPostText}`,
+  signupConfirmedAutoReply: `${defaultText.invalidInput}\n\nText ${startCommand} when you're ready to submit a post for {{title}}.`,
+  webSignupConfirmed: `Hi it's Freddie from DoSomething!${botSignupConfirmedText}`,
 };
 
 module.exports = {
@@ -60,23 +69,33 @@ module.exports = {
       },
     },
     photoPostConfig: {
+      // To be deprecated once botSignupConfirmed template exists on prod.
       gambitSignupMenu: {
         fieldName: 'gambitSignupMenuMessage',
-        default: defaultText.signupMenu,
+        default: photoPostDefaultText.botSignupConfirmed,
+      },
+      botSignupConfirmed: {
+        fieldName: 'botSignupConfirmedMessage',
+        default: photoPostDefaultText.botSignupConfirmed,
       },
       // This will get removed once Conversations Signup messages sends botSignupConfirmed.
       // @see textPostConfig property below.
       externalSignupMenu: {
         fieldName: 'externalSignupMenuMessage',
-        default: `Hi its Freddie from DoSomething! ${defaultText.signupMenu}`,
+        default: photoPostDefaultText.webSignupConfirmed,
       },
       webSignupConfirmed: {
         fieldName: 'externalSignupMenuMessage',
-        default: defaultText.signupMenu,
+        default: photoPostDefaultText.webSignupConfirmed,
       },
+      // To be deprecated once signupConfirmedAutoReply template exists on prod.
       invalidSignupMenuCommand: {
         fieldName: 'invalidSignupMenuCommandMessage',
-        default: `${defaultText.invalidInput} Text {{cmd_reportback}} to a submit a post for {{title}}.`,
+        default: photoPostDefaultText.signupConfirmedAutoReply,
+      },
+      signupConfirmedAutoReply: {
+        fieldName: 'signupConfirmedAutoReplyMessage',
+        default: photoPostDefaultText.signupConfirmedAutoReply,
       },
       askQuantity: {
         fieldName: 'askQuantityMessage',
@@ -100,19 +119,29 @@ module.exports = {
       },
       askWhyParticipated: {
         fieldName: 'askWhyParticipatedMessage',
-        default: defaultText.askWhyParticipated,
+        default: photoPostDefaultText.askWhyParticipated,
       },
       invalidWhyParticipated: {
         fieldName: 'invalidWhyParticipatedMessage',
-        default: `${defaultText.invalidInput}\n\n${defaultText.askWhyParticipated}`,
+        default: `${defaultText.invalidInput}\n\n${photoPostDefaultText.askWhyParticipated}`,
       },
+      // To be deprecated once photoPostCompleted template exists on prod.
       completedMenu: {
         fieldName: 'completedMenuMessage',
-        default: `Great! We've got you down for {{quantity}}.\n\n${defaultText.completedMenu}`,
+        default: photoPostDefaultText.photoPostCompleted,
       },
+      photoPostCompleted: {
+        fieldName: 'textPostCompletedMessage',
+        default: photoPostDefaultText.photoPostCompleted,
+      },
+      // To be deprecated once photoPostCompletedAutoReply template exists on prod.
       invalidCompletedMenuCommand: {
         fieldName: 'invalidCompletedMenuCommandMessage',
-        default: `${defaultText.invalidInput}\n\n${defaultText.completedMenu}.`,
+        default: photoPostDefaultText.photoPostCompletedAutoReply,
+      },
+      photoPostCompletedAutoReply: {
+        fieldName: 'photoPostCompletedAutoReplyMessage',
+        default: photoPostDefaultText.photoPostCompletedAutoReply,
       },
     },
     textPostConfig: {
