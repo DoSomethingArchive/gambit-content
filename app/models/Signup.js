@@ -52,7 +52,7 @@ const signupSchema = new mongoose.Schema({
 function parseActivityData(activityData) {
   const data = activityData[0];
   const result = {
-    // TODO: remove when we switch to Rogue V3
+    // TODO: remove when we fully switch to Rogue V3
     id: data.id || data.signup_id,
     user: data.northstar_id,
     campaign: data.campaign_id,
