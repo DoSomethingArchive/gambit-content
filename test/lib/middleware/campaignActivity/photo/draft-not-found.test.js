@@ -39,7 +39,7 @@ test.afterEach((t) => {
   t.context = {};
 });
 
-test('draftNotFound returns next if request has draft submission', async (t) => {
+test('draftNotFound returns next if request has draft', async (t) => {
   const next = sinon.stub();
   const middleware = draftNotFound();
   sandbox.stub(helpers.request, 'hasDraftSubmission')
@@ -54,7 +54,7 @@ test('draftNotFound returns next if request has draft submission', async (t) => 
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
-test('draftNotFound returns start auto reply if draft undefined and not askQuestion', async (t) => {
+test('draftNotFound sends startPhotoPost when no draft, no photo posts, and not askNextQuestion', async (t) => {
   const next = sinon.stub();
   const middleware = draftNotFound();
   sandbox.stub(helpers.request, 'hasDraftSubmission')
@@ -66,6 +66,24 @@ test('draftNotFound returns start auto reply if draft undefined and not askQuest
   next.should.not.have.been.called;
   replies.startPhotoPost.should.not.have.been.called;
   replies.startPhotoPostAutoReply.should.have.been.called;
+  replies.photoPostCompleted.should.not.have.been.called;
+  replies.photoPostCompletedAutoReply.should.not.have.been.called;
+  helpers.sendErrorResponse.should.not.have.been.called;
+});
+
+test('draftNotFound sends startPhotoPostAutoReply when no draft, no photo posts, and askNextQuestion', async (t) => {
+  const next = sinon.stub();
+  const middleware = draftNotFound();
+  sandbox.stub(helpers.request, 'hasDraftSubmission')
+    .returns(false);
+  sandbox.stub(helpers.request, 'hasSubmittedPhotoPost')
+    .returns(false);
+  t.context.req.askNextQuestion = true;
+
+  await middleware(t.context.req, t.context.res, next);
+  next.should.not.have.been.called;
+  replies.startPhotoPost.should.have.been.called;
+  replies.startPhotoPostAutoReply.should.not.have.been.called;
   replies.photoPostCompleted.should.not.have.been.called;
   replies.photoPostCompletedAutoReply.should.not.have.been.called;
   helpers.sendErrorResponse.should.not.have.been.called;
