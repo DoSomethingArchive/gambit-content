@@ -1,6 +1,7 @@
 'use strict';
 
 module.exports = {
+  useV3: () => !!process.env.DS_ROGUE_API_USE_V3,
   v2: {
     baseUri: process.env.DS_ROGUE_API_BASEURI,
   },
@@ -9,14 +10,13 @@ module.exports = {
   },
   authStrategies: {
     apiKey: {
-      apiVersion: 'v2',
       credentials: {
         key: process.env.DS_ROGUE_API_KEY,
         header: 'X-DS-Rogue-API-Key',
       },
     },
     clientCredentials: {
-      apiVersion: 'v3',
+      scopes: 'activity write',
       credentials: {
         client: {
           id: process.env.DS_NORTHSTAR_API_OAUTH_CLIENT_ID,
