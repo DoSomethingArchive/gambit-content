@@ -51,6 +51,14 @@ test('isValidReportbackText returns false is incoming_message is not valid text'
   t.falsy(requestHelper.isValidReportbackText(t.context.req));
 });
 
+// hasDraftSubmission
+test('hasDraftSubmission returns whether the signup total quantity submitted exists', (t) => {
+  t.context.req.signup = stubs.getSignupWithDraft();
+  t.truthy(requestHelper.hasDraftSubmission(t.context.req));
+  t.context.req.signup.draft_reportback_submission = null;
+  t.falsy(requestHelper.hasDraftSubmission(t.context.req));
+});
+
 // hasSubmittedPhotoPost
 test('hasSubmittedPhotoPost returns whether the signup total quantity submitted exists', (t) => {
   t.context.req.signup = stubs.getSignupWithTotalQuantitySubmitted();

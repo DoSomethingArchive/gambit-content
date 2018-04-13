@@ -20,6 +20,7 @@ const draftNotFound = require('../../../../../lib/middleware/campaignActivity/ph
 const sandbox = sinon.sandbox.create();
 
 test.beforeEach((t) => {
+  // TODO: Test sendErrorResponse once try/catch is in place.
   sandbox.stub(helpers, 'sendErrorResponse')
     .returns(underscore.noop);
   sandbox.stub(replies, 'startPhotoPost')
@@ -39,6 +40,21 @@ test.afterEach((t) => {
   t.context = {};
 });
 
+test('draftNotFound returns sendErrorResponse if hasDraftSubmission throws', async (t) => {
+  const next = sinon.stub();
+  const middleware = draftNotFound();
+  sandbox.stub(helpers.request, 'hasDraftSubmission')
+    .throws();
+
+  await middleware(t.context.req, t.context.res, next);
+  next.should.not.have.been.called;
+  replies.startPhotoPost.should.not.have.been.called;
+  replies.startPhotoPostAutoReply.should.not.have.been.called;
+  replies.photoPostCompleted.should.not.have.been.called;
+  replies.photoPostCompletedAutoReply.should.not.have.been.called;
+  helpers.sendErrorResponse.should.have.been.called;
+});
+
 test('draftNotFound returns next if request has draft', async (t) => {
   const next = sinon.stub();
   const middleware = draftNotFound();
@@ -54,7 +70,7 @@ test('draftNotFound returns next if request has draft', async (t) => {
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
-test('draftNotFound sends startPhotoPost when no draft, no photo posts, and not askNextQuestion', async (t) => {
+test('draftNotFound sends startPhotoPostAutoReply when not hasSubmittedPhotoPost and not askNextQuestion', async (t) => {
   const next = sinon.stub();
   const middleware = draftNotFound();
   sandbox.stub(helpers.request, 'hasDraftSubmission')
@@ -71,7 +87,7 @@ test('draftNotFound sends startPhotoPost when no draft, no photo posts, and not 
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
-test('draftNotFound sends startPhotoPostAutoReply when no draft, no photo posts, and askNextQuestion', async (t) => {
+test('draftNotFound sends startPhotoPost when not hasSubmittedPhotoPost and askNextQuestion', async (t) => {
   const next = sinon.stub();
   const middleware = draftNotFound();
   sandbox.stub(helpers.request, 'hasDraftSubmission')
@@ -86,5 +102,40 @@ test('draftNotFound sends startPhotoPostAutoReply when no draft, no photo posts,
   replies.startPhotoPostAutoReply.should.not.have.been.called;
   replies.photoPostCompleted.should.not.have.been.called;
   replies.photoPostCompletedAutoReply.should.not.have.been.called;
+  helpers.sendErrorResponse.should.not.have.been.called;
+});
+
+test('draftNotFound sends photoPostCompleted when hasSubmittedPhotoPost and askNextQuestion', async (t) => {
+  const next = sinon.stub();
+  const middleware = draftNotFound();
+  sandbox.stub(helpers.request, 'hasDraftSubmission')
+    .returns(false);
+  sandbox.stub(helpers.request, 'hasSubmittedPhotoPost')
+    .returns(true);
+  t.context.req.askNextQuestion = true;
+
+  await middleware(t.context.req, t.context.res, next);
+  next.should.not.have.been.called;
+  replies.startPhotoPost.should.not.have.been.called;
+  replies.startPhotoPostAutoReply.should.not.have.been.called;
+  replies.photoPostCompleted.should.have.been.called;
+  replies.photoPostCompletedAutoReply.should.not.have.been.called;
+  helpers.sendErrorResponse.should.not.have.been.called;
+});
+
+test('draftNotFound sends photoPostCompletedAutoReply when hasSubmittedPhotoPost and not askNextQuestion', async (t) => {
+  const next = sinon.stub();
+  const middleware = draftNotFound();
+  sandbox.stub(helpers.request, 'hasDraftSubmission')
+    .returns(false);
+  sandbox.stub(helpers.request, 'hasSubmittedPhotoPost')
+    .returns(true);
+
+  await middleware(t.context.req, t.context.res, next);
+  next.should.not.have.been.called;
+  replies.startPhotoPost.should.not.have.been.called;
+  replies.startPhotoPostAutoReply.should.not.have.been.called;
+  replies.photoPostCompleted.should.not.have.been.called;
+  replies.photoPostCompletedAutoReply.should.have.been.called;
   helpers.sendErrorResponse.should.not.have.been.called;
 });
