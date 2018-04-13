@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  useV3: () => !!process.env.DS_ROGUE_API_USE_V3,
+  useV3: () => process.env.DS_ROGUE_API_USE_V3 === 'true',
   v2: {
     baseUri: process.env.DS_ROGUE_API_BASEURI,
   },
