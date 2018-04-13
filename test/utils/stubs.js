@@ -76,6 +76,11 @@ module.exports = {
       draft_reportback_submission: module.exports.getDraft,
     };
   },
+  getSignupWithTotalQuantitySubmitted: function getSignupWithTotalQuantitySubmitted() {
+    const result = this.getSignupWithDraft();
+    result.total_quantity_submitted = 20;
+    return result;
+  },
   getDraft: function getDraft() {
     return {
       _id: 'ObjectId("598091807a11380d7ae5ad86")',
