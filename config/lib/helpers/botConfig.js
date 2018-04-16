@@ -142,22 +142,23 @@ module.exports = {
       },
     },
     textPostConfig: {
-      botSignupConfirmed: {
+      askText: {
+        // TODO: Create new field and migrate.
         fieldName: 'botSignupConfirmedMessage',
       },
-      // This will eventually get deprecated for webSignupConfirmed once Conversation Signup
-      // messages send the webSignupConfirmed.
-      // @see photoPostConfig above.
+      webAskText: {
+        // TODO: Create new field and migrate.
+        fieldName: 'webSignupConfirmedMessage',
+      },
+      // This will be deprecated for webAskText once Conversations Signup messages checks post type.
       externalSignupMenu: {
         fieldName: 'botSignupConfirmedMessage',
-      },
-      webSignupConfirmed: {
-        fieldName: 'webSignupConfirmedMessage',
       },
       invalidText: {
         fieldName: 'invalidTextMessage',
       },
-      textPostCompleted: {
+      completedTextPost: {
+        // TODO: Create new field and migrate.
         fieldName: 'textPostCompletedMessage',
       },
     },
