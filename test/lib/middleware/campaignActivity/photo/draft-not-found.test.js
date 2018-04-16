@@ -20,7 +20,6 @@ const draftNotFound = require('../../../../../lib/middleware/campaignActivity/ph
 const sandbox = sinon.sandbox.create();
 
 test.beforeEach((t) => {
-  // TODO: Test sendErrorResponse once try/catch is in place.
   sandbox.stub(helpers, 'sendErrorResponse')
     .returns(underscore.noop);
   sandbox.stub(replies, 'startPhotoPost')
