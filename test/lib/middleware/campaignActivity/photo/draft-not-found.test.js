@@ -27,9 +27,9 @@ test.beforeEach((t) => {
     .returns(underscore.noop);
   sandbox.stub(replies, 'startPhotoPostAutoReply')
     .returns(underscore.noop);
-  sandbox.stub(replies, 'photoPostCompleted')
+  sandbox.stub(replies, 'completedPhotoPost')
     .returns(underscore.noop);
-  sandbox.stub(replies, 'photoPostCompletedAutoReply')
+  sandbox.stub(replies, 'completedPhotoPostAutoReply')
     .returns(underscore.noop);
   t.context.req = httpMocks.createRequest();
   t.context.res = httpMocks.createResponse();
@@ -50,8 +50,8 @@ test('draftNotFound returns sendErrorResponse if hasDraftSubmission throws', asy
   next.should.not.have.been.called;
   replies.startPhotoPost.should.not.have.been.called;
   replies.startPhotoPostAutoReply.should.not.have.been.called;
-  replies.photoPostCompleted.should.not.have.been.called;
-  replies.photoPostCompletedAutoReply.should.not.have.been.called;
+  replies.completedPhotoPost.should.not.have.been.called;
+  replies.completedPhotoPostAutoReply.should.not.have.been.called;
   helpers.sendErrorResponse.should.have.been.called;
 });
 
@@ -65,8 +65,8 @@ test('draftNotFound returns next if request has draft', async (t) => {
   next.should.have.been.called;
   replies.startPhotoPost.should.not.have.been.called;
   replies.startPhotoPostAutoReply.should.not.have.been.called;
-  replies.photoPostCompleted.should.not.have.been.called;
-  replies.photoPostCompletedAutoReply.should.not.have.been.called;
+  replies.completedPhotoPost.should.not.have.been.called;
+  replies.completedPhotoPostAutoReply.should.not.have.been.called;
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
@@ -82,8 +82,8 @@ test('draftNotFound sends startPhotoPostAutoReply when not hasSubmittedPhotoPost
   next.should.not.have.been.called;
   replies.startPhotoPost.should.not.have.been.called;
   replies.startPhotoPostAutoReply.should.have.been.called;
-  replies.photoPostCompleted.should.not.have.been.called;
-  replies.photoPostCompletedAutoReply.should.not.have.been.called;
+  replies.completedPhotoPost.should.not.have.been.called;
+  replies.completedPhotoPostAutoReply.should.not.have.been.called;
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
@@ -100,12 +100,12 @@ test('draftNotFound sends startPhotoPost when not hasSubmittedPhotoPost and askN
   next.should.not.have.been.called;
   replies.startPhotoPost.should.have.been.called;
   replies.startPhotoPostAutoReply.should.not.have.been.called;
-  replies.photoPostCompleted.should.not.have.been.called;
-  replies.photoPostCompletedAutoReply.should.not.have.been.called;
+  replies.completedPhotoPost.should.not.have.been.called;
+  replies.completedPhotoPostAutoReply.should.not.have.been.called;
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
-test('draftNotFound sends photoPostCompleted when hasSubmittedPhotoPost and askNextQuestion', async (t) => {
+test('draftNotFound sends completedPhotoPost when hasSubmittedPhotoPost and askNextQuestion', async (t) => {
   const next = sinon.stub();
   const middleware = draftNotFound();
   sandbox.stub(helpers.request, 'hasDraftSubmission')
@@ -118,12 +118,12 @@ test('draftNotFound sends photoPostCompleted when hasSubmittedPhotoPost and askN
   next.should.not.have.been.called;
   replies.startPhotoPost.should.not.have.been.called;
   replies.startPhotoPostAutoReply.should.not.have.been.called;
-  replies.photoPostCompleted.should.have.been.called;
-  replies.photoPostCompletedAutoReply.should.not.have.been.called;
+  replies.completedPhotoPost.should.have.been.called;
+  replies.completedPhotoPostAutoReply.should.not.have.been.called;
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
-test('draftNotFound sends photoPostCompletedAutoReply when hasSubmittedPhotoPost and not askNextQuestion', async (t) => {
+test('draftNotFound sends completedPhotoPostAutoReply when hasSubmittedPhotoPost and not askNextQuestion', async (t) => {
   const next = sinon.stub();
   const middleware = draftNotFound();
   sandbox.stub(helpers.request, 'hasDraftSubmission')
@@ -135,7 +135,7 @@ test('draftNotFound sends photoPostCompletedAutoReply when hasSubmittedPhotoPost
   next.should.not.have.been.called;
   replies.startPhotoPost.should.not.have.been.called;
   replies.startPhotoPostAutoReply.should.not.have.been.called;
-  replies.photoPostCompleted.should.not.have.been.called;
-  replies.photoPostCompletedAutoReply.should.have.been.called;
+  replies.completedPhotoPost.should.not.have.been.called;
+  replies.completedPhotoPostAutoReply.should.have.been.called;
   helpers.sendErrorResponse.should.not.have.been.called;
 });

@@ -7,15 +7,15 @@ const defaultText = {
 };
 
 const startCommand = '{{cmd_reportback}}';
-const photoPostSignupConfirmedText = `Thanks for signing up for {{title}}! Text ${startCommand} to submit a post.`;
+const startPhotoPostText = `Thanks for signing up for {{title}}! Text ${startCommand} to submit a post.`;
 const completeAnotherPhotoPostText = `To submit another post for {{title}}, text ${startCommand}`;
 const photoPostDefaultText = {
   askWhyParticipated: 'Last question: Why was participating in {{title}} important to you? (No need to write an essay, one sentence is good).',
-  botSignupConfirmed: photoPostSignupConfirmedText,
-  photoPostCompleted: `Great! We've got you down for {{quantity}}. ${completeAnotherPhotoPostText}`,
-  photoPostCompletedAutoReply: `${defaultText.invalidInput}\n\n${completeAnotherPhotoPostText}`,
-  signupConfirmedAutoReply: `${defaultText.invalidInput}\n\nText ${startCommand} when you're ready to submit a post for {{title}}.`,
-  webSignupConfirmed: `Hi it's Freddie from DoSomething!${photoPostSignupConfirmedText}`,
+  completedPhotoPost: `Great! We've got you down for {{quantity}}. ${completeAnotherPhotoPostText}`,
+  completedPhotoPostAutoReply: `${defaultText.invalidInput}\n\n${completeAnotherPhotoPostText}`,
+  startPhotoPost: startPhotoPostText,
+  startPhotoPostAutoReply: `${defaultText.invalidInput}\n\nText ${startCommand} when you're ready to submit a post for {{title}}.`,
+  webStartPhotoPost: `Hi it's Freddie from DoSomething!${startPhotoPostText}`,
 };
 
 module.exports = {
@@ -69,34 +69,49 @@ module.exports = {
       },
     },
     photoPostConfig: {
-      // To be deprecated once botSignupConfirmed template exists on prod.
+      // These are templates we want to rename, but renamed + migrated fields don't exist yet.
       gambitSignupMenu: {
         fieldName: 'gambitSignupMenuMessage',
-        default: photoPostDefaultText.botSignupConfirmed,
+        default: photoPostDefaultText.startPhotoPost,
       },
-      botSignupConfirmed: {
-        fieldName: 'botSignupConfirmedMessage',
-        default: photoPostDefaultText.botSignupConfirmed,
-      },
-      // This will get removed once Conversations Signup messages sends botSignupConfirmed.
-      // @see textPostConfig property below.
       externalSignupMenu: {
         fieldName: 'externalSignupMenuMessage',
-        default: photoPostDefaultText.webSignupConfirmed,
+        default: photoPostDefaultText.webStartPhotoPost,
       },
-      webSignupConfirmed: {
-        fieldName: 'webSignupConfirmedMessage',
-        default: photoPostDefaultText.webSignupConfirmed,
-      },
-      // To be deprecated once signupConfirmedAutoReply template exists on prod.
       invalidSignupMenuCommand: {
         fieldName: 'invalidSignupMenuCommandMessage',
-        default: photoPostDefaultText.signupConfirmedAutoReply,
+        default: photoPostDefaultText.startPhotoPostAutoReply,
       },
-      signupConfirmedAutoReply: {
-        fieldName: 'signupConfirmedAutoReplyMessage',
-        default: photoPostDefaultText.signupConfirmedAutoReply,
+      completedMenu: {
+        fieldName: 'completedMenuMessage',
+        default: photoPostDefaultText.completedPhotoPost,
       },
+      invalidCompletedMenuCommand: {
+        fieldName: 'invalidCompletedMenuCommandMessage',
+        default: photoPostDefaultText.completedPhotoPostAutoReply,
+      },
+      // These are the renamed template names, but the fields still need to be renamed + migrated:
+      startPhotoPost: {
+        fieldName: 'gambitSignupMenuMessage',
+        default: photoPostDefaultText.startPhotoPost,
+      },
+      webStartPhotoPost: {
+        fieldName: 'externalSignupMenuMessage',
+        default: photoPostDefaultText.webStartPhotoPost,
+      },
+      startPhotoPostAutoReply: {
+        fieldName: 'invalidSignupMenuCommandMessage',
+        default: photoPostDefaultText.startPhotoPostAutoReply,
+      },
+      completedPhotoPost: {
+        fieldName: 'completedMenuMessage',
+        default: photoPostDefaultText.completedPhotoPost,
+      },
+      completedPhotoPostAutoReply: {
+        fieldName: 'invalidCompletedMenuCommandMessage',
+        default: photoPostDefaultText.completedPhotoPostAutoReply,
+      },
+      // The name and fields of data collecting templates will stay the same:
       askQuantity: {
         fieldName: 'askQuantityMessage',
       },
@@ -124,24 +139,6 @@ module.exports = {
       invalidWhyParticipated: {
         fieldName: 'invalidWhyParticipatedMessage',
         default: `${defaultText.invalidInput}\n\n${photoPostDefaultText.askWhyParticipated}`,
-      },
-      // To be deprecated once photoPostCompleted template exists on prod.
-      completedMenu: {
-        fieldName: 'completedMenuMessage',
-        default: photoPostDefaultText.photoPostCompleted,
-      },
-      photoPostCompleted: {
-        fieldName: 'textPostCompletedMessage',
-        default: photoPostDefaultText.photoPostCompleted,
-      },
-      // To be deprecated once photoPostCompletedAutoReply template exists on prod.
-      invalidCompletedMenuCommand: {
-        fieldName: 'invalidCompletedMenuCommandMessage',
-        default: photoPostDefaultText.photoPostCompletedAutoReply,
-      },
-      photoPostCompletedAutoReply: {
-        fieldName: 'photoPostCompletedAutoReplyMessage',
-        default: photoPostDefaultText.photoPostCompletedAutoReply,
       },
     },
     textPostConfig: {
