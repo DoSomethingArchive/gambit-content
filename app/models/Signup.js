@@ -52,7 +52,8 @@ const signupSchema = new mongoose.Schema({
 function parseActivityData(activityData) {
   const data = activityData[0];
   const result = {
-    id: data.signup_id,
+    // TODO: remove when we fully switch to Rogue V3
+    id: data.id || data.signup_id,
     user: data.northstar_id,
     campaign: data.campaign_id,
     total_quantity_submitted: data.quantity,
@@ -80,7 +81,6 @@ signupSchema.statics.lookupCurrentSignupForReq = function (req) {
         if (res.data.length < 1) {
           return resolve(false);
         }
-
         const signupData = parseActivityData(res.data);
         const signupId = signupData.id;
         logger.info('Signup.lookupCurrent', { signupId });

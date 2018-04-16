@@ -15,9 +15,9 @@
       - allow:
         - __set__
         - __get__
-    # need fot AVA test contetext support
+    # needed for AVA tests context support: t.context.name = 'tacos'
     no-param-reassign: off
-    # Support should constructs like result.should.be.true;
+    # needed to should constructs support: result.should.be.true
     no-unused-expressions: 'off'
     ava/assertion-arguments: error
     ava/max-asserts:
