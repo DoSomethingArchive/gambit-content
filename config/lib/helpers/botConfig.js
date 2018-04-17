@@ -143,23 +143,21 @@ module.exports = {
     },
     textPostConfig: {
       askText: {
-        // TODO: Create new field and migrate.
-        fieldName: 'botSignupConfirmedMessage',
+        fieldName: 'askTextMessage',
       },
       webAskText: {
-        // TODO: Create new field and migrate.
-        fieldName: 'webSignupConfirmedMessage',
+        fieldName: 'webAskTextMessage',
       },
-      // This will be deprecated for webAskText once Conversations Signup messages checks post type.
+      // This property will be deprecated for webAskText once Conversations
+      // checks the botConfig.postType to determine the template for web signup messages.
       externalSignupMenu: {
-        fieldName: 'botSignupConfirmedMessage',
+        fieldName: 'webAskTextMessage',
       },
       invalidText: {
         fieldName: 'invalidTextMessage',
       },
       completedTextPost: {
-        // TODO: Create new field and migrate.
-        fieldName: 'textPostCompletedMessage',
+        fieldName: 'completedTextPostMessage',
       },
     },
   },
