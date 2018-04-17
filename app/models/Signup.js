@@ -115,7 +115,8 @@ signupSchema.statics.createSignupForReq = function (req) {
   return new Promise((resolve, reject) => {
     helpers.campaignActivity.createSignupFromReq(req)
       .then((signup) => {
-        const signupId = signup.data.signup_id;
+        // TODO: update to signup.data.id when we fully switch to Rogue V3
+        const signupId = signup.data.id || signup.data.signup_id;
         if (keyword) {
           stathat.postStat(`signup: ${keyword}`);
         }
