@@ -15,7 +15,7 @@ const photoPostDefaultText = {
   completedPhotoPostAutoReply: `${defaultText.invalidInput}\n\n${completeAnotherPhotoPostText}`,
   startPhotoPost: startPhotoPostText,
   startPhotoPostAutoReply: `${defaultText.invalidInput}\n\nText ${startCommand} when you're ready to submit a post for {{title}}.`,
-  webStartPhotoPost: `Hi it's Freddie from DoSomething!${startPhotoPostText}`,
+  webStartPhotoPost: `Hi it's Freddie from DoSomething! ${startPhotoPostText}`,
 };
 
 module.exports = {
