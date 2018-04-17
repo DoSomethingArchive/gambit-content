@@ -1,12 +1,21 @@
 'use strict';
 
 const defaultText = {
-  askWhyParticipated: 'Last question: Why was participating in {{title}} important to you? (No need to write an essay, one sentence is good).',
-  completedMenu: 'To submit another post for {{title}}, text {{cmd_reportback}}',
   declined: 'Text MENU if you\'d like to find a different action to take.',
   invalidInput: 'Sorry, I didn\'t get that.',
-  signupMenu: 'Thanks for signing up for {{title}}! Text {{cmd_reportback}} to submit a post.',
   yesNo: '\n\nYes or No',
+};
+
+const startCommand = '{{cmd_reportback}}';
+const startPhotoPostText = `Thanks for signing up for {{title}}! Text ${startCommand} to submit a post.`;
+const completeAnotherPhotoPostText = `To submit another post for {{title}}, text ${startCommand}`;
+const photoPostDefaultText = {
+  askWhyParticipated: 'Last question: Why was participating in {{title}} important to you? (No need to write an essay, one sentence is good).',
+  completedPhotoPost: `Great! We've got you down for {{quantity}}. ${completeAnotherPhotoPostText}`,
+  completedPhotoPostAutoReply: `${defaultText.invalidInput}\n\n${completeAnotherPhotoPostText}`,
+  startPhotoPost: startPhotoPostText,
+  startPhotoPostAutoReply: `${defaultText.invalidInput}\n\nText ${startCommand} when you're ready to submit a post for {{title}}.`,
+  webStartPhotoPost: `Hi it's Freddie from DoSomething! ${startPhotoPostText}`,
 };
 
 module.exports = {
@@ -60,24 +69,49 @@ module.exports = {
       },
     },
     photoPostConfig: {
+      // These are templates we want to rename, but renamed + migrated fields don't exist yet.
       gambitSignupMenu: {
         fieldName: 'gambitSignupMenuMessage',
-        default: defaultText.signupMenu,
+        default: photoPostDefaultText.startPhotoPost,
       },
-      // This will get removed once Conversations Signup messages sends botSignupConfirmed.
-      // @see textPostConfig property below.
       externalSignupMenu: {
         fieldName: 'externalSignupMenuMessage',
-        default: `Hi its Freddie from DoSomething! ${defaultText.signupMenu}`,
-      },
-      webSignupConfirmed: {
-        fieldName: 'gambitSignupMenuMessage',
-        default: defaultText.signupMenu,
+        default: photoPostDefaultText.webStartPhotoPost,
       },
       invalidSignupMenuCommand: {
         fieldName: 'invalidSignupMenuCommandMessage',
-        default: `${defaultText.invalidInput} Text {{cmd_reportback}} to a submit a post for {{title}}.`,
+        default: photoPostDefaultText.startPhotoPostAutoReply,
       },
+      completedMenu: {
+        fieldName: 'completedMenuMessage',
+        default: photoPostDefaultText.completedPhotoPost,
+      },
+      invalidCompletedMenuCommand: {
+        fieldName: 'invalidCompletedMenuCommandMessage',
+        default: photoPostDefaultText.completedPhotoPostAutoReply,
+      },
+      // These are the renamed template names, but the fields still need to be renamed + migrated:
+      startPhotoPost: {
+        fieldName: 'gambitSignupMenuMessage',
+        default: photoPostDefaultText.startPhotoPost,
+      },
+      webStartPhotoPost: {
+        fieldName: 'externalSignupMenuMessage',
+        default: photoPostDefaultText.webStartPhotoPost,
+      },
+      startPhotoPostAutoReply: {
+        fieldName: 'invalidSignupMenuCommandMessage',
+        default: photoPostDefaultText.startPhotoPostAutoReply,
+      },
+      completedPhotoPost: {
+        fieldName: 'completedMenuMessage',
+        default: photoPostDefaultText.completedPhotoPost,
+      },
+      completedPhotoPostAutoReply: {
+        fieldName: 'invalidCompletedMenuCommandMessage',
+        default: photoPostDefaultText.completedPhotoPostAutoReply,
+      },
+      // The name and fields of data collecting templates will stay the same:
       askQuantity: {
         fieldName: 'askQuantityMessage',
       },
@@ -100,39 +134,30 @@ module.exports = {
       },
       askWhyParticipated: {
         fieldName: 'askWhyParticipatedMessage',
-        default: defaultText.askWhyParticipated,
+        default: photoPostDefaultText.askWhyParticipated,
       },
       invalidWhyParticipated: {
         fieldName: 'invalidWhyParticipatedMessage',
-        default: `${defaultText.invalidInput}\n\n${defaultText.askWhyParticipated}`,
-      },
-      completedMenu: {
-        fieldName: 'completedMenuMessage',
-        default: `Great! We've got you down for {{quantity}}.\n\n${defaultText.completedMenu}`,
-      },
-      invalidCompletedMenuCommand: {
-        fieldName: 'invalidCompletedMenuCommandMessage',
-        default: `${defaultText.invalidInput}\n\n${defaultText.completedMenu}.`,
+        default: `${defaultText.invalidInput}\n\n${photoPostDefaultText.askWhyParticipated}`,
       },
     },
     textPostConfig: {
-      botSignupConfirmed: {
-        fieldName: 'botSignupConfirmedMessage',
+      askText: {
+        fieldName: 'askTextMessage',
       },
-      // This will eventually get deprecated for webSignupConfirmed once Conversation Signup
-      // messages send the webSignupConfirmed.
-      // @see photoPostConfig above.
+      webAskText: {
+        fieldName: 'webAskTextMessage',
+      },
+      // This property will be deprecated for webAskText once Conversations
+      // checks the botConfig.postType to determine the template for web signup messages.
       externalSignupMenu: {
-        fieldName: 'botSignupConfirmedMessage',
-      },
-      webSignupConfirmed: {
-        fieldName: 'webSignupConfirmedMessage',
+        fieldName: 'webAskTextMessage',
       },
       invalidText: {
         fieldName: 'invalidTextMessage',
       },
-      textPostCompleted: {
-        fieldName: 'textPostCompletedMessage',
+      completedTextPost: {
+        fieldName: 'completedTextPostMessage',
       },
     },
   },
