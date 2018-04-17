@@ -27,7 +27,7 @@ test.beforeEach((t) => {
     .returns(underscore.noop);
   sandbox.stub(replies, 'invalidText')
     .returns(underscore.noop);
-  sandbox.stub(replies, 'textPostCompleted')
+  sandbox.stub(replies, 'completedTextPost')
     .returns(underscore.noop);
   t.context.req = httpMocks.createRequest();
   t.context.res = httpMocks.createResponse();
@@ -48,7 +48,7 @@ test('textPost returns next if not a textPost request', async (t) => {
   next.should.have.been.called;
   replies.askText.should.not.have.been.called;
   replies.invalidText.should.not.have.been.called;
-  replies.textPostCompleted.should.not.have.been.called;
+  replies.completedTextPost.should.not.have.been.called;
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
@@ -63,7 +63,7 @@ test('textPost returns askText when request has a keyword', async (t) => {
   next.should.not.have.been.called;
   replies.askText.should.have.been.calledWith(t.context.req, t.context.res);
   replies.invalidText.should.not.have.been.called;
-  replies.textPostCompleted.should.not.have.been.called;
+  replies.completedTextPost.should.not.have.been.called;
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
@@ -82,7 +82,7 @@ test('textPost returns invalidText when request.isValidReportbackText is false',
   replies.askText.should.not.have.been.calledWith(t.context.req, t.context.res);
   replies.invalidText.should.not.have.been.called;
   helpers.campaignActivity.createTextPostFromReq.should.have.been.calledWith(t.context.req);
-  replies.textPostCompleted.should.have.been.called;
+  replies.completedTextPost.should.have.been.called;
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
@@ -101,7 +101,7 @@ test('textPost returns completedMenu upon createTextPostFromReq success', async 
   replies.askText.should.not.have.been.calledWith(t.context.req, t.context.res);
   replies.invalidText.should.not.have.been.called;
   helpers.campaignActivity.createTextPostFromReq.should.have.been.calledWith(t.context.req);
-  replies.textPostCompleted.should.have.been.called;
+  replies.completedTextPost.should.have.been.called;
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
@@ -121,6 +121,6 @@ test('textPost returns sendErrorResponse upon createTextPostFromReq error', asyn
   replies.askText.should.not.have.been.calledWith(t.context.req, t.context.res);
   replies.invalidText.should.not.have.been.called;
   helpers.campaignActivity.createTextPostFromReq.should.have.been.calledWith(t.context.req);
-  replies.textPostCompleted.should.not.have.been.called;
+  replies.completedTextPost.should.not.have.been.called;
   helpers.sendErrorResponse.should.have.been.calledWith(t.context.res, error);
 });
