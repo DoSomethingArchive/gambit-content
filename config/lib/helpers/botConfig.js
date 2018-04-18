@@ -69,28 +69,8 @@ module.exports = {
       },
     },
     photoPostConfig: {
-      // These are templates we want to rename, but renamed + migrated fields don't exist yet.
-      gambitSignupMenu: {
-        fieldName: 'gambitSignupMenuMessage',
-        default: photoPostDefaultText.startPhotoPost,
-      },
-      externalSignupMenu: {
-        fieldName: 'externalSignupMenuMessage',
-        default: photoPostDefaultText.webStartPhotoPost,
-      },
-      invalidSignupMenuCommand: {
-        fieldName: 'invalidSignupMenuCommandMessage',
-        default: photoPostDefaultText.startPhotoPostAutoReply,
-      },
-      completedMenu: {
-        fieldName: 'completedMenuMessage',
-        default: photoPostDefaultText.completedPhotoPost,
-      },
-      invalidCompletedMenuCommand: {
-        fieldName: 'invalidCompletedMenuCommandMessage',
-        default: photoPostDefaultText.completedPhotoPostAutoReply,
-      },
-      // These are the renamed template names, but the fields still need to be renamed + migrated:
+      // These templates correspond to Contentful fields that need to be renamed + migrated.
+      // @see https://github.com/DoSomething/gambit-campaigns/issues/1037
       startPhotoPost: {
         fieldName: 'gambitSignupMenuMessage',
         default: photoPostDefaultText.startPhotoPost,
@@ -111,7 +91,7 @@ module.exports = {
         fieldName: 'invalidCompletedMenuCommandMessage',
         default: photoPostDefaultText.completedPhotoPostAutoReply,
       },
-      // The name and fields of data collecting templates will stay the same:
+      // End fields that renaming.
       askQuantity: {
         fieldName: 'askQuantityMessage',
       },
@@ -146,11 +126,6 @@ module.exports = {
         fieldName: 'askTextMessage',
       },
       webAskText: {
-        fieldName: 'webAskTextMessage',
-      },
-      // This property will be deprecated for webAskText once Conversations
-      // checks the botConfig.postType to determine the template for web signup messages.
-      externalSignupMenu: {
         fieldName: 'webAskTextMessage',
       },
       invalidText: {
