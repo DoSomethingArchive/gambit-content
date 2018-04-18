@@ -11,6 +11,9 @@ module.exports = {
   v3: {
     baseUri: process.env.DS_ROGUE_API_BASEURI_V3,
   },
+  photoPostCreation: {
+    fileProperty: 'file',
+  },
   authStrategies: {
     apiKey: {
       credentials: {
