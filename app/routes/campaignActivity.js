@@ -13,6 +13,9 @@ const getSignupMiddleware = require('../../lib/middleware/campaignActivity/signu
 const createNewSignupIfNotFoundMiddleware = require('../../lib/middleware/campaignActivity/signup-create');
 const validateRequestMiddleware = require('../../lib/middleware/campaignActivity/validate');
 
+// Middleware for External Posts.
+const externalPostMiddleware = require('../../lib/middleware/campaignActivity/external');
+
 // Middleware for Text Posts.
 const createTextPostMiddleware = require('../../lib/middleware/campaignActivity/text/post-create');
 
@@ -51,12 +54,17 @@ router.use(
 router.use(validateRequestMiddleware());
 
 /**
- * Submits a Text Post for requests with postType text.
+ * Handle External Post requests.
+ */
+router.use(externalPostMiddleware());
+
+/**
+ * Handle Text Post requests.
  */
 router.use(createTextPostMiddleware());
 
 /**
- * Check if this request is starting a Photo Post Submission.
+ * Check if this request is starting a submission for a Photo Post.
  */
 router.use(createDraftSubmissionMiddleware());
 

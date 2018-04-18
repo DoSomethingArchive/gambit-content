@@ -26,6 +26,7 @@ module.exports = {
    * { contentTypeName: 'postType' }
    */
   postTypesByContentType: {
+    externalPostConfig: 'external',
     textPostConfig: 'text',
     photoPostConfig: 'photo',
   },
@@ -66,6 +67,17 @@ module.exports = {
       invalidAskContinueResponse: {
         fieldName: 'invalidContinueResponseMessage',
         default: `${defaultText.invalidInput} Did you want to join {{title}}?${defaultText.yesNo}`,
+      },
+    },
+    externalPostConfig: {
+      startExternalPost: {
+        fieldName: 'startExternalPostMessage',
+      },
+      webStartExternalPost: {
+        fieldName: 'webStartExternalPostMessage',
+      },
+      startExternalPostAutoReply: {
+        fieldName: 'startExternalPostAutoReplyMessage',
       },
     },
     photoPostConfig: {
