@@ -9,6 +9,26 @@ const Chance = require('chance');
 const chance = new Chance();
 
 module.exports = {
+  rogueClient: {
+    getOauth2ClientToken: (expiresInSeconds = 3600) => {
+      const tokenString = 'tacos';
+      return {
+        id_token: tokenString,
+        token_type: 'Bearer',
+        expires_in: expiresInSeconds,
+        access_token: tokenString,
+      };
+    },
+    spyOnClientCredentialMethods: (sandbox, clientCredentialsInstance) => {
+      sandbox.spy(clientCredentialsInstance, 'setTicker');
+      sandbox.spy(clientCredentialsInstance, 'clearTicker');
+      sandbox.spy(clientCredentialsInstance, 'emit');
+      sandbox.spy(clientCredentialsInstance, 'renewToken');
+      sandbox.spy(clientCredentialsInstance, 'setToken');
+      sandbox.spy(clientCredentialsInstance, 'getAccessToken');
+      sandbox.spy(clientCredentialsInstance, 'renewExpiredToken');
+    },
+  },
   getRandomString: function getRandomString(length) {
     return chance.string({ length: length || 5 });
   },
