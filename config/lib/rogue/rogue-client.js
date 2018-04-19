@@ -11,6 +11,9 @@ module.exports = {
   v3: {
     baseUri: process.env.DS_ROGUE_API_BASEURI_V3,
   },
+  photoPostCreation: {
+    fileProperty: 'file',
+  },
   authStrategies: {
     apiKey: {
       credentials: {
@@ -19,7 +22,13 @@ module.exports = {
       },
     },
     clientCredentials: {
-      scopes: 'activity write',
+      /**
+       * admin write - required to create signups with client credentials flow, otherwise signups
+       *               will be created with an empty northstar_id. This is an edgecase that the
+       *               Rogue team is already aware of.
+       * activity    - required to retrieve user's signup activity.
+       */
+      scopes: 'admin activity write',
       credentials: {
         client: {
           id: process.env.DS_NORTHSTAR_API_OAUTH_CLIENT_ID,
