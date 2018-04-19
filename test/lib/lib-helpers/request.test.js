@@ -28,8 +28,16 @@ test.afterEach((t) => {
   t.context = {};
 });
 
+// isExternalPost
+test('isExternalPost returns whether req.postType is external', (t) => {
+  t.context.req.postType = 'external';
+  t.truthy(requestHelper.isExternalPost(t.context.req));
+  t.context.req.postType = 'photo';
+  t.falsy(requestHelper.isExternalPost(t.context.req));
+});
+
 // isTextPost
-test('isTextPost returns whether req.keyword', (t) => {
+test('isTextPost returns whether req.postType is text', (t) => {
   t.context.req.postType = 'text';
   t.truthy(requestHelper.isTextPost(t.context.req));
   t.context.req.postType = 'photo';
