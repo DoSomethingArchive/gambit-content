@@ -36,6 +36,14 @@ test('isExternalPost returns whether req.postType is external', (t) => {
   t.falsy(requestHelper.isExternalPost(t.context.req));
 });
 
+// isKeyword
+test('isKeyword returns whether req.keyword is set', (t) => {
+  t.context.req.keyword = stubs.getKeyword();
+  t.truthy(requestHelper.isKeyword(t.context.req));
+  t.context.req.keyword = null;
+  t.falsy(requestHelper.isKeyword(t.context.req));
+});
+
 // isTextPost
 test('isTextPost returns whether req.postType is text', (t) => {
   t.context.req.postType = 'text';
