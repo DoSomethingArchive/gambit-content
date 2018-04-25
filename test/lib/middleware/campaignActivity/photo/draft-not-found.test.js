@@ -74,6 +74,8 @@ test('draftNotFound sends startPhotoPostAutoReply when not hasSubmittedPhotoPost
   const middleware = draftNotFound();
   sandbox.stub(helpers.request, 'hasDraftSubmission')
     .returns(false);
+  sandbox.stub(helpers.request, 'isStartCommand')
+    .returns(false);
   sandbox.stub(helpers.request, 'hasSubmittedPhotoPost')
     .returns(false);
 
@@ -90,6 +92,8 @@ test('draftNotFound sends startPhotoPost when not hasSubmittedPhotoPost and askN
   const next = sinon.stub();
   const middleware = draftNotFound();
   sandbox.stub(helpers.request, 'hasDraftSubmission')
+    .returns(false);
+  sandbox.stub(helpers.request, 'isStartCommand')
     .returns(false);
   sandbox.stub(helpers.request, 'hasSubmittedPhotoPost')
     .returns(false);
@@ -109,6 +113,8 @@ test('draftNotFound sends completedPhotoPost when hasSubmittedPhotoPost and askN
   const middleware = draftNotFound();
   sandbox.stub(helpers.request, 'hasDraftSubmission')
     .returns(false);
+  sandbox.stub(helpers.request, 'isStartCommand')
+    .returns(false);
   sandbox.stub(helpers.request, 'hasSubmittedPhotoPost')
     .returns(true);
   t.context.req.askNextQuestion = true;
@@ -126,6 +132,8 @@ test('draftNotFound sends completedPhotoPostAutoReply when hasSubmittedPhotoPost
   const next = sinon.stub();
   const middleware = draftNotFound();
   sandbox.stub(helpers.request, 'hasDraftSubmission')
+    .returns(false);
+  sandbox.stub(helpers.request, 'isStartCommand')
     .returns(false);
   sandbox.stub(helpers.request, 'hasSubmittedPhotoPost')
     .returns(true);

@@ -20,7 +20,6 @@ const externalPostMiddleware = require('../../lib/middleware/campaignActivity/ex
 const createTextPostMiddleware = require('../../lib/middleware/campaignActivity/text/post-create');
 
 // Middleware for Photo Posts.
-const createDraftSubmissionMiddleware = require('../../lib/middleware/campaignActivity/photo/draft-create');
 const draftSubmissionNotFoundMiddleware = require('../../lib/middleware/campaignActivity/photo/draft-not-found');
 const draftSubmissionQuantityMiddleware = require('../../lib/middleware/campaignActivity/photo/draft-quantity');
 const draftSubmissionPhotoMiddleware = require('../../lib/middleware/campaignActivity/photo/draft-photo');
@@ -64,26 +63,18 @@ router.use(externalPostMiddleware());
 router.use(createTextPostMiddleware());
 
 /**
- * Check if this request is starting a submission for a Photo Post.
+ * Handle Photo Post requests.
  */
-router.use(createDraftSubmissionMiddleware());
 
-/**
- * If a Photo Post is not in progress, send auto replies.
- */
+// If user doesn't have a draft, check if the request is a start command and create new draft.
+// Otherwise send autoReply templates, prompting user to start a draft or take another action.
 router.use(draftSubmissionNotFoundMiddleware());
-
-/**
- * Collect data for a Photo Post.
- */
+// Save photo post data to the draft.
 router.use(draftSubmissionQuantityMiddleware());
 router.use(draftSubmissionPhotoMiddleware());
 router.use(draftSubmissionCaptionMiddleware());
 router.use(draftSubmissionWhyParticipatedMiddleware());
-
-/**
- * Submits completed draft as a Photo Post to Rogue.
- */
+// Submit completed draft as a photo post to Rogue.
 router.use(createPhotoPostMiddleware());
 
 module.exports = router;
