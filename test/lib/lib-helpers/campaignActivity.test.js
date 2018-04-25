@@ -11,9 +11,11 @@ const httpMocks = require('node-mocks-http');
 
 const rogue = require('../../../lib/rogue');
 const stubs = require('../../utils/stubs');
+const reportbackSubmissionFactory = require('../../utils/factories/reportbackSubmission');
 
-const mockDraft = stubs.getDraft();
+const mockDraft = reportbackSubmissionFactory.getValidReportbackSubmission();
 const mockDefaultCreatePayload = { id: stubs.getUserId() };
+const mockMessageText = stubs.getRandomString();
 const mockPost = stubs.getPost();
 
 // Module to test
@@ -26,11 +28,13 @@ const sandbox = sinon.sandbox.create();
 
 test.beforeEach((t) => {
   stubs.stubLogger(sandbox, logger);
+  sandbox.stub(mockDraft, 'save')
+    .returns(Promise.resolve({}));
   sandbox.stub(rogue, 'createPost')
     .returns(Promise.resolve(mockPost));
   t.context.req = httpMocks.createRequest();
   t.context.req.userId = stubs.getUserId();
-  t.context.req.incoming_message = stubs.getRandomString();
+  t.context.req.incoming_message = mockMessageText;
   t.context.req.campaignId = stubs.getCampaignId();
   t.context.req.campaignRunId = stubs.getCampaignRunId();
   t.context.req.platform = stubs.getPlatform();
@@ -74,7 +78,7 @@ test('getCreatePhotoPostPayloadFromReq returns an object', (t) => {
   result.photoUrl.should.equal(mockDraft.photo);
   result.quantity.should.equal(mockDraft.quantity);
   result.caption.should.equal(mockDraft.caption);
-  result.should.not.have.property('why_participated');
+  result.why_participated.should.equal(mockDraft.why_participated);
 });
 
 // getCreateTextPostPayloadFromReq
@@ -84,4 +88,26 @@ test('getCreateTextPostPayloadFromReq returns an object', (t) => {
   const result = activityHelper.getCreateTextPostPayloadFromReq(t.context.req);
   result.type.should.equal('text');
   result.text.should.equal(t.context.req.incoming_message);
+});
+
+// saveDraftCaptionFromReq
+test('saveDraftCaptionFromReq sets req.draftSubmission.caption and calls save', async (t) => {
+  sandbox.stub(activityHelper, 'getReportbackTextFromReq')
+    .returns(mockMessageText);
+  t.context.req.draftSubmission = mockDraft;
+
+  await activityHelper.saveDraftCaptionFromReq(t.context.req);
+  t.context.req.draftSubmission.caption.should.equal(mockMessageText);
+  mockDraft.save.should.have.been.called;
+});
+
+// saveDraftWhyParticipatedFromReq
+test('saveDraftWhyParticipatedFromReq sets req.draftSubmission.why_participated and calls save', async (t) => {
+  sandbox.stub(activityHelper, 'getReportbackTextFromReq')
+    .returns(mockMessageText);
+  t.context.req.draftSubmission = mockDraft;
+
+  await activityHelper.saveDraftWhyParticipatedFromReq(t.context.req);
+  t.context.req.draftSubmission.why_participated.should.equal(mockMessageText);
+  mockDraft.save.should.have.been.called;
 });
