@@ -61,10 +61,18 @@ test('isValidReportbackText returns false is incoming_message is not valid text'
 
 // hasDraftSubmission
 test('hasDraftSubmission returns whether the signup total quantity submitted exists', (t) => {
-  t.context.req.signup = stubs.getSignupWithDraft();
+  t.context.req.draftSubmission = stubs.getDraft();
   t.truthy(requestHelper.hasDraftSubmission(t.context.req));
-  t.context.req.signup.draft_reportback_submission = null;
+  t.context.req.draftSubmission = null;
   t.falsy(requestHelper.hasDraftSubmission(t.context.req));
+});
+
+// hasDraftSubmission
+test('hasDraftWithCaption returns whether the draft has a caption set', (t) => {
+  t.context.req.draftSubmission = stubs.getDraft();
+  t.truthy(requestHelper.hasDraftWithCaption(t.context.req));
+  t.context.req.draftSubmission = {};
+  t.falsy(requestHelper.hasDraftWithCaption(t.context.req));
 });
 
 // hasSubmittedPhotoPost
@@ -73,4 +81,18 @@ test('hasSubmittedPhotoPost returns whether the signup total quantity submitted 
   t.truthy(requestHelper.hasSubmittedPhotoPost(t.context.req));
   t.context.req.signup = stubs.getSignupWithDraft();
   t.falsy(requestHelper.hasSubmittedPhotoPost(t.context.req));
+});
+
+// setDraftSubmission
+test('setDraftSubmission should inject a draftSubmission property to req', (t) => {
+  const draftSubmission = stubs.getDraft();
+  requestHelper.setDraftSubmission(t.context.req, draftSubmission);
+  t.context.req.draftSubmission.should.deep.equal(draftSubmission);
+});
+
+// setSignup
+test('setSignup should inject a signup property to req', (t) => {
+  const signup = stubs.getSignupWithTotalQuantitySubmitted();
+  requestHelper.setSignup(t.context.req, signup);
+  t.context.req.signup.should.deep.equal(signup);
 });
