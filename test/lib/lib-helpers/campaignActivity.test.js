@@ -100,9 +100,12 @@ test('getReportbackTextFromReq returns a string', (t) => {
 test('getCreateTextPostPayloadFromReq returns an object', (t) => {
   sandbox.stub(activityHelper, 'getDefaultCreatePayloadFromReq')
     .returns(mockDefaultCreatePayload);
+  sandbox.stub(activityHelper, 'getReportbackTextFromReq')
+    .returns(mockMessageText);
+
   const result = activityHelper.getCreateTextPostPayloadFromReq(t.context.req);
-  result.type.should.equal('text');
-  result.text.should.equal(t.context.req.incoming_message);
+  activityHelper.getReportbackTextFromReq.should.have.been.called;
+  result.text.should.equal(mockMessageText);
 });
 
 // saveDraftCaptionFromReq

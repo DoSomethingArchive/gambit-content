@@ -67,7 +67,7 @@ test('hasDraftSubmission returns whether the signup total quantity submitted exi
   t.falsy(requestHelper.hasDraftSubmission(t.context.req));
 });
 
-// hasDraftSubmission
+// hasDraftWithCaption
 test('hasDraftWithCaption returns whether the draft has a caption set', (t) => {
   t.context.req.draftSubmission = stubs.getDraft();
   t.truthy(requestHelper.hasDraftWithCaption(t.context.req));
