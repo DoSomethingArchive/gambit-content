@@ -9,6 +9,7 @@ const sinonChai = require('sinon-chai');
 const sinon = require('sinon');
 const httpMocks = require('node-mocks-http');
 
+const helpers = require('../../../lib/helpers');
 const rogue = require('../../../lib/rogue');
 const stubs = require('../../utils/stubs');
 const reportbackSubmissionFactory = require('../../utils/factories/reportbackSubmission');
@@ -79,6 +80,20 @@ test('getCreatePhotoPostPayloadFromReq returns an object', (t) => {
   result.quantity.should.equal(mockDraft.quantity);
   result.caption.should.equal(mockDraft.caption);
   result.why_participated.should.equal(mockDraft.why_participated);
+});
+
+// getReportbackTextFromReq
+test('getReportbackTextFromReq returns a string', (t) => {
+  const mockResult = 'Winter is coming';
+  sandbox.stub(helpers.request, 'messageText')
+    .returns(mockMessageText);
+  sandbox.stub(helpers.reportback, 'trimText')
+    .returns(mockResult);
+
+  const result = activityHelper.getReportbackTextFromReq(t.context.req);
+  result.should.equal(mockResult);
+  helpers.request.messageText.should.have.been.calledWith(t.context.req);
+  helpers.reportback.trimText.should.have.been.calledWith(mockMessageText);
 });
 
 // getCreateTextPostPayloadFromReq
