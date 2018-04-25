@@ -10,7 +10,6 @@ const underscore = require('underscore');
 
 const helpers = require('../../../../../lib/helpers');
 const replies = require('../../../../../lib/replies');
-const stubs = require('../../../../utils/stubs');
 
 chai.should();
 chai.use(sinonChai);
@@ -41,20 +40,24 @@ test('externalPost returns next if not an externalPost request', async (t) => {
   const middleware = externalPost();
   sandbox.stub(helpers.request, 'isExternalPost')
     .returns(false);
+  sandbox.stub(helpers.request, 'isKeyword')
+    .returns(true);
 
   await middleware(t.context.req, t.context.res, next);
   next.should.have.been.called;
+  helpers.request.isKeyword.should.not.have.been.called;
   replies.startExternalPost.should.not.have.been.called;
   replies.startExternalPostAutoReply.should.not.have.been.called;
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
-test('externalPost returns start reply for externalPost request with keyword', async (t) => {
+test('externalPost returns startExternalPost for externalPost keyword request', async (t) => {
   const next = sinon.stub();
   const middleware = externalPost();
   sandbox.stub(helpers.request, 'isExternalPost')
     .returns(true);
-  t.context.req.keyword = stubs.getKeyword();
+  sandbox.stub(helpers.request, 'isKeyword')
+    .returns(true);
 
   await middleware(t.context.req, t.context.res, next);
   next.should.not.have.been.called;
@@ -63,7 +66,7 @@ test('externalPost returns start reply for externalPost request with keyword', a
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
-test('externalPost returns auto reply for externalPost request without keyword', async (t) => {
+test('externalPost returns startExternalPostAutoReply for externalPost non-keyword request', async (t) => {
   const next = sinon.stub();
   const middleware = externalPost();
   sandbox.stub(helpers.request, 'isExternalPost')
