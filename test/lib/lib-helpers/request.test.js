@@ -7,6 +7,7 @@ const chai = require('chai');
 const sinonChai = require('sinon-chai');
 const sinon = require('sinon');
 const httpMocks = require('node-mocks-http');
+const camelCase = require('camelcase');
 
 const helpers = require('../../../lib/helpers');
 const stubs = require('../../utils/stubs');
@@ -16,6 +17,8 @@ const requestHelper = require('../../../lib/helpers/request');
 
 chai.should();
 chai.use(sinonChai);
+
+const startCommand = helpers.command.getStartCommand();
 
 const sandbox = sinon.sandbox.create();
 
@@ -51,15 +54,21 @@ test('isStartCommand returns false if messageText undefined', (t) => {
   t.falsy(requestHelper.isStartCommand(t.context.req));
 });
 
-test('isStartCommand returns true if messageText is Start Command', (t) => {
+test('isStartCommand returns true if messageText is Start Command with leading and trailing whitespace', (t) => {
   sandbox.stub(requestHelper, 'messageText')
-    .returns(helpers.command.getStartCommand());
+    .returns(` ${startCommand} `);
+  t.truthy(requestHelper.isStartCommand(t.context.req));
+});
+
+test('isStartCommand returns true if messageText is camelcase Start Command', (t) => {
+  sandbox.stub(requestHelper, 'messageText')
+    .returns(camelCase(startCommand));
   t.truthy(requestHelper.isStartCommand(t.context.req));
 });
 
 test('isStartCommand returns true if messageText is lowercase Start Command', (t) => {
   sandbox.stub(requestHelper, 'messageText')
-    .returns(helpers.command.getStartCommand().toLowerCase());
+    .returns(startCommand.toLowerCase());
   t.truthy(requestHelper.isStartCommand(t.context.req));
 });
 
