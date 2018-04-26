@@ -6,7 +6,7 @@ module.exports = {
       tag: '{{cmd_reportback}}',
       value: 'START',
     },
-    support: {
+    requestSupport: {
       tag: '{{cmd_member_support}}',
       value: 'Q',
     },
