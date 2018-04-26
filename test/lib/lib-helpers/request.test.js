@@ -7,6 +7,7 @@ const chai = require('chai');
 const sinonChai = require('sinon-chai');
 const sinon = require('sinon');
 const httpMocks = require('node-mocks-http');
+const camelCase = require('camelcase');
 
 const helpers = require('../../../lib/helpers');
 const stubs = require('../../utils/stubs');
@@ -16,6 +17,8 @@ const requestHelper = require('../../../lib/helpers/request');
 
 chai.should();
 chai.use(sinonChai);
+
+const startCommand = helpers.command.getStartCommand();
 
 const sandbox = sinon.sandbox.create();
 
@@ -34,6 +37,39 @@ test('isExternalPost returns whether req.postType is external', (t) => {
   t.truthy(requestHelper.isExternalPost(t.context.req));
   t.context.req.postType = 'photo';
   t.falsy(requestHelper.isExternalPost(t.context.req));
+});
+
+// isKeyword
+test('isKeyword returns whether req.keyword is set', (t) => {
+  t.context.req.keyword = stubs.getKeyword();
+  t.truthy(requestHelper.isKeyword(t.context.req));
+  t.context.req.keyword = null;
+  t.falsy(requestHelper.isKeyword(t.context.req));
+});
+
+// isStartCommand
+test('isStartCommand returns false if messageText undefined', (t) => {
+  sandbox.stub(requestHelper, 'messageText')
+    .returns(null);
+  t.falsy(requestHelper.isStartCommand(t.context.req));
+});
+
+test('isStartCommand returns true if messageText is Start Command with leading and trailing whitespace', (t) => {
+  sandbox.stub(requestHelper, 'messageText')
+    .returns(` ${startCommand} `);
+  t.truthy(requestHelper.isStartCommand(t.context.req));
+});
+
+test('isStartCommand returns true if messageText is camelcase Start Command', (t) => {
+  sandbox.stub(requestHelper, 'messageText')
+    .returns(camelCase(startCommand));
+  t.truthy(requestHelper.isStartCommand(t.context.req));
+});
+
+test('isStartCommand returns true if messageText is lowercase Start Command', (t) => {
+  sandbox.stub(requestHelper, 'messageText')
+    .returns(startCommand.toLowerCase());
+  t.truthy(requestHelper.isStartCommand(t.context.req));
 });
 
 // isTextPost
