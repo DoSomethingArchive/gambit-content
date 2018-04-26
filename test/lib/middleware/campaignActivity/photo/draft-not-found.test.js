@@ -10,7 +10,6 @@ const underscore = require('underscore');
 
 const helpers = require('../../../../../lib/helpers');
 const replies = require('../../../../../lib/replies');
-const signupFactory = require('../../../../utils/factories/signup');
 
 chai.should();
 chai.use(sinonChai);
@@ -75,17 +74,16 @@ test('draftNotFound returns next if request has draft', async (t) => {
 test('draftNotFound returns askQuantity if request.isStartCommand', async (t) => {
   const next = sinon.stub();
   const middleware = draftNotFound();
-  t.context.req.signup = signupFactory.getValidSignup();
   sandbox.stub(helpers.request, 'hasDraftSubmission')
     .returns(false);
   sandbox.stub(helpers.request, 'isStartCommand')
     .returns(true);
-  sandbox.stub(t.context.req.signup, 'createDraftReportbackSubmission')
+  sandbox.stub(helpers.campaignActivity, 'createDraftFromReq')
     .returns(Promise.resolve(true));
 
   await middleware(t.context.req, t.context.res, next);
   next.should.not.have.been.called;
-  t.context.req.signup.createDraftReportbackSubmission.should.have.been.called;
+  helpers.campaignActivity.createDraftFromReq.should.have.been.called;
   replies.askQuantity.should.have.been.called;
   replies.startPhotoPost.should.not.have.been.called;
   replies.startPhotoPostAutoReply.should.not.have.been.called;
@@ -94,20 +92,19 @@ test('draftNotFound returns askQuantity if request.isStartCommand', async (t) =>
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
-test('draftNotFound returns sendErrroResponse if createDraftReportbackSubmission fails', async (t) => {
+test('draftNotFound returns sendErrorResponse if createDraftFromReq fails', async (t) => {
   const next = sinon.stub();
   const middleware = draftNotFound();
-  t.context.req.signup = signupFactory.getValidSignup();
   sandbox.stub(helpers.request, 'hasDraftSubmission')
     .returns(false);
   sandbox.stub(helpers.request, 'isStartCommand')
     .returns(true);
-  sandbox.stub(t.context.req.signup, 'createDraftReportbackSubmission')
+  sandbox.stub(helpers.campaignActivity, 'createDraftFromReq')
     .returns(Promise.reject(new Error()));
 
   await middleware(t.context.req, t.context.res, next);
   next.should.not.have.been.called;
-  t.context.req.signup.createDraftReportbackSubmission.should.have.been.called;
+  helpers.campaignActivity.createDraftFromReq.should.have.been.called;
   replies.askQuantity.should.not.have.been.called;
   replies.startPhotoPost.should.not.have.been.called;
   replies.startPhotoPostAutoReply.should.not.have.been.called;

@@ -12,12 +12,13 @@ const httpMocks = require('node-mocks-http');
 const helpers = require('../../../lib/helpers');
 const rogue = require('../../../lib/rogue');
 const stubs = require('../../utils/stubs');
-const reportbackSubmissionFactory = require('../../utils/factories/reportbackSubmission');
+const signupFactory = require('../../utils/factories/signup');
 
-const mockDraft = reportbackSubmissionFactory.getValidReportbackSubmission();
 const mockDefaultCreatePayload = { id: stubs.getUserId() };
 const mockMessageText = stubs.getRandomString();
 const mockPost = stubs.getPost();
+const mockSignup = signupFactory.getValidSignupWthDraft();
+const mockDraft = mockSignup.draft_reportback_submission;
 
 // Module to test
 const activityHelper = require('../../../lib/helpers/campaignActivity');
@@ -39,14 +40,23 @@ test.beforeEach((t) => {
   t.context.req.campaignId = stubs.getCampaignId();
   t.context.req.campaignRunId = stubs.getCampaignRunId();
   t.context.req.platform = stubs.getPlatform();
-  t.context.req.signup = {
-    draft_reportback_submission: mockDraft,
-  };
+  t.context.req.signup = mockSignup;
 });
 
 test.afterEach((t) => {
   sandbox.restore();
   t.context = {};
+});
+
+// createPhotoPostFromReq
+test('createDraftFromReq calls req.signup.createDraftReportbackSubmission', async (t) => {
+  sandbox.stub(activityHelper, 'getDefaultCreatePayloadFromReq')
+    .returns(mockDefaultCreatePayload);
+
+  const result = await activityHelper.createTextPostFromReq(t.context.req);
+  activityHelper.getDefaultCreatePayloadFromReq.should.have.been.called;
+  rogue.createPost.should.have.been.calledWith(mockDefaultCreatePayload);
+  result.should.equal(mockPost);
 });
 
 // createPhotoPostFromReq
