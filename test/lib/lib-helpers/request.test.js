@@ -44,6 +44,25 @@ test('isKeyword returns whether req.keyword is set', (t) => {
   t.falsy(requestHelper.isKeyword(t.context.req));
 });
 
+// isStartCommand
+test('isStartCommand returns false if messageText undefined', (t) => {
+  sandbox.stub(requestHelper, 'messageText')
+    .returns(null);
+  t.falsy(requestHelper.isStartCommand(t.context.req));
+});
+
+test('isStartCommand returns true if messageText is Start Command', (t) => {
+  sandbox.stub(requestHelper, 'messageText')
+    .returns(helpers.command.getStartCommand());
+  t.truthy(requestHelper.isStartCommand(t.context.req));
+});
+
+test('isStartCommand returns true if messageText is lowercase Start Command', (t) => {
+  sandbox.stub(requestHelper, 'messageText')
+    .returns(helpers.command.getStartCommand().toLowerCase());
+  t.truthy(requestHelper.isStartCommand(t.context.req));
+});
+
 // isTextPost
 test('isTextPost returns whether req.postType is text', (t) => {
   t.context.req.postType = 'text';
