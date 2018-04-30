@@ -30,6 +30,8 @@ test.beforeEach((t) => {
     .returns(underscore.noop);
   sandbox.stub(replies, 'completedPhotoPostAutoReply')
     .returns(underscore.noop);
+  sandbox.stub(replies, 'askQuantity')
+    .returns(underscore.noop);
   t.context.req = httpMocks.createRequest();
   t.context.res = httpMocks.createResponse();
 });
@@ -69,10 +71,54 @@ test('draftNotFound returns next if request has draft', async (t) => {
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
+test('draftNotFound returns askQuantity if request.isStartCommand', async (t) => {
+  const next = sinon.stub();
+  const middleware = draftNotFound();
+  sandbox.stub(helpers.request, 'hasDraftSubmission')
+    .returns(false);
+  sandbox.stub(helpers.request, 'isStartCommand')
+    .returns(true);
+  sandbox.stub(helpers.campaignActivity, 'createDraftFromReq')
+    .returns(Promise.resolve(true));
+
+  await middleware(t.context.req, t.context.res, next);
+  next.should.not.have.been.called;
+  helpers.campaignActivity.createDraftFromReq.should.have.been.called;
+  replies.askQuantity.should.have.been.called;
+  replies.startPhotoPost.should.not.have.been.called;
+  replies.startPhotoPostAutoReply.should.not.have.been.called;
+  replies.completedPhotoPost.should.not.have.been.called;
+  replies.completedPhotoPostAutoReply.should.not.have.been.called;
+  helpers.sendErrorResponse.should.not.have.been.called;
+});
+
+test('draftNotFound returns sendErrorResponse if createDraftFromReq fails', async (t) => {
+  const next = sinon.stub();
+  const middleware = draftNotFound();
+  sandbox.stub(helpers.request, 'hasDraftSubmission')
+    .returns(false);
+  sandbox.stub(helpers.request, 'isStartCommand')
+    .returns(true);
+  sandbox.stub(helpers.campaignActivity, 'createDraftFromReq')
+    .returns(Promise.reject(new Error()));
+
+  await middleware(t.context.req, t.context.res, next);
+  next.should.not.have.been.called;
+  helpers.campaignActivity.createDraftFromReq.should.have.been.called;
+  replies.askQuantity.should.not.have.been.called;
+  replies.startPhotoPost.should.not.have.been.called;
+  replies.startPhotoPostAutoReply.should.not.have.been.called;
+  replies.completedPhotoPost.should.not.have.been.called;
+  replies.completedPhotoPostAutoReply.should.not.have.been.called;
+  helpers.sendErrorResponse.should.have.been.called;
+});
+
 test('draftNotFound sends startPhotoPostAutoReply when not hasSubmittedPhotoPost and not askNextQuestion', async (t) => {
   const next = sinon.stub();
   const middleware = draftNotFound();
   sandbox.stub(helpers.request, 'hasDraftSubmission')
+    .returns(false);
+  sandbox.stub(helpers.request, 'isStartCommand')
     .returns(false);
   sandbox.stub(helpers.request, 'hasSubmittedPhotoPost')
     .returns(false);
@@ -90,6 +136,8 @@ test('draftNotFound sends startPhotoPost when not hasSubmittedPhotoPost and askN
   const next = sinon.stub();
   const middleware = draftNotFound();
   sandbox.stub(helpers.request, 'hasDraftSubmission')
+    .returns(false);
+  sandbox.stub(helpers.request, 'isStartCommand')
     .returns(false);
   sandbox.stub(helpers.request, 'hasSubmittedPhotoPost')
     .returns(false);
@@ -109,6 +157,8 @@ test('draftNotFound sends completedPhotoPost when hasSubmittedPhotoPost and askN
   const middleware = draftNotFound();
   sandbox.stub(helpers.request, 'hasDraftSubmission')
     .returns(false);
+  sandbox.stub(helpers.request, 'isStartCommand')
+    .returns(false);
   sandbox.stub(helpers.request, 'hasSubmittedPhotoPost')
     .returns(true);
   t.context.req.askNextQuestion = true;
@@ -126,6 +176,8 @@ test('draftNotFound sends completedPhotoPostAutoReply when hasSubmittedPhotoPost
   const next = sinon.stub();
   const middleware = draftNotFound();
   sandbox.stub(helpers.request, 'hasDraftSubmission')
+    .returns(false);
+  sandbox.stub(helpers.request, 'isStartCommand')
     .returns(false);
   sandbox.stub(helpers.request, 'hasSubmittedPhotoPost')
     .returns(true);

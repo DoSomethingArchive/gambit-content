@@ -7,7 +7,6 @@ require('dotenv').config();
 const Promise = require('bluebird');
 const test = require('ava');
 const chai = require('chai');
-const expect = require('chai').expect;
 const newrelic = require('newrelic');
 const logger = require('winston');
 const sinonChai = require('sinon-chai');
@@ -118,27 +117,6 @@ test('sendTimeoutResponse', (t) => {
   helpers.sendTimeoutResponse(t.context.res);
   helpers.sendResponse.should.have.been.called;
   t.context.res.status.should.have.been.calledWith(504);
-});
-
-// getFirstWord
-test('getFirstWord should return null if no message is passed', () => {
-  const result = helpers.getFirstWord(undefined);
-  expect(result).to.be.null;
-});
-
-// isCommand
-test('isCommand should return true when incoming message and command are valid Gambit commands', () => {
-  const commandsObject = stubs.helpers.getValidCommandValues();
-  const commands = Object.keys(commandsObject);
-
-  commands.forEach((command) => {
-    helpers.isCommand(commandsObject[command], command).should.be.true;
-  });
-});
-
-test('isCommand should return false when missing incomingMessage argument', () => {
-  helpers.isCommand(undefined, 'member_support').should.be.false;
-  helpers.isCommand(undefined, 'reportback').should.be.false;
 });
 
 // handleTimeout

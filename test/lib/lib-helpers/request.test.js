@@ -7,6 +7,7 @@ const chai = require('chai');
 const sinonChai = require('sinon-chai');
 const sinon = require('sinon');
 const httpMocks = require('node-mocks-http');
+const camelCase = require('camelcase');
 
 const helpers = require('../../../lib/helpers');
 const stubs = require('../../utils/stubs');
@@ -16,6 +17,8 @@ const requestHelper = require('../../../lib/helpers/request');
 
 chai.should();
 chai.use(sinonChai);
+
+const startCommand = helpers.command.getStartCommand();
 
 const sandbox = sinon.sandbox.create();
 
@@ -34,6 +37,39 @@ test('isExternalPost returns whether req.postType is external', (t) => {
   t.truthy(requestHelper.isExternalPost(t.context.req));
   t.context.req.postType = 'photo';
   t.falsy(requestHelper.isExternalPost(t.context.req));
+});
+
+// isKeyword
+test('isKeyword returns whether req.keyword is set', (t) => {
+  t.context.req.keyword = stubs.getKeyword();
+  t.truthy(requestHelper.isKeyword(t.context.req));
+  t.context.req.keyword = null;
+  t.falsy(requestHelper.isKeyword(t.context.req));
+});
+
+// isStartCommand
+test('isStartCommand returns false if messageText undefined', (t) => {
+  sandbox.stub(requestHelper, 'messageText')
+    .returns(null);
+  t.falsy(requestHelper.isStartCommand(t.context.req));
+});
+
+test('isStartCommand returns true if messageText is Start Command with leading and trailing whitespace', (t) => {
+  sandbox.stub(requestHelper, 'messageText')
+    .returns(` ${startCommand} `);
+  t.truthy(requestHelper.isStartCommand(t.context.req));
+});
+
+test('isStartCommand returns true if messageText is camelcase Start Command', (t) => {
+  sandbox.stub(requestHelper, 'messageText')
+    .returns(camelCase(startCommand));
+  t.truthy(requestHelper.isStartCommand(t.context.req));
+});
+
+test('isStartCommand returns true if messageText is lowercase Start Command', (t) => {
+  sandbox.stub(requestHelper, 'messageText')
+    .returns(startCommand.toLowerCase());
+  t.truthy(requestHelper.isStartCommand(t.context.req));
 });
 
 // isTextPost
@@ -61,10 +97,18 @@ test('isValidReportbackText returns false is incoming_message is not valid text'
 
 // hasDraftSubmission
 test('hasDraftSubmission returns whether the signup total quantity submitted exists', (t) => {
-  t.context.req.signup = stubs.getSignupWithDraft();
+  t.context.req.draftSubmission = stubs.getDraft();
   t.truthy(requestHelper.hasDraftSubmission(t.context.req));
-  t.context.req.signup.draft_reportback_submission = null;
+  t.context.req.draftSubmission = null;
   t.falsy(requestHelper.hasDraftSubmission(t.context.req));
+});
+
+// hasDraftWithCaption
+test('hasDraftWithCaption returns whether the draft has a caption set', (t) => {
+  t.context.req.draftSubmission = stubs.getDraft();
+  t.truthy(requestHelper.hasDraftWithCaption(t.context.req));
+  t.context.req.draftSubmission = {};
+  t.falsy(requestHelper.hasDraftWithCaption(t.context.req));
 });
 
 // hasSubmittedPhotoPost
@@ -73,4 +117,18 @@ test('hasSubmittedPhotoPost returns whether the signup total quantity submitted 
   t.truthy(requestHelper.hasSubmittedPhotoPost(t.context.req));
   t.context.req.signup = stubs.getSignupWithDraft();
   t.falsy(requestHelper.hasSubmittedPhotoPost(t.context.req));
+});
+
+// setDraftSubmission
+test('setDraftSubmission should inject a draftSubmission property to req', (t) => {
+  const draftSubmission = stubs.getDraft();
+  requestHelper.setDraftSubmission(t.context.req, draftSubmission);
+  t.context.req.draftSubmission.should.deep.equal(draftSubmission);
+});
+
+// setSignup
+test('setSignup should inject a signup property to req', (t) => {
+  const signup = stubs.getSignupWithTotalQuantitySubmitted();
+  requestHelper.setSignup(t.context.req, signup);
+  t.context.req.signup.should.deep.equal(signup);
 });

@@ -26,11 +26,6 @@ const defaultConfig = {
 const configVars = underscore.extend({}, defaultConfig, envConfig);
 
 /**
- * Check that required config vars exist, otherwise kill the Gambit!
- */
-configVars.requiredVarsConfigured = require('./required-vars')();
-
-/**
  * Winston Logger setup
  * We don't need to export the Logger. Just require adhoc in whatever file we need it,
  * like: const logger = require('winston');
