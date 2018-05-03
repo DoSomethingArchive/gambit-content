@@ -48,26 +48,26 @@ test('isKeyword returns whether req.keyword is set', (t) => {
 });
 
 // isStartCommand
-test('isStartCommand returns false if messageText undefined', (t) => {
-  sandbox.stub(requestHelper, 'messageText')
+test('isStartCommand returns false if getMessageText undefined', (t) => {
+  sandbox.stub(requestHelper, 'getMessageText')
     .returns(null);
   t.falsy(requestHelper.isStartCommand(t.context.req));
 });
 
-test('isStartCommand returns true if messageText is Start Command with leading and trailing whitespace', (t) => {
-  sandbox.stub(requestHelper, 'messageText')
+test('isStartCommand returns true if getMessageText is Start Command with leading and trailing whitespace', (t) => {
+  sandbox.stub(requestHelper, 'getMessageText')
     .returns(` ${startCommand} `);
   t.truthy(requestHelper.isStartCommand(t.context.req));
 });
 
-test('isStartCommand returns true if messageText is camelcase Start Command', (t) => {
-  sandbox.stub(requestHelper, 'messageText')
+test('isStartCommand returns true if getMessageText is camelcase Start Command', (t) => {
+  sandbox.stub(requestHelper, 'getMessageText')
     .returns(camelCase(startCommand));
   t.truthy(requestHelper.isStartCommand(t.context.req));
 });
 
-test('isStartCommand returns true if messageText is lowercase Start Command', (t) => {
-  sandbox.stub(requestHelper, 'messageText')
+test('isStartCommand returns true if getMessageText is lowercase Start Command', (t) => {
+  sandbox.stub(requestHelper, 'getMessageText')
     .returns(startCommand.toLowerCase());
   t.truthy(requestHelper.isStartCommand(t.context.req));
 });
