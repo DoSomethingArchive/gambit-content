@@ -118,6 +118,17 @@ test('getCreateTextPostPayloadFromReq returns an object', (t) => {
   result.text.should.equal(mockMessageText);
 });
 
+// saveDraftCaptionFromReq
+test('saveDraftCaptionFromReq sets req.draftSubmission.caption and calls save', async (t) => {
+  sandbox.stub(activityHelper, 'getReportbackTextFromReq')
+    .returns(mockMessageText);
+  t.context.req.draftSubmission = mockDraft;
+
+  await activityHelper.saveDraftCaptionFromReq(t.context.req);
+  t.context.req.draftSubmission.caption.should.equal(mockMessageText);
+  mockDraft.save.should.have.been.called;
+});
+
 // saveDraftPhotoFromReq
 test('saveDraftPhotoFromReq sets req.draftSubmission.why_participated and calls save', async (t) => {
   const photoUrl = mockDraft.photo;
@@ -130,14 +141,15 @@ test('saveDraftPhotoFromReq sets req.draftSubmission.why_participated and calls 
   mockDraft.save.should.have.been.called;
 });
 
-// saveDraftCaptionFromReq
-test('saveDraftCaptionFromReq sets req.draftSubmission.caption and calls save', async (t) => {
-  sandbox.stub(activityHelper, 'getReportbackTextFromReq')
-    .returns(mockMessageText);
+// saveDraftQuantityFromReq
+test('saveDraftQuantityFromReq sets req.draftSubmission.quantity and calls save', async (t) => {
+  const quantity = '240';
+  sandbox.stub(helpers.request, 'getMessageText')
+    .returns(quantity);
   t.context.req.draftSubmission = mockDraft;
 
-  await activityHelper.saveDraftCaptionFromReq(t.context.req);
-  t.context.req.draftSubmission.caption.should.equal(mockMessageText);
+  await activityHelper.saveDraftQuantityFromReq(t.context.req);
+  t.context.req.draftSubmission.quantity.should.equal(Number(quantity));
   mockDraft.save.should.have.been.called;
 });
 

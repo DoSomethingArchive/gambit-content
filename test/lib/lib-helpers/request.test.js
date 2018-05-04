@@ -96,6 +96,21 @@ test('isTextPost returns whether req.postType is text', (t) => {
   t.falsy(requestHelper.isTextPost(t.context.req));
 });
 
+// isValidReportbackQuantity
+test('isValidReportbackQuantity returns true if incoming_message is positive integer', (t) => {
+  t.context.req.incoming_message = '33';
+  sandbox.stub(helpers.reportback, 'isValidQuantity')
+    .returns(true);
+  t.truthy(requestHelper.isValidReportbackQuantity(t.context.req));
+});
+
+test('isValidReportbackQuantity returns false is incoming_message is not positive integer', (t) => {
+  t.context.req.incoming_message = 'text';
+  sandbox.stub(helpers.reportback, 'isValidQuantity')
+    .returns(false);
+  t.falsy(requestHelper.isValidReportbackQuantity(t.context.req));
+});
+
 // isValidReportbackText
 test('isValidReportbackText returns true if incoming_message is valid text', (t) => {
   t.context.req.incoming_message = 'text';
