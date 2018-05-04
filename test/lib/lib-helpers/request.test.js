@@ -47,6 +47,14 @@ test('getMessageText returns req.incoming_message property', (t) => {
   result.should.equal(messageText);
 });
 
+// isBroadcastResponse
+test('isBroadcastResponse returns whether req.broadcast_id is set', (t) => {
+  t.context.req.broadcast_id = stubs.getBroadcastId();
+  t.truthy(requestHelper.isBroadcastResponse(t.context.req));
+  t.context.req.broadcast_id = null;
+  t.falsy(requestHelper.isBroadcastResponse(t.context.req));
+});
+
 // isExternalPost
 test('isExternalPost returns whether req.postType is external', (t) => {
   t.context.req.postType = 'external';
@@ -178,4 +186,29 @@ test('setSignup should inject a signup property to req', (t) => {
   const signup = stubs.getSignupWithTotalQuantitySubmitted();
   requestHelper.setSignup(t.context.req, signup);
   t.context.req.signup.should.deep.equal(signup);
+});
+
+// shouldAskNextQuestion
+test('shouldAskNextQuestion returns true if request is keyword', (t) => {
+  sandbox.stub(requestHelper, 'isKeyword')
+    .returns(true);
+  sandbox.stub(requestHelper, 'isBroadcastResponse')
+    .returns(false);
+  t.truthy(requestHelper.shouldAskNextQuestion(t.context.req));
+});
+
+test('shouldAskNextQuestion returns true if request is broadcast response', (t) => {
+  sandbox.stub(requestHelper, 'isKeyword')
+    .returns(false);
+  sandbox.stub(requestHelper, 'isBroadcastResponse')
+    .returns(true);
+  t.truthy(requestHelper.shouldAskNextQuestion(t.context.req));
+});
+
+test('shouldAskNextQuestion returns false if request is not keyword or broadcast response', (t) => {
+  sandbox.stub(requestHelper, 'isKeyword')
+    .returns(false);
+  sandbox.stub(requestHelper, 'isBroadcastResponse')
+    .returns(false);
+  t.falsy(requestHelper.shouldAskNextQuestion(t.context.req));
 });
