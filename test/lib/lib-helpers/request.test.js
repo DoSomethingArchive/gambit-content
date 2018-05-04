@@ -135,6 +135,14 @@ test('hasDraftWithPhoto returns whether the draft has a photo set', (t) => {
   t.falsy(requestHelper.hasDraftWithPhoto(t.context.req));
 });
 
+// hasDraftWithQuantity
+test('hasDraftWithQuantity returns whether the draft has a quantity set', (t) => {
+  t.context.req.draftSubmission = stubs.getDraft();
+  t.truthy(requestHelper.hasDraftWithQuantity(t.context.req));
+  t.context.req.draftSubmission = {};
+  t.falsy(requestHelper.hasDraftWithQuantity(t.context.req));
+});
+
 // hasSubmittedPhotoPost
 test('hasSubmittedPhotoPost returns whether the signup total quantity submitted exists', (t) => {
   t.context.req.signup = stubs.getSignupWithTotalQuantitySubmitted();
