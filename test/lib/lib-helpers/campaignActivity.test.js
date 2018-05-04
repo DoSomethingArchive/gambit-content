@@ -118,6 +118,18 @@ test('getCreateTextPostPayloadFromReq returns an object', (t) => {
   result.text.should.equal(mockMessageText);
 });
 
+// saveDraftPhotoFromReq
+test('saveDraftPhotoFromReq sets req.draftSubmission.why_participated and calls save', async (t) => {
+  const photoUrl = mockDraft.photo;
+  sandbox.stub(helpers.request, 'getMessagePhotoUrl')
+    .returns(photoUrl);
+  t.context.req.draftSubmission = mockDraft;
+
+  await activityHelper.saveDraftPhotoFromReq(t.context.req);
+  t.context.req.draftSubmission.photo.should.equal(photoUrl);
+  mockDraft.save.should.have.been.called;
+});
+
 // saveDraftCaptionFromReq
 test('saveDraftCaptionFromReq sets req.draftSubmission.caption and calls save', async (t) => {
   sandbox.stub(activityHelper, 'getReportbackTextFromReq')

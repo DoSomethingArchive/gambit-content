@@ -31,6 +31,22 @@ test.afterEach((t) => {
   t.context = {};
 });
 
+// getMessagePhotoUrl
+test('getMessagePhotoUrl returns req.incoming_image_url property', (t) => {
+  const photoUrl = stubs.getPhotoUrl();
+  t.context.req.incoming_image_url = photoUrl;
+  const result = requestHelper.getMessagePhotoUrl(t.context.req);
+  result.should.equal(photoUrl);
+});
+
+// getMessageText
+test('getMessageText returns req.incoming_message property', (t) => {
+  const messageText = stubs.getRandomString();
+  t.context.req.incoming_message = messageText;
+  const result = requestHelper.getMessageText(t.context.req);
+  result.should.equal(messageText);
+});
+
 // isExternalPost
 test('isExternalPost returns whether req.postType is external', (t) => {
   t.context.req.postType = 'external';
@@ -109,6 +125,14 @@ test('hasDraftWithCaption returns whether the draft has a caption set', (t) => {
   t.truthy(requestHelper.hasDraftWithCaption(t.context.req));
   t.context.req.draftSubmission = {};
   t.falsy(requestHelper.hasDraftWithCaption(t.context.req));
+});
+
+// hasDraftWithPhoto
+test('hasDraftWithPhoto returns whether the draft has a photo set', (t) => {
+  t.context.req.draftSubmission = stubs.getDraft();
+  t.truthy(requestHelper.hasDraftWithPhoto(t.context.req));
+  t.context.req.draftSubmission = {};
+  t.falsy(requestHelper.hasDraftWithPhoto(t.context.req));
 });
 
 // hasSubmittedPhotoPost

@@ -62,6 +62,9 @@ module.exports = {
   getPlatform: function getPlatform() {
     return 'sms';
   },
+  getPhotoUrl: function getPhotoUrl() {
+    return 'https://www.wired.com/wp-content/uploads/2015/03/The-X-Files1-1024x768.jpg';
+  },
   getPost: function getPost() {
     return { id: this.getPostId() };
   },
@@ -109,7 +112,7 @@ module.exports = {
       created_at: 'ISODate("2017-08-01T14:30:20.651Z")',
       __v: 0,
       quantity: 2,
-      photo: 'https://www.wired.com/wp-content/uploads/2015/03/The-X-Files1-1024x768.jpg',
+      photo: this.getPhotoUrl(),
       caption: this.getRandomString(),
     };
   },
