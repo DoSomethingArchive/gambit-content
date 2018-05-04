@@ -107,14 +107,14 @@ test('isTextPost returns whether req.postType is text', (t) => {
 // isValidReportbackQuantity
 test('isValidReportbackQuantity returns true if incoming_message is positive integer', (t) => {
   t.context.req.incoming_message = '33';
-  sandbox.stub(helpers.reportback, 'isValidQuantity')
+  sandbox.stub(helpers.util, 'isValidQuantity')
     .returns(true);
   t.truthy(requestHelper.isValidReportbackQuantity(t.context.req));
 });
 
 test('isValidReportbackQuantity returns false is incoming_message is not positive integer', (t) => {
   t.context.req.incoming_message = 'text';
-  sandbox.stub(helpers.reportback, 'isValidQuantity')
+  sandbox.stub(helpers.util, 'isValidQuantity')
     .returns(false);
   t.falsy(requestHelper.isValidReportbackQuantity(t.context.req));
 });
@@ -122,14 +122,14 @@ test('isValidReportbackQuantity returns false is incoming_message is not positiv
 // isValidReportbackText
 test('isValidReportbackText returns true if incoming_message is valid text', (t) => {
   t.context.req.incoming_message = 'text';
-  sandbox.stub(helpers.reportback, 'isValidText')
+  sandbox.stub(helpers.util, 'isValidText')
     .returns(true);
   t.truthy(requestHelper.isValidReportbackText(t.context.req));
 });
 
 test('isValidReportbackText returns false is incoming_message is not valid text', (t) => {
   t.context.req.incoming_message = 'text';
-  sandbox.stub(helpers.reportback, 'isValidText')
+  sandbox.stub(helpers.util, 'isValidText')
     .returns(false);
   t.falsy(requestHelper.isValidReportbackText(t.context.req));
 });

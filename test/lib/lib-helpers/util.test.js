@@ -14,10 +14,10 @@ const sinon = require('sinon');
 const stubs = require('../../utils/stubs');
 
 // Config
-const config = require('../../../config/lib/helpers/reportback');
+const config = require('../../../config/lib/helpers/util');
 
 // Module to test
-const reportbackHelper = require('../../../lib/helpers/reportback');
+const reportbackHelper = require('../../../lib/helpers/util');
 
 // setup "x.should.y" assertion style
 chai.should();

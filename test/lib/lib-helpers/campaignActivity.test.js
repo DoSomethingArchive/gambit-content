@@ -97,13 +97,13 @@ test('getReportbackTextFromReq returns a string', (t) => {
   const mockResult = 'Winter is coming';
   sandbox.stub(helpers.request, 'getMessageText')
     .returns(mockMessageText);
-  sandbox.stub(helpers.reportback, 'trimText')
+  sandbox.stub(helpers.util, 'trimText')
     .returns(mockResult);
 
   const result = activityHelper.getReportbackTextFromReq(t.context.req);
   result.should.equal(mockResult);
   helpers.request.getMessageText.should.have.been.calledWith(t.context.req);
-  helpers.reportback.trimText.should.have.been.calledWith(mockMessageText);
+  helpers.util.trimText.should.have.been.calledWith(mockMessageText);
 });
 
 // getCreateTextPostPayloadFromReq
