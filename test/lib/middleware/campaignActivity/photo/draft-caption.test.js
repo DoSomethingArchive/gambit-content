@@ -162,4 +162,3 @@ test('draftCaption returns sendErrorResponse if saveDraftCaptionFromReq fails', 
   helpers.campaignActivity.saveDraftCaptionFromReq.should.have.been.called;
   helpers.sendErrorResponse.should.have.been.called;
 });
-
