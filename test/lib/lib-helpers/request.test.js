@@ -31,6 +31,30 @@ test.afterEach((t) => {
   t.context = {};
 });
 
+// getMessagePhotoUrl
+test('getMessagePhotoUrl returns req.incoming_image_url property', (t) => {
+  const photoUrl = stubs.getPhotoUrl();
+  t.context.req.incoming_image_url = photoUrl;
+  const result = requestHelper.getMessagePhotoUrl(t.context.req);
+  result.should.equal(photoUrl);
+});
+
+// getMessageText
+test('getMessageText returns req.incoming_message property', (t) => {
+  const messageText = stubs.getRandomString();
+  t.context.req.incoming_message = messageText;
+  const result = requestHelper.getMessageText(t.context.req);
+  result.should.equal(messageText);
+});
+
+// isBroadcastResponse
+test('isBroadcastResponse returns whether req.broadcast_id is set', (t) => {
+  t.context.req.broadcast_id = stubs.getBroadcastId();
+  t.truthy(requestHelper.isBroadcastResponse(t.context.req));
+  t.context.req.broadcast_id = null;
+  t.falsy(requestHelper.isBroadcastResponse(t.context.req));
+});
+
 // isExternalPost
 test('isExternalPost returns whether req.postType is external', (t) => {
   t.context.req.postType = 'external';
@@ -48,26 +72,26 @@ test('isKeyword returns whether req.keyword is set', (t) => {
 });
 
 // isStartCommand
-test('isStartCommand returns false if messageText undefined', (t) => {
-  sandbox.stub(requestHelper, 'messageText')
+test('isStartCommand returns false if getMessageText undefined', (t) => {
+  sandbox.stub(requestHelper, 'getMessageText')
     .returns(null);
   t.falsy(requestHelper.isStartCommand(t.context.req));
 });
 
-test('isStartCommand returns true if messageText is Start Command with leading and trailing whitespace', (t) => {
-  sandbox.stub(requestHelper, 'messageText')
+test('isStartCommand returns true if getMessageText is Start Command with leading and trailing whitespace', (t) => {
+  sandbox.stub(requestHelper, 'getMessageText')
     .returns(` ${startCommand} `);
   t.truthy(requestHelper.isStartCommand(t.context.req));
 });
 
-test('isStartCommand returns true if messageText is camelcase Start Command', (t) => {
-  sandbox.stub(requestHelper, 'messageText')
+test('isStartCommand returns true if getMessageText is camelcase Start Command', (t) => {
+  sandbox.stub(requestHelper, 'getMessageText')
     .returns(camelCase(startCommand));
   t.truthy(requestHelper.isStartCommand(t.context.req));
 });
 
-test('isStartCommand returns true if messageText is lowercase Start Command', (t) => {
-  sandbox.stub(requestHelper, 'messageText')
+test('isStartCommand returns true if getMessageText is lowercase Start Command', (t) => {
+  sandbox.stub(requestHelper, 'getMessageText')
     .returns(startCommand.toLowerCase());
   t.truthy(requestHelper.isStartCommand(t.context.req));
 });
@@ -80,17 +104,32 @@ test('isTextPost returns whether req.postType is text', (t) => {
   t.falsy(requestHelper.isTextPost(t.context.req));
 });
 
+// isValidReportbackQuantity
+test('isValidReportbackQuantity returns true if incoming_message is positive integer', (t) => {
+  t.context.req.incoming_message = '33';
+  sandbox.stub(helpers.util, 'isValidQuantity')
+    .returns(true);
+  t.truthy(requestHelper.isValidReportbackQuantity(t.context.req));
+});
+
+test('isValidReportbackQuantity returns false is incoming_message is not positive integer', (t) => {
+  t.context.req.incoming_message = 'text';
+  sandbox.stub(helpers.util, 'isValidQuantity')
+    .returns(false);
+  t.falsy(requestHelper.isValidReportbackQuantity(t.context.req));
+});
+
 // isValidReportbackText
 test('isValidReportbackText returns true if incoming_message is valid text', (t) => {
   t.context.req.incoming_message = 'text';
-  sandbox.stub(helpers.reportback, 'isValidText')
+  sandbox.stub(helpers.util, 'isValidText')
     .returns(true);
   t.truthy(requestHelper.isValidReportbackText(t.context.req));
 });
 
 test('isValidReportbackText returns false is incoming_message is not valid text', (t) => {
   t.context.req.incoming_message = 'text';
-  sandbox.stub(helpers.reportback, 'isValidText')
+  sandbox.stub(helpers.util, 'isValidText')
     .returns(false);
   t.falsy(requestHelper.isValidReportbackText(t.context.req));
 });
@@ -109,6 +148,22 @@ test('hasDraftWithCaption returns whether the draft has a caption set', (t) => {
   t.truthy(requestHelper.hasDraftWithCaption(t.context.req));
   t.context.req.draftSubmission = {};
   t.falsy(requestHelper.hasDraftWithCaption(t.context.req));
+});
+
+// hasDraftWithPhoto
+test('hasDraftWithPhoto returns whether the draft has a photo set', (t) => {
+  t.context.req.draftSubmission = stubs.getDraft();
+  t.truthy(requestHelper.hasDraftWithPhoto(t.context.req));
+  t.context.req.draftSubmission = {};
+  t.falsy(requestHelper.hasDraftWithPhoto(t.context.req));
+});
+
+// hasDraftWithQuantity
+test('hasDraftWithQuantity returns whether the draft has a quantity set', (t) => {
+  t.context.req.draftSubmission = stubs.getDraft();
+  t.truthy(requestHelper.hasDraftWithQuantity(t.context.req));
+  t.context.req.draftSubmission = {};
+  t.falsy(requestHelper.hasDraftWithQuantity(t.context.req));
 });
 
 // hasSubmittedPhotoPost
@@ -131,4 +186,29 @@ test('setSignup should inject a signup property to req', (t) => {
   const signup = stubs.getSignupWithTotalQuantitySubmitted();
   requestHelper.setSignup(t.context.req, signup);
   t.context.req.signup.should.deep.equal(signup);
+});
+
+// shouldAskNextQuestion
+test('shouldAskNextQuestion returns true if request is keyword', (t) => {
+  sandbox.stub(requestHelper, 'isKeyword')
+    .returns(true);
+  sandbox.stub(requestHelper, 'isBroadcastResponse')
+    .returns(false);
+  t.truthy(requestHelper.shouldAskNextQuestion(t.context.req));
+});
+
+test('shouldAskNextQuestion returns true if request is broadcast response', (t) => {
+  sandbox.stub(requestHelper, 'isKeyword')
+    .returns(false);
+  sandbox.stub(requestHelper, 'isBroadcastResponse')
+    .returns(true);
+  t.truthy(requestHelper.shouldAskNextQuestion(t.context.req));
+});
+
+test('shouldAskNextQuestion returns false if request is not keyword or broadcast response', (t) => {
+  sandbox.stub(requestHelper, 'isKeyword')
+    .returns(false);
+  sandbox.stub(requestHelper, 'isBroadcastResponse')
+    .returns(false);
+  t.falsy(requestHelper.shouldAskNextQuestion(t.context.req));
 });

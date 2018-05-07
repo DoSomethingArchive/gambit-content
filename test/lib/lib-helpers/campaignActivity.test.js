@@ -95,15 +95,15 @@ test('getCreatePhotoPostPayloadFromReq returns an object', (t) => {
 // getReportbackTextFromReq
 test('getReportbackTextFromReq returns a string', (t) => {
   const mockResult = 'Winter is coming';
-  sandbox.stub(helpers.request, 'messageText')
+  sandbox.stub(helpers.request, 'getMessageText')
     .returns(mockMessageText);
-  sandbox.stub(helpers.reportback, 'trimText')
+  sandbox.stub(helpers.util, 'trimText')
     .returns(mockResult);
 
   const result = activityHelper.getReportbackTextFromReq(t.context.req);
   result.should.equal(mockResult);
-  helpers.request.messageText.should.have.been.calledWith(t.context.req);
-  helpers.reportback.trimText.should.have.been.calledWith(mockMessageText);
+  helpers.request.getMessageText.should.have.been.calledWith(t.context.req);
+  helpers.util.trimText.should.have.been.calledWith(mockMessageText);
 });
 
 // getCreateTextPostPayloadFromReq
@@ -126,6 +126,30 @@ test('saveDraftCaptionFromReq sets req.draftSubmission.caption and calls save', 
 
   await activityHelper.saveDraftCaptionFromReq(t.context.req);
   t.context.req.draftSubmission.caption.should.equal(mockMessageText);
+  mockDraft.save.should.have.been.called;
+});
+
+// saveDraftPhotoFromReq
+test('saveDraftPhotoFromReq sets req.draftSubmission.why_participated and calls save', async (t) => {
+  const photoUrl = mockDraft.photo;
+  sandbox.stub(helpers.request, 'getMessagePhotoUrl')
+    .returns(photoUrl);
+  t.context.req.draftSubmission = mockDraft;
+
+  await activityHelper.saveDraftPhotoFromReq(t.context.req);
+  t.context.req.draftSubmission.photo.should.equal(photoUrl);
+  mockDraft.save.should.have.been.called;
+});
+
+// saveDraftQuantityFromReq
+test('saveDraftQuantityFromReq sets req.draftSubmission.quantity and calls save', async (t) => {
+  const quantity = '240';
+  sandbox.stub(helpers.request, 'getMessageText')
+    .returns(quantity);
+  t.context.req.draftSubmission = mockDraft;
+
+  await activityHelper.saveDraftQuantityFromReq(t.context.req);
+  t.context.req.draftSubmission.quantity.should.equal(Number(quantity));
   mockDraft.save.should.have.been.called;
 });
 
