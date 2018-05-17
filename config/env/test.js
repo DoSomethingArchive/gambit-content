@@ -1,7 +1,5 @@
 'use strict';
 
-require('dotenv').config();
-
 const dbName = 'ds-mdata-responder-test';
 let dbUri = `mongodb://localhost/${dbName}`;
 

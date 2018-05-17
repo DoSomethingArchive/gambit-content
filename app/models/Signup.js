@@ -52,8 +52,7 @@ const signupSchema = new mongoose.Schema({
 function parseActivityData(activityData) {
   const data = activityData[0];
   const result = {
-    // TODO: remove when we fully switch to Rogue V3
-    id: data.id || data.signup_id,
+    id: data.id,
     user: data.northstar_id,
     campaign: data.campaign_id,
     total_quantity_submitted: data.quantity,
@@ -76,7 +75,7 @@ signupSchema.statics.lookupCurrentSignupForReq = function (req) {
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.lookupCurrent(${userId}, ${campaignRunId})`);
 
-    return rogue.fetchActivityForUserIdAndCampaignRunId(userId, campaignRunId)
+    return rogue.getSignupsByUserIdAndCampaignRunId(userId, campaignRunId)
       .then((res) => {
         if (res.data.length < 1) {
           return resolve(false);
@@ -115,8 +114,7 @@ signupSchema.statics.createSignupForReq = function (req) {
   return new Promise((resolve, reject) => {
     helpers.campaignActivity.createSignupFromReq(req)
       .then((signup) => {
-        // TODO: update to signup.data.id when we fully switch to Rogue V3
-        const signupId = signup.data.id || signup.data.signup_id;
+        const signupId = signup.data.id;
         if (keyword) {
           stathat.postStat(`signup: ${keyword}`);
         }
