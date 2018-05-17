@@ -75,7 +75,7 @@ signupSchema.statics.lookupCurrentSignupForReq = function (req) {
   return new Promise((resolve, reject) => {
     logger.debug(`Signup.lookupCurrent(${userId}, ${campaignRunId})`);
 
-    return rogue.fetchActivityForUserIdAndCampaignRunId(userId, campaignRunId)
+    return rogue.getSignupsByUserIdAndCampaignRunId(userId, campaignRunId)
       .then((res) => {
         if (res.data.length < 1) {
           return resolve(false);
