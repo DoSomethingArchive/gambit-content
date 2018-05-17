@@ -82,8 +82,8 @@
     "eslint-plugin-ava": "^4.5.1",
     "nock": "^9.2.5",
     "node-mocks-http": "^1.6.1",
-    "nyc": "^11.7.1",
-    "rewire": "^3.0.2",
+    "nyc": "^11.8.0",
+    "rewire": "^4.0.1",
     "sinon": "^4.5.0",
     "sinon-chai": "^3.0.0",
     "supertest": "^3.0.0"
