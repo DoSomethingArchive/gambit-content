@@ -41,6 +41,7 @@
     "npm": "5.7.1"
   },
   "dependencies": {
+    "@dosomething/gateway": "^1.4.0",
     "@risingstack/v8-profiler": "^5.7.11",
     "async": "^2.6.0",
     "aws-sdk": "2.36.0",
@@ -53,7 +54,6 @@
     "connect-timeout": "^1.8.0",
     "contentful": "^3.8.0",
     "date-fns": "^1.29.0",
-    "dotenv": "^5.0.1",
     "express": "^4.10.2",
     "file-exists": "^4.0.0",
     "html-entities": "^1.1.1",
@@ -77,12 +77,13 @@
     "chai": "^4.1.2",
     "chance": "^1.0.16",
     "codecov": "^3.0.1",
+    "dotenv": "^5.0.1",
     "eslint": "^4.19.1",
     "eslint-plugin-ava": "^4.5.1",
     "nock": "^9.2.5",
     "node-mocks-http": "^1.6.1",
-    "nyc": "^11.7.1",
-    "rewire": "^3.0.2",
+    "nyc": "^11.8.0",
+    "rewire": "^4.0.1",
     "sinon": "^4.5.0",
     "sinon-chai": "^3.0.0",
     "supertest": "^3.0.0"

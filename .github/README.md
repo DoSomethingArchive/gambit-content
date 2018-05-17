@@ -4,7 +4,7 @@
 
 Gambit Campaigns is a [Gambit Conversations](https://github.com/dosomething/gambit-conversations) microservice for:
 
-* Storing User Campaign activity from an inbound message, and posting it to [Rogue](https://github.com/dosomething/gambit-campaigns/wiki/rogue).
+* Storing User Campaign activity from an inbound message, and posting it to [Rogue](https://github.com/dosomething/gambit-campaigns/wiki/rogue) via [Gateway-js](https://github.com/DoSomething/gateway-js).
 
 * Querying Contentful for a list of active Keywords and Campaigns available running on Gambit.
 
