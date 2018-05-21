@@ -26,7 +26,7 @@ chai.use(sinonChai);
 const sandbox = sinon.sandbox.create();
 
 test.beforeEach(() => {
-  sandbox.stub(contentful, 'parseContentTypeFromContentfulEntry')
+  sandbox.stub(contentful, 'getContentTypeFromContentfulEntry')
     .returns(botConfigContentType);
 });
 
