@@ -4,6 +4,7 @@
 const campaignsIndexRoute = require('./campaigns/index');
 const campaignsSingleRoute = require('./campaigns/single');
 const campaignActivityRoute = require('./campaignActivity');
+const defaultTopicTriggersRoute = require('./defaultTopicTriggers');
 const topicsSingleRoute = require('./topics/single');
 const statusRoute = require('./status');
 
@@ -40,6 +41,8 @@ module.exports = function init(app) {
   // TODO: Remove this once we make the switch in Conversations.
   app.use('/v1/receive-message', campaignActivityRoute);
 
-  // Provides keywords and templates for a single topic.
+  // Provides data for a single topic.
   app.use('/v1/topics/:topicId', topicsSingleRoute);
+  // Provides list of defaultTopicTriggers
+  app.use('/v1/defaultTopicTriggers', defaultTopicTriggersRoute);
 };
