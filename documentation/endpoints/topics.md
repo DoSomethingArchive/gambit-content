@@ -35,7 +35,8 @@ curl http://localhost:5000/v1/topics/5MSUDKlVp6kqkUMw8gW004 \
     "campaign": {
       "id": 7059,
       "title": "Lose Your V-Card",
-      "tagline": "Help your friends register to vote!"
+      "tagline": "Help your friends register to vote!",
+      "campaignRunId": 8105
     },
     "templates": {
       "startExternalPost": {
