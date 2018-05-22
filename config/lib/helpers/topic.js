@@ -21,7 +21,7 @@ const photoPostDefaultText = {
 module.exports = {
   defaultPostType: 'photo',
   /**
-   * Maps each content type that's available as a postConfig to the Post type it should create.
+   * Maps each content type that's available as a topic to the Post type it should create.
    *
    * { contentTypeName: 'postType' }
    */
@@ -148,4 +148,8 @@ module.exports = {
       },
     },
   },
+  topicContentTypes: [
+    'externalPostConfig',
+    'textPostConfig',
+  ],
 };
