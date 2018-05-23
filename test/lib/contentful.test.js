@@ -168,8 +168,14 @@ test('parsePostConfigContentTypeFromBotConfig returns falsy if botConfig does no
   t.falsy(result);
 });
 
-// parseContentTypeFromEntry
+// getContentfulIdFromContentfulEntry
+test('getContentfulIdFromContentfulEntry returns contentful entry id of given entry', () => {
+  const result = contentful.getContentfulIdFromContentfulEntry(botConfigStub);
+  result.should.equal(botConfigStub.sys.id);
+});
+
+// getContentTypeFromContentfulEntry
 test('getContentTypeFromContentfulEntry returns content type name of given entry', () => {
   const result = contentful.getContentTypeFromContentfulEntry(botConfigStub);
-  result.should.equal('campaign');
+  result.should.equal(botConfigStub.sys.contentType.sys.id);
 });
