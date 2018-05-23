@@ -15,9 +15,8 @@ const campaignId = stubs.getCampaignId();
 const campaignConfig = stubs.contentful.getEntries('default-campaign').items[0];
 const campaignConfigContentfulId = campaignConfig.sys.id;
 const campaignTemplates = config.templatesByContentType.campaign;
-const topicContentType = 'campaign';
-const postConfigContentType = 'textPostConfig';
-const postType = config.postTypesByContentType[postConfigContentType];
+const campaignConfigContentType = 'campaign';
+const topicContentType = 'textPostConfig';
 const templateName = stubs.getTemplateName();
 const templateText = stubs.getRandomString();
 
@@ -31,7 +30,7 @@ const sandbox = sinon.sandbox.create();
 
 test.beforeEach(() => {
   sandbox.stub(contentful, 'getContentTypeFromContentfulEntry')
-    .returns(topicContentType);
+    .returns(campaignConfigContentType);
 });
 
 test.afterEach(() => {
@@ -98,21 +97,8 @@ test('getFieldValueFromContentfulEntryAndTemplateName returns the entry field va
   result.should.deep.equal(campaignConfig.fields.memberSupportMessage);
 });
 
-// getTemplatesFromBotConfig
-test('getTemplatesFromBotConfig returns an object with template names as properties', () => {
-  const templateData = { raw: templateText };
-  sandbox.stub(topicHelper, 'getTemplateFromContentfulEntryAndTemplateName')
-    .returns(templateData);
-  const result = topicHelper.getTemplatesFromBotConfig(campaignConfig);
-  Object.keys(campaignTemplates).forEach((name) => {
-    result[name].should.deep.equal(templateData);
-  });
-});
-
-// getPostTypeFromBotConfig
-test('getPostTypeFromBotConfig returns the topic field value for templateName arg', () => {
-  sandbox.stub(contentful, 'parsePostConfigContentTypeFromBotConfig')
-    .returns(postConfigContentType);
-  const result = topicHelper.getPostTypeFromBotConfig(campaignConfig);
-  result.should.equal(postType);
+// getPostTypeFromContentType
+test('getPostTypeFromContentType returns the topic field value for templateName arg', () => {
+  const result = topicHelper.getPostTypeFromContentType(topicContentType);
+  result.should.equal(config.postTypesByContentType[topicContentType]);
 });

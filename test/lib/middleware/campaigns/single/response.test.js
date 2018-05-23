@@ -54,12 +54,13 @@ test.afterEach((t) => {
   t.context = {};
 });
 
-test('sendResponse does contain data.topics when req.topics undefined', (t) => {
+test('sendResponse sends null botConfig property when req.topics undefined', (t) => {
   const middleware = sendResponse();
-
+  t.context.req.topics = [];
   middleware(t.context.req, t.context.res);
-  t.falsy(t.context.req.campaign.botConfig);
-  t.context.req.campaign.should.not.have.property('topics');
+
+  t.falsy(t.context.req.campaign.botConfig.postType);
+  t.falsy(t.context.req.campaign.botConfig.templates);
   t.context.res.send.should.have.been.called;
 });
 
@@ -76,7 +77,6 @@ test('sendResponse injects a topics array if req.topics exists', (t) => {
 
 test('sendResponse calls sendErrorResponse if an error is caught', (t) => {
   const middleware = sendResponse();
-  t.context.req.topics = [];
   middleware(t.context.req, t.context.res);
   helpers.sendErrorResponse.should.have.been.called;
 });
