@@ -18,7 +18,7 @@ chai.should();
 chai.use(sinonChai);
 
 // module to be tested
-const getBotConfig = require('../../../../../lib/middleware/campaigns/single/bot-config-get');
+const getTopics = require('../../../../../lib/middleware/campaigns/single/topics-get');
 
 const sandbox = sinon.sandbox.create();
 
@@ -37,28 +37,30 @@ test.afterEach((t) => {
   t.context = {};
 });
 
-test('getBotConfig should inject a botConfig property with fetchByCampaignId result', async (t) => {
+test('getTopics should inject a botConfig property with fetchByCampaignId result', async (t) => {
   const next = sinon.stub();
-  const middleware = getBotConfig();
-  sandbox.stub(helpers.botConfig, 'fetchByCampaignId')
+  const middleware = getTopics();
+  sandbox.stub(helpers.topic, 'fetchTopicsByCampaignId')
     .returns(Promise.resolve(botConfigStub));
 
   // test
   await middleware(t.context.req, t.context.res, next);
-  t.context.req.botConfig.should.deep.equal(botConfigStub);
+  helpers.topic.fetchTopicsByCampaignId.should.have.been.calledWith(t.context.req.campaignId);
+  t.context.req.topics.should.deep.equal(botConfigStub);
   next.should.have.been.called;
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
-test('getBotConfig should sendErrorResponse if fetchByCampaignId fails', async (t) => {
+test('getTopics should sendErrorResponse if fetchTopicsByCampaignId fails', async (t) => {
   const next = sinon.stub();
-  const middleware = getBotConfig();
+  const middleware = getTopics();
   const mockError = { message: 'Epic fail' };
-  sandbox.stub(helpers.botConfig, 'fetchByCampaignId')
+  sandbox.stub(helpers.topic, 'fetchTopicsByCampaignId')
     .returns(Promise.reject(mockError));
 
   // test
   await middleware(t.context.req, t.context.res, next);
+  helpers.topic.fetchTopicsByCampaignId.should.have.been.calledWith(t.context.req.campaignId);
   next.should.not.have.been.called;
   helpers.sendErrorResponse.should.have.been.calledWith(t.context.res, mockError);
 });

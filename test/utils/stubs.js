@@ -77,6 +77,9 @@ module.exports = {
   getPostType: function getPostType() {
     return 'text';
   },
+  getRandomMessageText: function getRandomMessageText() {
+    return chance.sentence();
+  },
   getTemplateName: function getTemplateName() {
     return 'memberSupport';
   },
