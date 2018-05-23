@@ -1,5 +1,7 @@
 'use strict';
 
+require('dotenv').config();
+
 const test = require('ava');
 const chai = require('chai');
 const sinonChai = require('sinon-chai');
@@ -9,7 +11,9 @@ const contentful = require('../../../lib/contentful');
 const stubs = require('../../utils/stubs');
 const config = require('../../../config/lib/helpers/topic');
 
-const topic = stubs.contentful.getEntries('default-campaign').items[0];
+const campaignId = stubs.getCampaignId();
+const campaignConfig = stubs.contentful.getEntries('default-campaign').items[0];
+const campaignConfigContentfulId = campaignConfig.sys.id;
 const campaignTemplates = config.templatesByContentType.campaign;
 const topicContentType = 'campaign';
 const postConfigContentType = 'textPostConfig';
@@ -34,20 +38,27 @@ test.afterEach(() => {
   sandbox.restore();
 });
 
-// fetchByCampaignId
-test('fetchByCampaignId returns contentful.fetchBotConfigByCampaignId', async () => {
-  sandbox.stub(contentful, 'fetchBotConfigByCampaignId')
-    .returns(topic);
+// fetchTopicsByCampaignId
+test('fetchTopicsByCampaignId returns contentful.fetchBotConfigByCampaignId', async () => {
+  const firstParseTopicResult = { id: '132' };
+  sandbox.stub(contentful, 'fetchCampaignConfigByCampaignId')
+    .returns(Promise.resolve(campaignConfig));
+  sandbox.stub(contentful, 'getContentfulIdFromContentfulEntry')
+    .returns(campaignConfigContentfulId);
+  sandbox.stub(contentful, 'fetchByContentTypeAndCampaignReferenceContentfulId')
+    .returns(Promise.resolve([{}]));
+  sandbox.stub(topicHelper, 'parseTopicFromContentfulEntry')
+    .returns(Promise.resolve(firstParseTopicResult));
 
-  const result = await topicHelper.fetchByCampaignId(stubs.getCampaignId());
-  contentful.fetchBotConfigByCampaignId.should.have.been.called;
-  result.should.equal(topic);
+  const result = await topicHelper.fetchTopicsByCampaignId(campaignId);
+  contentful.fetchCampaignConfigByCampaignId.should.have.been.calledWith(campaignId);
+  result.should.deep.equal([firstParseTopicResult]);
 });
 
 // getDefaultTextForBotConfigTemplateName
 test('getDefaultValueFromContentfulEntryAndTemplateName returns default for templateName', () => {
   const result = topicHelper
-    .getDefaultValueFromContentfulEntryAndTemplateName(topic, templateName);
+    .getDefaultValueFromContentfulEntryAndTemplateName(campaignConfig, templateName);
   result.should.equal(campaignTemplates[templateName].default);
 });
 
@@ -59,7 +70,7 @@ test('getTemplateFromContentfulEntryAndTemplateName returns default text when no
     .returns(null);
 
   const result = topicHelper
-    .getTemplateFromContentfulEntryAndTemplateName(topic, templateName);
+    .getTemplateFromContentfulEntryAndTemplateName(campaignConfig, templateName);
   topicHelper.getDefaultValueFromContentfulEntryAndTemplateName.should.have.been.called;
   topicHelper.getFieldValueFromContentfulEntryAndTemplateName.should.have.been.called;
   result.override.should.equal(false);
@@ -73,7 +84,7 @@ test('getTemplateFromContentfulEntryAndTemplateName returns template text when t
     .returns(templateText);
 
   const result = topicHelper
-    .getTemplateFromContentfulEntryAndTemplateName(topic, templateName);
+    .getTemplateFromContentfulEntryAndTemplateName(campaignConfig, templateName);
   topicHelper.getDefaultValueFromContentfulEntryAndTemplateName.should.not.have.been.called;
   topicHelper.getFieldValueFromContentfulEntryAndTemplateName.should.have.been.called;
   result.override.should.equal(true);
@@ -83,8 +94,8 @@ test('getTemplateFromContentfulEntryAndTemplateName returns template text when t
 // getFieldValueFromContentfulEntryAndTemplateName
 test('getFieldValueFromContentfulEntryAndTemplateName returns the entry field value for templateName', () => {
   const result = topicHelper
-    .getFieldValueFromContentfulEntryAndTemplateName(topic, templateName);
-  result.should.deep.equal(topic.fields.memberSupportMessage);
+    .getFieldValueFromContentfulEntryAndTemplateName(campaignConfig, templateName);
+  result.should.deep.equal(campaignConfig.fields.memberSupportMessage);
 });
 
 // getTemplatesFromBotConfig
@@ -92,7 +103,7 @@ test('getTemplatesFromBotConfig returns an object with template names as propert
   const templateData = { raw: templateText };
   sandbox.stub(topicHelper, 'getTemplateFromContentfulEntryAndTemplateName')
     .returns(templateData);
-  const result = topicHelper.getTemplatesFromBotConfig(topic);
+  const result = topicHelper.getTemplatesFromBotConfig(campaignConfig);
   Object.keys(campaignTemplates).forEach((name) => {
     result[name].should.deep.equal(templateData);
   });
@@ -102,6 +113,6 @@ test('getTemplatesFromBotConfig returns an object with template names as propert
 test('getPostTypeFromBotConfig returns the topic field value for templateName arg', () => {
   sandbox.stub(contentful, 'parsePostConfigContentTypeFromBotConfig')
     .returns(postConfigContentType);
-  const result = topicHelper.getPostTypeFromBotConfig(topic);
+  const result = topicHelper.getPostTypeFromBotConfig(campaignConfig);
   result.should.equal(postType);
 });
