@@ -13,7 +13,6 @@ const config = require('../../../config/lib/helpers/topic');
 
 const campaignId = stubs.getCampaignId();
 const campaignConfig = stubs.contentful.getEntries('default-campaign').items[0];
-const campaignConfigContentfulId = campaignConfig.sys.id;
 const campaignTemplates = config.templatesByContentType.campaign;
 const campaignConfigContentType = 'campaign';
 const topicContentType = 'textPostConfig';
@@ -37,21 +36,18 @@ test.afterEach(() => {
   sandbox.restore();
 });
 
-// fetchTopicsByCampaignId
-test('fetchTopicsByCampaignId returns contentful.fetchBotConfigByCampaignId', async () => {
-  const firstParseTopicResult = { id: '132' };
-  sandbox.stub(contentful, 'fetchCampaignConfigByCampaignId')
-    .returns(Promise.resolve(campaignConfig));
-  sandbox.stub(contentful, 'getContentfulIdFromContentfulEntry')
-    .returns(campaignConfigContentfulId);
-  sandbox.stub(contentful, 'fetchByContentTypeAndCampaignReferenceContentfulId')
-    .returns(Promise.resolve([{}]));
-  sandbox.stub(topicHelper, 'parseTopicFromContentfulEntry')
-    .returns(Promise.resolve(firstParseTopicResult));
+// getByCampaignId
+test('getByCampaignId returns filtered results of getAll', async () => {
+  const getTopicsResult = [{ id: '132' }];
+  sandbox.stub(topicHelper, 'getAll')
+    .returns(Promise.resolve(getTopicsResult));
+  sandbox.stub(getTopicsResult, 'filter')
+    .returns(getTopicsResult);
 
-  const result = await topicHelper.fetchTopicsByCampaignId(campaignId);
-  contentful.fetchCampaignConfigByCampaignId.should.have.been.calledWith(campaignId);
-  result.should.deep.equal([firstParseTopicResult]);
+  const result = await topicHelper.getByCampaignId(campaignId);
+  topicHelper.getAll.should.have.been.called;
+  getTopicsResult.filter.should.have.been.called;
+  result.should.deep.equal(getTopicsResult);
 });
 
 // getDefaultTextForBotConfigTemplateName

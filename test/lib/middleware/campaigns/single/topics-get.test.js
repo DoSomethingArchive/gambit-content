@@ -37,30 +37,30 @@ test.afterEach((t) => {
   t.context = {};
 });
 
-test('getTopics should inject a botConfig property with fetchByCampaignId result', async (t) => {
+test('getTopics should inject a botConfig property set to getByCampaignId result', async (t) => {
   const next = sinon.stub();
   const middleware = getTopics();
-  sandbox.stub(helpers.topic, 'fetchTopicsByCampaignId')
+  sandbox.stub(helpers.topic, 'getByCampaignId')
     .returns(Promise.resolve(botConfigStub));
 
   // test
   await middleware(t.context.req, t.context.res, next);
-  helpers.topic.fetchTopicsByCampaignId.should.have.been.calledWith(t.context.req.campaignId);
+  helpers.topic.getByCampaignId.should.have.been.calledWith(t.context.req.campaignId);
   t.context.req.topics.should.deep.equal(botConfigStub);
   next.should.have.been.called;
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
-test('getTopics should sendErrorResponse if fetchTopicsByCampaignId fails', async (t) => {
+test('getTopics should sendErrorResponse if getByCampaignId fails', async (t) => {
   const next = sinon.stub();
   const middleware = getTopics();
   const mockError = { message: 'Epic fail' };
-  sandbox.stub(helpers.topic, 'fetchTopicsByCampaignId')
+  sandbox.stub(helpers.topic, 'getByCampaignId')
     .returns(Promise.reject(mockError));
 
   // test
   await middleware(t.context.req, t.context.res, next);
-  helpers.topic.fetchTopicsByCampaignId.should.have.been.calledWith(t.context.req.campaignId);
+  helpers.topic.getByCampaignId.should.have.been.calledWith(t.context.req.campaignId);
   next.should.not.have.been.called;
   helpers.sendErrorResponse.should.have.been.calledWith(t.context.res, mockError);
 });
