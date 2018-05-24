@@ -59,9 +59,6 @@ module.exports = {
   getKeyword: function getKeyword() {
     return 'bookbot';
   },
-  getEnvironment: function getEnvironment() {
-    return process.env.NODE_ENV || 'thor';
-  },
   getPlatform: function getPlatform() {
     return 'sms';
   },

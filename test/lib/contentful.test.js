@@ -80,8 +80,8 @@ test('contentfulError should add the Contentful error prefix to the error object
   error.message.should.have.string(prefix);
 });
 
-// fetchSingleEntry
-test('fetchSingleEntry should only get one item from the entries returned by contentful', async () => {
+// fetchByContentfulId
+test('fetchByContentfulId should only get one item from the entries returned by contentful', async () => {
   // setup
   sandbox.spy(underscore, 'first');
 
@@ -91,13 +91,13 @@ test('fetchSingleEntry should only get one item from the entries returned by con
   });
 
   // test
-  const entry = await contentful.fetchSingleEntry();
+  const entry = await contentful.fetchByContentfulId();
   underscore.first.should.have.been.called;
   entry.should.be.an('object');
   entry.should.not.be.an('array');
 });
 
-test('fetchSingleEntry should reject with a contentfulError if unsuccessful', async () => {
+test('fetchByContentfulId should reject with a contentfulError if unsuccessful', async () => {
   // setup
   sandbox.spy(contentful, 'contentfulError');
   contentful.__set__('client', {
@@ -106,23 +106,11 @@ test('fetchSingleEntry should reject with a contentfulError if unsuccessful', as
 
   // test
   try {
-    await contentful.fetchSingleEntry();
+    await contentful.fetchByContentfulId();
   } catch (error) {
     error.status.should.be.equal(500);
   }
   contentful.contentfulError.should.have.been.called;
-});
-
-// fetchKeyword
-test('fetchKeyword should send contentful a query with content_type of keyword', async () => {
-  // setup
-  sandbox.stub(contentful, 'fetchSingleEntry').returns(keywordStub);
-  const keyword = stubs.getKeyword();
-  const query = contentful.getQueryBuilder().contentType('keyword').keyword(keyword).build();
-
-  // test
-  await contentful.fetchKeyword(keyword);
-  contentful.fetchSingleEntry.getCall(0).args[0].should.be.eql(query);
 });
 
 // fetchKeywords
@@ -131,8 +119,7 @@ test('fetchKeywords should send contentful a query with content_type of keyword 
   contentful.__set__('client', {
     getEntries: sinon.stub().returns(allKeywordsStub),
   });
-  const env = stubs.getEnvironment();
-  const query = contentful.getQueryBuilder().contentType('keyword').environment(env).build();
+  const query = contentful.getQueryBuilder().keywords().build();
 
   // test
   await contentful.fetchKeywords();
