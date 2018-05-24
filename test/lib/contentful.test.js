@@ -29,7 +29,6 @@ const sandbox = sinon.sandbox.create();
 // Stubs
 const allKeywordsStub = Promise.resolve(stubs.contentful.getEntries('keywords'));
 const botConfigStub = stubs.contentful.getEntries('default-campaign').items[0];
-const keywordStub = Promise.resolve(stubs.contentful.getEntries('keyword'));
 const failStub = Promise.reject({ status: 500 });
 const postConfigContentTypeStub = stubs.getPostConfigContentType();
 const contentfulAPIStub = {
