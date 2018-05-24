@@ -51,36 +51,36 @@ test('getByCampaignId returns filtered results of getAll', async () => {
 });
 
 // getDefaultTextForBotConfigTemplateName
-test('getDefaultValueFromContentfulEntryAndTemplateName returns default for templateName', () => {
+test('getDefaultTextFromContentfulEntryAndTemplateName returns default for templateName', () => {
   const result = topicHelper
-    .getDefaultValueFromContentfulEntryAndTemplateName(campaignConfig, templateName);
-  result.should.equal(campaignTemplates[templateName].default);
+    .getDefaultTextFromContentfulEntryAndTemplateName(campaignConfig, templateName);
+  result.should.equal(campaignTemplates[templateName].defaultText);
 });
 
-// getTemplateFromContentfulEntryAndTemplateName
-test('getTemplateFromContentfulEntryAndTemplateName returns default text when no field value exists', () => {
-  sandbox.stub(topicHelper, 'getDefaultValueFromContentfulEntryAndTemplateName')
+// parseTemplateFromContentfulEntryAndTemplateName
+test('parseTemplateFromContentfulEntryAndTemplateName returns default text when no field value exists', () => {
+  sandbox.stub(topicHelper, 'getDefaultTextFromContentfulEntryAndTemplateName')
     .returns(templateText);
   sandbox.stub(topicHelper, 'getFieldValueFromContentfulEntryAndTemplateName')
     .returns(null);
 
   const result = topicHelper
-    .getTemplateFromContentfulEntryAndTemplateName(campaignConfig, templateName);
-  topicHelper.getDefaultValueFromContentfulEntryAndTemplateName.should.have.been.called;
+    .parseTemplateFromContentfulEntryAndTemplateName(campaignConfig, templateName);
+  topicHelper.getDefaultTextFromContentfulEntryAndTemplateName.should.have.been.called;
   topicHelper.getFieldValueFromContentfulEntryAndTemplateName.should.have.been.called;
   result.override.should.equal(false);
   result.raw.should.equal(templateText);
 });
 
-test('getTemplateFromContentfulEntryAndTemplateName returns template text when topic value exists', () => {
-  sandbox.stub(topicHelper, 'getDefaultValueFromContentfulEntryAndTemplateName')
+test('parseTemplateFromContentfulEntryAndTemplateName returns template text when topic value exists', () => {
+  sandbox.stub(topicHelper, 'getDefaultTextFromContentfulEntryAndTemplateName')
     .returns(stubs.getRandomString());
   sandbox.stub(topicHelper, 'getFieldValueFromContentfulEntryAndTemplateName')
     .returns(templateText);
 
   const result = topicHelper
-    .getTemplateFromContentfulEntryAndTemplateName(campaignConfig, templateName);
-  topicHelper.getDefaultValueFromContentfulEntryAndTemplateName.should.not.have.been.called;
+    .parseTemplateFromContentfulEntryAndTemplateName(campaignConfig, templateName);
+  topicHelper.getDefaultTextFromContentfulEntryAndTemplateName.should.not.have.been.called;
   topicHelper.getFieldValueFromContentfulEntryAndTemplateName.should.have.been.called;
   result.override.should.equal(true);
   result.raw.should.equal(templateText);
