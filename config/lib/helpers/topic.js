@@ -151,6 +151,7 @@ module.exports = {
   },
   topicContentTypes: [
     'externalPostConfig',
+    'photoPostConfig',
     'textPostConfig',
   ],
 };
