@@ -18,7 +18,7 @@ chai.should();
 chai.use(sinonChai);
 
 // module to be tested
-const getTopics = require('../../../../../lib/middleware/campaigns/single/topics-get');
+const getTopic = require('../../../../../lib/middleware/topics/single/topic-get');
 
 const sandbox = sinon.sandbox.create();
 
@@ -26,7 +26,9 @@ test.beforeEach((t) => {
   sandbox.stub(helpers, 'sendErrorResponse')
     .returns(underscore.noop);
   t.context.req = httpMocks.createRequest();
-  t.context.req.campaign = stubs.getPhoenixCampaign();
+  t.context.req.params = {
+    topicId: stubs.getContentfulId(),
+  };
   t.context.res = httpMocks.createResponse();
 });
 
@@ -35,30 +37,30 @@ test.afterEach((t) => {
   t.context = {};
 });
 
-test('getTopics should inject a topics property set to helpers.topic.getByCampaignId result', async (t) => {
+test('getTopic should inject a topic property set to getById result', async (t) => {
   const next = sinon.stub();
-  const middleware = getTopics();
-  sandbox.stub(helpers.topic, 'getByCampaignId')
+  const middleware = getTopic();
+  sandbox.stub(helpers.topic, 'getById')
     .returns(Promise.resolve(botConfigStub));
 
   // test
   await middleware(t.context.req, t.context.res, next);
-  helpers.topic.getByCampaignId.should.have.been.calledWith(t.context.req.campaignId);
-  t.context.req.topics.should.deep.equal(botConfigStub);
+  helpers.topic.getById.should.have.been.calledWith(t.context.req.params.topicId);
+  t.context.req.topic.should.deep.equal(botConfigStub);
   next.should.have.been.called;
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
-test('getTopics should sendErrorResponse if getByCampaignId fails', async (t) => {
+test('getTopic should sendErrorResponse if getById fails', async (t) => {
   const next = sinon.stub();
-  const middleware = getTopics();
+  const middleware = getTopic();
   const mockError = { message: 'Epic fail' };
-  sandbox.stub(helpers.topic, 'getByCampaignId')
+  sandbox.stub(helpers.topic, 'getById')
     .returns(Promise.reject(mockError));
 
   // test
   await middleware(t.context.req, t.context.res, next);
-  helpers.topic.getByCampaignId.should.have.been.calledWith(t.context.req.campaignId);
+  helpers.topic.getById.should.have.been.calledWith(t.context.req.params.topicId);
   next.should.not.have.been.called;
   helpers.sendErrorResponse.should.have.been.calledWith(t.context.res, mockError);
 });

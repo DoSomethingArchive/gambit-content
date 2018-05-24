@@ -53,6 +53,9 @@ module.exports = {
   getBroadcastId: function getBroadcastId() {
     return 1246319;
   },
+  getContentfulId: function getContentfulId() {
+    return '5xa3oDEx4Ao0Sm2qoQCeI';
+  },
   getKeyword: function getKeyword() {
     return 'bookbot';
   },

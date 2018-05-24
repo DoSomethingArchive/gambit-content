@@ -12,13 +12,13 @@ const underscore = require('underscore');
 const stubs = require('../../../../utils/stubs');
 const helpers = require('../../../../../lib/helpers');
 
-const botConfigStub = stubs.contentful.getEntries('default-campaign').items[0];
+const topicStubs = stubs.contentful.getEntries('default-campaign').items;
 
 chai.should();
 chai.use(sinonChai);
 
 // module to be tested
-const getTopics = require('../../../../../lib/middleware/campaigns/single/topics-get');
+const getTopics = require('../../../../../lib/middleware/topics/index');
 
 const sandbox = sinon.sandbox.create();
 
@@ -26,8 +26,8 @@ test.beforeEach((t) => {
   sandbox.stub(helpers, 'sendErrorResponse')
     .returns(underscore.noop);
   t.context.req = httpMocks.createRequest();
-  t.context.req.campaign = stubs.getPhoenixCampaign();
   t.context.res = httpMocks.createResponse();
+  sandbox.spy(t.context.res, 'send');
 });
 
 test.afterEach((t) => {
@@ -35,30 +35,30 @@ test.afterEach((t) => {
   t.context = {};
 });
 
-test('getTopics should inject a topics property set to helpers.topic.getByCampaignId result', async (t) => {
+test('getTopics should send helpers.topic.getAll result', async (t) => {
   const next = sinon.stub();
   const middleware = getTopics();
-  sandbox.stub(helpers.topic, 'getByCampaignId')
-    .returns(Promise.resolve(botConfigStub));
+  sandbox.stub(helpers.topic, 'getAll')
+    .returns(Promise.resolve(topicStubs));
 
   // test
   await middleware(t.context.req, t.context.res, next);
-  helpers.topic.getByCampaignId.should.have.been.calledWith(t.context.req.campaignId);
-  t.context.req.topics.should.deep.equal(botConfigStub);
-  next.should.have.been.called;
+  helpers.topic.getAll.should.have.been.called;
+  t.context.res.send.should.have.been.called;
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
-test('getTopics should sendErrorResponse if getByCampaignId fails', async (t) => {
+
+test('getTopics should send errorResponse if helpers.topic.getAll fails', async (t) => {
   const next = sinon.stub();
   const middleware = getTopics();
-  const mockError = { message: 'Epic fail' };
-  sandbox.stub(helpers.topic, 'getByCampaignId')
-    .returns(Promise.reject(mockError));
+  const error = new Error('o noes');
+  sandbox.stub(helpers.topic, 'getAll')
+    .returns(Promise.reject(error));
 
   // test
   await middleware(t.context.req, t.context.res, next);
-  helpers.topic.getByCampaignId.should.have.been.calledWith(t.context.req.campaignId);
-  next.should.not.have.been.called;
-  helpers.sendErrorResponse.should.have.been.calledWith(t.context.res, mockError);
+  helpers.topic.getAll.should.have.been.called;
+  t.context.res.send.should.not.have.been.called;
+  helpers.sendErrorResponse.should.have.been.calledWith(t.context.res, error);
 });
