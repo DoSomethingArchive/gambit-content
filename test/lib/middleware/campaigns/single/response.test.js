@@ -54,7 +54,7 @@ test.afterEach((t) => {
   t.context = {};
 });
 
-test('sendResponse sends null botConfig property when req.topics undefined', (t) => {
+test('sendResponse sends botConfig object with null properties when req.topics undefined', (t) => {
   const middleware = sendResponse();
   t.context.req.topics = [];
   middleware(t.context.req, t.context.res);
