@@ -58,7 +58,7 @@ test('campaigns.get should throw when cache set fails', async (t) => {
 
 test('campaigns.set should return an object', async () => {
   cacheHelper.__set__('campaignsCache', {
-    set: () => Promise.resolve(campaign),
+    set: () => Promise.resolve(JSON.stringify(campaign)),
   });
   const result = await cacheHelper.campaigns.set(campaignId);
   result.should.deep.equal(campaign);
