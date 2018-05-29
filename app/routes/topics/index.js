@@ -2,7 +2,7 @@
 
 const express = require('express');
 
-const getTopicsMiddleware = require('../../../lib/middleware/topics/index');
+const getTopicsMiddleware = require('../../../lib/middleware/topics/index/topics-get');
 
 const router = express.Router({ mergeParams: true });
 

@@ -18,7 +18,7 @@ chai.should();
 chai.use(sinonChai);
 
 // module to be tested
-const getTopics = require('../../../../../lib/middleware/topics/index');
+const getTopics = require('../../../../../lib/middleware/topics/index/topics-get');
 
 const sandbox = sinon.sandbox.create();
 

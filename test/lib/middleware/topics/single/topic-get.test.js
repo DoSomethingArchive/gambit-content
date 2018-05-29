@@ -30,6 +30,7 @@ test.beforeEach((t) => {
     topicId: stubs.getContentfulId(),
   };
   t.context.res = httpMocks.createResponse();
+  sandbox.spy(t.context.res, 'send');
 });
 
 test.afterEach((t) => {
@@ -46,8 +47,7 @@ test('getTopic should inject a topic property set to getById result', async (t) 
   // test
   await middleware(t.context.req, t.context.res, next);
   helpers.topic.getById.should.have.been.calledWith(t.context.req.params.topicId);
-  t.context.req.topic.should.deep.equal(botConfigStub);
-  next.should.have.been.called;
+  t.context.res.send.should.have.been.calledWith({ data: botConfigStub });
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
@@ -61,6 +61,6 @@ test('getTopic should sendErrorResponse if getById fails', async (t) => {
   // test
   await middleware(t.context.req, t.context.res, next);
   helpers.topic.getById.should.have.been.calledWith(t.context.req.params.topicId);
-  next.should.not.have.been.called;
+  t.context.res.send.should.not.have.been.called;
   helpers.sendErrorResponse.should.have.been.calledWith(t.context.res, mockError);
 });
