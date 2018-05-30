@@ -18,6 +18,7 @@ const campaignConfigContentType = 'campaign';
 const topicContentType = 'textPostConfig';
 const templateName = stubs.getTemplateName();
 const templateText = stubs.getRandomString();
+const topic = stubs.getTopic();
 
 // Module to test
 const topicHelper = require('../../../lib/helpers/topic');
@@ -34,6 +35,23 @@ test.beforeEach(() => {
 
 test.afterEach(() => {
   sandbox.restore();
+});
+
+// fetchAll
+test('fetchAll returns parsed contentful.fetchByContentTypes', async () => {
+  const fetchTopicsEntriesResult = [{ id: '132' }];
+  sandbox.stub(contentful, 'fetchByContentTypes')
+    .returns(Promise.resolve(fetchTopicsEntriesResult));
+  sandbox.stub(topicHelper, 'parseTopicFromContentfulEntry')
+    .returns(Promise.resolve(topic));
+
+
+  const result = await topicHelper.fetchAll();
+  contentful.fetchByContentTypes.should.have.been.calledWith(config.topicContentTypes);
+  fetchTopicsEntriesResult.forEach((item) => {
+    topicHelper.parseTopicFromContentfulEntry.should.have.been.calledWith(item);
+  });
+  result.should.deep.equal([topic]);
 });
 
 // getByCampaignId
