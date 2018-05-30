@@ -66,7 +66,6 @@ test('getById returns campaigns cache if set', async () => {
   sandbox.stub(campaignHelper, 'fetchById')
     .returns(Promise.resolve(campaign));
 
-
   const result = await campaignHelper.getById(campaignId);
   helpers.cache.campaigns.get.should.have.been.calledWith(campaignId);
   campaignHelper.fetchById.should.not.have.been.called;
