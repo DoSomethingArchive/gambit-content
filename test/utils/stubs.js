@@ -9,16 +9,6 @@ const Chance = require('chance');
 const chance = new Chance();
 
 /**
- * @return {Object}
- */
-function getDefaultTopicTrigger() {
-  return {
-    id: module.exports.getContentfulId(),
-    reply: module.exports.getRandomMessageText(),
-  };
-}
-
-/**
  * @return {String}
  */
 function getRandomWord() {
@@ -37,7 +27,6 @@ function getTopic() {
 }
 
 module.exports = {
-  getDefaultTopicTrigger,
   getTopic,
   rogueClient: {
     getOauth2ClientToken: (expiresInSeconds = 3600) => {

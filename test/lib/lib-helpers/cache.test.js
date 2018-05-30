@@ -15,11 +15,12 @@ const cacheHelper = rewire('../../../lib/helpers/cache');
 
 // stubs
 const stubs = require('../../utils/stubs');
+const defaultTopicTriggerFactory = require('../../utils/factories/defaultTopicTrigger');
 
 const campaign = stubs.getPhoenixCampaign();
 const campaignId = stubs.getCampaignId();
 const contentfulId = stubs.getContentfulId();
-const defaultTopicTrigger = stubs.getDefaultTopicTrigger();
+const defaultTopicTrigger = defaultTopicTriggerFactory.getValidDefaultTopicTriggerWithReply();
 const topic = stubs.getTopic();
 
 const sandbox = sinon.sandbox.create();

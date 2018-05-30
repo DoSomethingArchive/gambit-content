@@ -9,10 +9,13 @@ const sinonChai = require('sinon-chai');
 const httpMocks = require('node-mocks-http');
 const underscore = require('underscore');
 
-const stubs = require('../../../../utils/stubs');
 const helpers = require('../../../../../lib/helpers');
+const defaultTopicTriggerFactory = require('../../../../utils/factories/defaultTopicTrigger');
 
-const defaultTopicTriggerStubs = [stubs.getDefaultTopicTrigger(), stubs.getDefaultTopicTrigger()];
+const defaultTopicTriggerStubs = [
+  defaultTopicTriggerFactory.getValidDefaultTopicTriggerWithReply(),
+  defaultTopicTriggerFactory.getValidDefaultTopicTriggerWithReply(),
+];
 
 chai.should();
 chai.use(sinonChai);

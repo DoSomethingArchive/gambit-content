@@ -8,11 +8,15 @@ const sinonChai = require('sinon-chai');
 const sinon = require('sinon');
 
 const contentful = require('../../../lib/contentful');
-const stubs = require('../../utils/stubs');
+const helpers = require('../../../lib/helpers');
 const config = require('../../../config/lib/helpers/defaultTopicTrigger');
 const defaultTopicTriggerContentfulFactory = require('../../utils/factories/contentful/defaultTopicTrigger');
+const defaultTopicTriggerFactory = require('../../utils/factories/defaultTopicTrigger');
 
-const defaultTopicTrigger = stubs.getDefaultTopicTrigger();
+const firstEntry = defaultTopicTriggerContentfulFactory.getValidDefaultTopicTrigger();
+const firstDefaultTopicTrigger = defaultTopicTriggerFactory.getValidDefaultTopicTriggerWithReply();
+const secondEntry = defaultTopicTriggerContentfulFactory.getValidDefaultTopicTrigger();
+const secondDefaultTopicTrigger = defaultTopicTriggerFactory.getValidDefaultTopicTriggerWithReply();
 
 // Module to test
 const defaultTopicTriggerHelper = require('../../../lib/helpers/defaultTopicTrigger');
@@ -28,23 +32,22 @@ test.afterEach(() => {
 
 // fetchAll
 test('fetchAll returns contentful.fetchByContentTypes parsed as defaultTopicTrigger objects', async () => {
-  const firstEntry = defaultTopicTriggerContentfulFactory.getValidDefaultTopicTrigger();
-  const secondEntry = defaultTopicTriggerContentfulFactory.getValidDefaultTopicTrigger();
-  const fetchDefaultTopicTriggerEntriesResult = [firstEntry, secondEntry];
-
   sandbox.stub(contentful, 'fetchByContentTypes')
-    .returns(Promise.resolve(fetchDefaultTopicTriggerEntriesResult));
+    .returns(Promise.resolve([firstEntry, secondEntry]));
   sandbox.stub(defaultTopicTriggerHelper, 'parseDefaultTopicTriggerFromContentfulEntry')
-    .returns(defaultTopicTrigger);
+    .onCall(0)
+    .returns(firstDefaultTopicTrigger)
+    .onCall(1)
+    .returns(secondDefaultTopicTrigger);
 
   const result = await defaultTopicTriggerHelper.fetchAll();
   contentful.fetchByContentTypes
     .should.have.been.calledWith(config.defaultTopicTriggerContentTypes);
-  fetchDefaultTopicTriggerEntriesResult.forEach((item) => {
-    defaultTopicTriggerHelper.parseDefaultTopicTriggerFromContentfulEntry
-      .should.have.been.calledWith(item);
-  });
-  result.should.deep.equal([defaultTopicTrigger, defaultTopicTrigger]);
+  defaultTopicTriggerHelper.parseDefaultTopicTriggerFromContentfulEntry
+    .should.have.been.calledWith(firstEntry);
+  defaultTopicTriggerHelper.parseDefaultTopicTriggerFromContentfulEntry
+    .should.have.been.calledWith(secondEntry);
+  result.should.deep.equal([firstDefaultTopicTrigger, secondDefaultTopicTrigger]);
 });
 
 test('fetchAll throws if contentful.fetchByContentTypes fails', async (t) => {
@@ -52,8 +55,40 @@ test('fetchAll throws if contentful.fetchByContentTypes fails', async (t) => {
   sandbox.stub(contentful, 'fetchByContentTypes')
     .returns(Promise.reject(error));
   sandbox.stub(defaultTopicTriggerHelper, 'parseDefaultTopicTriggerFromContentfulEntry')
-    .returns(defaultTopicTrigger);
+    .returns(firstDefaultTopicTrigger);
 
   const result = await t.throws(defaultTopicTriggerHelper.fetchAll());
   result.should.deep.equal(error);
+});
+
+// getAll
+test('getAll returns allDefaultTopicTriggers cache if set', async () => {
+  const cacheResult = [firstDefaultTopicTrigger, secondDefaultTopicTrigger];
+  sandbox.stub(helpers.cache.defaultTopicTriggers, 'get')
+    .returns(Promise.resolve(cacheResult));
+  sandbox.stub(defaultTopicTriggerHelper, 'fetchAll')
+    .returns(Promise.resolve([]));
+
+
+  const result = await defaultTopicTriggerHelper.getAll();
+  helpers.cache.defaultTopicTriggers.get
+    .should.have.been.calledWith(config.allDefaultTopicTriggersCacheKey);
+  defaultTopicTriggerHelper.fetchAll.should.not.have.been.called;
+  result.should.deep.equal(cacheResult);
+});
+
+test('getAll returns fetchAll results if cache not set', async () => {
+  const fetchResult = [firstDefaultTopicTrigger, secondDefaultTopicTrigger];
+  sandbox.stub(helpers.cache.defaultTopicTriggers, 'get')
+    .returns(Promise.resolve(null));
+  sandbox.stub(defaultTopicTriggerHelper, 'fetchAll')
+    .returns(Promise.resolve(fetchResult));
+  sandbox.stub(helpers.cache.topics, 'set')
+    .returns(Promise.resolve(fetchResult));
+
+  const result = await defaultTopicTriggerHelper.getAll();
+  helpers.cache.defaultTopicTriggers.get
+    .should.have.been.calledWith(config.allDefaultTopicTriggersCacheKey);
+  defaultTopicTriggerHelper.fetchAll.should.have.been.called;
+  result.should.deep.equal(fetchResult);
 });
