@@ -18,6 +18,16 @@ function getDefaultTopicTrigger() {
   };
 }
 
+/**
+ * @return {String}
+ */
+function getRandomWord() {
+  return chance.word();
+}
+
+/**
+ * @return {Object}
+ */
 function getTopic() {
   return {
     id: module.exports.getContentfulId(),
@@ -100,6 +110,7 @@ module.exports = {
   getRandomMessageText: function getRandomMessageText() {
     return chance.sentence();
   },
+  getRandomWord,
   getTemplateName: function getTemplateName() {
     return 'memberSupport';
   },
