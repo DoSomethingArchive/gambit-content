@@ -2,7 +2,7 @@
 
 const express = require('express');
 
-const defaultTopicTriggersMiddleware = require('../../lib/middleware/defaultTopicTriggers');
+const defaultTopicTriggersMiddleware = require('../../../lib/middleware/defaultTopicTriggers/index');
 
 const router = express.Router({ mergeParams: true });
 
