@@ -21,7 +21,7 @@ chai.should();
 chai.use(sinonChai);
 
 // module to be tested
-const getDefaultTopicTriggers = require('../../../../../lib/middleware/defaultTopicTriggers/index');
+const getDefaultTopicTriggers = require('../../../../../lib/middleware/defaultTopicTriggers/index/defaultTopicTriggers-get');
 
 const sandbox = sinon.sandbox.create();
 
