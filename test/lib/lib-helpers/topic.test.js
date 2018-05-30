@@ -30,11 +30,6 @@ chai.use(sinonChai);
 
 const sandbox = sinon.sandbox.create();
 
-test.beforeEach(() => {
-  sandbox.stub(contentful, 'getContentTypeFromContentfulEntry')
-    .returns(campaignConfigContentType);
-});
-
 test.afterEach(() => {
   sandbox.restore();
 });
@@ -132,6 +127,16 @@ test('getDefaultTextFromContentfulEntryAndTemplateName returns default for templ
   const result = topicHelper
     .getDefaultTextFromContentfulEntryAndTemplateName(campaignConfig, templateName);
   result.should.equal(campaignTemplates[templateName].defaultText);
+});
+
+// getTemplateInfoFromContentfulEntryAndTemplateName
+test('getTemplateInfoFromContentfulEntryAndTemplateName returns an object', () => {
+  sandbox.stub(contentful, 'getContentTypeFromContentfulEntry')
+    .returns(campaignConfigContentType);
+  const result = topicHelper
+    .getTemplateInfoFromContentfulEntryAndTemplateName(campaignConfig, templateName);
+  contentful.getContentTypeFromContentfulEntry.should.have.been.called;
+  result.should.equal(config.templatesByContentType[campaignConfigContentType][templateName]);
 });
 
 // parseTemplateFromContentfulEntryAndTemplateName
