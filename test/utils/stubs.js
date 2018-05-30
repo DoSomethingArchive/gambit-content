@@ -8,7 +8,26 @@ const Chance = require('chance');
 
 const chance = new Chance();
 
+/**
+ * @return {String}
+ */
+function getRandomWord() {
+  return chance.word();
+}
+
+/**
+ * @return {Object}
+ */
+function getTopic() {
+  return {
+    id: module.exports.getContentfulId(),
+    type: module.exports.getPostConfigContentType(),
+    postType: module.exports.getPostType(),
+  };
+}
+
 module.exports = {
+  getTopic,
   rogueClient: {
     getOauth2ClientToken: (expiresInSeconds = 3600) => {
       const tokenString = 'tacos';
@@ -53,11 +72,11 @@ module.exports = {
   getBroadcastId: function getBroadcastId() {
     return 1246319;
   },
+  getContentfulId: function getContentfulId() {
+    return '5xa3oDEx4Ao0Sm2qoQCeI';
+  },
   getKeyword: function getKeyword() {
     return 'bookbot';
-  },
-  getEnvironment: function getEnvironment() {
-    return process.env.NODE_ENV || 'thor';
   },
   getPlatform: function getPlatform() {
     return 'sms';
@@ -77,6 +96,10 @@ module.exports = {
   getPostType: function getPostType() {
     return 'text';
   },
+  getRandomMessageText: function getRandomMessageText() {
+    return chance.sentence();
+  },
+  getRandomWord,
   getTemplateName: function getTemplateName() {
     return 'memberSupport';
   },

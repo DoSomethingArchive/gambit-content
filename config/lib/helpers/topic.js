@@ -19,9 +19,10 @@ const photoPostDefaultText = {
 };
 
 module.exports = {
+  allTopicsCacheKey: 'all',
   defaultPostType: 'photo',
   /**
-   * Maps each content type that's available as a postConfig to the Post type it should create.
+   * Maps each content type that's available as a topic to the Post type it should create.
    *
    * { contentTypeName: 'postType' }
    */
@@ -38,35 +39,35 @@ module.exports = {
     campaign: {
       memberSupport: {
         fieldName: 'memberSupportMessage',
-        default: 'Text back your question and I\'ll try to get back to you within 24 hrs.\n\nIf you want to continue {{title}}, text back {{keyword}}',
+        defaultText: 'Text back your question and I\'ll try to get back to you within 24 hrs.\n\nIf you want to continue {{title}}, text back {{keyword}}',
       },
       campaignClosed: {
         fieldName: 'campaignClosedMessage',
-        default: 'Sorry, {{title}} is no longer available.\n\nText {{cmd_member_support}} for help.',
+        defaultText: 'Sorry, {{title}} is no longer available.\n\nText {{cmd_member_support}} for help.',
       },
       askSignup: {
         fieldName: 'askSignupMessage',
-        default: `{{tagline}}\n\nWant to join {{title}}?${defaultText.yesNo}`,
+        defaultText: `{{tagline}}\n\nWant to join {{title}}?${defaultText.yesNo}`,
       },
       declinedSignup: {
         fieldName: 'declinedSignupMessage',
-        default: `Ok! ${defaultText.declined}`,
+        defaultText: `Ok! ${defaultText.declined}`,
       },
       invalidAskSignupResponse: {
         fieldName: 'invalidSignupResponseMessage',
-        default: `${defaultText.invalidInput} Did you want to join {{title}}?${defaultText.yesNo}`,
+        defaultText: `${defaultText.invalidInput} Did you want to join {{title}}?${defaultText.yesNo}`,
       },
       askContinue: {
         fieldName: 'askContinueMessage',
-        default: `Ready to get back to {{title}}?${defaultText.yesNo}`,
+        defaultText: `Ready to get back to {{title}}?${defaultText.yesNo}`,
       },
       declinedContinue: {
         fieldName: 'declinedContinueMessage',
-        default: `Right on, we'll check in with you about {{title}} later.\n\n${defaultText.declined}`,
+        defaultText: `Right on, we'll check in with you about {{title}} later.\n\n${defaultText.declined}`,
       },
       invalidAskContinueResponse: {
         fieldName: 'invalidContinueResponseMessage',
-        default: `${defaultText.invalidInput} Did you want to join {{title}}?${defaultText.yesNo}`,
+        defaultText: `${defaultText.invalidInput} Did you want to join {{title}}?${defaultText.yesNo}`,
       },
     },
     externalPostConfig: {
@@ -85,23 +86,23 @@ module.exports = {
       // @see https://github.com/DoSomething/gambit-campaigns/issues/1037
       startPhotoPost: {
         fieldName: 'gambitSignupMenuMessage',
-        default: photoPostDefaultText.startPhotoPost,
+        defaultText: photoPostDefaultText.startPhotoPost,
       },
       webStartPhotoPost: {
         fieldName: 'externalSignupMenuMessage',
-        default: photoPostDefaultText.webStartPhotoPost,
+        defaultText: photoPostDefaultText.webStartPhotoPost,
       },
       startPhotoPostAutoReply: {
         fieldName: 'invalidSignupMenuCommandMessage',
-        default: photoPostDefaultText.startPhotoPostAutoReply,
+        defaultText: photoPostDefaultText.startPhotoPostAutoReply,
       },
       completedPhotoPost: {
         fieldName: 'completedMenuMessage',
-        default: photoPostDefaultText.completedPhotoPost,
+        defaultText: photoPostDefaultText.completedPhotoPost,
       },
       completedPhotoPostAutoReply: {
         fieldName: 'invalidCompletedMenuCommandMessage',
-        default: photoPostDefaultText.completedPhotoPostAutoReply,
+        defaultText: photoPostDefaultText.completedPhotoPostAutoReply,
       },
       // End fields that renaming.
       askQuantity: {
@@ -118,19 +119,19 @@ module.exports = {
       },
       askCaption: {
         fieldName: 'askCaptionMessage',
-        default: 'Got it! Now text back a caption for your photo (think Instagram)! Keep it short & sweet, under 60 characters please.',
+        defaultText: 'Got it! Now text back a caption for your photo (think Instagram)! Keep it short & sweet, under 60 characters please.',
       },
       invalidCaption: {
         fieldName: 'invalidCaptionMessage',
-        default: `${defaultText.invalidInput}\n\nText back a caption for your photo -- keep it short & sweet, under 60 characters please. (but more than 3!)`,
+        defaultText: `${defaultText.invalidInput}\n\nText back a caption for your photo -- keep it short & sweet, under 60 characters please. (but more than 3!)`,
       },
       askWhyParticipated: {
         fieldName: 'askWhyParticipatedMessage',
-        default: photoPostDefaultText.askWhyParticipated,
+        defaultText: photoPostDefaultText.askWhyParticipated,
       },
       invalidWhyParticipated: {
         fieldName: 'invalidWhyParticipatedMessage',
-        default: `${defaultText.invalidInput}\n\n${photoPostDefaultText.askWhyParticipated}`,
+        defaultText: `${defaultText.invalidInput}\n\n${photoPostDefaultText.askWhyParticipated}`,
       },
     },
     textPostConfig: {
@@ -148,4 +149,9 @@ module.exports = {
       },
     },
   },
+  topicContentTypes: [
+    'externalPostConfig',
+    'photoPostConfig',
+    'textPostConfig',
+  ],
 };
