@@ -8,6 +8,7 @@ const sinonChai = require('sinon-chai');
 const sinon = require('sinon');
 
 const contentful = require('../../../lib/contentful');
+const helpers = require('../../../lib/helpers');
 const stubs = require('../../utils/stubs');
 const config = require('../../../config/lib/helpers/topic');
 
@@ -19,6 +20,7 @@ const topicContentType = 'textPostConfig';
 const templateName = stubs.getTemplateName();
 const templateText = stubs.getRandomString();
 const topic = stubs.getTopic();
+const topicId = stubs.getContentfulId();
 
 // Module to test
 const topicHelper = require('../../../lib/helpers/topic');
@@ -38,7 +40,7 @@ test.afterEach(() => {
 });
 
 // fetchAll
-test('fetchAll returns parsed contentful.fetchByContentTypes', async () => {
+test('fetchAll returns contentful.fetchByContentTypes parsed as topic objects', async () => {
   const fetchTopicsEntriesResult = [{ id: '132' }];
   sandbox.stub(contentful, 'fetchByContentTypes')
     .returns(Promise.resolve(fetchTopicsEntriesResult));
@@ -52,6 +54,63 @@ test('fetchAll returns parsed contentful.fetchByContentTypes', async () => {
     topicHelper.parseTopicFromContentfulEntry.should.have.been.calledWith(item);
   });
   result.should.deep.equal([topic]);
+});
+
+test('fetchAll throws if contentful.fetchByContentTypes fails', async (t) => {
+  const error = new Error('epic fail');
+  sandbox.stub(contentful, 'fetchByContentTypes')
+    .returns(Promise.reject(error));
+  sandbox.stub(topicHelper, 'parseTopicFromContentfulEntry')
+    .returns(Promise.resolve(topic));
+
+
+  const result = await t.throws(topicHelper.fetchAll());
+  result.should.deep.equal(error);
+});
+
+// fetchById
+test('fetchById returns contentful.fetchByContentfulId parsed as topic object', async () => {
+  const fetchEntryResult = { id: '132' };
+  sandbox.stub(contentful, 'fetchByContentfulId')
+    .returns(Promise.resolve(fetchEntryResult));
+  sandbox.stub(topicHelper, 'parseTopicFromContentfulEntry')
+    .returns(Promise.resolve(topic));
+
+
+  const result = await topicHelper.fetchById(topicId);
+  contentful.fetchByContentfulId.should.have.been.calledWith(topicId);
+  topicHelper.parseTopicFromContentfulEntry.should.have.been.calledWith(fetchEntryResult);
+  result.should.deep.equal(topic);
+});
+
+// getAll
+test('getAll returns allTopics cache if set', async () => {
+  const allTopicsCacheResult = [{ id: '132' }];
+  sandbox.stub(helpers.cache.topics, 'get')
+    .returns(Promise.resolve(allTopicsCacheResult));
+  sandbox.stub(topicHelper, 'fetchAll')
+    .returns(Promise.resolve(allTopicsCacheResult));
+
+
+  const result = await topicHelper.getAll();
+  helpers.cache.topics.get.should.have.been.calledWith(config.allTopicsCacheKey);
+  topicHelper.fetchAll.should.not.have.been.called;
+  result.should.deep.equal(allTopicsCacheResult);
+});
+
+test('getAll returns fetchAll results if cache not set', async () => {
+  const allTopics = [{ id: '132' }];
+  sandbox.stub(helpers.cache.topics, 'get')
+    .returns(Promise.resolve(null));
+  sandbox.stub(topicHelper, 'fetchAll')
+    .returns(Promise.resolve(allTopics));
+  sandbox.stub(helpers.cache.topics, 'set')
+    .returns(Promise.resolve(allTopics));
+
+  const result = await topicHelper.getAll();
+  helpers.cache.topics.get.should.have.been.calledWith(config.allTopicsCacheKey);
+  topicHelper.fetchAll.should.have.been.called;
+  result.should.deep.equal(allTopics);
 });
 
 // getByCampaignId
