@@ -42,7 +42,6 @@ test('fetchAll returns contentful.fetchByContentTypes parsed as topic objects', 
   sandbox.stub(topicHelper, 'parseTopicFromContentfulEntry')
     .returns(Promise.resolve(topic));
 
-
   const result = await topicHelper.fetchAll();
   contentful.fetchByContentTypes.should.have.been.calledWith(config.topicContentTypes);
   fetchTopicsEntriesResult.forEach((item) => {
@@ -120,6 +119,34 @@ test('getByCampaignId returns filtered results of getAll', async () => {
   topicHelper.getAll.should.have.been.called;
   getTopicsResult.filter.should.have.been.called;
   result.should.deep.equal(getTopicsResult);
+});
+
+// getById
+test('getById returns topics cache if set', async () => {
+  sandbox.stub(helpers.cache.topics, 'get')
+    .returns(Promise.resolve(topic));
+  sandbox.stub(topicHelper, 'fetchById')
+    .returns(Promise.resolve(topic));
+
+  const result = await topicHelper.getById(topicId);
+  helpers.cache.topics.get.should.have.been.calledWith(topicId);
+  topicHelper.fetchById.should.not.have.been.called;
+  result.should.deep.equal(topic);
+});
+
+test('getById returns fetchById and sets cache if cache not set', async () => {
+  sandbox.stub(helpers.cache.topics, 'get')
+    .returns(Promise.resolve(null));
+  sandbox.stub(topicHelper, 'fetchById')
+    .returns(Promise.resolve(topic));
+  sandbox.stub(helpers.cache.topics, 'set')
+    .returns(Promise.resolve(topic));
+
+  const result = await topicHelper.getById(topicId);
+  helpers.cache.topics.get.should.have.been.calledWith(topicId);
+  topicHelper.fetchById.should.have.been.calledWith(topicId);
+  helpers.cache.topics.set.should.have.been.calledWith(topicId, topic);
+  result.should.deep.equal(topic);
 });
 
 // getDefaultTextForBotConfigTemplateName

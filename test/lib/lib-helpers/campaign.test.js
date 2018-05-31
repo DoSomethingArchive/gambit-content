@@ -12,10 +12,13 @@ const sinon = require('sinon');
 const underscore = require('underscore');
 const dateFns = require('date-fns');
 
-// App Modules
+const helpers = require('../../../lib/helpers');
+const contentful = require('../../../lib/contentful');
+const phoenix = require('../../../lib/phoenix');
 const stubs = require('../../utils/stubs');
 
 const campaign = stubs.phoenix.getCampaign().data;
+const campaignId = campaign.id;
 
 // Config
 const config = require('../../../config/lib/helpers/campaign');
@@ -37,6 +40,51 @@ test.beforeEach(() => {
 
 test.afterEach(() => {
   sandbox.restore();
+});
+
+// fetchById
+test('fetchById calls phoenix.fetchCampaignById and contentful.fetchKeywordsForCampaignId', async () => {
+  const keywords = ['winterfell', 'lannister'];
+  sandbox.stub(phoenix, 'fetchCampaignById')
+    .returns(Promise.resolve(stubs.phoenix.getCampaign()));
+  sandbox.stub(campaignHelper, 'parseCampaign')
+    .returns(campaign);
+  sandbox.stub(contentful, 'fetchKeywordsForCampaignId')
+    .returns(Promise.resolve(keywords));
+
+  const result = await campaignHelper.fetchById(campaignId);
+  phoenix.fetchCampaignById.should.have.been.calledWith(campaignId);
+  contentful.fetchKeywordsForCampaignId.should.have.been.calledWith(campaignId);
+  result.title.should.equal(campaign.title);
+  result.keywords.should.deep.equal(keywords);
+});
+
+// getById
+test('getById returns campaigns cache if set', async () => {
+  sandbox.stub(helpers.cache.campaigns, 'get')
+    .returns(Promise.resolve(campaign));
+  sandbox.stub(campaignHelper, 'fetchById')
+    .returns(Promise.resolve(campaign));
+
+  const result = await campaignHelper.getById(campaignId);
+  helpers.cache.campaigns.get.should.have.been.calledWith(campaignId);
+  campaignHelper.fetchById.should.not.have.been.called;
+  result.should.deep.equal(campaign);
+});
+
+test('getById returns fetchById and sets cache if cache not set', async () => {
+  sandbox.stub(helpers.cache.campaigns, 'get')
+    .returns(Promise.resolve(null));
+  sandbox.stub(campaignHelper, 'fetchById')
+    .returns(Promise.resolve(campaign));
+  sandbox.stub(helpers.cache.campaigns, 'set')
+    .returns(Promise.resolve(campaign));
+
+  const result = await campaignHelper.getById(campaignId);
+  helpers.cache.campaigns.get.should.have.been.calledWith(campaignId);
+  campaignHelper.fetchById.should.have.been.calledWith(campaignId);
+  helpers.cache.campaigns.set.should.have.been.calledWith(`${campaignId}`, campaign);
+  result.should.deep.equal(campaign);
 });
 
 // isClosed

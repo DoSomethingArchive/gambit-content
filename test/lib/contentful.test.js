@@ -9,12 +9,12 @@ const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
 const logger = require('winston');
 const rewire = require('rewire');
-const underscore = require('underscore');
 
 // app modules
 const stubs = require('../../test/utils/stubs');
 const stathat = require('../../lib/stathat');
 const contentfulAPI = require('contentful');
+const defaultTopicTriggerContentfulFactory = require('../../test/utils/factories/contentful/defaultTopicTrigger');
 
 // setup "x.should.y" assertion style
 chai.should();
@@ -29,6 +29,8 @@ const sandbox = sinon.sandbox.create();
 // Stubs
 const allKeywordsStub = Promise.resolve(stubs.contentful.getEntries('keywords'));
 const botConfigStub = stubs.contentful.getEntries('default-campaign').items[0];
+const getEntryStub = Promise.resolve(defaultTopicTriggerContentfulFactory
+  .getValidDefaultTopicTrigger());
 const failStub = Promise.reject({ status: 500 });
 const postConfigContentTypeStub = stubs.getPostConfigContentType();
 const contentfulAPIStub = {
@@ -81,17 +83,12 @@ test('contentfulError should add the Contentful error prefix to the error object
 
 // fetchByContentfulId
 test('fetchByContentfulId should only get one item from the entries returned by contentful', async () => {
-  // setup
-  sandbox.spy(underscore, 'first');
-
-  // fetchSingleEntry calls getEntries so we stub it here using rewire's __set__
   contentful.__set__('client', {
-    getEntries: sinon.stub().returns(allKeywordsStub),
+    getEntry: sinon.stub().returns(getEntryStub),
   });
 
   // test
   const entry = await contentful.fetchByContentfulId();
-  underscore.first.should.have.been.called;
   entry.should.be.an('object');
   entry.should.not.be.an('array');
 });
@@ -100,7 +97,7 @@ test('fetchByContentfulId should reject with a contentfulError if unsuccessful',
   // setup
   sandbox.spy(contentful, 'contentfulError');
   contentful.__set__('client', {
-    getEntries: sinon.stub().returns(failStub),
+    getEntry: sinon.stub().returns(failStub),
   });
 
   // test
