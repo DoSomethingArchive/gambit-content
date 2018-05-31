@@ -132,7 +132,7 @@ test('draftNotFound sends startPhotoPostAutoReply when not hasSubmittedPhotoPost
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
-test('draftNotFound sends startPhotoPost when not hasSubmittedPhotoPost and askNextQuestion', async (t) => {
+test('draftNotFound sends startPhotoPost when not hasSubmittedPhotoPost and shouldAskNextQuestion', async (t) => {
   const next = sinon.stub();
   const middleware = draftNotFound();
   sandbox.stub(helpers.request, 'hasDraftSubmission')
@@ -141,7 +141,8 @@ test('draftNotFound sends startPhotoPost when not hasSubmittedPhotoPost and askN
     .returns(false);
   sandbox.stub(helpers.request, 'hasSubmittedPhotoPost')
     .returns(false);
-  t.context.req.askNextQuestion = true;
+  sandbox.stub(helpers.request, 'shouldAskNextQuestion')
+    .returns(true);
 
   await middleware(t.context.req, t.context.res, next);
   next.should.not.have.been.called;
@@ -152,7 +153,7 @@ test('draftNotFound sends startPhotoPost when not hasSubmittedPhotoPost and askN
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
-test('draftNotFound sends completedPhotoPost when hasSubmittedPhotoPost and askNextQuestion', async (t) => {
+test('draftNotFound sends completedPhotoPost when hasSubmittedPhotoPost and shouldAskNextQuestion', async (t) => {
   const next = sinon.stub();
   const middleware = draftNotFound();
   sandbox.stub(helpers.request, 'hasDraftSubmission')
@@ -161,7 +162,8 @@ test('draftNotFound sends completedPhotoPost when hasSubmittedPhotoPost and askN
     .returns(false);
   sandbox.stub(helpers.request, 'hasSubmittedPhotoPost')
     .returns(true);
-  t.context.req.askNextQuestion = true;
+  sandbox.stub(helpers.request, 'shouldAskNextQuestion')
+    .returns(true);
 
   await middleware(t.context.req, t.context.res, next);
   next.should.not.have.been.called;
@@ -172,7 +174,7 @@ test('draftNotFound sends completedPhotoPost when hasSubmittedPhotoPost and askN
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
-test('draftNotFound sends completedPhotoPostAutoReply when hasSubmittedPhotoPost and not askNextQuestion', async (t) => {
+test('draftNotFound sends completedPhotoPostAutoReply when hasSubmittedPhotoPost and not shouldAskNextQuestion', async (t) => {
   const next = sinon.stub();
   const middleware = draftNotFound();
   sandbox.stub(helpers.request, 'hasDraftSubmission')
@@ -181,6 +183,8 @@ test('draftNotFound sends completedPhotoPostAutoReply when hasSubmittedPhotoPost
     .returns(false);
   sandbox.stub(helpers.request, 'hasSubmittedPhotoPost')
     .returns(true);
+  sandbox.stub(helpers.request, 'shouldAskNextQuestion')
+    .returns(false);
 
   await middleware(t.context.req, t.context.res, next);
   next.should.not.have.been.called;

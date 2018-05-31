@@ -9,12 +9,12 @@ const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
 const logger = require('winston');
 const rewire = require('rewire');
-const underscore = require('underscore');
 
 // app modules
 const stubs = require('../../test/utils/stubs');
 const stathat = require('../../lib/stathat');
 const contentfulAPI = require('contentful');
+const defaultTopicTriggerContentfulFactory = require('../../test/utils/factories/contentful/defaultTopicTrigger');
 
 // setup "x.should.y" assertion style
 chai.should();
@@ -29,7 +29,8 @@ const sandbox = sinon.sandbox.create();
 // Stubs
 const allKeywordsStub = Promise.resolve(stubs.contentful.getEntries('keywords'));
 const botConfigStub = stubs.contentful.getEntries('default-campaign').items[0];
-const keywordStub = Promise.resolve(stubs.contentful.getEntries('keyword'));
+const getEntryStub = Promise.resolve(defaultTopicTriggerContentfulFactory
+  .getValidDefaultTopicTrigger());
 const failStub = Promise.reject({ status: 500 });
 const postConfigContentTypeStub = stubs.getPostConfigContentType();
 const contentfulAPIStub = {
@@ -80,49 +81,32 @@ test('contentfulError should add the Contentful error prefix to the error object
   error.message.should.have.string(prefix);
 });
 
-// fetchSingleEntry
-test('fetchSingleEntry should only get one item from the entries returned by contentful', async () => {
-  // setup
-  sandbox.spy(underscore, 'first');
-
-  // fetchSingleEntry calls getEntries so we stub it here using rewire's __set__
+// fetchByContentfulId
+test('fetchByContentfulId should only get one item from the entries returned by contentful', async () => {
   contentful.__set__('client', {
-    getEntries: sinon.stub().returns(allKeywordsStub),
+    getEntry: sinon.stub().returns(getEntryStub),
   });
 
   // test
-  const entry = await contentful.fetchSingleEntry();
-  underscore.first.should.have.been.called;
+  const entry = await contentful.fetchByContentfulId();
   entry.should.be.an('object');
   entry.should.not.be.an('array');
 });
 
-test('fetchSingleEntry should reject with a contentfulError if unsuccessful', async () => {
+test('fetchByContentfulId should reject with a contentfulError if unsuccessful', async () => {
   // setup
   sandbox.spy(contentful, 'contentfulError');
   contentful.__set__('client', {
-    getEntries: sinon.stub().returns(failStub),
+    getEntry: sinon.stub().returns(failStub),
   });
 
   // test
   try {
-    await contentful.fetchSingleEntry();
+    await contentful.fetchByContentfulId();
   } catch (error) {
     error.status.should.be.equal(500);
   }
   contentful.contentfulError.should.have.been.called;
-});
-
-// fetchKeyword
-test('fetchKeyword should send contentful a query with content_type of keyword', async () => {
-  // setup
-  sandbox.stub(contentful, 'fetchSingleEntry').returns(keywordStub);
-  const keyword = stubs.getKeyword();
-  const query = contentful.getQueryBuilder().contentType('keyword').keyword(keyword).build();
-
-  // test
-  await contentful.fetchKeyword(keyword);
-  contentful.fetchSingleEntry.getCall(0).args[0].should.be.eql(query);
 });
 
 // fetchKeywords
@@ -131,8 +115,7 @@ test('fetchKeywords should send contentful a query with content_type of keyword 
   contentful.__set__('client', {
     getEntries: sinon.stub().returns(allKeywordsStub),
   });
-  const env = stubs.getEnvironment();
-  const query = contentful.getQueryBuilder().contentType('keyword').environment(env).build();
+  const query = contentful.getQueryBuilder().keywords().build();
 
   // test
   await contentful.fetchKeywords();
@@ -155,7 +138,7 @@ test('fetchKeywords should call contentfulError when it fails', async () => {
 test('parsePostConfigContentTypeFromBotConfig returns content type if botConfig has postConfig', () => {
   sandbox.stub(contentful, 'getPostConfigFromBotConfig')
     .returns({});
-  sandbox.stub(contentful, 'parseContentTypeFromContentfulEntry')
+  sandbox.stub(contentful, 'getContentTypeFromContentfulEntry')
     .returns(postConfigContentTypeStub);
   const result = contentful.parsePostConfigContentTypeFromBotConfig(botConfigStub);
   result.should.equal(postConfigContentTypeStub);
@@ -168,8 +151,14 @@ test('parsePostConfigContentTypeFromBotConfig returns falsy if botConfig does no
   t.falsy(result);
 });
 
-// parseContentTypeFromEntry
-test('parseContentTypeFromContentfulEntry returns content type name of given entry', () => {
-  const result = contentful.parseContentTypeFromContentfulEntry(botConfigStub);
-  result.should.equal('campaign');
+// getContentfulIdFromContentfulEntry
+test('getContentfulIdFromContentfulEntry returns contentful entry id of given entry', () => {
+  const result = contentful.getContentfulIdFromContentfulEntry(botConfigStub);
+  result.should.equal(botConfigStub.sys.id);
+});
+
+// getContentTypeFromContentfulEntry
+test('getContentTypeFromContentfulEntry returns content type name of given entry', () => {
+  const result = contentful.getContentTypeFromContentfulEntry(botConfigStub);
+  result.should.equal(botConfigStub.sys.contentType.sys.id);
 });

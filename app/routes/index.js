@@ -4,6 +4,9 @@
 const campaignsIndexRoute = require('./campaigns/index');
 const campaignsSingleRoute = require('./campaigns/single');
 const campaignActivityRoute = require('./campaignActivity');
+const defaultTopicTriggersRoute = require('./defaultTopicTriggers');
+const topicsIndexRoute = require('./topics/index');
+const topicsSingleRoute = require('./topics/single');
 const statusRoute = require('./status');
 
 // middleware config
@@ -28,6 +31,9 @@ module.exports = function init(app) {
   app.get('/', statusRoute);
   app.use('/v1/status', statusRoute);
 
+  // Provides list of defaultTopicTriggers
+  app.use('/v1/defaultTopicTriggers', defaultTopicTriggersRoute);
+
   // Provides keywords and templates for a single Campaign.
   app.use('/v1/campaigns/:campaignId', campaignsSingleRoute);
 
@@ -38,4 +44,10 @@ module.exports = function init(app) {
   app.use('/v1/campaignActivity', campaignActivityRoute);
   // TODO: Remove this once we make the switch in Conversations.
   app.use('/v1/receive-message', campaignActivityRoute);
+
+  // Provides data for a chatbot topic.
+  app.use('/v1/topics/:topicId', topicsSingleRoute);
+
+  // Provides list of chatbot topics.
+  app.use('/v1/topics', topicsIndexRoute);
 };
