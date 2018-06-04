@@ -21,7 +21,7 @@ function getRandomWord() {
 function getTopic() {
   return {
     id: module.exports.getContentfulId(),
-    type: module.exports.getPostConfigContentType(),
+    type: module.exports.getTopicContentType(),
     postType: module.exports.getPostType(),
   };
 }
@@ -87,7 +87,7 @@ module.exports = {
   getPost: function getPost() {
     return { id: this.getPostId() };
   },
-  getPostConfigContentType: function getPostConfigContentType() {
+  getTopicContentType: function getTopicContentType() {
     return 'textPostConfig';
   },
   getPostId: function getPostId() {
