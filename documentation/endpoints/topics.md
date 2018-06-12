@@ -1,6 +1,6 @@
 # Topics
 
-A topic is considered one of the following Contentful content types:
+A topic is one of the following Contentful content types:
 
 * `photoPostConfig` - creates a signup and submits a photo post for a campaign
 * `textPostConfig` - creates a signup and submits a text post for a campaign
