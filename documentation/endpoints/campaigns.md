@@ -1,17 +1,32 @@
 # Campaigns
 
-## Retrieve all Campaigns
+A campaign references a [Phoenix campaign](https://github.com/DoSomething/phoenix-next/blob/master/docs/api-reference/v2/campaigns.md#retrieve-a-campaign).
+
+Fields:
+
+Name | Type | Description
+-----|------|------------
+`id` | Number | The campaign id
+`title` | String | The campaign title, available as a `{{title}}` tag within a topic template
+`tagline` | String | The campaign tagline, available as a `{{tagline}}` tag within a topic template
+`status` | String | Either `'active'` or `'closed'`. Users may not participate in chatbot topics for closed campaigns.
+`currentCampaignRun` | Object | Contains a numeric `id` property to be passed when creating a post for the campaign
+`keywords` | Array | List of signup keywords for the campaign. To be deprecated by using `defaultTopicTriggers` instead (see https://github.com/DoSomething/gambit-conversations/pull/339)
+`topics` | Array | List of chatbot [topics](/topics.md) available for the campaign.
+`botConfig` | Object | To be deprecated: this was used when a campaign could only have a single topic. Now that campaigns may have multiple topics, the first topic found in the `topics` array property will be returned here for backwards compatability until https://github.com/DoSomething/gambit-conversations/pull/339 is deployed to production and all keyword entries are archived.
+
+## Retrieve all campaigns
 
 ```
 GET /v1/campaigns
 ```
 
-Returns a list of Campaigns that have Gambit keywords available.
+Returns a list of Campaigns that have keyword entries published. This will likely be deprecated by querying the `defaultTopicTriggers` once keywords are available (or refactored to filter the list of `defaultTopicTriggers` by topics that reference a campaign)
 
 <details><summary>**Example Request**</summary><p>
 
 ```
-curl http://localhost:5000/v1/campaigns?exclude=true \
+curl http://localhost:5000/v1/campaigns \
   -H "Accept: application/json" \
   -H "Content-Type: application/json" \
 ```
@@ -52,25 +67,16 @@ curl http://localhost:5000/v1/campaigns?exclude=true \
 
 </p></details>
 
-## Retrieve a Campaign
+## Retrieve a campaign
 
 ```
 GET /v1/campaigns/:id
 ```
 
-Returns a single Campaign, and its rendered templates for Gambit usage.
-
-A Campaign's `templates` properties are rendered from the fields values defined on a Campaign's corresponding Contentful Campaign. Each `templates` property is an object with properties:
-
-* `override` -- boolean specifying whether the `raw` value is defined on the entry for the
-given Campaign ID, or the default Campaign
-* `raw` -- string, the copy stored in Contentful to use for this message type
-* `rendered` -- string, the rendered copy to be delivered to the end user
-
 <details><summary>**Example Request**</summary><p>
 
 ```
-curl http://localhost:5000/v1/campaigns/7483 \
+curl http://localhost:5000/v1/campaigns/7 \
      -H "Accept: application/json" \
      -H "Content-Type: application/json" \
 ```
@@ -81,29 +87,238 @@ curl http://localhost:5000/v1/campaigns/7483 \
 ```
 {
   "data": {
-    "id": 2900,
-    "title": "Get Lucky",
-    "tagline": "Stash our fortune tellers with tips on using condoms.",
+    "id": 7,
+    "title": "Mirror Messages",
+    "tagline": "Boost a stranger's self-esteem with just a sticky note!",
     "status": "active",
     "currentCampaignRun": {
-      "id": 6477
+      "id": 8076
     },
     "keywords": [
-      "LUCKYBOT"
+      "MIRROR"
+    ],
+    "topics": [
+      {
+        "id": "6swLaA7HKE8AGI6iQuWk4y",
+        "type": "photoPostConfig",
+        "postType": "photo",
+        "templates": {
+          "startPhotoPost": {
+            "raw": "Over 111,000 people have joined the movement to bring positivity to their schools. All it takes is posting encouraging notes in places that can trigger low self-esteem. Take 5 mins to post a note today. \n\nThen, text {{cmd_reportback}} to share a photo of the messages you posted (and you'll be entered to win a $2000 scholarship)!",
+            "override": true,
+            "rendered": "Over 111,000 people have joined the movement to bring positivity to their schools. All it takes is posting encouraging notes in places that can trigger low self-esteem. Take 5 mins to post a note today. \n\nThen, text START to share a photo of the messages you posted (and you'll be entered to win a $2000 scholarship)!"
+          },
+          "webStartPhotoPost": {
+            "raw": "Hey - this is Freddie from DoSomething. Thanks for joining a movement to spread positivity in school. You can do something simple to make a big impact for a stranger.\n\nLet's do this: post encouraging notes in places that can trigger low self-esteem, like school bathrooms.\n\nThen, text  {{cmd_reportback}}  to share a photo of the messages you posted (and you'll be entered to win a $2000 scholarship)!",
+            "override": true,
+            "rendered": "Hey - this is Freddie from DoSomething. Thanks for joining a movement to spread positivity in school. You can do something simple to make a big impact for a stranger.\n\nLet's do this: post encouraging notes in places that can trigger low self-esteem, like school bathrooms.\n\nThen, text  START  to share a photo of the messages you posted (and you'll be entered to win a $2000 scholarship)!"
+          },
+          "startPhotoPostAutoReply": {
+            "raw": "Sorry, I didn't get that.\n\nText {{cmd_reportback}} when you're ready to submit a post for {{title}}.",
+            "override": false,
+            "rendered": "Sorry, I didn't get that.\n\nText START when you're ready to submit a post for Mirror Messages."
+          },
+          "completedPhotoPost": {
+            "raw": "Great! We've got you down for {{quantity}} messages posted.\n\nTo submit another post for Mirror Messages, text {{cmd_reportback}}.",
+            "override": true,
+            "rendered": "Great! We've got you down for {{quantity}} messages posted.\n\nTo submit another post for Mirror Messages, text START."
+          },
+          "completedPhotoPostAutoReply": {
+            "raw": "Sorry I didn't get that.  If you've posted more messages, text {{cmd_reportback}}.\n\nText Q if you have a question, or text MENU to find a different action to take.",
+            "override": true,
+            "rendered": "Sorry I didn't get that.  If you've posted more messages, text START.\n\nText Q if you have a question, or text MENU to find a different action to take."
+          },
+          "askQuantity": {
+            "raw": "Sweet! First, what's the total number of messages you posted?\n\nBe sure to text in a number not a word (i.e. “4”, not “four”)",
+            "override": true,
+            "rendered": "Sweet! First, what's the total number of messages you posted?\n\nBe sure to text in a number not a word (i.e. “4”, not “four”)"
+          },
+          "invalidQuantity": {
+            "raw": "Sorry, that isn't a valid number. What's the total number of messages you posted? Be sure to text in a number not a word (i.e. “4”, not “four”)",
+            "override": true,
+            "rendered": "Sorry, that isn't a valid number. What's the total number of messages you posted? Be sure to text in a number not a word (i.e. “4”, not “four”)"
+          },
+          "askPhoto": {
+            "raw": "Send us your best pic of yourself and the messages you posted.",
+            "override": true,
+            "rendered": "Send us your best pic of yourself and the messages you posted."
+          },
+          "invalidPhoto": {
+            "raw": "Sorry, I didn't get that.\n\nSend us your best pic of yourself and the messages you posted. \n\nIf you have a question, text Q.",
+            "override": true,
+            "rendered": "Sorry, I didn't get that.\n\nSend us your best pic of yourself and the messages you posted. \n\nIf you have a question, text Q."
+          },
+          "askCaption": {
+            "raw": "Got it! Now text back a caption for your photo (think Instagram)! Keep it short & sweet, under 60 characters please.",
+            "override": false,
+            "rendered": "Got it! Now text back a caption for your photo (think Instagram)! Keep it short & sweet, under 60 characters please."
+          },
+          "invalidCaption": {
+            "raw": "Sorry, I didn't get that.\n\nText back a caption for your photo -- keep it short & sweet, under 60 characters please. (but more than 3!)",
+            "override": false,
+            "rendered": "Sorry, I didn't get that.\n\nText back a caption for your photo -- keep it short & sweet, under 60 characters please. (but more than 3!)"
+          },
+          "askWhyParticipated": {
+            "raw": "Last question: Why was participating in {{title}} important to you? (No need to write an essay, one sentence is good).",
+            "override": false,
+            "rendered": "Last question: Why was participating in Mirror Messages important to you? (No need to write an essay, one sentence is good)."
+          },
+          "invalidWhyParticipated": {
+            "raw": "Sorry, I didn't get that.\n\nLast question: Why was participating in {{title}} important to you? (No need to write an essay, one sentence is good).",
+            "override": false,
+            "rendered": "Sorry, I didn't get that.\n\nLast question: Why was participating in Mirror Messages important to you? (No need to write an essay, one sentence is good)."
+          },
+          "memberSupport": {
+            "raw": "Text back your question and I'll try to get back to you within 24 hrs.\n\nIf you want to continue {{title}}, text back {{keyword}}",
+            "override": false,
+            "rendered": "Text back your question and I'll try to get back to you within 24 hrs.\n\nIf you want to continue Mirror Messages, text back MIRROR"
+          },
+          "campaignClosed": {
+            "raw": "Sorry, {{title}} is no longer available.\n\nText {{cmd_member_support}} for help.",
+            "override": false,
+            "rendered": "Sorry, Mirror Messages is no longer available.\n\nText Q for help."
+          },
+          "askSignup": {
+            "raw": "{{tagline}}\n\nWant to join {{title}}?\n\nYes or No",
+            "override": false,
+            "rendered": "Boost a stranger's self-esteem with just a sticky note!\n\nWant to join Mirror Messages?\n\nYes or No"
+          },
+          "declinedSignup": {
+            "raw": "Ok! Text MENU if you'd like to find a different action to take.",
+            "override": false,
+            "rendered": "Ok! Text MENU if you'd like to find a different action to take."
+          },
+          "invalidAskSignupResponse": {
+            "raw": "Sorry, I didn't get that. Did you want to join {{title}}?\n\nYes or No",
+            "override": false,
+            "rendered": "Sorry, I didn't get that. Did you want to join Mirror Messages?\n\nYes or No"
+          },
+          "askContinue": {
+            "raw": "Ready to get back to {{title}}?\n\nYes or No",
+            "override": false,
+            "rendered": "Ready to get back to Mirror Messages?\n\nYes or No"
+          },
+          "declinedContinue": {
+            "raw": "Right on, we'll check in with you about {{title}} later.\n\nText MENU if you'd like to find a different action to take.",
+            "override": false,
+            "rendered": "Right on, we'll check in with you about Mirror Messages later.\n\nText MENU if you'd like to find a different action to take."
+          },
+          "invalidAskContinueResponse": {
+            "raw": "Sorry, I didn't get that. Did you want to join {{title}}?\n\nYes or No",
+            "override": false,
+            "rendered": "Sorry, I didn't get that. Did you want to join Mirror Messages?\n\nYes or No"
+          }
+        }
+      }
     ],
     "botConfig": {
-      "postType": "text",
+      "postType": "photo",
       "templates": {
-        "gambitSignupMenu": {
-          "raw": "Thanks for signing up for {{title}}! Text {{cmd_reportback}} to submit a post.",
-          "override": false,
-          "rendered": "Thanks for signing up for Get Lucky! Text START to submit a post."
+        "startPhotoPost": {
+          "raw": "Over 111,000 people have joined the movement to bring positivity to their schools. All it takes is posting encouraging notes in places that can trigger low self-esteem. Take 5 mins to post a note today. \n\nThen, text {{cmd_reportback}} to share a photo of the messages you posted (and you'll be entered to win a $2000 scholarship)!",
+          "override": true,
+          "rendered": "Over 111,000 people have joined the movement to bring positivity to their schools. All it takes is posting encouraging notes in places that can trigger low self-esteem. Take 5 mins to post a note today. \n\nThen, text START to share a photo of the messages you posted (and you'll be entered to win a $2000 scholarship)!"
         },
-        "externalSignupMenu": {
-          "raw": "Hi its Freddie from DoSomething! Thanks for signing up for {{title}}! Text {{cmd_reportback}} to submit a post.",
-          "override": false,
-          "rendered": "Hi its Freddie from DoSomething! Thanks for signing up for Get Lucky! Text START to submit a post."
+        "webStartPhotoPost": {
+          "raw": "Hey - this is Freddie from DoSomething. Thanks for joining a movement to spread positivity in school. You can do something simple to make a big impact for a stranger.\n\nLet's do this: post encouraging notes in places that can trigger low self-esteem, like school bathrooms.\n\nThen, text  {{cmd_reportback}}  to share a photo of the messages you posted (and you'll be entered to win a $2000 scholarship)!",
+          "override": true,
+          "rendered": "Hey - this is Freddie from DoSomething. Thanks for joining a movement to spread positivity in school. You can do something simple to make a big impact for a stranger.\n\nLet's do this: post encouraging notes in places that can trigger low self-esteem, like school bathrooms.\n\nThen, text  START  to share a photo of the messages you posted (and you'll be entered to win a $2000 scholarship)!"
         },
+        "startPhotoPostAutoReply": {
+          "raw": "Sorry, I didn't get that.\n\nText {{cmd_reportback}} when you're ready to submit a post for {{title}}.",
+          "override": false,
+          "rendered": "Sorry, I didn't get that.\n\nText START when you're ready to submit a post for Mirror Messages."
+        },
+        "completedPhotoPost": {
+          "raw": "Great! We've got you down for {{quantity}} messages posted.\n\nTo submit another post for Mirror Messages, text {{cmd_reportback}}.",
+          "override": true,
+          "rendered": "Great! We've got you down for {{quantity}} messages posted.\n\nTo submit another post for Mirror Messages, text START."
+        },
+        "completedPhotoPostAutoReply": {
+          "raw": "Sorry I didn't get that.  If you've posted more messages, text {{cmd_reportback}}.\n\nText Q if you have a question, or text MENU to find a different action to take.",
+          "override": true,
+          "rendered": "Sorry I didn't get that.  If you've posted more messages, text START.\n\nText Q if you have a question, or text MENU to find a different action to take."
+        },
+        "askQuantity": {
+          "raw": "Sweet! First, what's the total number of messages you posted?\n\nBe sure to text in a number not a word (i.e. “4”, not “four”)",
+          "override": true,
+          "rendered": "Sweet! First, what's the total number of messages you posted?\n\nBe sure to text in a number not a word (i.e. “4”, not “four”)"
+        },
+        "invalidQuantity": {
+          "raw": "Sorry, that isn't a valid number. What's the total number of messages you posted? Be sure to text in a number not a word (i.e. “4”, not “four”)",
+          "override": true,
+          "rendered": "Sorry, that isn't a valid number. What's the total number of messages you posted? Be sure to text in a number not a word (i.e. “4”, not “four”)"
+        },
+        "askPhoto": {
+          "raw": "Send us your best pic of yourself and the messages you posted.",
+          "override": true,
+          "rendered": "Send us your best pic of yourself and the messages you posted."
+        },
+        "invalidPhoto": {
+          "raw": "Sorry, I didn't get that.\n\nSend us your best pic of yourself and the messages you posted. \n\nIf you have a question, text Q.",
+          "override": true,
+          "rendered": "Sorry, I didn't get that.\n\nSend us your best pic of yourself and the messages you posted. \n\nIf you have a question, text Q."
+        },
+        "askCaption": {
+          "raw": "Got it! Now text back a caption for your photo (think Instagram)! Keep it short & sweet, under 60 characters please.",
+          "override": false,
+          "rendered": "Got it! Now text back a caption for your photo (think Instagram)! Keep it short & sweet, under 60 characters please."
+        },
+        "invalidCaption": {
+          "raw": "Sorry, I didn't get that.\n\nText back a caption for your photo -- keep it short & sweet, under 60 characters please. (but more than 3!)",
+          "override": false,
+          "rendered": "Sorry, I didn't get that.\n\nText back a caption for your photo -- keep it short & sweet, under 60 characters please. (but more than 3!)"
+        },
+        "askWhyParticipated": {
+          "raw": "Last question: Why was participating in {{title}} important to you? (No need to write an essay, one sentence is good).",
+          "override": false,
+          "rendered": "Last question: Why was participating in Mirror Messages important to you? (No need to write an essay, one sentence is good)."
+        },
+        "invalidWhyParticipated": {
+          "raw": "Sorry, I didn't get that.\n\nLast question: Why was participating in {{title}} important to you? (No need to write an essay, one sentence is good).",
+          "override": false,
+          "rendered": "Sorry, I didn't get that.\n\nLast question: Why was participating in Mirror Messages important to you? (No need to write an essay, one sentence is good)."
+        },
+        "memberSupport": {
+          "raw": "Text back your question and I'll try to get back to you within 24 hrs.\n\nIf you want to continue {{title}}, text back {{keyword}}",
+          "override": false,
+          "rendered": "Text back your question and I'll try to get back to you within 24 hrs.\n\nIf you want to continue Mirror Messages, text back MIRROR"
+        },
+        "campaignClosed": {
+          "raw": "Sorry, {{title}} is no longer available.\n\nText {{cmd_member_support}} for help.",
+          "override": false,
+          "rendered": "Sorry, Mirror Messages is no longer available.\n\nText Q for help."
+        },
+        "askSignup": {
+          "raw": "{{tagline}}\n\nWant to join {{title}}?\n\nYes or No",
+          "override": false,
+          "rendered": "Boost a stranger's self-esteem with just a sticky note!\n\nWant to join Mirror Messages?\n\nYes or No"
+        },
+        "declinedSignup": {
+          "raw": "Ok! Text MENU if you'd like to find a different action to take.",
+          "override": false,
+          "rendered": "Ok! Text MENU if you'd like to find a different action to take."
+        },
+        "invalidAskSignupResponse": {
+          "raw": "Sorry, I didn't get that. Did you want to join {{title}}?\n\nYes or No",
+          "override": false,
+          "rendered": "Sorry, I didn't get that. Did you want to join Mirror Messages?\n\nYes or No"
+        },
+        "askContinue": {
+          "raw": "Ready to get back to {{title}}?\n\nYes or No",
+          "override": false,
+          "rendered": "Ready to get back to Mirror Messages?\n\nYes or No"
+        },
+        "declinedContinue": {
+          "raw": "Right on, we'll check in with you about {{title}} later.\n\nText MENU if you'd like to find a different action to take.",
+          "override": false,
+          "rendered": "Right on, we'll check in with you about Mirror Messages later.\n\nText MENU if you'd like to find a different action to take."
+        },
+        "invalidAskContinueResponse": {
+          "raw": "Sorry, I didn't get that. Did you want to join {{title}}?\n\nYes or No",
+          "override": false,
+          "rendered": "Sorry, I didn't get that. Did you want to join Mirror Messages?\n\nYes or No"
+        }
       }
     }
   }
