@@ -115,7 +115,10 @@ curl http://localhost:5000/v1/topics \
           "override": false,
           "rendered": "Sorry, I didn't get that. Did you want to join Lose Your V-Card?\n\nYes or No"
         }
-      }
+      },
+      "triggers": [
+        "vcard",
+      ]
     },
     {
       "id": "3peS2Oye08o6OwUMAEcS2c",
