@@ -1,6 +1,6 @@
 # Default topic triggers
 
-Default topic triggers define [Rivescript triggers](https://www.rivescript.com/docs/tutorial#triggers) to be added to the chatbot's default Rivescript topic, in addition to the ones we've [hardcoded](https://github.com/DoSomething/gambit-conversations/tree/master/brain).
+The defaultTopicTrigger entries define additional Rivescript [triggers to add to the default topic](https://www.rivescript.com/docs/tutorial#triggers) that is [hardcoded](https://github.com/DoSomething/gambit-conversations/tree/master/brain).
 
 Fields:
 
@@ -10,24 +10,25 @@ Name | Type | Description
 `trigger` | String | The line of text used to match an inbound message from a user
 `reply` | String | If set, the line of text to be returned as a reply to the user
 `redirect` | String | If set, references the `trigger` that contains the `reply` to be used for this trigger
-`topicId` | String | If set, change the user's topic to this 
+`topicId` | String | If set, updates the conversation topic. To be deprecated once gambit-conversations queries for the `topic` property
+`topic` | Object | If set, updates the conversation topic.
 
 A default topic trigger will have either a single `reply`, `redirect`, or `topicId` set, it cannot have a combination of these properties.
 
 
 ```
-GET /v1/topics
+GET /v1/defaultTopicTriggers
 ```
 
-Returns a list of chatbot topics published in Contentful.
+Returns defaultTopicTrigger entries.
 
 
 <details><summary>**Example Request**</summary><p>
 
 ```
-curl http://localhost:5000/v1/topics \
-  -H "Accept: application/json" \
-  -H "Content-Type: application/json" \
+curl http://localhost:5000/v1/defaultTopicTriggers
+  -H "Accept: application/json"
+  -H "Content-Type: application/json"
 ```
 
 </p></details>
@@ -47,10 +48,36 @@ curl http://localhost:5000/v1/topics \
       "trigger": "(what|how) you (doing|doin|feeling|feelin|up to) [*]",
       "redirect": "chat"
     },
-      {
-      "id": "3ievihqFRekcmqScOOqGMC",
-      "trigger": "spit",
-      "topicId": "tv7e98JGXmMM2kskGaUA2"
+    {
+      "id": "4bK32GTCNius2EMie8OIko",
+      "trigger": "brake",
+      "topicId": "5PhrBp29VuiEuiwCqOSCEW",
+      "topic": {
+        "id": "5PhrBp29VuiEuiwCqOSCEW",
+        "name": "Brake It Down - Take quiz",
+        "type": "externalPostConfig",
+        "postType": "external",
+        "campaign": {
+          "id": 8109,
+          "title": "Brake It Down",
+          "tagline": "Take a quiz to increase road safety.",
+          "status": "active",
+          "currentCampaignRun": {
+            "id": 8110
+          },
+          "keywords": [
+            "BRAKE"
+          ]
+        },
+        "templates": {
+          ...
+        }
+      }
+    },
+    {
+      "id": "OBeo4BHGWiuaGiKA82A20",
+      "trigger": "(smosh|smash|smsh|smoosh|shmsh)",
+      "reply": "Ian & Anthony are super busy doing other funny and cool things. It's <bot name> for now! Don't forget, everything you need is at <bot url>. Text ya later!"
     },
     {
       "id": "2eQcVISjvWKCCGOmqOycMW",
