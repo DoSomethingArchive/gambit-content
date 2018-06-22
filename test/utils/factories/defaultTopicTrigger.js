@@ -8,6 +8,7 @@ const stubs = require('../stubs');
 function getValidDefaultTopicTriggerWithReply() {
   return {
     id: stubs.getContentfulId(),
+    trigger: stubs.getRandomMessageText(),
     reply: stubs.getRandomMessageText(),
   };
 }

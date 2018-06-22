@@ -92,3 +92,14 @@ test('getAll returns fetchAll results if cache not set', async () => {
   defaultTopicTriggerHelper.fetchAll.should.have.been.called;
   result.should.deep.equal(fetchResult);
 });
+
+// getTriggersFromDefaultTopicTriggers
+test('getTriggersFromDefaultTopicTriggers returns array of trigger properties', (t) => {
+  const defaultTopicTriggers = [firstDefaultTopicTrigger, secondDefaultTopicTrigger];
+
+  const result = defaultTopicTriggerHelper
+    .getTriggersFromDefaultTopicTriggers(defaultTopicTriggers);
+  result[0].should.equal(firstDefaultTopicTrigger.trigger);
+  result[1].should.equal(secondDefaultTopicTrigger.trigger);
+  t.is(result.length, 2);
+});
