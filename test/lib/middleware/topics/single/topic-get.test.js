@@ -12,7 +12,11 @@ const underscore = require('underscore');
 const stubs = require('../../../../utils/stubs');
 const helpers = require('../../../../../lib/helpers');
 
-const botConfigStub = stubs.contentful.getEntries('default-campaign').items[0];
+const defaultTopicTriggerFactory = require('../../../../utils/factories/defaultTopicTrigger');
+const topicFactory = require('../../../../utils/factories/topic');
+
+const topic = topicFactory.getValidTopic();
+const defaultTopicTrigger = defaultTopicTriggerFactory.getValidDefaultTopicTriggerWithTopic();
 
 chai.should();
 chai.use(sinonChai);
@@ -42,12 +46,14 @@ test('getTopic should inject a topic property set to getById result', async (t) 
   const next = sinon.stub();
   const middleware = getTopic();
   sandbox.stub(helpers.topic, 'getById')
-    .returns(Promise.resolve(botConfigStub));
+    .returns(Promise.resolve(topic));
+  sandbox.stub(helpers.defaultTopicTrigger, 'getByTopicId')
+    .returns(Promise.resolve([defaultTopicTrigger]));
 
   // test
   await middleware(t.context.req, t.context.res, next);
   helpers.topic.getById.should.have.been.calledWith(t.context.req.params.topicId);
-  t.context.res.send.should.have.been.calledWith({ data: botConfigStub });
+  t.context.res.send.should.have.been.calledWith({ data: topic });
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
