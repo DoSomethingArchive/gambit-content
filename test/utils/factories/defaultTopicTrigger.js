@@ -2,17 +2,29 @@
 
 const stubs = require('../stubs');
 
+function getDefaultTopicTrigger() {
+  return {
+    id: stubs.getContentfulId(),
+    trigger: stubs.getRandomMessageText(),
+  };
+}
+
 /**
  * @return {Object}
  */
 function getValidDefaultTopicTriggerWithReply() {
-  return {
-    id: stubs.getContentfulId(),
-    trigger: stubs.getRandomMessageText(),
-    reply: stubs.getRandomMessageText(),
-  };
+  const result = getDefaultTopicTrigger();
+  result.reply = stubs.getRandomMessageText();
+  return result;
 }
 
+function getValidDefaultTopicTriggerWithTopic() {
+  const result = getDefaultTopicTrigger();
+  result.topicId = stubs.getContentfulId();
+  // TODO: Add topic property
+  return result;
+}
 module.exports = {
   getValidDefaultTopicTriggerWithReply,
+  getValidDefaultTopicTriggerWithTopic,
 };
