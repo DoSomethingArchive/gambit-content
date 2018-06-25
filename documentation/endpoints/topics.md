@@ -18,6 +18,7 @@ Name | Type | Description
 `templates.raw` | String | The field value stored in Contentful to return for the template, or a hardcoded default value if the field value is not set
 `templates.rendered` | String | The `raw` value replaced with any campaign or command tags. See https://github.com/DoSomething/gambit-admin/wiki/Tags
 `templates.override` | Boolean | Whether the `raw` value is set from a Contentful field value (override is `true`), or from a hardcoded default (override is `false`)
+`triggers` | Array | List of defaultTopicTriggers that change user conversation to this topic
 
 ## Retrieve all topics
 
@@ -25,7 +26,7 @@ Name | Type | Description
 GET /v1/topics
 ```
 
-Returns a list of chatbot topics published in Contentful.
+Returns all topics.
 
 
 <details><summary>**Example Request**</summary><p>
@@ -115,7 +116,10 @@ curl http://localhost:5000/v1/topics \
           "override": false,
           "rendered": "Sorry, I didn't get that. Did you want to join Lose Your V-Card?\n\nYes or No"
         }
-      }
+      },
+      "triggers": [
+        "vcard",
+      ]
     },
     {
       "id": "3peS2Oye08o6OwUMAEcS2c",
@@ -239,7 +243,10 @@ curl http://localhost:5000/v1/topics \
           "override": false,
           "rendered": "Sorry, I didn't get that. Did you want to join #SaveTheMascots?\n\nYes or No"
         }
-      }
+      },
+      "triggers": [
+        "mascot",
+      ]
     },
   ]
 }
@@ -391,7 +398,10 @@ curl http://localhost:5000/v1/topics/6swLaA7HKE8AGI6iQuWk4y \
         "override": false,
         "rendered": "Sorry, I didn't get that. Did you want to join Mirror Messages?\n\nYes or No"
       }
-    }
+    },
+    "triggers": [
+      "mirror",
+    ]
   }
 }
 ```

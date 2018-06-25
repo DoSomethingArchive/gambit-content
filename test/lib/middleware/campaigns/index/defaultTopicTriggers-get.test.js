@@ -11,18 +11,13 @@ const underscore = require('underscore');
 
 const stubs = require('../../../../utils/stubs');
 const helpers = require('../../../../../lib/helpers');
-
 const defaultTopicTriggerFactory = require('../../../../utils/factories/defaultTopicTrigger');
-const topicFactory = require('../../../../utils/factories/topic');
-
-const topic = topicFactory.getValidTopic();
-const defaultTopicTrigger = defaultTopicTriggerFactory.getValidDefaultTopicTriggerWithTopic();
 
 chai.should();
 chai.use(sinonChai);
 
 // module to be tested
-const getTopic = require('../../../../../lib/middleware/topics/single/topic-get');
+const getDefaultTopicTriggersWithCampaignTopics = require('../../../../../lib/middleware/campaigns/index/defaultTopicTriggers-get');
 
 const sandbox = sinon.sandbox.create();
 
@@ -30,11 +25,8 @@ test.beforeEach((t) => {
   sandbox.stub(helpers, 'sendErrorResponse')
     .returns(underscore.noop);
   t.context.req = httpMocks.createRequest();
-  t.context.req.params = {
-    topicId: stubs.getContentfulId(),
-  };
+  t.context.req.campaign = stubs.getPhoenixCampaign();
   t.context.res = httpMocks.createResponse();
-  sandbox.spy(t.context.res, 'send');
 });
 
 test.afterEach((t) => {
@@ -42,31 +34,31 @@ test.afterEach((t) => {
   t.context = {};
 });
 
-test('getTopic should inject a topic property set to getById result', async (t) => {
+test('getDefaultTopicTriggersWithCampaignTopics should inject a changeTopicTriggers property set to helpers.defaultTopicTrigger.getAllWithCampaignTopics result', async (t) => {
   const next = sinon.stub();
-  const middleware = getTopic();
-  sandbox.stub(helpers.topic, 'getById')
-    .returns(Promise.resolve(topic));
-  sandbox.stub(helpers.defaultTopicTrigger, 'getByTopicId')
-    .returns(Promise.resolve([defaultTopicTrigger]));
+  const middleware = getDefaultTopicTriggersWithCampaignTopics();
+  const defaultTopicTriggers = [defaultTopicTriggerFactory.getValidDefaultTopicTriggerWithTopic()];
+  sandbox.stub(helpers.defaultTopicTrigger, 'getAllWithCampaignTopics')
+    .returns(Promise.resolve(defaultTopicTriggers));
 
   // test
   await middleware(t.context.req, t.context.res, next);
-  helpers.topic.getById.should.have.been.calledWith(t.context.req.params.topicId);
-  t.context.res.send.should.have.been.calledWith({ data: topic });
+  helpers.defaultTopicTrigger.getAllWithCampaignTopics.should.have.been.called;
+  t.context.req.changeTopicTriggers.should.deep.equal(defaultTopicTriggers);
+  next.should.have.been.called;
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
-test('getTopic should sendErrorResponse if getById fails', async (t) => {
+test('getDefaultTopicTriggersWithCampaignTopics should sendErrorResponse if getByCampaignId fails', async (t) => {
   const next = sinon.stub();
-  const middleware = getTopic();
+  const middleware = getDefaultTopicTriggersWithCampaignTopics();
   const mockError = { message: 'Epic fail' };
-  sandbox.stub(helpers.topic, 'getById')
+  sandbox.stub(helpers.defaultTopicTrigger, 'getAllWithCampaignTopics')
     .returns(Promise.reject(mockError));
 
   // test
   await middleware(t.context.req, t.context.res, next);
-  helpers.topic.getById.should.have.been.calledWith(t.context.req.params.topicId);
-  t.context.res.send.should.not.have.been.called;
+  helpers.defaultTopicTrigger.getAllWithCampaignTopics.should.have.been.called;
+  next.should.not.have.been.called;
   helpers.sendErrorResponse.should.have.been.calledWith(t.context.res, mockError);
 });

@@ -11,6 +11,7 @@ const contentful = require('../../../lib/contentful');
 const helpers = require('../../../lib/helpers');
 const stubs = require('../../utils/stubs');
 const config = require('../../../config/lib/helpers/topic');
+const textPostConfigFactory = require('../../utils/factories/contentful/textPostConfig');
 
 const campaignId = stubs.getCampaignId();
 const campaignConfig = stubs.contentful.getEntries('default-campaign').items[0];
@@ -206,4 +207,16 @@ test('getFieldValueFromContentfulEntryAndTemplateName returns the entry field va
 test('getPostTypeFromContentType returns the topic field value for templateName arg', () => {
   const result = topicHelper.getPostTypeFromContentType(topicContentType);
   result.should.equal(config.postTypesByContentType[topicContentType]);
+});
+
+// parseTopicFromContentfulEntry
+test('parseTopicFromContentfulEntry returns object', async () => {
+  const textPostConfig = textPostConfigFactory.getValidTextPostConfig();
+  sandbox.stub(contentful, 'getContentTypeFromContentfulEntry')
+    .returns(topicContentType);
+
+  const result = await topicHelper.parseTopicFromContentfulEntry(textPostConfig);
+  result.id.should.equal(textPostConfig.sys.id);
+  result.name.should.equal(textPostConfig.fields.name);
+  result.type.should.equal(topicContentType);
 });

@@ -1,6 +1,7 @@
 # Campaigns
 
-A campaign references a [Phoenix campaign](https://github.com/DoSomething/phoenix-next/blob/master/docs/api-reference/v2/campaigns.md#retrieve-a-campaign).
+The `campaigns` resource lists active topics for [campaigns](https://github.com/DoSomething/phoenix-next/blob/master/docs/api-reference/v2/campaigns.md#retrieve-a-campaign).  Users can participate in a campaign via chatbot if the campaign has at least one active topic, meaning the topic has at least one published defaultTopicTrigger referencing it (aka a campaign keyword).
+
 
 Fields:
 
@@ -12,8 +13,8 @@ Name | Type | Description
 `status` | String | Either `'active'` or `'closed'`. Users may not participate in chatbot topics for closed campaigns.
 `currentCampaignRun` | Object | Contains a numeric `id` property to be passed when creating a post for the campaign
 `keywords` | Array | List of signup keywords for the campaign. To be deprecated by using `defaultTopicTriggers` instead (see https://github.com/DoSomething/gambit-conversations/pull/339)
-`topics` | Array | List of chatbot [topics](/topics.md) available for the campaign.
-`botConfig` | Object | To be deprecated: this was used when a campaign could only have a single topic. Now that campaigns may have multiple topics, the first topic found in the `topics` array property will be returned here for backwards compatability until https://github.com/DoSomething/gambit-conversations/pull/339 is deployed to production and all keyword entries are archived.
+`topics` | Array | List of active [topics](/topics.md) available for the campaign.
+
 
 ## Retrieve all campaigns
 
@@ -21,7 +22,7 @@ Name | Type | Description
 GET /v1/campaigns
 ```
 
-Returns a list of Campaigns that have keyword entries published. This will likely be deprecated by querying the `defaultTopicTriggers` once keywords are available (or refactored to filter the list of `defaultTopicTriggers` by topics that reference a campaign)
+Returns a list of campaigns that active topics.
 
 <details><summary>**Example Request**</summary><p>
 
@@ -36,33 +37,54 @@ curl http://localhost:5000/v1/campaigns \
 <details><summary>**Example Response**</summary><p>
 
 ```
+{
   "data": [
     {
-      "id": 2710,
-      "title": "#SuperStressFace",
+      "id": 7,
+      "title": "Mirror Messages",
+      "tagline": "Boost a stranger's self-esteem with just a sticky note!",
       "status": "active",
+      "currentCampaignRun": {
+        "id": 8076
+      },
       "keywords": [
-        "STRESSBOT"
+        "MIRROR"
+      ],
+      "topics": [
+        {
+          "id": "6swLaA7HKE8AGI6iQuWk4y",
+          "name": "Mirror Messages",
+          "postType": "photo",
+          "triggers": [
+            "mirror"
+          ]
+        }
       ]
     },
     {
-      "id": 1524,
-      "title": "Bubble Breaks",
-      "status": "active",
+      "id": 2178,
+      "title": "Give a Spit About Cancer",
+      "tagline": "Fight blood cancer just by swabbing your cheek.",
+      "status": "closed",
+      "currentCampaignRun": {
+        "id": 8044
+      },
       "keywords": [
-        "BUBBLEBOT"
-      ]
-    },
-    {
-      "id": 6620,
-      "title": "Dunk You Very Much",
-      "status": "active",
-      "keywords": [
-        "DUNKBOT",
-        "DUNKINTIME"
+        "SPIT"
+      ],
+      "topics": [
+        {
+          "id": "tv7e98JGXmMM2kskGaUA2",
+          "name": "Give A Spit - Share link",
+          "postType": "external",
+          "triggers": [
+            "spit"
+          ]
+        }
       ]
     },
   ]
+}
 ```
 
 </p></details>

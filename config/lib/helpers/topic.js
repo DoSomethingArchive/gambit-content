@@ -39,7 +39,7 @@ module.exports = {
     campaign: {
       memberSupport: {
         fieldName: 'memberSupportMessage',
-        defaultText: 'Text back your question and I\'ll try to get back to you within 24 hrs.\n\nIf you want to continue {{title}}, text back {{keyword}}',
+        defaultText: 'Text back your question and I\'ll try to get back to you within 24 hrs.',
       },
       campaignClosed: {
         fieldName: 'campaignClosedMessage',

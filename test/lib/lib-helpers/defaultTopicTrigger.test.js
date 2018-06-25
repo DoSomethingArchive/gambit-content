@@ -69,7 +69,6 @@ test('getAll returns allDefaultTopicTriggers cache if set', async () => {
   sandbox.stub(defaultTopicTriggerHelper, 'fetchAll')
     .returns(Promise.resolve([]));
 
-
   const result = await defaultTopicTriggerHelper.getAll();
   helpers.cache.defaultTopicTriggers.get
     .should.have.been.calledWith(config.allDefaultTopicTriggersCacheKey);
@@ -91,4 +90,21 @@ test('getAll returns fetchAll results if cache not set', async () => {
     .should.have.been.calledWith(config.allDefaultTopicTriggersCacheKey);
   defaultTopicTriggerHelper.fetchAll.should.have.been.called;
   result.should.deep.equal(fetchResult);
+});
+
+// getTriggersFromDefaultTopicTriggers
+test('getTriggersFromDefaultTopicTriggers returns array of trigger properties', () => {
+  const defaultTopicTriggers = [firstDefaultTopicTrigger, secondDefaultTopicTrigger];
+
+  const result = defaultTopicTriggerHelper
+    .getTriggersFromDefaultTopicTriggers(defaultTopicTriggers);
+  result.should.deep.equal([firstDefaultTopicTrigger.trigger, secondDefaultTopicTrigger.trigger]);
+});
+
+// removeInvalidDefaultTopicTriggers
+test('removeInvalidDefaultTopicTriggers filters any null array items', () => {
+  const parsedItems = [null, firstDefaultTopicTrigger, null, null, secondDefaultTopicTrigger, null];
+  const result = defaultTopicTriggerHelper
+    .removeInvalidDefaultTopicTriggers(parsedItems);
+  result.should.deep.equal([firstDefaultTopicTrigger, secondDefaultTopicTrigger]);
 });
