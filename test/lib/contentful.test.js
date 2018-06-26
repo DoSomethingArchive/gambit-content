@@ -16,6 +16,7 @@ const stubs = require('../../test/utils/stubs');
 const stathat = require('../../lib/stathat');
 const contentfulAPI = require('contentful');
 const defaultTopicTriggerContentfulFactory = require('../../test/utils/factories/contentful/defaultTopicTrigger');
+const textPostConfigContentfulFactory = require('../../test/utils/factories/contentful/textPostConfig');
 
 // setup "x.should.y" assertion style
 chai.should();
@@ -30,6 +31,7 @@ const sandbox = sinon.sandbox.create();
 // Stubs
 const defaultTopicTriggerEntry = defaultTopicTriggerContentfulFactory
   .getValidDefaultTopicTrigger();
+const textPostConfigEntry = textPostConfigContentfulFactory.getValidTextPostConfig();
 const allKeywordsStub = Promise.resolve(stubs.contentful.getEntries('keywords'));
 const campaignConfigStub = stubs.contentful.getEntries('default-campaign').items[0];
 const getEntriesStub = Promise.resolve({ items: [defaultTopicTriggerEntry] });
@@ -182,4 +184,10 @@ test('getContentfulIdFromContentfulEntry returns contentful entry id of given en
 test('getContentTypeFromContentfulEntry returns content type name of given entry', () => {
   const result = contentful.getContentTypeFromContentfulEntry(campaignConfigStub);
   result.should.equal(campaignConfigStub.sys.contentType.sys.id);
+});
+
+// getNameTextFromContentfulEntry
+test('getNameTextFromContentfulEntry returns value of given entry name field', () => {
+  const result = contentful.getNameTextFromContentfulEntry(textPostConfigEntry);
+  result.should.equal(textPostConfigEntry.fields.name);
 });

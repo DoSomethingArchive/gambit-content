@@ -12,8 +12,6 @@ const underscore = require('underscore');
 const stubs = require('../../../../utils/stubs');
 const helpers = require('../../../../../lib/helpers');
 
-const botConfigStub = stubs.contentful.getEntries('default-campaign').items[0];
-
 chai.should();
 chai.use(sinonChai);
 
@@ -38,13 +36,12 @@ test.afterEach((t) => {
 test('getTopics should inject a topics property set to helpers.topic.getByCampaignId result', async (t) => {
   const next = sinon.stub();
   const middleware = getTopics();
-  sandbox.stub(helpers.topic, 'getByCampaignId')
-    .returns(Promise.resolve(botConfigStub));
+  sandbox.stub(helpers.defaultTopicTrigger, 'getAll')
+    .returns(Promise.resolve([]));
 
   // test
   await middleware(t.context.req, t.context.res, next);
-  helpers.topic.getByCampaignId.should.have.been.calledWith(t.context.req.campaignId);
-  t.context.req.topics.should.deep.equal(botConfigStub);
+  helpers.defaultTopicTrigger.getAll.should.have.been.called;
   next.should.have.been.called;
   helpers.sendErrorResponse.should.not.have.been.called;
 });
@@ -53,12 +50,12 @@ test('getTopics should sendErrorResponse if getByCampaignId fails', async (t) =>
   const next = sinon.stub();
   const middleware = getTopics();
   const mockError = { message: 'Epic fail' };
-  sandbox.stub(helpers.topic, 'getByCampaignId')
+  sandbox.stub(helpers.defaultTopicTrigger, 'getAll')
     .returns(Promise.reject(mockError));
 
   // test
   await middleware(t.context.req, t.context.res, next);
-  helpers.topic.getByCampaignId.should.have.been.calledWith(t.context.req.campaignId);
+  helpers.defaultTopicTrigger.getAll.should.have.been.called;
   next.should.not.have.been.called;
   helpers.sendErrorResponse.should.have.been.calledWith(t.context.res, mockError);
 });
