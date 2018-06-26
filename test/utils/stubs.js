@@ -109,9 +109,6 @@ module.exports = {
   getPhoneNumber: function getPhoneNumber() {
     return '5559108329';
   },
-  getKeywordContentfulObject: function getKeywordContentfulObject() {
-    return {};
-  },
   // Mocks a Signup populated with a draft Reportback Submission.
   getSignupWithDraft: function getSignupWithDraft() {
     return {
@@ -236,20 +233,9 @@ module.exports = {
     return msg;
   },
   contentful: {
-
     getAllTemplatesForCampaignId: function getAllTemplatesForCampaignId() {
       return module.exports.getJSONstub('all-campaign-fields');
     },
-
-    // Returns an object that is formatted in-place
-    // in lib/contentful's method: fetchKeywordsForCampaignId.
-    // We should be returning raw JSON data that we get from contentful here!
-    // TODO: Refactor when we format response in a separate function (testable)
-    // instead of in-place inside the promise's callback
-    getKeywords: function getKeywords() {
-      return [{ keyword: 'BOOKBOT' }];
-    },
-
     /**
      * Gets entries from contentful
      *
