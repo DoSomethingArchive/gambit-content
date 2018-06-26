@@ -13,7 +13,6 @@ const underscore = require('underscore');
 const dateFns = require('date-fns');
 
 const helpers = require('../../../lib/helpers');
-const contentful = require('../../../lib/contentful');
 const phoenix = require('../../../lib/phoenix');
 const stubs = require('../../utils/stubs');
 

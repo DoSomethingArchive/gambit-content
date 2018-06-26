@@ -4,7 +4,6 @@
 require('dotenv').config();
 
 // Libraries
-const Promise = require('bluebird');
 const test = require('ava');
 const chai = require('chai');
 const newrelic = require('newrelic');
@@ -16,15 +15,10 @@ const sinon = require('sinon');
 // App Modules
 const stubs = require('../../test/utils/stubs');
 const signupFactory = require('../utils/factories/signup');
-const contentful = require('../../lib/contentful.js');
 const stathat = require('../../lib/stathat');
 
 // Module to test
 const helpers = require('../../lib/helpers');
-
-// Stub functions
-const fetchKeywordsForCampaignIdStub = () => Promise.resolve(stubs.contentful.getKeywords());
-const fetchKeywordsForCampaignIdStubFail = () => Promise.reject({ status: 500 });
 
 // setup "x.should.y" assertion style
 chai.should();
@@ -35,12 +29,6 @@ const sandbox = sinon.sandbox.create();
 // Setup!
 test.beforeEach((t) => {
   stubs.stubLogger(sandbox, logger);
-  sandbox.stub(contentful, 'fetchKeywordsForCampaignId')
-    .callsFake(fetchKeywordsForCampaignIdStub)
-    .withArgs('fail')
-    .callsFake(fetchKeywordsForCampaignIdStubFail)
-    .withArgs('empty')
-    .returns(Promise.resolve([]));
   sandbox.stub(newrelic, 'addCustomParameters');
   sandbox.stub(stathat, 'postStat');
 

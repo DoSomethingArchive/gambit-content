@@ -32,7 +32,6 @@ const sandbox = sinon.sandbox.create();
 const defaultTopicTriggerEntry = defaultTopicTriggerContentfulFactory
   .getValidDefaultTopicTrigger();
 const textPostConfigEntry = textPostConfigContentfulFactory.getValidTextPostConfig();
-const allKeywordsStub = Promise.resolve(stubs.contentful.getEntries('keywords'));
 const campaignConfigStub = stubs.contentful.getEntries('default-campaign').items[0];
 const getEntriesStub = Promise.resolve({ items: [defaultTopicTriggerEntry] });
 const failStub = Promise.reject({ status: 500 });
@@ -148,29 +147,6 @@ test('fetchByContentTypes should call contentfulError when it fails', async (t) 
 
   // test
   await t.throws(contentful.fetchByContentTypes(['text']));
-  contentful.contentfulError.should.have.been.called;
-});
-
-// fetchKeywords
-test('fetchKeywords should send contentful a query with keywords', async () => {
-  contentful.__set__('client', {
-    getEntries: sinon.stub().returns(allKeywordsStub),
-  });
-  const query = contentful.getQueryBuilder().keywords().build();
-
-  // test
-  await contentful.fetchKeywords();
-  contentful.getClient().getEntries.getCall(0).args[0].should.be.eql(query);
-});
-
-test('fetchKeywords should call contentfulError when it fails', async () => {
-  sandbox.spy(contentful, 'contentfulError');
-  contentful.__set__('client', {
-    getEntries: sinon.stub().returns(failStub),
-  });
-
-  // test
-  await contentful.fetchKeywords();
   contentful.contentfulError.should.have.been.called;
 });
 
