@@ -1,6 +1,6 @@
 # Campaigns
 
-The `campaigns` resource lists active topics for [campaigns](https://github.com/DoSomething/phoenix-next/blob/master/docs/api-reference/v2/campaigns.md#retrieve-a-campaign).  Users can participate in a campaign via chatbot if the campaign has at least one active topic, meaning the topic has at least one published defaultTopicTrigger referencing it (aka a campaign keyword).
+The `campaigns` resource lists active topics for [campaigns](https://github.com/DoSomething/phoenix-next/blob/master/docs/api-reference/v2/campaigns.md#retrieve-a-campaign).  Users can participate in a campaign via chatbot if the campaign has at least one active topic, meaning the topic has at least one published defaultTopicTrigger referencing it.
 
 
 Fields:
@@ -12,7 +12,6 @@ Name | Type | Description
 `tagline` | String | The campaign tagline, available as a `{{tagline}}` tag within a topic template
 `status` | String | Either `'active'` or `'closed'`. Users may not participate in chatbot topics for closed campaigns.
 `currentCampaignRun` | Object | Contains a numeric `id` property to be passed when creating a post for the campaign
-`keywords` | Array | List of signup keywords for the campaign. To be deprecated by using `defaultTopicTriggers` instead (see https://github.com/DoSomething/gambit-conversations/pull/339)
 `topics` | Array | List of active [topics](/topics.md) available for the campaign.
 
 
@@ -47,9 +46,6 @@ curl http://localhost:5000/v1/campaigns \
       "currentCampaignRun": {
         "id": 8076
       },
-      "keywords": [
-        "MIRROR"
-      ],
       "topics": [
         {
           "id": "6swLaA7HKE8AGI6iQuWk4y",
@@ -69,9 +65,6 @@ curl http://localhost:5000/v1/campaigns \
       "currentCampaignRun": {
         "id": 8044
       },
-      "keywords": [
-        "SPIT"
-      ],
       "topics": [
         {
           "id": "tv7e98JGXmMM2kskGaUA2",
@@ -116,9 +109,6 @@ curl http://localhost:5000/v1/campaigns/7 \
     "currentCampaignRun": {
       "id": 8076
     },
-    "keywords": [
-      "MIRROR"
-    ],
     "topics": [
       {
         "id": "6swLaA7HKE8AGI6iQuWk4y",
@@ -191,9 +181,9 @@ curl http://localhost:5000/v1/campaigns/7 \
             "rendered": "Sorry, I didn't get that.\n\nLast question: Why was participating in Mirror Messages important to you? (No need to write an essay, one sentence is good)."
           },
           "memberSupport": {
-            "raw": "Text back your question and I'll try to get back to you within 24 hrs.\n\nIf you want to continue {{title}}, text back {{keyword}}",
+            "raw": "Text back your question and I'll try to get back to you within 24 hrs.",
             "override": false,
-            "rendered": "Text back your question and I'll try to get back to you within 24 hrs.\n\nIf you want to continue Mirror Messages, text back MIRROR"
+            "rendered": "Text back your question and I'll try to get back to you within 24 hrs."
           },
           "campaignClosed": {
             "raw": "Sorry, {{title}} is no longer available.\n\nText {{cmd_member_support}} for help.",
