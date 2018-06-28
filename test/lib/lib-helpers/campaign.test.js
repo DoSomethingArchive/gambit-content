@@ -13,7 +13,6 @@ const underscore = require('underscore');
 const dateFns = require('date-fns');
 
 const helpers = require('../../../lib/helpers');
-const contentful = require('../../../lib/contentful');
 const phoenix = require('../../../lib/phoenix');
 const stubs = require('../../utils/stubs');
 
@@ -43,20 +42,16 @@ test.afterEach(() => {
 });
 
 // fetchById
-test('fetchById calls phoenix.fetchCampaignById and contentful.fetchKeywordsForCampaignId', async () => {
-  const keywords = ['winterfell', 'lannister'];
+test('fetchById calls phoenix.fetchCampaignById and parseCampaign', async () => {
   sandbox.stub(phoenix, 'fetchCampaignById')
     .returns(Promise.resolve(stubs.phoenix.getCampaign()));
   sandbox.stub(campaignHelper, 'parseCampaign')
     .returns(campaign);
-  sandbox.stub(contentful, 'fetchKeywordsForCampaignId')
-    .returns(Promise.resolve(keywords));
 
   const result = await campaignHelper.fetchById(campaignId);
   phoenix.fetchCampaignById.should.have.been.calledWith(campaignId);
-  contentful.fetchKeywordsForCampaignId.should.have.been.calledWith(campaignId);
-  result.title.should.equal(campaign.title);
-  result.keywords.should.deep.equal(keywords);
+  campaignHelper.parseCampaign.should.have.been.calledWith(campaign);
+  result.should.deep.equal(campaign);
 });
 
 // getById
