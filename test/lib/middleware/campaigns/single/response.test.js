@@ -54,24 +54,12 @@ test.afterEach((t) => {
   t.context = {};
 });
 
-test('sendResponse sends botConfig object with null properties when req.topics undefined', (t) => {
-  const middleware = sendResponse();
-  t.context.req.topics = [];
-  middleware(t.context.req, t.context.res);
-
-  t.falsy(t.context.req.campaign.botConfig.postType);
-  t.falsy(t.context.req.campaign.botConfig.templates);
-  t.context.res.send.should.have.been.called;
-});
-
 test('sendResponse injects a topics array if req.topics exists', (t) => {
   t.context.req.topics = mockTopics;
   const middleware = sendResponse();
 
   middleware(t.context.req, t.context.res);
   t.context.req.campaign.topics.should.deep.equal(mockTopics);
-  t.context.req.campaign.botConfig.postType.should.equal(firstMockTopic.postType);
-  t.context.req.campaign.botConfig.templates.should.deep.equal(firstMockTopic.templates);
   t.context.res.send.should.have.been.called;
 });
 
