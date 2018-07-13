@@ -8,6 +8,10 @@ const Chance = require('chance');
 
 const chance = new Chance();
 
+function getBroadcastName() {
+  return 'FeedingBetterFutures2018_Jan30_Niche_TestA';
+}
+
 /**
  * @return {String}
  */
@@ -70,8 +74,9 @@ module.exports = {
     return 6677;
   },
   getBroadcastId: function getBroadcastId() {
-    return 1246319;
+    return this.getContentfulId();
   },
+  getBroadcastName,
   getContentfulId: function getContentfulId() {
     return '5xa3oDEx4Ao0Sm2qoQCeI';
   },
