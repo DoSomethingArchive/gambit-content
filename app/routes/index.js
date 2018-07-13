@@ -39,9 +39,6 @@ module.exports = function init(app) {
   // Provides list of chatbot broadcasts.
   app.use('/v1/broadcasts', broadcastsIndexRoute);
 
-  // Provides list of campaigns with active topics.
-  app.use('/v1/campaigns', campaignsIndexRoute);
-
   // Provides list of defaultTopicTriggers
   app.use('/v1/defaultTopicTriggers', defaultTopicTriggersRoute);
 
