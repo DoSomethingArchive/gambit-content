@@ -132,7 +132,8 @@ test('fetchByContentTypes should send contentful a query with contentTypes', asy
   contentful.__set__('client', {
     getEntries: sinon.stub().returns(getEntriesStub),
   });
-  const query = contentful.getQueryBuilder().contentTypes(contentTypes).build();
+  const query = contentful.getQueryBuilder()
+    .contentTypes(contentTypes).orderByDescCreatedAt().build();
 
   // test
   await contentful.fetchByContentTypes(contentTypes);
