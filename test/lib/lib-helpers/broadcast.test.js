@@ -16,6 +16,8 @@ const broadcastFactory = require('../../utils/factories/broadcast');
 const broadcastId = stubs.getContentfulId();
 const broadcastEntry = broadcastEntryFactory.getValidCampaignBroadcast();
 const broadcast = broadcastFactory.getValidCampaignBroadcast();
+const broadcastName = stubs.getBroadcastName();
+const campaignId = stubs.getCampaignId();
 
 // Module to test
 const broadcastHelper = require('../../../lib/helpers/broadcast');
@@ -24,6 +26,15 @@ chai.should();
 chai.use(sinonChai);
 
 const sandbox = sinon.sandbox.create();
+
+test.beforeEach(() => {
+  sandbox.stub(contentful, 'getContentfulIdFromContentfulEntry')
+    .returns(broadcastId);
+  sandbox.stub(contentful, 'getNameTextFromContentfulEntry')
+    .returns(broadcastName);
+  sandbox.stub(contentful, 'getCampaignIdFromContentfulEntry')
+    .returns(campaignId);
+});
 
 test.afterEach(() => {
   sandbox.restore();
@@ -68,4 +79,32 @@ test('fetchById returns contentful.fetchByContentfulId parsed as broadcast objec
   contentful.fetchByContentfulId.should.have.been.calledWith(broadcastId);
   broadcastHelper.parseBroadcastFromContentfulEntry.should.have.been.calledWith(fetchEntryResult);
   result.should.deep.equal(broadcast);
+});
+
+// parseBroadcastFromContentfulEntry
+test('parseBroadcastFromContentfulEntry returns an object with null topic if campaign broadcast', (t) => {
+  const result = broadcastHelper.parseBroadcastFromContentfulEntry(broadcastEntry);
+  contentful.getContentfulIdFromContentfulEntry.should.have.been.calledWith(broadcastEntry);
+  result.id.should.equal(broadcastId);
+  contentful.getNameTextFromContentfulEntry.should.have.been.calledWith(broadcastEntry);
+  result.name.should.equal(broadcastName);
+  t.is(result.topic, null);
+  result.campaignId.should.equal(campaignId);
+  result.message.text.should.equal(broadcastEntry.fields.message);
+  result.message.template.should.equal(broadcastEntry.fields.template);
+});
+
+test('parseBroadcastFromContentfulEntry returns an object with null campaignId if hardcoded topic broadcast', (t) => {
+  const hardcodedTopicBroadcastEntry = broadcastEntryFactory.getValidTopicBroadcast();
+  const result = broadcastHelper.parseBroadcastFromContentfulEntry(hardcodedTopicBroadcastEntry);
+  contentful.getContentfulIdFromContentfulEntry
+    .should.have.been.calledWith(hardcodedTopicBroadcastEntry);
+  result.id.should.equal(broadcastId);
+  contentful.getNameTextFromContentfulEntry
+    .should.have.been.calledWith(hardcodedTopicBroadcastEntry);
+  result.name.should.equal(broadcastName);
+  t.is(result.campaignId, null);
+  result.topic.should.equal(hardcodedTopicBroadcastEntry.fields.topic);
+  result.message.text.should.equal(hardcodedTopicBroadcastEntry.fields.message);
+  result.message.template.should.equal('rivescript');
 });

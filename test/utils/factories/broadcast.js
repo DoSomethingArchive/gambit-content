@@ -5,7 +5,7 @@ const stubs = require('../stubs');
 function getValidCampaignBroadcast(date = Date.now()) {
   return {
     id: stubs.getBroadcastId(),
-    name: 'FeedingBetterFutures2018_Jan30_Niche_TestA',
+    name: stubs.getBroadcastName(),
     createdAt: date,
     updatedAt: date,
     message: {

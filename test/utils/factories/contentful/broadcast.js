@@ -5,12 +5,12 @@ const stubs = require('../../stubs');
 module.exports.getValidCampaignBroadcast = function getValidCampaignBroadcast(date = Date.now()) {
   return {
     sys: {
-      id: stubs.getContentfulId(),
+      id: stubs.getBroadcastId(),
       createdAt: date,
       updatedAt: date,
     },
     fields: {
-      name: stubs.getRandomWord(),
+      name: stubs.getBroadcastName(),
       topic: null,
       message: stubs.getRandomMessageText(),
       template: 'askSignup',
