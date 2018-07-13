@@ -2,6 +2,9 @@
 
 Endpoint                                       | Functionality                                           
 ---------------------------------------------- | --------------------------------------------------------
+`GET /v1/broadcasts` | Retrieve broadcasts
+`GET /v1/broadcasts/:id` | Retrieve a single broadcast
+`GET /v1/campaigns/:id` | [Retrieve a campaign](endpoints/campaigns.md#retrieve-a-campaigns)
 `GET /v1/campaigns` | [Retrieve all campaigns with active topics](endpoints/campaigns.md#retrieve-all-campaigns)
 `GET /v1/campaigns/:id` | [Retrieve a campaign](endpoints/campaigns.md#retrieve-a-campaigns)
 `POST /v1/campaignActivity` | [Parses an inbound message from user as campaign activity](endpoints/campaignActivity.md)
