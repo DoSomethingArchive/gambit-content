@@ -70,7 +70,7 @@ module.exports = {
     return 6677;
   },
   getBroadcastId: function getBroadcastId() {
-    return 1246319;
+    return this.getContentfulId();
   },
   getContentfulId: function getContentfulId() {
     return '5xa3oDEx4Ao0Sm2qoQCeI';
