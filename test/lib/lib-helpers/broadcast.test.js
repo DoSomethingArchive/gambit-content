@@ -13,6 +13,8 @@ const config = require('../../../config/lib/helpers/broadcast');
 const broadcastEntryFactory = require('../../utils/factories/contentful/broadcast');
 const broadcastFactory = require('../../utils/factories/broadcast');
 
+// stubs
+const attachments = [stubs.getAttachment()];
 const broadcastId = stubs.getContentfulId();
 const broadcastEntry = broadcastEntryFactory.getValidCampaignBroadcast();
 const broadcast = broadcastFactory.getValidCampaignBroadcast();
@@ -83,6 +85,9 @@ test('fetchById returns contentful.fetchByContentfulId parsed as broadcast objec
 
 // parseBroadcastFromContentfulEntry
 test('parseBroadcastFromContentfulEntry returns an object with null topic if campaign broadcast', (t) => {
+  sandbox.stub(contentful, 'getAttachmentsFromContentfulEntry')
+    .returns(attachments);
+
   const result = broadcastHelper.parseBroadcastFromContentfulEntry(broadcastEntry);
   contentful.getContentfulIdFromContentfulEntry.should.have.been.calledWith(broadcastEntry);
   result.id.should.equal(broadcastId);
@@ -92,6 +97,8 @@ test('parseBroadcastFromContentfulEntry returns an object with null topic if cam
   result.campaignId.should.equal(campaignId);
   result.message.text.should.equal(broadcastEntry.fields.message);
   result.message.template.should.equal(broadcastEntry.fields.template);
+  contentful.getAttachmentsFromContentfulEntry.should.have.been.calledWith(broadcastEntry);
+  result.message.attachments.should.equal(attachments);
 });
 
 test('parseBroadcastFromContentfulEntry returns an object with null campaignId if hardcoded topic broadcast', (t) => {
