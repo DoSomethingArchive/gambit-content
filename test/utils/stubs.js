@@ -9,6 +9,31 @@ const Chance = require('chance');
 const chance = new Chance();
 
 /**
+ * @return {Object}
+ */
+function getAttachment() {
+  return {
+    url: '//images.ctfassets.net/owik07lyerdj/55kiwuII4oWWG2OiWM2E6e/fb93ab4a76c2f4a5d6c6afb1a2fc810f/doge-code.png',
+    details: {
+      size: 182729,
+      image: {
+        width: 476,
+        height: 249,
+      },
+    },
+    fileName: 'doge-code.png',
+    contentType: 'image/png',
+  };
+}
+
+/**
+ * @return {String}
+ */
+function getBroadcastName() {
+  return 'FeedingBetterFutures2018_Jan30_Niche_TestA';
+}
+
+/**
  * @return {String}
  */
 function getRandomWord() {
@@ -27,6 +52,7 @@ function getTopic() {
 }
 
 module.exports = {
+  getAttachment,
   getTopic,
   rogueClient: {
     getOauth2ClientToken: (expiresInSeconds = 3600) => {
@@ -70,8 +96,9 @@ module.exports = {
     return 6677;
   },
   getBroadcastId: function getBroadcastId() {
-    return 1246319;
+    return this.getContentfulId();
   },
+  getBroadcastName,
   getContentfulId: function getContentfulId() {
     return '5xa3oDEx4Ao0Sm2qoQCeI';
   },

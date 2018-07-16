@@ -15,6 +15,7 @@ const underscore = require('underscore');
 const stubs = require('../../test/utils/stubs');
 const stathat = require('../../lib/stathat');
 const contentfulAPI = require('contentful');
+const broadcastContentfulFactory = require('../../test/utils/factories/contentful/broadcast');
 const defaultTopicTriggerContentfulFactory = require('../../test/utils/factories/contentful/defaultTopicTrigger');
 const textPostConfigContentfulFactory = require('../../test/utils/factories/contentful/textPostConfig');
 
@@ -29,6 +30,7 @@ const contentful = rewire('../../lib/contentful');
 const sandbox = sinon.sandbox.create();
 
 // Stubs
+const broadcastEntry = broadcastContentfulFactory.getValidCampaignBroadcast();
 const defaultTopicTriggerEntry = defaultTopicTriggerContentfulFactory
   .getValidDefaultTopicTrigger();
 const textPostConfigEntry = textPostConfigContentfulFactory.getValidTextPostConfig();
@@ -132,7 +134,8 @@ test('fetchByContentTypes should send contentful a query with contentTypes', asy
   contentful.__set__('client', {
     getEntries: sinon.stub().returns(getEntriesStub),
   });
-  const query = contentful.getQueryBuilder().contentTypes(contentTypes).build();
+  const query = contentful.getQueryBuilder()
+    .contentTypes(contentTypes).orderByDescCreatedAt().build();
 
   // test
   await contentful.fetchByContentTypes(contentTypes);
@@ -160,6 +163,13 @@ test('getContentfulIdFromContentfulEntry returns contentful entry id of given en
 test('getContentTypeFromContentfulEntry returns content type name of given entry', () => {
   const result = contentful.getContentTypeFromContentfulEntry(campaignConfigStub);
   result.should.equal(campaignConfigStub.sys.contentType.sys.id);
+});
+
+// getAttachmentsFromContentfulEntry
+test('getAttachmentsFromContentfulEntry returns value of given entry name field', () => {
+  const result = contentful.getAttachmentsFromContentfulEntry(broadcastEntry);
+  const attachment = broadcastEntry.fields.attachments[0].fields.file;
+  result.should.deep.equal([attachment]);
 });
 
 // getNameTextFromContentfulEntry

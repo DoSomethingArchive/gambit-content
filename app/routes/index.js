@@ -1,6 +1,8 @@
 'use strict';
 
 // Routes
+const broadcastsIndexRoute = require('./broadcasts/index');
+const broadcastsSingleRoute = require('./broadcasts/single');
 const campaignsIndexRoute = require('./campaigns/index');
 const campaignsSingleRoute = require('./campaigns/single');
 const campaignActivityRoute = require('./campaignActivity');
@@ -30,6 +32,12 @@ module.exports = function init(app) {
   regGlobalMiddleware(app);
   app.get('/', statusRoute);
   app.use('/v1/status', statusRoute);
+
+  // Provides data for a chatbot broadcast.
+  app.use('/v1/broadcasts/:broadcastId', broadcastsSingleRoute);
+
+  // Provides list of chatbot broadcasts.
+  app.use('/v1/broadcasts', broadcastsIndexRoute);
 
   // Provides list of defaultTopicTriggers
   app.use('/v1/defaultTopicTriggers', defaultTopicTriggersRoute);
