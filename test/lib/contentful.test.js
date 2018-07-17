@@ -134,11 +134,13 @@ test('fetchByContentTypes should send contentful a query with contentTypes', asy
   contentful.__set__('client', {
     getEntries: sinon.stub().returns(getEntriesStub),
   });
+  const skipCount = 11;
   const query = contentful.getQueryBuilder()
-    .contentTypes(contentTypes).orderByDescCreatedAt().build();
+    .contentTypes(contentTypes).skip(skipCount).orderByDescCreatedAt()
+    .build();
 
   // test
-  await contentful.fetchByContentTypes(contentTypes);
+  await contentful.fetchByContentTypes(contentTypes, skipCount);
   contentful.getClient().getEntries.getCall(0).args[0].should.be.eql(query);
 });
 

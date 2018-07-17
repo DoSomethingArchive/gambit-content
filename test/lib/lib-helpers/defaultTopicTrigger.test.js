@@ -33,7 +33,7 @@ test.afterEach(() => {
 // fetchAll
 test('fetchAll returns contentful.fetchByContentTypes parsed as defaultTopicTrigger objects', async () => {
   sandbox.stub(contentful, 'fetchByContentTypes')
-    .returns(Promise.resolve([firstEntry, secondEntry]));
+    .returns(Promise.resolve({ items: [firstEntry, secondEntry] }));
   sandbox.stub(defaultTopicTriggerHelper, 'parseDefaultTopicTriggerFromContentfulEntry')
     .onCall(0)
     .returns(firstDefaultTopicTrigger)

@@ -37,7 +37,7 @@ test.afterEach(() => {
 
 // fetchAll
 test('fetchAll returns contentful.fetchByContentTypes parsed as topic objects', async () => {
-  const fetchTopicsEntriesResult = [{ id: '132' }];
+  const fetchTopicsEntriesResult = { items: [textPostConfigFactory.getValidTextPostConfig()] };
   sandbox.stub(contentful, 'fetchByContentTypes')
     .returns(Promise.resolve(fetchTopicsEntriesResult));
   sandbox.stub(topicHelper, 'parseTopicFromContentfulEntry')
@@ -45,7 +45,7 @@ test('fetchAll returns contentful.fetchByContentTypes parsed as topic objects', 
 
   const result = await topicHelper.fetchAll();
   contentful.fetchByContentTypes.should.have.been.calledWith(config.topicContentTypes);
-  fetchTopicsEntriesResult.forEach((item) => {
+  fetchTopicsEntriesResult.items.forEach((item) => {
     topicHelper.parseTopicFromContentfulEntry.should.have.been.calledWith(item);
   });
   result.should.deep.equal([topic]);
