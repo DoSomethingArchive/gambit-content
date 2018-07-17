@@ -33,33 +33,31 @@ test.afterEach((t) => {
   t.context = {};
 });
 
-test('getBroadcasts should send helpers.broadcast.fetchAll result', async (t) => {
+test('getBroadcasts should send helpers.broadcast.fetch result', async (t) => {
   const next = sinon.stub();
   const middleware = getBroadcasts();
   const firstBroadcast = broadcastFactory.getValidCampaignBroadcast();
   const secondBroadcast = broadcastFactory.getValidCampaignBroadcast();
-  sandbox.stub(helpers.broadcast, 'fetchAll')
-    .returns(Promise.resolve([firstBroadcast, secondBroadcast]));
+  sandbox.stub(helpers.broadcast, 'fetch')
+    .returns(Promise.resolve({ data: [firstBroadcast, secondBroadcast] }));
 
   // test
   await middleware(t.context.req, t.context.res, next);
-  helpers.broadcast.fetchAll.should.have.been.called;
-  t.context.req.data[0].name.should.equal(firstBroadcast.name);
-  t.context.req.data[1].name.should.equal(secondBroadcast.name);
+  helpers.broadcast.fetch.should.have.been.called;
   t.context.res.send.should.have.been.called;
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
-test('getBroadcasts should send errorResponse if helpers.broadcast.getAll fails', async (t) => {
+test('getBroadcasts should send errorResponse if helpers.broadcast.fetch fails', async (t) => {
   const next = sinon.stub();
   const middleware = getBroadcasts();
   const error = new Error('o noes');
-  sandbox.stub(helpers.broadcast, 'fetchAll')
+  sandbox.stub(helpers.broadcast, 'fetch')
     .returns(Promise.reject(error));
 
   // test
   await middleware(t.context.req, t.context.res, next);
-  helpers.broadcast.fetchAll.should.have.been.called;
+  helpers.broadcast.fetch.should.have.been.called;
   t.context.res.send.should.not.have.been.called;
   helpers.sendErrorResponse.should.have.been.calledWith(t.context.res, error);
 });

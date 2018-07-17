@@ -42,30 +42,30 @@ test.afterEach(() => {
   sandbox.restore();
 });
 
-// fetchAll
-test('fetchAll returns contentful.fetchByContentTypes parsed as broadcast objects', async () => {
+// fetch
+test('fetch returns contentful.fetchByContentTypes parsed as broadcast objects', async () => {
   const fetchEntriesResult = { items: [broadcastEntry] };
   sandbox.stub(contentful, 'fetchByContentTypes')
     .returns(Promise.resolve(fetchEntriesResult));
   sandbox.stub(broadcastHelper, 'parseBroadcastFromContentfulEntry')
-    .returns(Promise.resolve(broadcast));
+    .returns(broadcast);
 
-  const result = await broadcastHelper.fetchAll();
+  const result = await broadcastHelper.fetch();
   contentful.fetchByContentTypes.should.have.been.calledWith(config.broadcastContentTypes);
   fetchEntriesResult.items.forEach((item) => {
     broadcastHelper.parseBroadcastFromContentfulEntry.should.have.been.calledWith(item);
   });
-  result.should.deep.equal([broadcast]);
+  result.data.should.deep.equal([broadcast]);
 });
 
-test('fetchAll throws if contentful.fetchByContentTypes fails', async (t) => {
+test('fetch throws if contentful.fetchByContentTypes fails', async (t) => {
   const error = new Error('epic fail');
   sandbox.stub(contentful, 'fetchByContentTypes')
     .returns(Promise.reject(error));
   sandbox.stub(broadcastHelper, 'parseBroadcastFromContentfulEntry')
-    .returns(Promise.resolve(broadcast));
+    .returns(broadcast);
 
-  const result = await t.throws(broadcastHelper.fetchAll());
+  const result = await t.throws(broadcastHelper.fetch());
   result.should.deep.equal(error);
 });
 
