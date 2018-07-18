@@ -48,7 +48,7 @@ test('fetch returns contentful.fetchByContentTypes parsed as topic objects', asy
   fetchTopicsEntriesResult.items.forEach((item) => {
     topicHelper.parseTopicFromContentfulEntry.should.have.been.calledWith(item);
   });
-  result.should.deep.equal([topic]);
+  result.data.should.deep.equal([topic]);
 });
 
 test('fetch throws if contentful.fetchByContentTypes fails', async (t) => {
@@ -98,7 +98,7 @@ test('getAll returns fetch results if cache not set', async () => {
   sandbox.stub(helpers.cache.topics, 'get')
     .returns(Promise.resolve(null));
   sandbox.stub(topicHelper, 'fetch')
-    .returns(Promise.resolve(allTopics));
+    .returns(Promise.resolve({ data: allTopics }));
   sandbox.stub(helpers.cache.topics, 'set')
     .returns(Promise.resolve(allTopics));
 

@@ -35,14 +35,14 @@ test.afterEach((t) => {
   t.context = {};
 });
 
-test('getTopics should send helpers.topic.getAll result', async (t) => {
+test('getTopics should send helpers.topic.fetch result', async (t) => {
   const next = sinon.stub();
   const middleware = getTopics();
   const triggers = [stubs.getRandomWord()];
   const firstTopic = topicFactory.getValidTopic();
   const secondTopic = topicFactory.getValidTopic();
-  sandbox.stub(helpers.topic, 'getAll')
-    .returns(Promise.resolve([firstTopic, secondTopic]));
+  sandbox.stub(helpers.topic, 'fetch')
+    .returns(Promise.resolve({ data: [firstTopic, secondTopic] }));
   sandbox.stub(helpers.defaultTopicTrigger, 'getByTopicId')
     .returns(Promise.resolve(defaultTopicTriggerFactory.getValidDefaultTopicTriggerWithTopic()));
   sandbox.stub(helpers.defaultTopicTrigger, 'getTriggersFromDefaultTopicTriggers')
@@ -50,7 +50,7 @@ test('getTopics should send helpers.topic.getAll result', async (t) => {
 
   // test
   await middleware(t.context.req, t.context.res, next);
-  helpers.topic.getAll.should.have.been.called;
+  helpers.topic.fetch.should.have.been.called;
   helpers.defaultTopicTrigger.getByTopicId.should.have.been.calledWith(firstTopic.id);
   helpers.defaultTopicTrigger.getByTopicId.should.have.been.calledWith(secondTopic.id);
   t.context.req.data[0].name.should.equal(firstTopic.name);
@@ -61,16 +61,16 @@ test('getTopics should send helpers.topic.getAll result', async (t) => {
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
-test('getTopics should send errorResponse if helpers.topic.getAll fails', async (t) => {
+test('getTopics should send errorResponse if helpers.topic.fetch fails', async (t) => {
   const next = sinon.stub();
   const middleware = getTopics();
   const error = new Error('o noes');
-  sandbox.stub(helpers.topic, 'getAll')
+  sandbox.stub(helpers.topic, 'fetch')
     .returns(Promise.reject(error));
 
   // test
   await middleware(t.context.req, t.context.res, next);
-  helpers.topic.getAll.should.have.been.called;
+  helpers.topic.fetch.should.have.been.called;
   t.context.res.send.should.not.have.been.called;
   helpers.sendErrorResponse.should.have.been.calledWith(t.context.res, error);
 });
