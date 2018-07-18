@@ -35,23 +35,23 @@ test.afterEach(() => {
   sandbox.restore();
 });
 
-// fetchAll
-test('fetchAll returns contentful.fetchByContentTypes parsed as topic objects', async () => {
+// fetch
+test('fetch returns contentful.fetchByContentTypes parsed as topic objects', async () => {
   const fetchTopicsEntriesResult = { items: [textPostConfigFactory.getValidTextPostConfig()] };
   sandbox.stub(contentful, 'fetchByContentTypes')
     .returns(Promise.resolve(fetchTopicsEntriesResult));
   sandbox.stub(topicHelper, 'parseTopicFromContentfulEntry')
     .returns(Promise.resolve(topic));
 
-  const result = await topicHelper.fetchAll();
-  contentful.fetchByContentTypes.should.have.been.calledWith(config.topicContentTypes);
+  const result = await topicHelper.fetch();
+  contentful.fetchByContentTypes.should.have.been.calledWith(config.topicContentTypes, {});
   fetchTopicsEntriesResult.items.forEach((item) => {
     topicHelper.parseTopicFromContentfulEntry.should.have.been.calledWith(item);
   });
   result.should.deep.equal([topic]);
 });
 
-test('fetchAll throws if contentful.fetchByContentTypes fails', async (t) => {
+test('fetch throws if contentful.fetchByContentTypes fails', async (t) => {
   const error = new Error('epic fail');
   sandbox.stub(contentful, 'fetchByContentTypes')
     .returns(Promise.reject(error));
@@ -59,7 +59,7 @@ test('fetchAll throws if contentful.fetchByContentTypes fails', async (t) => {
     .returns(Promise.resolve(topic));
 
 
-  const result = await t.throws(topicHelper.fetchAll());
+  const result = await t.throws(topicHelper.fetch());
   result.should.deep.equal(error);
 });
 
@@ -83,28 +83,28 @@ test('getAll returns allTopics cache if set', async () => {
   const allTopicsCacheResult = [{ id: '132' }];
   sandbox.stub(helpers.cache.topics, 'get')
     .returns(Promise.resolve(allTopicsCacheResult));
-  sandbox.stub(topicHelper, 'fetchAll')
+  sandbox.stub(topicHelper, 'fetch')
     .returns(Promise.resolve(allTopicsCacheResult));
 
 
   const result = await topicHelper.getAll();
   helpers.cache.topics.get.should.have.been.calledWith(config.allTopicsCacheKey);
-  topicHelper.fetchAll.should.not.have.been.called;
+  topicHelper.fetch.should.not.have.been.called;
   result.should.deep.equal(allTopicsCacheResult);
 });
 
-test('getAll returns fetchAll results if cache not set', async () => {
+test('getAll returns fetch results if cache not set', async () => {
   const allTopics = [{ id: '132' }];
   sandbox.stub(helpers.cache.topics, 'get')
     .returns(Promise.resolve(null));
-  sandbox.stub(topicHelper, 'fetchAll')
+  sandbox.stub(topicHelper, 'fetch')
     .returns(Promise.resolve(allTopics));
   sandbox.stub(helpers.cache.topics, 'set')
     .returns(Promise.resolve(allTopics));
 
   const result = await topicHelper.getAll();
   helpers.cache.topics.get.should.have.been.calledWith(config.allTopicsCacheKey);
-  topicHelper.fetchAll.should.have.been.called;
+  topicHelper.fetch.should.have.been.called;
   result.should.deep.equal(allTopics);
 });
 

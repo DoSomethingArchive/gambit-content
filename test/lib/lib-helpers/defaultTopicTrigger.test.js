@@ -30,8 +30,8 @@ test.afterEach(() => {
   sandbox.restore();
 });
 
-// fetchAll
-test('fetchAll returns contentful.fetchByContentTypes parsed as defaultTopicTrigger objects', async () => {
+// fetch
+test('fetch returns contentful.fetchByContentTypes parsed as defaultTopicTrigger objects', async () => {
   sandbox.stub(contentful, 'fetchByContentTypes')
     .returns(Promise.resolve({ items: [firstEntry, secondEntry] }));
   sandbox.stub(defaultTopicTriggerHelper, 'parseDefaultTopicTriggerFromContentfulEntry')
@@ -40,7 +40,7 @@ test('fetchAll returns contentful.fetchByContentTypes parsed as defaultTopicTrig
     .onCall(1)
     .returns(secondDefaultTopicTrigger);
 
-  const result = await defaultTopicTriggerHelper.fetchAll();
+  const result = await defaultTopicTriggerHelper.fetch();
   contentful.fetchByContentTypes
     .should.have.been.calledWith(config.defaultTopicTriggerContentTypes);
   defaultTopicTriggerHelper.parseDefaultTopicTriggerFromContentfulEntry
@@ -50,14 +50,14 @@ test('fetchAll returns contentful.fetchByContentTypes parsed as defaultTopicTrig
   result.should.deep.equal([firstDefaultTopicTrigger, secondDefaultTopicTrigger]);
 });
 
-test('fetchAll throws if contentful.fetchByContentTypes fails', async (t) => {
+test('fetch throws if contentful.fetchByContentTypes fails', async (t) => {
   const error = new Error('epic fail');
   sandbox.stub(contentful, 'fetchByContentTypes')
     .returns(Promise.reject(error));
   sandbox.stub(defaultTopicTriggerHelper, 'parseDefaultTopicTriggerFromContentfulEntry')
     .returns(firstDefaultTopicTrigger);
 
-  const result = await t.throws(defaultTopicTriggerHelper.fetchAll());
+  const result = await t.throws(defaultTopicTriggerHelper.fetch());
   result.should.deep.equal(error);
 });
 
@@ -66,21 +66,21 @@ test('getAll returns allDefaultTopicTriggers cache if set', async () => {
   const cacheResult = [firstDefaultTopicTrigger, secondDefaultTopicTrigger];
   sandbox.stub(helpers.cache.defaultTopicTriggers, 'get')
     .returns(Promise.resolve(cacheResult));
-  sandbox.stub(defaultTopicTriggerHelper, 'fetchAll')
+  sandbox.stub(defaultTopicTriggerHelper, 'fetch')
     .returns(Promise.resolve([]));
 
   const result = await defaultTopicTriggerHelper.getAll();
   helpers.cache.defaultTopicTriggers.get
     .should.have.been.calledWith(config.allDefaultTopicTriggersCacheKey);
-  defaultTopicTriggerHelper.fetchAll.should.not.have.been.called;
+  defaultTopicTriggerHelper.fetch.should.not.have.been.called;
   result.should.deep.equal(cacheResult);
 });
 
-test('getAll returns fetchAll results if cache not set', async () => {
+test('getAll returns fetch results if cache not set', async () => {
   const fetchResult = [firstDefaultTopicTrigger, secondDefaultTopicTrigger];
   sandbox.stub(helpers.cache.defaultTopicTriggers, 'get')
     .returns(Promise.resolve(null));
-  sandbox.stub(defaultTopicTriggerHelper, 'fetchAll')
+  sandbox.stub(defaultTopicTriggerHelper, 'fetch')
     .returns(Promise.resolve(fetchResult));
   sandbox.stub(helpers.cache.topics, 'set')
     .returns(Promise.resolve(fetchResult));
@@ -88,7 +88,7 @@ test('getAll returns fetchAll results if cache not set', async () => {
   const result = await defaultTopicTriggerHelper.getAll();
   helpers.cache.defaultTopicTriggers.get
     .should.have.been.calledWith(config.allDefaultTopicTriggersCacheKey);
-  defaultTopicTriggerHelper.fetchAll.should.have.been.called;
+  defaultTopicTriggerHelper.fetch.should.have.been.called;
   result.should.deep.equal(fetchResult);
 });
 
