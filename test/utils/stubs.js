@@ -34,6 +34,19 @@ function getBroadcastName() {
 }
 
 /**
+ * @param {Array} data
+ * @return {Object}
+ */
+function getFetchByContentTypesResultWithArray(data) {
+  return {
+    meta: {
+      total: data.length,
+    },
+    data,
+  };
+}
+
+/**
  * @return {String}
  */
 function getRandomWord() {
@@ -260,6 +273,7 @@ module.exports = {
     return msg;
   },
   contentful: {
+    getFetchByContentTypesResultWithArray,
     getAllTemplatesForCampaignId: function getAllTemplatesForCampaignId() {
       return module.exports.getJSONstub('all-campaign-fields');
     },

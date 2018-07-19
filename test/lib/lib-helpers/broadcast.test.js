@@ -44,7 +44,8 @@ test.afterEach(() => {
 
 // fetch
 test('fetch returns contentful.fetchByContentTypes parsed as broadcast objects', async () => {
-  const fetchEntriesResult = { items: [broadcastEntry] };
+  const entries = [broadcastEntry];
+  const fetchEntriesResult = stubs.contentful.getFetchByContentTypesResultWithArray(entries);
   sandbox.stub(contentful, 'fetchByContentTypes')
     .returns(Promise.resolve(fetchEntriesResult));
   sandbox.stub(broadcastHelper, 'parseBroadcastFromContentfulEntry')
@@ -52,8 +53,8 @@ test('fetch returns contentful.fetchByContentTypes parsed as broadcast objects',
 
   const result = await broadcastHelper.fetch();
   contentful.fetchByContentTypes.should.have.been.calledWith(config.broadcastContentTypes);
-  fetchEntriesResult.items.forEach((item) => {
-    broadcastHelper.parseBroadcastFromContentfulEntry.should.have.been.calledWith(item);
+  fetchEntriesResult.data.forEach((entry) => {
+    broadcastHelper.parseBroadcastFromContentfulEntry.should.have.been.calledWith(entry);
   });
   result.data.should.deep.equal([broadcast]);
 });

@@ -8,6 +8,7 @@ const sinonChai = require('sinon-chai');
 const sinon = require('sinon');
 
 const contentful = require('../../../lib/contentful');
+const stubs = require('../../utils/stubs');
 const helpers = require('../../../lib/helpers');
 const config = require('../../../config/lib/helpers/defaultTopicTrigger');
 const defaultTopicTriggerContentfulFactory = require('../../utils/factories/contentful/defaultTopicTrigger');
@@ -32,8 +33,10 @@ test.afterEach(() => {
 
 // fetch
 test('fetch returns contentful.fetchByContentTypes parsed as defaultTopicTrigger objects', async () => {
+  const entries = [firstEntry, secondEntry];
+  const fetchEntriesResult = stubs.contentful.getFetchByContentTypesResultWithArray(entries);
   sandbox.stub(contentful, 'fetchByContentTypes')
-    .returns(Promise.resolve({ items: [firstEntry, secondEntry] }));
+    .returns(Promise.resolve(fetchEntriesResult));
   sandbox.stub(defaultTopicTriggerHelper, 'parseDefaultTopicTriggerFromContentfulEntry')
     .onCall(0)
     .returns(firstDefaultTopicTrigger)
