@@ -20,21 +20,27 @@ Name | Type | Description
 `templates.override` | Boolean | Whether the `raw` value is set from a Contentful field value (override is `true`), or from a hardcoded default (override is `false`)
 `triggers` | Array | List of defaultTopicTriggers that change user conversation to this topic
 
-## Retrieve all topics
+## Retrieve topics
 
 ```
 GET /v1/topics
 ```
 
-Returns all topics.
+Returns topics.
+
+### Query parameters
+
+Name | Type | Description
+-----|------|------------
+`skip` | Number | Number of results to skip
 
 
 <details><summary>**Example Request**</summary><p>
 
 ```
-curl http://localhost:5000/v1/topics \
-  -H "Accept: application/json" \
-  -H "Content-Type: application/json" \
+curl http://localhost:5000/v1/topics
+  -H "Accept: application/json"
+  -H "Content-Type: application/json"
 ```
 
 </p></details>
@@ -248,7 +254,15 @@ curl http://localhost:5000/v1/topics \
         "mascot",
       ]
     },
-  ]
+    ...
+  ],
+  "meta": {
+    "pagination": {
+      "total": 21,
+      "skip": 0,
+      "limit": 100
+    }
+  }
 }
 ```
 
