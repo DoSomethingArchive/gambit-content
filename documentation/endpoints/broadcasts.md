@@ -38,6 +38,7 @@ curl http://localhost:5000/v1/broadcasts?skip=20
 </p></details>
 
 <details><summary>**Example Response**</summary><p>
+  
 ```
 {
   "data": [
@@ -101,6 +102,7 @@ curl http://localhost:5000/v1/broadcasts/2HdYviqiK46skcgKW6OSGk
 </p></details>
 
 <details><summary>**Example Response**</summary><p>
+  
 ```
 {
   "data": {
