@@ -40,6 +40,17 @@ test.afterEach(() => {
  * Tests
  */
 
+// getMeta
+test('getMeta returns an object with a pagination property', () => {
+  const total = 200;
+  const skip = 10;
+  const limit = 30;
+  const result = utilHelper.getMeta(total, skip, limit);
+  result.pagination.total.should.equal(total);
+  result.pagination.skip.should.equal(skip);
+  result.pagination.limit.should.equal(limit);
+});
+
 // isValidQuantity
 test('isValidQuantity() validations', () => {
   // non decimal number should pass
