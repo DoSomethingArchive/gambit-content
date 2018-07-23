@@ -8,9 +8,14 @@ Name | Type | Description
 -----|------|------------
 `id` | String | The Contentful entry id
 `name` | String | Internal name used to reference the broadcast
-`message` | Object | Broadcast message content. See the Gambit Conversations messages endpoint for details.
-`topic` | String | If set, updates the conversation topic to this string.
-`campaignId` | Number | If set, updates the conversation topic to the given campaign's topic.
+`message` | Object | Contains the [outbound message content](https://github.com/DoSomething/gambit-conversations/blob/master/documentation/endpoints/messages.md) to send to user
+`message.text` | String |
+`message.attachments` | Array |
+`message.template` | String |
+`topic` | String | If set, updates the conversation topic to this string.*
+`campaignId` | Number | If set, updates the conversation topic to the given campaign's topic.*
+
+* Note: These fields will likely be deprecated by a `topicId` per https://www.pivotaltracker.com/story/show/157369418
 
 
 ## Retrieve broadcasts
