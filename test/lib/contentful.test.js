@@ -14,6 +14,7 @@ const underscore = require('underscore');
 // app modules
 const stubs = require('../../test/utils/stubs');
 const stathat = require('../../lib/stathat');
+const utilHelper = require('../../lib/helpers/util');
 const contentfulAPI = require('contentful');
 const broadcastContentfulFactory = require('../../test/utils/factories/contentful/broadcast');
 const defaultTopicTriggerContentfulFactory = require('../../test/utils/factories/contentful/defaultTopicTrigger');
@@ -34,6 +35,7 @@ const broadcastEntry = broadcastContentfulFactory.getValidCampaignBroadcast();
 const defaultTopicTriggerEntry = defaultTopicTriggerContentfulFactory
   .getValidDefaultTopicTrigger();
 const textPostConfigEntry = textPostConfigContentfulFactory.getValidTextPostConfig();
+const campaignConfigIndexStub = stubs.contentful.getEntries('campaign');
 const campaignConfigStub = stubs.contentful.getEntries('default-campaign').items[0];
 const getEntriesStub = Promise.resolve({ items: [defaultTopicTriggerEntry] });
 const failStub = Promise.reject({ status: 500 });
@@ -178,4 +180,18 @@ test('getAttachmentsFromContentfulEntry returns value of given entry name field'
 test('getNameTextFromContentfulEntry returns value of given entry name field', () => {
   const result = contentful.getNameTextFromContentfulEntry(textPostConfigEntry);
   result.should.equal(textPostConfigEntry.fields.name);
+});
+
+// parseGetEntriesResponse
+test('parseGetEntriesResponse returns object with meta and data properties', () => {
+  const stubMeta = {
+    pagination: {
+      total: campaignConfigIndexStub.items.length,
+    },
+  };
+  sandbox.stub(utilHelper, 'getMeta')
+    .returns(stubMeta);
+  const result = contentful.parseGetEntriesResponse(campaignConfigIndexStub);
+  result.data.should.deep.equal(campaignConfigIndexStub.items);
+  result.meta.should.deep.equal(stubMeta);
 });
