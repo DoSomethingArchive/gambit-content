@@ -38,7 +38,7 @@ Name | Type | Description
 <details><summary>**Example Request**</summary><p>
 
 ```
-curl http://localhost:5000/v1/topics
+curl http://localhost:5000/v1/topics?skip=5
   -H "Accept: application/json"
   -H "Content-Type: application/json"
 ```
@@ -259,7 +259,7 @@ curl http://localhost:5000/v1/topics
   "meta": {
     "pagination": {
       "total": 21,
-      "skip": 0,
+      "skip": 5,
       "limit": 100
     }
   }
