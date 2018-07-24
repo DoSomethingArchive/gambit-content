@@ -6,6 +6,7 @@ const sinonChai = require('sinon-chai');
 const sinon = require('sinon');
 const httpMocks = require('node-mocks-http');
 
+const utilHelper = require('../../../lib/helpers/util');
 const stubs = require('../../utils/stubs');
 
 // Module to test
@@ -34,13 +35,23 @@ test('sendData passes object with data property to res.send', (t) => {
   t.context.res.send.should.have.been.calledWith({ data });
 });
 
-// sendDataAndMeta
-test('sendDataAndMeta passes object with data and meta properties to res.send', (t) => {
+// sendIndexData
+test('sendIndexData calls res.send with data arg and given meta arg if exists', (t) => {
   const meta = {
     pagination: {
       total: 240,
     },
   };
-  responseHelper.sendDataAndMeta(t.context.res, data, meta);
+  responseHelper.sendIndexData(t.context.res, data, meta);
   t.context.res.send.should.have.been.calledWith({ data, meta });
+});
+
+// sendIndexData
+test('sendIndexData calls res.send with data arg and util.getMeta if meta undefined', (t) => {
+  const stubMeta = { total: data.length };
+  sandbox.stub(utilHelper, 'getMeta')
+    .returns(stubMeta);
+  responseHelper.sendIndexData(t.context.res, data);
+  utilHelper.getMeta.should.have.been.calledWith(data.length);
+  t.context.res.send.should.have.been.calledWith({ data, meta: stubMeta });
 });
