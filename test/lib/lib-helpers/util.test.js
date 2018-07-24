@@ -40,8 +40,14 @@ test.afterEach(() => {
  * Tests
  */
 
+// getDefaultMetaLimit
+test('getDefaultIndexQueryLimit returns config.defaultIndexQueryLimit', () => {
+  const result = utilHelper.getDefaultIndexQueryLimit();
+  result.should.equal(config.defaultIndexQueryLimit);
+});
+
 // getMeta
-test('getMeta returns an object with a pagination property', () => {
+test('getMeta returns an object with pagination properties with given args', () => {
   const total = 200;
   const skip = 10;
   const limit = 30;
@@ -49,6 +55,13 @@ test('getMeta returns an object with a pagination property', () => {
   result.pagination.total.should.equal(total);
   result.pagination.skip.should.equal(skip);
   result.pagination.limit.should.equal(limit);
+});
+
+test('getMeta returns an object with default pagination properties if args are empty', () => {
+  const result = utilHelper.getMeta();
+  result.pagination.total.should.equal(0);
+  result.pagination.skip.should.equal(0);
+  result.pagination.limit.should.equal(utilHelper.getDefaultIndexQueryLimit());
 });
 
 // isValidQuantity
