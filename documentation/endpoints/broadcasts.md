@@ -30,6 +30,7 @@ Returns broadcasts.
 
 Name | Type | Description
 -----|------|------------
+`limit` | Number | Number of results to retrieve
 `skip` | Number | Number of results to skip
 
 <details><summary>**Example Request**</summary><p>
