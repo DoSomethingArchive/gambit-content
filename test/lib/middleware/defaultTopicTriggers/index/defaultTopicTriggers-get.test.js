@@ -28,9 +28,10 @@ const sandbox = sinon.sandbox.create();
 test.beforeEach((t) => {
   sandbox.stub(helpers, 'sendErrorResponse')
     .returns(underscore.noop);
+  sandbox.stub(helpers.response, 'sendIndexData')
+    .returns(underscore.noop);
   t.context.req = httpMocks.createRequest();
   t.context.res = httpMocks.createResponse();
-  sandbox.spy(t.context.res, 'send');
 });
 
 test.afterEach((t) => {
@@ -47,7 +48,8 @@ test('getDefaultTopicTriggers should send helpers.defaultTopicTrigger.getAll res
   // test
   await middleware(t.context.req, t.context.res, next);
   helpers.defaultTopicTrigger.getAll.should.have.been.called;
-  t.context.res.send.should.have.been.called;
+  helpers.response.sendIndexData
+    .should.have.been.calledWith(t.context.res, defaultTopicTriggerStubs);
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
@@ -62,6 +64,6 @@ test('getDefaultTopicTriggers should send errorResponse if helpers.defaultTopicT
   // test
   await middleware(t.context.req, t.context.res, next);
   helpers.defaultTopicTrigger.getAll.should.have.been.called;
-  t.context.res.send.should.not.have.been.called;
+  helpers.response.sendIndexData.should.not.have.been.called;
   helpers.sendErrorResponse.should.have.been.calledWith(t.context.res, error);
 });
