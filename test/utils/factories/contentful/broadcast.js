@@ -6,6 +6,11 @@ module.exports.getValidCampaignBroadcast = function getValidCampaignBroadcast(da
   return {
     sys: {
       id: stubs.getBroadcastId(),
+      contentType: {
+        sys: {
+          id: 'broadcast',
+        },
+      },
       createdAt: date,
       updatedAt: date,
     },

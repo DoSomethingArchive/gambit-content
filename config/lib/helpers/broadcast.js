@@ -2,6 +2,7 @@
 
 module.exports = {
   broadcastContentTypes: [
+    'autoReplyBroadcast',
     'broadcast',
   ],
 };

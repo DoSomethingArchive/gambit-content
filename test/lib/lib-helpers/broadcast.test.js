@@ -19,6 +19,7 @@ const broadcastId = stubs.getContentfulId();
 const broadcastEntry = broadcastEntryFactory.getValidCampaignBroadcast();
 const broadcast = broadcastFactory.getValidCampaignBroadcast();
 const broadcastName = stubs.getBroadcastName();
+const broadcastType = 'broadcast';
 const campaignId = stubs.getCampaignId();
 
 // Module to test
@@ -32,6 +33,8 @@ const sandbox = sinon.sandbox.create();
 test.beforeEach(() => {
   sandbox.stub(contentful, 'getContentfulIdFromContentfulEntry')
     .returns(broadcastId);
+  sandbox.stub(contentful, 'getContentTypeFromContentfulEntry')
+    .returns(broadcastType);
   sandbox.stub(contentful, 'getNameTextFromContentfulEntry')
     .returns(broadcastName);
   sandbox.stub(contentful, 'getCampaignIdFromContentfulEntry')
@@ -92,6 +95,8 @@ test('parseBroadcastFromContentfulEntry returns an object with null topic if cam
   const result = broadcastHelper.parseBroadcastFromContentfulEntry(broadcastEntry);
   contentful.getContentfulIdFromContentfulEntry.should.have.been.calledWith(broadcastEntry);
   result.id.should.equal(broadcastId);
+  contentful.getContentTypeFromContentfulEntry.should.have.been.calledWith(broadcastEntry);
+  result.type.should.equal(broadcastType);
   contentful.getNameTextFromContentfulEntry.should.have.been.calledWith(broadcastEntry);
   result.name.should.equal(broadcastName);
   t.is(result.topic, null);
