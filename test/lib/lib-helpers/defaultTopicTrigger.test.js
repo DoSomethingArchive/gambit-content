@@ -45,7 +45,7 @@ test('fetch returns contentful.fetchByContentTypes parsed as defaultTopicTrigger
 
   const result = await defaultTopicTriggerHelper.fetch();
   contentful.fetchByContentTypes
-    .should.have.been.calledWith(config.defaultTopicTriggerContentTypes);
+    .should.have.been.calledWith(config.contentTypes);
   defaultTopicTriggerHelper.parseDefaultTopicTriggerFromContentfulEntry
     .should.have.been.calledWith(firstEntry);
   defaultTopicTriggerHelper.parseDefaultTopicTriggerFromContentfulEntry

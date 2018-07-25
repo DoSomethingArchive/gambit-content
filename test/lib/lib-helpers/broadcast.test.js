@@ -55,7 +55,7 @@ test('fetch returns contentful.fetchByContentTypes parsed as broadcast objects',
     .returns(broadcast);
 
   const result = await broadcastHelper.fetch();
-  contentful.fetchByContentTypes.should.have.been.calledWith(config.broadcastContentTypes);
+  contentful.fetchByContentTypes.should.have.been.calledWith(config.contentTypes);
   fetchEntriesResult.data.forEach((entry) => {
     broadcastHelper.parseBroadcastFromContentfulEntry.should.have.been.calledWith(entry);
   });

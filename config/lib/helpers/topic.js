@@ -20,6 +20,11 @@ const photoPostDefaultText = {
 
 module.exports = {
   allTopicsCacheKey: 'all',
+  contentTypes: [
+    'externalPostConfig',
+    'photoPostConfig',
+    'textPostConfig',
+  ],
   defaultPostType: 'photo',
   /**
    * Maps each content type that's available as a topic to the Post type it should create.
@@ -149,9 +154,4 @@ module.exports = {
       },
     },
   },
-  topicContentTypes: [
-    'externalPostConfig',
-    'photoPostConfig',
-    'textPostConfig',
-  ],
 };

@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  broadcastContentTypes: [
+  contentTypes: [
     'autoReplyBroadcast',
     'broadcast',
   ],

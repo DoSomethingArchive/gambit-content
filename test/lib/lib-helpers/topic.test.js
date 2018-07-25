@@ -45,7 +45,7 @@ test('fetch returns contentful.fetchByContentTypes parsed as topic objects', asy
     .returns(Promise.resolve(topic));
 
   const result = await topicHelper.fetch();
-  contentful.fetchByContentTypes.should.have.been.calledWith(config.topicContentTypes, {});
+  contentful.fetchByContentTypes.should.have.been.calledWith(config.contentTypes, {});
   entries.forEach((entry) => {
     topicHelper.parseTopicFromContentfulEntry.should.have.been.calledWith(entry);
   });
