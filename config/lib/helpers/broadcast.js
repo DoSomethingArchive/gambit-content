@@ -5,4 +5,5 @@ module.exports = {
     'autoReplyBroadcast',
     'broadcast',
   ],
+  legacyContentType: 'broadcast',
 };
