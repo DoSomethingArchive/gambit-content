@@ -9,7 +9,6 @@ const sinon = require('sinon');
 
 const contentful = require('../../../lib/contentful');
 const stubs = require('../../utils/stubs');
-const config = require('../../../config/lib/helpers/broadcast');
 const broadcastEntryFactory = require('../../utils/factories/contentful/broadcast');
 const broadcastFactory = require('../../utils/factories/broadcast');
 

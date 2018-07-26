@@ -2,7 +2,7 @@
 
 const express = require('express');
 
-const getContentfulEntryMiddleware = require('../../../lib/middleware/contentfulEntries/single/contentfulEntry-get.js');
+const getContentfulEntryMiddleware = require('../../../lib/middleware/contentfulEntries/single/contentfulEntry-get');
 
 const router = express.Router({ mergeParams: true });
 
