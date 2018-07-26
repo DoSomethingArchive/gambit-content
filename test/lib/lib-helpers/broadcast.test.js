@@ -90,11 +90,11 @@ test('fetchById returns contentful.fetchByContentfulId parsed as broadcast objec
 });
 
 // parseBroadcastFromContentfulEntry
-test('parseBroadcastFromContentfulEntry returns an object with null topic if campaign broadcast', (t) => {
+test('parseBroadcastFromContentfulEntry returns an object with null topic if campaign broadcast', async (t) => {
   sandbox.stub(contentful, 'getAttachmentsFromContentfulEntry')
     .returns(attachments);
 
-  const result = broadcastHelper.parseBroadcastFromContentfulEntry(broadcastEntry);
+  const result = await broadcastHelper.parseBroadcastFromContentfulEntry(broadcastEntry);
   contentful.getContentfulIdFromContentfulEntry.should.have.been.calledWith(broadcastEntry);
   result.id.should.equal(broadcastId);
   contentful.getContentTypeFromContentfulEntry.should.have.been.calledWith(broadcastEntry);
@@ -109,9 +109,10 @@ test('parseBroadcastFromContentfulEntry returns an object with null topic if cam
   result.message.attachments.should.equal(attachments);
 });
 
-test('parseBroadcastFromContentfulEntry returns an object with null campaignId if hardcoded topic broadcast', (t) => {
+test('parseBroadcastFromContentfulEntry returns an object with null campaignId if hardcoded topic broadcast', async (t) => {
   const hardcodedTopicBroadcastEntry = broadcastEntryFactory.getValidTopicBroadcast();
-  const result = broadcastHelper.parseBroadcastFromContentfulEntry(hardcodedTopicBroadcastEntry);
+  const result = await broadcastHelper
+    .parseBroadcastFromContentfulEntry(hardcodedTopicBroadcastEntry);
   contentful.getContentfulIdFromContentfulEntry
     .should.have.been.calledWith(hardcodedTopicBroadcastEntry);
   result.id.should.equal(broadcastId);
