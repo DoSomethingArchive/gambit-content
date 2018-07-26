@@ -1,7 +1,24 @@
 'use strict';
 
 module.exports = {
-  broadcastContentTypes: [
-    'broadcast',
-  ],
+  contentTypes: {
+    askChangeTopicBroadcast: {
+      type: 'askChangeTopicBroadcast',
+      templates: [
+        'declinedChangeTopic',
+        'invalidAskChangeTopicResponse',
+        'autoReply',
+      ],
+    },
+    autoReplyBroadcast: {
+      type: 'autoReplyBroadcast',
+      templates: [
+        'autoReply',
+      ],
+    },
+    legacy: {
+      type: 'broadcast',
+      templates: [],
+    },
+  },
 };
