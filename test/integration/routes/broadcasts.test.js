@@ -27,26 +27,11 @@ test('get to /broadcasts should respond with status code 403', async () => {
     .expect(403);
 });
 
-test('get to /broadcasts should respond with status code 200 with valid api header', async () => {
-  await request(app)
-    .get(broadcastsRoutePath)
-    .set('x-gambit-api-key', stubs.getAPIKey())
-    .expect(200);
-});
-
-
 test('get to /broadcasts should respond with status code 403 with invalid api header', async () => {
   await request(app)
     .get(broadcastsRoutePath)
     .set('x-gambit-api-key', stubs.getRandomWord())
     .expect(403);
-});
-
-test('get to /broadcasts should respond with status code 200 with valid api query', async () => {
-  await request(app)
-    .get(broadcastsRoutePath)
-    .query({ apiKey: stubs.getAPIKey() })
-    .expect(200);
 });
 
 test('get to /broadcasts should respond with status code 403 with invalid api query', async () => {
