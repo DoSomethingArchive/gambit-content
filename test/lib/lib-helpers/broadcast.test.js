@@ -8,6 +8,7 @@ const sinonChai = require('sinon-chai');
 const sinon = require('sinon');
 
 const contentful = require('../../../lib/contentful');
+const helpers = require('../../../lib/helpers');
 const stubs = require('../../utils/stubs');
 const broadcastEntryFactory = require('../../utils/factories/contentful/broadcast');
 const broadcastFactory = require('../../utils/factories/broadcast');
@@ -88,6 +89,44 @@ test('fetchById returns contentful.fetchByContentfulId parsed as broadcast objec
   const result = await broadcastHelper.fetchById(broadcastId);
   contentful.fetchByContentfulId.should.have.been.calledWith(broadcastId);
   broadcastHelper.parseBroadcastFromContentfulEntry.should.have.been.calledWith(fetchEntryResult);
+  result.should.deep.equal(broadcast);
+});
+
+
+// getById
+test('getById returns broadcasts cache if set', async () => {
+  sandbox.stub(helpers.cache.broadcasts, 'get')
+    .returns(Promise.resolve(broadcast));
+  sandbox.stub(broadcastHelper, 'fetchById')
+    .returns(Promise.resolve(broadcast));
+
+  const result = await broadcastHelper.getById(broadcastId);
+  helpers.cache.broadcasts.get.should.have.been.calledWith(broadcastId);
+  broadcastHelper.fetchById.should.not.have.been.called;
+  result.should.deep.equal(broadcast);
+});
+
+test('getById returns fetchById and sets cache if cache not set', async () => {
+  sandbox.stub(helpers.cache.broadcasts, 'get')
+    .returns(Promise.resolve(null));
+  sandbox.stub(broadcastHelper, 'fetchById')
+    .returns(Promise.resolve(broadcast));
+
+  const result = await broadcastHelper.getById(broadcastId);
+  helpers.cache.broadcasts.get.should.have.been.calledWith(broadcastId);
+  broadcastHelper.fetchById.should.have.been.calledWith(broadcastId);
+  result.should.deep.equal(broadcast);
+});
+
+test('getById returns fetchById if resetCache arg is true', async () => {
+  sandbox.stub(helpers.cache.broadcasts, 'get')
+    .returns(Promise.resolve(null));
+  sandbox.stub(broadcastHelper, 'fetchById')
+    .returns(Promise.resolve(broadcast));
+
+  const result = await broadcastHelper.getById(broadcastId, true);
+  helpers.cache.broadcasts.get.should.not.have.been.called;
+  broadcastHelper.fetchById.should.have.been.calledWith(broadcastId);
   result.should.deep.equal(broadcast);
 });
 

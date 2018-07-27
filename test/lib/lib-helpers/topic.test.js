@@ -154,6 +154,18 @@ test('getById returns fetchById and sets cache if cache not set', async () => {
   result.should.deep.equal(topic);
 });
 
+test('getById returns fetchById if resetCache arg is true', async () => {
+  sandbox.stub(helpers.cache.topics, 'get')
+    .returns(Promise.resolve(null));
+  sandbox.stub(topicHelper, 'fetchById')
+    .returns(Promise.resolve(topic));
+
+  const result = await topicHelper.getById(topicId, true);
+  helpers.cache.topics.get.should.not.have.been.called;
+  topicHelper.fetchById.should.have.been.calledWith(topicId);
+  result.should.deep.equal(topic);
+});
+
 // getDefaultTextForBotConfigTemplateName
 test('getDefaultTextFromContentfulEntryAndTemplateName returns default for templateName', () => {
   const result = topicHelper
