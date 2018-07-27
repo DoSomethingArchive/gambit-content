@@ -4,22 +4,27 @@ const contentTypes = {
   askChangeTopicBroadcast: {
     type: 'askChangeTopicBroadcast',
     isBroadcast: true,
+    postType: null,
   },
   autoReplyBroadcast: {
     type: 'autoReplyBroadcast',
     isBroadcast: true,
+    postType: null,
   },
   externalPostConfig: {
     type: 'externalPostConfig',
     isBroadcast: false,
+    postType: 'external',
   },
   photoPostConfig: {
     type: 'photoPostConfig',
     isBroadcast: false,
+    postType: 'photo',
   },
   textPostConfig: {
     type: 'textPostConfig',
     isBroadcast: false,
+    postType: 'text',
   },
 };
 
@@ -45,16 +50,6 @@ module.exports = {
   allTopicsCacheKey: 'all',
   contentTypes,
   defaultPostType: 'photo',
-  /**
-   * Maps each content type that's available as a topic to the Post type it should create.
-   *
-   * { contentTypeName: 'postType' }
-   */
-  postTypesByContentType: {
-    externalPostConfig: 'external',
-    textPostConfig: 'text',
-    photoPostConfig: 'photo',
-  },
   /*
    * Maps each content type with a map of templateNames and its corresponding field name and
    * default text to use, if a field value doesn't exist. Fields without defaults are required.
