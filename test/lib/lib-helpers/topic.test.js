@@ -65,11 +65,13 @@ test('fetch throws if contentful.fetchByContentTypes fails', async (t) => {
 });
 
 // fetchById
-test('fetchById returns contentful.fetchByContentfulId parsed as topic object', async () => {
+test('fetchById returns contentful.fetchByContentfulId parsed as cached topic object', async () => {
   const fetchEntryResult = { id: '132' };
   sandbox.stub(contentful, 'fetchByContentfulId')
     .returns(Promise.resolve(fetchEntryResult));
   sandbox.stub(topicHelper, 'parseTopicFromContentfulEntry')
+    .returns(Promise.resolve(topic));
+  sandbox.stub(helpers.cache.topics, 'set')
     .returns(Promise.resolve(topic));
 
 
@@ -77,6 +79,7 @@ test('fetchById returns contentful.fetchByContentfulId parsed as topic object', 
   contentful.fetchByContentfulId.should.have.been.calledWith(topicId);
   topicHelper.parseTopicFromContentfulEntry.should.have.been.calledWith(fetchEntryResult);
   result.should.deep.equal(topic);
+  helpers.cache.topics.set.should.have.been.calledWith(topicId, topic);
 });
 
 // getAll
@@ -141,13 +144,10 @@ test('getById returns fetchById and sets cache if cache not set', async () => {
     .returns(Promise.resolve(null));
   sandbox.stub(topicHelper, 'fetchById')
     .returns(Promise.resolve(topic));
-  sandbox.stub(helpers.cache.topics, 'set')
-    .returns(Promise.resolve(topic));
 
   const result = await topicHelper.getById(topicId);
   helpers.cache.topics.get.should.have.been.calledWith(topicId);
   topicHelper.fetchById.should.have.been.calledWith(topicId);
-  helpers.cache.topics.set.should.have.been.calledWith(topicId, topic);
   result.should.deep.equal(topic);
 });
 
