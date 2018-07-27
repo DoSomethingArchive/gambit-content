@@ -32,7 +32,6 @@ function regGlobalMiddleware(app) {
 module.exports = function init(app) {
   regGlobalMiddleware(app);
   app.get('/', statusRoute);
-  app.get('/v1/status', statusRoute);
 
   // Returns data for a contentful entry.
   app.use('/v1/contentfulEntries/:contentfulId', contentfulEntriesSingleRoute);
