@@ -1,5 +1,28 @@
 'use strict';
 
+const contentTypes = {
+  askChangeTopicBroadcast: {
+    type: 'askChangeTopicBroadcast',
+    isBroadcast: true,
+  },
+  autoReplyBroadcast: {
+    type: 'autoReplyBroadcast',
+    isBroadcast: true,
+  },
+  externalPostConfig: {
+    type: 'externalPostConfig',
+    isBroadcast: false,
+  },
+  photoPostConfig: {
+    type: 'photoPostConfig',
+    isBroadcast: false,
+  },
+  textPostConfig: {
+    type: 'textPostConfig',
+    isBroadcast: false,
+  },
+};
+
 const defaultText = {
   declined: 'Text MENU if you\'d like to find a different action to take.',
   invalidInput: 'Sorry, I didn\'t get that.',
@@ -20,11 +43,7 @@ const photoPostDefaultText = {
 
 module.exports = {
   allTopicsCacheKey: 'all',
-  contentTypes: [
-    'externalPostConfig',
-    'photoPostConfig',
-    'textPostConfig',
-  ],
+  contentTypes,
   defaultPostType: 'photo',
   /**
    * Maps each content type that's available as a topic to the Post type it should create.
