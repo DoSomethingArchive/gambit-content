@@ -1,5 +1,8 @@
 # API
 
+All endpoints require either a valid `x-gambit-api-key` header or `apiKey` query parameter.
+
+
 Endpoint                                       | Functionality                                           
 ---------------------------------------------- | --------------------------------------------------------
 `GET /v1/broadcasts` | [Retrieve broadcasts](endpoints/broadcasts.md#retrieve-broadcasts)

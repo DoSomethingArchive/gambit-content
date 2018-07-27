@@ -32,7 +32,7 @@ function regGlobalMiddleware(app) {
 module.exports = function init(app) {
   regGlobalMiddleware(app);
   app.get('/', statusRoute);
-  app.use('/v1/status', statusRoute);
+  app.get('/v1/status', statusRoute);
 
   // Returns data for a contentful entry.
   app.use('/v1/contentfulEntries/:contentfulId', contentfulEntriesSingleRoute);
@@ -43,9 +43,6 @@ module.exports = function init(app) {
   // Provides list of chatbot broadcasts.
   app.use('/v1/broadcasts', broadcastsIndexRoute);
 
-  // Provides list of defaultTopicTriggers
-  app.use('/v1/defaultTopicTriggers', defaultTopicTriggersRoute);
-
   // Provides keywords and templates for a single Campaign.
   app.use('/v1/campaigns/:campaignId', campaignsSingleRoute);
 
@@ -54,8 +51,9 @@ module.exports = function init(app) {
 
   // Receives inbound message from Gambit Conversations service.
   app.use('/v1/campaignActivity', campaignActivityRoute);
-  // TODO: Remove this once we make the switch in Conversations.
-  app.use('/v1/receive-message', campaignActivityRoute);
+
+  // Provides list of defaultTopicTriggers
+  app.use('/v1/defaultTopicTriggers', defaultTopicTriggersRoute);
 
   // Provides data for a chatbot topic.
   app.use('/v1/topics/:topicId', topicsSingleRoute);
