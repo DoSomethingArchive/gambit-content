@@ -1,5 +1,6 @@
 'use strict';
 
+// @see documentation/endpoints/topics
 const contentTypes = {
   askChangeTopicBroadcast: {
     type: 'askChangeTopicBroadcast',
