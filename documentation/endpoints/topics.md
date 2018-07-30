@@ -1,17 +1,24 @@
 # Topics
 
-A topic is one of the following Contentful content types:
+A conversation topic may be set to one of the following Contentful content types:
 
-* `photoPostConfig` - creates a signup and submits a photo post for a campaign
-* `textPostConfig` - creates a signup and submits a text post for a campaign
-* `externalPostConfig` - creates a signup for a campaign, but does not submit a post. The campaign post is created externally when user visits the link included in the templates of an `externalPostConfig` topic.
+### Campaign topics
+
+* `photoPostConfig` - creates a signup and sends replies to create a photo post for a campaign
+* `textPostConfig` - creates a signup and sends replies to create text post for a campaign
+* `externalPostConfig` - creates a signup for a campaign, but does not create a post via messaging. The campaign post is created externally when user visits the link included in the templates of an `externalPostConfig` topic.
+
+
+### Broadcast topics
+* `autoReplyBroadcast` - replies with an `autoReply` template after sending an outbound broadcast
+* `askChangeTopicBroadcast` - [under construction](https://i.amz.mshcdn.com/xxwMNSb7PAnpcIOmwhIU1dh80SA=/fit-in/1200x9600/https%3A%2F%2Fblueprint-api-production.s3.amazonaws.com%2Fuploads%2Fcard%2Fimage%2F168421%2Ftumblr_ks4m18IymX1qz4u07o1_250.gif)
 
 Fields:
 
 Name | Type | Description
 -----|------|------------
 `id` | String | The Contentful entry id
-`type` | String | The Contentful content type, e.g. `photoPostConfig`
+`type` | String | The Contentful entry type, e.g. `photoPostConfig`, `textPostConfig`
 `postType` | String | The type of post the topic should create, e.g. `photo`
 `campaign` | Object | The campaign this topic should create a signup and post for.
 `templates` | Object | Collection of outbound message templates that can be sent from this topic.
@@ -269,19 +276,25 @@ curl http://localhost:5000/v1/topics?skip=5
 
 </p></details>
 
-## Retrieve a topic
+## Retrieve topic
 
 ```
 GET /v1/topics/:id
 ```
 
-Returns a single topic by its (Contentful) id.
+Returns a topic.
+
+### Query parameters
+
+Name | Type | Description
+-----|------|------------
+`cache` | string | If set to `false`, fetches topic from Contentful and resets cache.
 
 
 <details><summary>**Example Request**</summary><p>
 
 ```
-curl http://localhost:5000/v1/topics/6swLaA7HKE8AGI6iQuWk4y \
+curl http://localhost:5000/v1/topics/6swLaA7HKE8AGI6iQuWk4y?cache=false \
      -H "Accept: application/json" \
      -H "Content-Type: application/json" \
 ```

@@ -37,15 +37,18 @@ test.afterEach(() => {
 
 // fetch
 test('fetch returns contentful.fetchByContentTypes parsed as topic objects', async () => {
+  const contentTypes = [topicContentType];
   const entries = [textPostConfigFactory.getValidTextPostConfig()];
   const fetchEntriesResult = stubs.contentful.getFetchByContentTypesResultWithArray(entries);
+  sandbox.stub(topicHelper, 'getContentTypes')
+    .returns(contentTypes);
   sandbox.stub(contentful, 'fetchByContentTypes')
     .returns(Promise.resolve(fetchEntriesResult));
   sandbox.stub(topicHelper, 'parseTopicFromContentfulEntry')
     .returns(Promise.resolve(topic));
 
   const result = await topicHelper.fetch();
-  contentful.fetchByContentTypes.should.have.been.calledWith(config.topicContentTypes, {});
+  contentful.fetchByContentTypes.should.have.been.calledWith(contentTypes, {});
   entries.forEach((entry) => {
     topicHelper.parseTopicFromContentfulEntry.should.have.been.calledWith(entry);
   });
@@ -65,11 +68,13 @@ test('fetch throws if contentful.fetchByContentTypes fails', async (t) => {
 });
 
 // fetchById
-test('fetchById returns contentful.fetchByContentfulId parsed as topic object', async () => {
+test('fetchById returns contentful.fetchByContentfulId parsed as cached topic object', async () => {
   const fetchEntryResult = { id: '132' };
   sandbox.stub(contentful, 'fetchByContentfulId')
     .returns(Promise.resolve(fetchEntryResult));
   sandbox.stub(topicHelper, 'parseTopicFromContentfulEntry')
+    .returns(Promise.resolve(topic));
+  sandbox.stub(helpers.cache.topics, 'set')
     .returns(Promise.resolve(topic));
 
 
@@ -77,6 +82,7 @@ test('fetchById returns contentful.fetchByContentfulId parsed as topic object', 
   contentful.fetchByContentfulId.should.have.been.calledWith(topicId);
   topicHelper.parseTopicFromContentfulEntry.should.have.been.calledWith(fetchEntryResult);
   result.should.deep.equal(topic);
+  helpers.cache.topics.set.should.have.been.calledWith(topicId, topic);
 });
 
 // getAll
@@ -141,13 +147,22 @@ test('getById returns fetchById and sets cache if cache not set', async () => {
     .returns(Promise.resolve(null));
   sandbox.stub(topicHelper, 'fetchById')
     .returns(Promise.resolve(topic));
-  sandbox.stub(helpers.cache.topics, 'set')
-    .returns(Promise.resolve(topic));
 
   const result = await topicHelper.getById(topicId);
   helpers.cache.topics.get.should.have.been.calledWith(topicId);
   topicHelper.fetchById.should.have.been.calledWith(topicId);
-  helpers.cache.topics.set.should.have.been.calledWith(topicId, topic);
+  result.should.deep.equal(topic);
+});
+
+test('getById returns fetchById if resetCache arg is true', async () => {
+  sandbox.stub(helpers.cache.topics, 'get')
+    .returns(Promise.resolve(null));
+  sandbox.stub(topicHelper, 'fetchById')
+    .returns(Promise.resolve(topic));
+
+  const result = await topicHelper.getById(topicId, true);
+  helpers.cache.topics.get.should.not.have.been.called;
+  topicHelper.fetchById.should.have.been.calledWith(topicId);
   result.should.deep.equal(topic);
 });
 
@@ -205,9 +220,9 @@ test('getFieldValueFromContentfulEntryAndTemplateName returns the entry field va
 });
 
 // getPostTypeFromContentType
-test('getPostTypeFromContentType returns the topic field value for templateName arg', () => {
+test('getPostTypeFromContentType returns postType string property from contentTypeConfig', () => {
   const result = topicHelper.getPostTypeFromContentType(topicContentType);
-  result.should.equal(config.postTypesByContentType[topicContentType]);
+  result.should.equal(config.contentTypes[topicContentType].postType);
 });
 
 // parseTopicFromContentfulEntry
