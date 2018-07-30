@@ -11,7 +11,7 @@ A conversation topic may be set to one of the following Contentful content types
 
 ### Broadcast topics
 * `autoReplyBroadcast` - replies with an `autoReply` template after sending an outbound broadcast
-
+* `askChangeTopicBroadcast` - [under construction](https://i.amz.mshcdn.com/xxwMNSb7PAnpcIOmwhIU1dh80SA=/fit-in/1200x9600/https%3A%2F%2Fblueprint-api-production.s3.amazonaws.com%2Fuploads%2Fcard%2Fimage%2F168421%2Ftumblr_ks4m18IymX1qz4u07o1_250.gif)
 
 Fields:
 
@@ -276,19 +276,25 @@ curl http://localhost:5000/v1/topics?skip=5
 
 </p></details>
 
-## Retrieve a topic
+## Retrieve topic
 
 ```
 GET /v1/topics/:id
 ```
 
-Returns a single topic by its (Contentful) id.
+Returns a topic.
+
+### Query parameters
+
+Name | Type | Description
+-----|------|------------
+`cache` | string | If set to `false`, fetches topic from Contentful and resets cache.
 
 
 <details><summary>**Example Request**</summary><p>
 
 ```
-curl http://localhost:5000/v1/topics/6swLaA7HKE8AGI6iQuWk4y \
+curl http://localhost:5000/v1/topics/6swLaA7HKE8AGI6iQuWk4y?cache=false \
      -H "Accept: application/json" \
      -H "Content-Type: application/json" \
 ```

@@ -45,14 +45,14 @@ test.afterEach((t) => {
 test('getTopic should inject a topic property set to getById result', async (t) => {
   const next = sinon.stub();
   const middleware = getTopic();
-  sandbox.stub(helpers.contentfulEntry, 'getById')
+  sandbox.stub(helpers.topic, 'getById')
     .returns(Promise.resolve(topic));
   sandbox.stub(helpers.defaultTopicTrigger, 'getByTopicId')
     .returns(Promise.resolve([defaultTopicTrigger]));
 
   // test
   await middleware(t.context.req, t.context.res, next);
-  helpers.contentfulEntry.getById.should.have.been.calledWith(t.context.req.params.topicId);
+  helpers.topic.getById.should.have.been.calledWith(t.context.req.params.topicId);
   t.context.res.send.should.have.been.calledWith({ data: topic });
   helpers.sendErrorResponse.should.not.have.been.called;
 });
@@ -61,12 +61,12 @@ test('getTopic should sendErrorResponse if getById fails', async (t) => {
   const next = sinon.stub();
   const middleware = getTopic();
   const mockError = { message: 'Epic fail' };
-  sandbox.stub(helpers.contentfulEntry, 'getById')
+  sandbox.stub(helpers.topic, 'getById')
     .returns(Promise.reject(mockError));
 
   // test
   await middleware(t.context.req, t.context.res, next);
-  helpers.contentfulEntry.getById.should.have.been.calledWith(t.context.req.params.topicId);
+  helpers.topic.getById.should.have.been.calledWith(t.context.req.params.topicId);
   t.context.res.send.should.not.have.been.called;
   helpers.sendErrorResponse.should.have.been.calledWith(t.context.res, mockError);
 });

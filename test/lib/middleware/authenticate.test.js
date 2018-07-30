@@ -25,6 +25,7 @@ const authenticateRequest = require('../../../lib/middleware/authenticate');
 const sandbox = sinon.sandbox.create();
 
 // stubs
+const endpointStub = '/v1/topics';
 const stathatStub = underscore.noop;
 
 // Setup!
@@ -43,13 +44,13 @@ test.afterEach((t) => {
   t.context = {};
 });
 
-test('authenticateRequest should call next if it is a GET', (t) => {
+test('authenticateRequest should call next if it is a GET on index', (t) => {
   // setup
   const next = sinon.stub();
   const middleware = authenticateRequest(config);
   const req = httpMocks.createRequest({
     method: 'GET',
-    url: '/v1/status',
+    url: '/',
   });
 
   // test
@@ -57,7 +58,7 @@ test('authenticateRequest should call next if it is a GET', (t) => {
   next.should.have.been.called;
 });
 
-test('authenticateRequest should call next if it is a POST and the correct API key is sent in the headers', (t) => {
+test('authenticateRequest should call next if non-index and valid API key is sent in the headers', (t) => {
   // setup
   const next = sinon.stub();
   const middleware = authenticateRequest(config);
@@ -65,7 +66,7 @@ test('authenticateRequest should call next if it is a POST and the correct API k
   headers[config.apiKeyHeaderName] = config.apiKey;
   const req = httpMocks.createRequest({
     method: 'POST',
-    url: '/v1/chatbot',
+    url: endpointStub,
     headers,
   });
 
@@ -74,7 +75,24 @@ test('authenticateRequest should call next if it is a POST and the correct API k
   next.should.have.been.called;
 });
 
-test('authenticateRequest should fail with status 403 if POST and not valid API key is found in the headers', (t) => {
+test('authenticateRequest should call next if non-index and valid API key is sent in the query', (t) => {
+  // setup
+  const next = sinon.stub();
+  const middleware = authenticateRequest(config);
+  const query = {};
+  query[config.apiKeyQueryName] = config.apiKey;
+  const req = httpMocks.createRequest({
+    method: 'GET',
+    url: endpointStub,
+    query,
+  });
+
+  // test
+  middleware(req, t.context.res, next);
+  next.should.have.been.called;
+});
+
+test('authenticateRequest should fail with status 403 if non-index and invalid API key is found in the headers', (t) => {
   // setup
   sandbox.spy(t.context.res, 'sendStatus'); // TODO: Implementation dependant, makes the test brittle.
   const next = sinon.stub();
@@ -83,8 +101,27 @@ test('authenticateRequest should fail with status 403 if POST and not valid API 
   headers[config.apiKeyHeaderName] = 'allthecovfefes';
   const req = httpMocks.createRequest({
     method: 'POST',
-    url: '/v1/chatbot',
+    url: endpointStub,
     headers,
+  });
+
+  // test
+  middleware(req, t.context.res, next);
+  next.should.not.have.been.called;
+  t.context.res.sendStatus.should.have.been.calledWith(403);
+});
+
+test('authenticateRequest should fail with status 403 if non-index and invalid API key is found in the query', (t) => {
+  // setup
+  sandbox.spy(t.context.res, 'sendStatus'); // TODO: Implementation dependant, makes the test brittle.
+  const next = sinon.stub();
+  const middleware = authenticateRequest(config);
+  const query = {};
+  query[config.apiKeyQueryName] = 'sandwich';
+  const req = httpMocks.createRequest({
+    method: 'GET',
+    url: endpointStub,
+    query,
   });
 
   // test

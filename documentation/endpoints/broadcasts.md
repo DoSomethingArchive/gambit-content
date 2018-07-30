@@ -100,10 +100,16 @@ GET /v1/broadcasts/:id
 
 Returns a broadcast.
 
+### Query parameters
+
+Name | Type | Description
+-----|------|------------
+`cache` | string | If set to `false`, fetches broadcast from Contentful and resets cache.
+
 <details><summary>**Example Request**</summary><p>
 
 ```
-curl http://localhost:5000/v1/broadcasts/2HdYviqiK46skcgKW6OSGk
+curl http://localhost:5000/v1/broadcasts/2HdYviqiK46skcgKW6OSGk?cache=false
   -H "Accept: application/json"
   -H "Content-Type: application/json"
 ```
