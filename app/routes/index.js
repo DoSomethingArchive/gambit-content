@@ -16,10 +16,14 @@ const statusRoute = require('./status');
 const authenticateConfig = require('../../config/lib/middleware/authenticate');
 
 // middleware
+const enforceHttpsMiddleware = require('../../lib/middleware/enforce-https');
 const timeoutMiddleware = require('../../lib/middleware/timeouts');
 const authenticateMiddleware = require('../../lib/middleware/authenticate');
 
 function regGlobalMiddleware(app) {
+  // Enforce https
+  app.use(enforceHttpsMiddleware(app.locals.forceHttps));
+
   // 504 timeouts middleware
   Object.keys(timeoutMiddleware).forEach((name) => {
     app.use(timeoutMiddleware[name]);
