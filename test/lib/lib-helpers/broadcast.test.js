@@ -10,6 +10,7 @@ const sinon = require('sinon');
 const contentful = require('../../../lib/contentful');
 const helpers = require('../../../lib/helpers');
 const stubs = require('../../utils/stubs');
+const autoReplyBroadcastEntryFactory = require('../../utils/factories/contentful/autoReplyBroadcast');
 const broadcastEntryFactory = require('../../utils/factories/contentful/broadcast');
 const broadcastFactory = require('../../utils/factories/broadcast');
 
@@ -128,6 +129,25 @@ test('getById returns fetchById if resetCache arg is true', async () => {
   helpers.cache.broadcasts.get.should.not.have.been.called;
   broadcastHelper.fetchById.should.have.been.calledWith(broadcastId);
   result.should.deep.equal(broadcast);
+});
+
+// parseBroadcastMessageFromContentfulEntryAndTemplateName
+test('parseBroadcastMessageFromContentfulEntryAndTemplateName returns null if contentfulEntry does not have broadcast set', (t) => {
+  const result = broadcastHelper
+    .parseBroadcastMessageFromContentfulEntryAndTemplateName(broadcastEntry);
+  t.is(result, null);
+});
+
+test('parseBroadcastMessageFromContentfulEntryAndTemplateName returns getMessageTemplateFromContentfulEntryAndTemplateName', () => {
+  const autoReplyBroadcast = autoReplyBroadcastEntryFactory.getValidAutoReplyBroadcast();
+  const templateName = stubs.getRandomWord();
+  const messageTemplate = { text: stubs.getRandomMessageText(), template: templateName };
+  sandbox.stub(helpers.contentfulEntry, 'getMessageTemplateFromContentfulEntryAndTemplateName')
+    .returns(messageTemplate);
+
+  const result = broadcastHelper
+    .parseBroadcastMessageFromContentfulEntryAndTemplateName(autoReplyBroadcast, templateName);
+  result.should.equal(messageTemplate);
 });
 
 // parseLegacyBroadcastFromContentfulEntry
