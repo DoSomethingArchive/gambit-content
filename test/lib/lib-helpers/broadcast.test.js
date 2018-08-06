@@ -10,7 +10,7 @@ const sinon = require('sinon');
 const contentful = require('../../../lib/contentful');
 const helpers = require('../../../lib/helpers');
 const stubs = require('../../utils/stubs');
-const autoReplyBroadcastEntryFactory = require('../../utils/factories/contentful/autoReplyBroadcast');
+const askChangeTopicEntryFactory = require('../../utils/factories/contentful/askChangeTopic');
 const broadcastEntryFactory = require('../../utils/factories/contentful/broadcast');
 const broadcastFactory = require('../../utils/factories/broadcast');
 
@@ -20,8 +20,9 @@ const broadcastId = stubs.getContentfulId();
 const broadcastEntry = broadcastEntryFactory.getValidCampaignBroadcast();
 const broadcast = broadcastFactory.getValidCampaignBroadcast();
 const broadcastName = stubs.getBroadcastName();
-const broadcastType = 'broadcast';
+const broadcastType = 'askChangeTopic';
 const campaignId = stubs.getCampaignId();
+const legacyBroadcastType = 'broadcast';
 
 // Module to test
 const broadcastHelper = require('../../../lib/helpers/broadcast');
@@ -34,8 +35,6 @@ const sandbox = sinon.sandbox.create();
 test.beforeEach(() => {
   sandbox.stub(contentful, 'getContentfulIdFromContentfulEntry')
     .returns(broadcastId);
-  sandbox.stub(contentful, 'getContentTypeFromContentfulEntry')
-    .returns(broadcastType);
   sandbox.stub(contentful, 'getNameTextFromContentfulEntry')
     .returns(broadcastName);
   sandbox.stub(contentful, 'getCampaignIdFromContentfulEntry')
@@ -57,6 +56,8 @@ test('fetch returns contentful.fetchByContentTypes parsed as broadcast objects',
     .returns(Promise.resolve(fetchEntriesResult));
   sandbox.stub(broadcastHelper, 'parseBroadcastFromContentfulEntry')
     .returns(Promise.resolve(broadcast));
+  sandbox.stub(contentful, 'getContentTypeFromContentfulEntry')
+    .returns(broadcastType);
 
   const result = await broadcastHelper.fetch();
 
@@ -86,6 +87,8 @@ test('fetchById returns contentful.fetchByContentfulId parsed as broadcast objec
     .returns(Promise.resolve(fetchEntryResult));
   sandbox.stub(broadcastHelper, 'parseBroadcastFromContentfulEntry')
     .returns(Promise.resolve(broadcast));
+  sandbox.stub(contentful, 'getContentTypeFromContentfulEntry')
+    .returns(broadcastType);
 
   const result = await broadcastHelper.fetchById(broadcastId);
   contentful.fetchByContentfulId.should.have.been.calledWith(broadcastId);
@@ -139,14 +142,16 @@ test('parseBroadcastMessageFromContentfulEntryAndTemplateName returns null if co
 });
 
 test('parseBroadcastMessageFromContentfulEntryAndTemplateName returns getMessageTemplateFromContentfulEntryAndTemplateName', () => {
-  const autoReplyBroadcast = autoReplyBroadcastEntryFactory.getValidAutoReplyBroadcast();
+  const askChangeTopic = askChangeTopicEntryFactory.getValidAskChangeTopic();
   const templateName = stubs.getRandomWord();
   const messageTemplate = { text: stubs.getRandomMessageText(), template: templateName };
   sandbox.stub(helpers.contentfulEntry, 'getMessageTemplateFromContentfulEntryAndTemplateName')
     .returns(messageTemplate);
+  sandbox.stub(contentful, 'getContentTypeFromContentfulEntry')
+    .returns(broadcastType);
 
   const result = broadcastHelper
-    .parseBroadcastMessageFromContentfulEntryAndTemplateName(autoReplyBroadcast, templateName);
+    .parseBroadcastMessageFromContentfulEntryAndTemplateName(askChangeTopic, templateName);
   result.should.equal(messageTemplate);
 });
 
@@ -154,12 +159,14 @@ test('parseBroadcastMessageFromContentfulEntryAndTemplateName returns getMessage
 test('parseLegacyBroadcastFromContentfulEntry returns an object with null topic if campaign broadcast', async (t) => {
   sandbox.stub(contentful, 'getAttachmentsFromContentfulEntry')
     .returns(attachments);
+  sandbox.stub(contentful, 'getContentTypeFromContentfulEntry')
+    .returns(legacyBroadcastType);
 
   const result = await broadcastHelper.parseLegacyBroadcastFromContentfulEntry(broadcastEntry);
   contentful.getContentfulIdFromContentfulEntry.should.have.been.calledWith(broadcastEntry);
   result.id.should.equal(broadcastId);
   contentful.getContentTypeFromContentfulEntry.should.have.been.calledWith(broadcastEntry);
-  result.type.should.equal(broadcastType);
+  result.type.should.equal(legacyBroadcastType);
   contentful.getNameTextFromContentfulEntry.should.have.been.calledWith(broadcastEntry);
   result.name.should.equal(broadcastName);
   t.is(result.topic, null);
@@ -172,12 +179,15 @@ test('parseLegacyBroadcastFromContentfulEntry returns an object with null topic 
 
 test('parseLegacyBroadcastFromContentfulEntry returns an object with null campaignId if hardcoded topic broadcast', async (t) => {
   const hardcodedTopicBroadcastEntry = broadcastEntryFactory.getValidTopicBroadcast();
+  sandbox.stub(contentful, 'getContentTypeFromContentfulEntry')
+    .returns(legacyBroadcastType);
 
   const result = await broadcastHelper
     .parseLegacyBroadcastFromContentfulEntry(hardcodedTopicBroadcastEntry);
   contentful.getContentfulIdFromContentfulEntry
     .should.have.been.calledWith(hardcodedTopicBroadcastEntry);
   result.id.should.equal(broadcastId);
+  result.type.should.equal(legacyBroadcastType);
   contentful.getNameTextFromContentfulEntry
     .should.have.been.calledWith(hardcodedTopicBroadcastEntry);
   result.name.should.equal(broadcastName);
