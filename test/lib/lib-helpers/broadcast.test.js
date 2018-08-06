@@ -130,6 +130,13 @@ test('getById returns fetchById if resetCache arg is true', async () => {
   result.should.deep.equal(broadcast);
 });
 
+// parseBroadcastMessageFromContentfulEntryAndTemplateName
+test('parseBroadcastMessageFromContentfulEntryAndTemplateName returns null if contentfulEntry does not have broadcast set', (t) => {
+  const result = broadcastHelper
+    .parseBroadcastMessageFromContentfulEntryAndTemplateName(broadcastEntry);
+  t.is(result, null);
+});
+
 // parseLegacyBroadcastFromContentfulEntry
 test('parseLegacyBroadcastFromContentfulEntry returns an object with null topic if campaign broadcast', async (t) => {
   sandbox.stub(contentful, 'getAttachmentsFromContentfulEntry')
