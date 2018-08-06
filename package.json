@@ -37,7 +37,7 @@
     ]
   },
   "engines": {
-    "node": "8.11.1",
+    "node": "8.11.3",
     "npm": "5.7.1"
   },
   "dependencies": {
@@ -55,6 +55,7 @@
     "contentful": "^3.8.0",
     "date-fns": "^1.29.0",
     "express": "^4.10.2",
+    "express-sslify": "^1.2.0",
     "file-exists": "^4.0.0",
     "html-entities": "^1.1.1",
     "mongoose": "4.6.8",
