@@ -50,11 +50,31 @@ test('getSummaryFromContentfulEntry returns an object with name and type propert
   result.updatedAt.should.equal(stubEntryDate);
 });
 
+// isDefaultTopicTrigger
+test('isDefaultTopicTrigger is truthy if contentful.isContentType', (t) => {
+  sandbox.stub(contentful, 'isContentType')
+    .returns(true);
+  t.truthy(contentfulEntryHelper.isDefaultTopicTrigger(stubEntry));
+});
+
+test('isDefaultTopicTrigger is falsy if not contentful.isContentType', (t) => {
+  sandbox.stub(contentful, 'isContentType')
+    .returns(false);
+  t.falsy(contentfulEntryHelper.isDefaultTopicTrigger(stubEntry));
+});
+
+
 // isMessage
-test('isMessage returns true if contentful.isContentType result with args entry and message', (t) => {
+test('isMessage is truthy if contentful.isContentType', (t) => {
   sandbox.stub(contentful, 'isContentType')
     .returns(true);
   t.truthy(contentfulEntryHelper.isMessage(stubEntry));
+});
+
+test('isMessage is falsy if not contentful.isContentType', (t) => {
+  sandbox.stub(contentful, 'isContentType')
+    .returns(false);
+  t.falsy(contentfulEntryHelper.isMessage(stubEntry));
 });
 
 test('isMessage returns false if not contentful.isContentType result with args entry and message ', (t) => {
