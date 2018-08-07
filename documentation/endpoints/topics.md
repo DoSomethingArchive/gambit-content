@@ -14,7 +14,7 @@ A conversation topic may be set to one of the following Contentful content types
 [under construction](https://i.amz.mshcdn.com/xxwMNSb7PAnpcIOmwhIU1dh80SA=/fit-in/1200x9600/https%3A%2F%2Fblueprint-api-production.s3.amazonaws.com%2Fuploads%2Fcard%2Fimage%2F168421%2Ftumblr_ks4m18IymX1qz4u07o1_250.gif)
 
 * `autoReplyBroadcast` - replies with an `autoReply` template after sending an outbound broadcast
-* `askChangeTopic` - asks yes/no question
+* `askYesNo` - asks yes/no question
 
 Fields:
 
