@@ -11,8 +11,6 @@ module.exports = {
         'autoReply',
       ],
     },
-    // TODO: Deprecate this type? if an externalPostConfig didn't require a campaign, a campaignless
-    // externalPostConfig seems it could take the place of our survey_response Rivescript topic.
     autoReplyBroadcast: {
       type: 'autoReplyBroadcast',
       templates: [
