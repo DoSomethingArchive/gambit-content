@@ -40,9 +40,9 @@ test.afterEach(() => {
   sandbox.restore();
 });
 
-// getNameInfoFromContentfulEntry
-test('getNameInfoFromContentfulEntry returns an object with name and type properties', () => {
-  const result = contentfulEntryHelper.getNameInfoFromContentfulEntry(stubEntry);
+// getSummaryFromContentfulEntry
+test('getSummaryFromContentfulEntry returns an object with name and type properties', () => {
+  const result = contentfulEntryHelper.getSummaryFromContentfulEntry(stubEntry);
   result.id.should.equal(stubEntryId);
   result.type.should.equal(stubContentType);
   result.name.should.equal(stubNameText);
