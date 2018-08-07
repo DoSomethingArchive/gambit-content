@@ -4,14 +4,7 @@ const stubs = require('../../stubs');
 
 function getValidMessage() {
   const data = {
-    sys: {
-      id: stubs.getContentfulId(),
-      contentType: {
-        sys: {
-          id: 'message',
-        },
-      },
-    },
+    sys: stubs.contentful.getSysWithTypeAndDate('message'),
     fields: {
       text: stubs.getRandomMessageText(),
       attachments: [

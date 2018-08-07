@@ -49,3 +49,16 @@ test('getNameInfoFromContentfulEntry returns an object with name and type proper
   result.createdAt.should.equal(stubEntryDate);
   result.updatedAt.should.equal(stubEntryDate);
 });
+
+// isMessage
+test('isMessage returns true if contentful.isContentType result with args entry and message', (t) => {
+  sandbox.stub(contentful, 'isContentType')
+    .returns(true);
+  t.truthy(contentfulEntryHelper.isMessage(stubEntry));
+});
+
+test('isMessage returns false if not contentful.isContentType result with args entry and message ', (t) => {
+  sandbox.stub(contentful, 'isContentType')
+    .returns(false);
+  t.falsy(contentfulEntryHelper.isMessage(stubEntry));
+});
