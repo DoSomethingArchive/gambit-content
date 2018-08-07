@@ -7,8 +7,8 @@ const contentTypes = {
     isBroadcast: true,
     postType: null,
   },
-  autoReplyBroadcast: {
-    type: 'autoReplyBroadcast',
+  autoReply: {
+    type: 'autoReply',
     isBroadcast: true,
     postType: null,
   },
