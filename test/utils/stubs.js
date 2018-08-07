@@ -288,6 +288,25 @@ module.exports = {
       const result = require(`${path}get-entries-${contentType}.json`);
       return result;
     },
+    /**
+     * Returns a mock sys property of an item in a Contentful getEnries response.
+     *
+     * @param {String} contentType
+     * @param {Date} date
+     * @return {Object}
+     */
+    getSysWithTypeAndDate: function getSysWithTypeAndDate(contentType, date = Date.now()) {
+      return {
+        id: module.exports.getContentfulId(),
+        contentType: {
+          sys: {
+            id: contentType,
+          },
+        },
+        createdAt: date,
+        updatedAt: date,
+      };
+    },
   },
   getJSONstub: function getJSONstub(name, category = 'contentful') {
     const path = `../stubs/${category}/`;

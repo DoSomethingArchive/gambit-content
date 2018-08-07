@@ -10,7 +10,7 @@ const sinon = require('sinon');
 const contentful = require('../../../lib/contentful');
 const helpers = require('../../../lib/helpers');
 const stubs = require('../../utils/stubs');
-const askChangeTopicEntryFactory = require('../../utils/factories/contentful/askChangeTopic');
+const askYesNoEntryFactory = require('../../utils/factories/contentful/askYesNo');
 const broadcastEntryFactory = require('../../utils/factories/contentful/broadcast');
 const broadcastFactory = require('../../utils/factories/broadcast');
 
@@ -20,7 +20,7 @@ const broadcastId = stubs.getContentfulId();
 const broadcastEntry = broadcastEntryFactory.getValidCampaignBroadcast();
 const broadcast = broadcastFactory.getValidCampaignBroadcast();
 const broadcastName = stubs.getBroadcastName();
-const broadcastType = 'askChangeTopic';
+const broadcastType = 'askYesNo';
 const campaignId = stubs.getCampaignId();
 const legacyBroadcastType = 'broadcast';
 
@@ -142,7 +142,7 @@ test('parseBroadcastMessageFromContentfulEntryAndTemplateName returns null if co
 });
 
 test('parseBroadcastMessageFromContentfulEntryAndTemplateName returns getMessageTemplateFromContentfulEntryAndTemplateName', () => {
-  const askChangeTopic = askChangeTopicEntryFactory.getValidAskChangeTopic();
+  const askYesNo = askYesNoEntryFactory.getValidAskYesNo();
   const templateName = stubs.getRandomWord();
   const messageTemplate = { text: stubs.getRandomMessageText(), template: templateName };
   sandbox.stub(helpers.contentfulEntry, 'getMessageTemplateFromContentfulEntryAndTemplateName')
@@ -151,7 +151,7 @@ test('parseBroadcastMessageFromContentfulEntryAndTemplateName returns getMessage
     .returns(broadcastType);
 
   const result = broadcastHelper
-    .parseBroadcastMessageFromContentfulEntryAndTemplateName(askChangeTopic, templateName);
+    .parseBroadcastMessageFromContentfulEntryAndTemplateName(askYesNo, templateName);
   result.should.equal(messageTemplate);
 });
 
