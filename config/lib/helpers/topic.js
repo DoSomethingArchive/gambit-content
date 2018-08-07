@@ -2,8 +2,8 @@
 
 // @see documentation/endpoints/topics
 const contentTypes = {
-  askChangeTopicBroadcast: {
-    type: 'askChangeTopicBroadcast',
+  askYesNo: {
+    type: 'askYesNo',
     isBroadcast: true,
     postType: null,
   },
