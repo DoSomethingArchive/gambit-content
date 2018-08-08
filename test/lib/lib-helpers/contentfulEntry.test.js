@@ -10,6 +10,7 @@ const sinon = require('sinon');
 const contentful = require('../../../lib/contentful');
 const stubs = require('../../utils/stubs');
 const askYesNoEntryFactory = require('../../utils/factories/contentful/askYesNo');
+const autoReplyFactory = require('../../utils/factories/contentful/autoReply');
 const messageFactory = require('../../utils/factories/contentful/message');
 
 // stubs
@@ -51,8 +52,16 @@ test('getSummaryFromContentfulEntry returns an object with name and type propert
   result.updatedAt.should.equal(stubEntryDate);
 });
 
+// isAutoReply
+test('isAutoReply  returns whether contentType is autoReply', (t) => {
+  const askYesNoEntry = askYesNoEntryFactory.getValidAskYesNo();
+  t.falsy(contentfulEntryHelper.isAutoReply(askYesNoEntry));
+  const autoReplyEntry = autoReplyFactory.getValidAutoReply();
+  t.truthy(contentfulEntryHelper.isAutoReply(autoReplyEntry));
+});
+
 // isBroadcastable
-test('isBroadcastable is returns whether contentType is broadcastable', (t) => {
+test('isBroadcastable returns whether contentType is broadcastable', (t) => {
   const askYesNoEntry = askYesNoEntryFactory.getValidAskYesNo();
   t.truthy(contentfulEntryHelper.isBroadcastable(askYesNoEntry));
   const messageEntry = messageFactory.getValidMessage();
