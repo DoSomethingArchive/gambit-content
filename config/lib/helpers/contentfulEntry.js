@@ -14,7 +14,6 @@ module.exports = {
     },
     autoReply: {
       type: 'autoReply',
-      broadcastable: false,
       templates: [
         'autoReply',
       ],
@@ -23,9 +22,8 @@ module.exports = {
       type: 'autoReplyBroadcast',
       broadcastable: true,
     },
-    externalPostConfig: {
-      type: 'externalPostConfig',
-      postType: 'external',
+    defaultTopicTrigger: {
+      type: 'defaultTopicTrigger',
     },
     message: {
       type: 'message',
@@ -38,9 +36,15 @@ module.exports = {
       type: 'textPostConfig',
       postType: 'text',
     },
+    // Legacy types:
     // Ideally we'd backfill all legacy entries as their new types, but we likely can't change the
     // the type of a Contentful entry without changing its id (if that's the case - we'd need to
     // bulk update all documents in the Conversations messages DB)
+    // This externalPostConfig type will deprecated by an autoReply:
+    externalPostConfig: {
+      type: 'externalPostConfig',
+      postType: 'external',
+    },
     legacyBroadcast: {
       type: 'broadcast',
       broadcastable: true,
