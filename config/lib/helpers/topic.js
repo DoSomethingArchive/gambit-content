@@ -1,34 +1,5 @@
 'use strict';
 
-// @see documentation/endpoints/topics
-const contentTypes = {
-  askYesNo: {
-    type: 'askYesNo',
-    isBroadcast: true,
-    postType: null,
-  },
-  autoReply: {
-    type: 'autoReply',
-    isBroadcast: true,
-    postType: null,
-  },
-  externalPostConfig: {
-    type: 'externalPostConfig',
-    isBroadcast: false,
-    postType: 'external',
-  },
-  photoPostConfig: {
-    type: 'photoPostConfig',
-    isBroadcast: false,
-    postType: 'photo',
-  },
-  textPostConfig: {
-    type: 'textPostConfig',
-    isBroadcast: false,
-    postType: 'text',
-  },
-};
-
 const defaultText = {
   declined: 'Text MENU if you\'d like to find a different action to take.',
   invalidInput: 'Sorry, I didn\'t get that.',
@@ -49,7 +20,6 @@ const photoPostDefaultText = {
 
 module.exports = {
   allTopicsCacheKey: 'all',
-  contentTypes,
   defaultPostType: 'photo',
   /*
    * Maps each content type with a map of templateNames and its corresponding field name and

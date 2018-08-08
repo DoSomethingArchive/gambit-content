@@ -63,7 +63,6 @@ test('isDefaultTopicTrigger is falsy if not contentful.isContentType', (t) => {
   t.falsy(contentfulEntryHelper.isDefaultTopicTrigger(stubEntry));
 });
 
-
 // isMessage
 test('isMessage is truthy if contentful.isContentType', (t) => {
   sandbox.stub(contentful, 'isContentType')
