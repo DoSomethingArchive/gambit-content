@@ -9,6 +9,7 @@ function getValidAutoReply(date = Date.now()) {
     fields: {
       name: stubs.getBroadcastName(),
       autoReply: messageFactory.getValidMessage(),
+      // TODO: Add a campaign reference field, returning a campaign factory's valid campaign.
     },
   };
   return data;
