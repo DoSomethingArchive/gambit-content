@@ -1,21 +1,14 @@
 'use strict';
 
 const stubs = require('../../stubs');
-const messageFactory = require('./message');
 const autoReplyFactory = require('./autoReply');
 
-function getValidAutoReplyBroadcast() {
+function getValidAutoReplyBroadcast(date = Date.now()) {
   const data = {
-    sys: {
-      id: stubs.getContentfulId(),
-      contentType: {
-        sys: {
-          id: 'autoReplyBroadcast',
-        },
-      },
-    },
+    sys: stubs.contentful.getSysWithTypeAndDate('autoReplyBroadcast', date),
     fields: {
-      broadcast: messageFactory.getValidMessage(),
+      text: stubs.getRandomMessageText(),
+      attachments: stubs.contentful.getAttachments(),
       topic: autoReplyFactory.getValidAutoReply(),
     },
   };

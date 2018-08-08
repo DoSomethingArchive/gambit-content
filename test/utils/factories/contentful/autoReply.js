@@ -7,7 +7,7 @@ function getValidAutoReply(date = Date.now()) {
   const data = {
     sys: stubs.contentful.getSysWithTypeAndDate('autoReply', date),
     fields: {
-      name: stubs.getBroadcastName(),
+      name: stubs.getRandomName(),
       autoReply: messageFactory.getValidMessage(),
       // TODO: Add a campaign reference field, returning a campaign factory's valid campaign.
     },

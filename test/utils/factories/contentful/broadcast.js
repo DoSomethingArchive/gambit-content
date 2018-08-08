@@ -4,16 +4,7 @@ const stubs = require('../../stubs');
 
 module.exports.getValidCampaignBroadcast = function getValidCampaignBroadcast(date = Date.now()) {
   return {
-    sys: {
-      id: stubs.getBroadcastId(),
-      contentType: {
-        sys: {
-          id: 'broadcast',
-        },
-      },
-      createdAt: date,
-      updatedAt: date,
-    },
+    sys: stubs.contentful.getSysWithTypeAndDate('broadcast', date),
     fields: {
       name: stubs.getBroadcastName(),
       topic: null,

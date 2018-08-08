@@ -1,22 +1,22 @@
 'use strict';
 
 const stubs = require('../../stubs');
-const messageFactory = require('./message');
 const textPostConfigFactory = require('./textPostConfig');
 
 function getValidAskYesNo(date = Date.now()) {
-  const data = {
+  return {
     sys: stubs.contentful.getSysWithTypeAndDate('askYesNo', date),
     fields: {
       name: stubs.getBroadcastName(),
-      askYesNo: messageFactory.getValidMessage(),
-      saidYes: textPostConfigFactory.getValidTextPostConfig(),
-      saidNo: messageFactory.getValidMessage(),
-      invalidAskYesNoResponse: messageFactory.getValidMessage(),
-      saidNoAutoReply: messageFactory.getValidMessage(),
+      text: stubs.getRandomMessageText(),
+      attachments: stubs.contentful.getAttachments(),
+      topic: textPostConfigFactory.getValidTextPostConfig(),
+      saidYes: stubs.getRandomMessageText(),
+      saidNo: stubs.getRandomMessageText(),
+      invalidAskYesNoResponse: stubs.getRandomMessageText(),
+      autoReply: stubs.getRandomMessageText(),
     },
   };
-  return data;
 }
 
 module.exports = {

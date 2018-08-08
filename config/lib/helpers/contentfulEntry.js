@@ -1,5 +1,15 @@
 'use strict';
 
+/**
+ * This maps the fields in our Contentful types into broadcast, topic, and defaultTopicTriggers.
+ *
+ * Content types with templates set are returned as topics. Each item in the templates array is a
+ * single value text field to be used as a bot reply template while in the topic.
+ *
+ * A broadcastable content type currently requires a text field named "text" and attachments field
+ * named "attachments" to define content for the outbound broadcast.
+ *
+ */
 module.exports = {
   contentTypes: {
     askYesNo: {
@@ -9,7 +19,6 @@ module.exports = {
         'saidYes',
         'saidNo',
         'invalidAskYesNoResponse',
-        'autoReply',
       ],
     },
     autoReply: {
