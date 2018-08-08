@@ -123,7 +123,7 @@ test('getById returns fetchById if resetCache arg is true', async () => {
 });
 
 // parseBroadcastFromContentfulEntry
-test('parseBroadcastFromContentfulEntry sets message to getMessageTemplateFromContentfulEntryAndTemplateName', async () => {
+test('parseBroadcastFromContentfulEntry returns object with message from getMessageTemplateFromContentfulEntryAndTemplateName', async () => {
   const autoReplyBroadcastEntry = autoReplyBroadcastFactory.getValidAutoReplyBroadcast();
   const stubContentType = stubs.getRandomWord();
   sandbox.stub(helpers.contentfulEntry, 'getSummaryFromContentfulEntry')
@@ -137,11 +137,11 @@ test('parseBroadcastFromContentfulEntry sets message to getMessageTemplateFromCo
   result.message.template.should.equal(stubContentType);
 });
 
-// parseLegacyBroadcastFromContentfulEntry
-test('parseLegacyBroadcastFromContentfulEntry returns an object with null topic if campaign broadcast', (t) => {
+// getLegacyBroadcastDataFromContentfulEntry
+test('getLegacyBroadcastDataFromContentfulEntry returns an object with null topic if campaign broadcast', (t) => {
   sandbox.stub(contentful, 'getAttachmentsFromContentfulEntry')
     .returns(attachments);
-  const result = broadcastHelper.parseLegacyBroadcastFromContentfulEntry(broadcastEntry);
+  const result = broadcastHelper.getLegacyBroadcastDataFromContentfulEntry(broadcastEntry);
   t.is(result.topic, null);
   result.campaignId.should.equal(campaignId);
   result.message.text.should.equal(broadcastEntry.fields.message);
@@ -150,10 +150,10 @@ test('parseLegacyBroadcastFromContentfulEntry returns an object with null topic 
   result.message.attachments.should.equal(attachments);
 });
 
-test('parseLegacyBroadcastFromContentfulEntry returns an object with null campaignId if hardcoded topic broadcast', (t) => {
+test('getLegacyBroadcastDataFromContentfulEntry returns an object with null campaignId if hardcoded topic broadcast', (t) => {
   const hardcodedTopicBroadcastEntry = broadcastEntryFactory.getValidTopicBroadcast();
   const result = broadcastHelper
-    .parseLegacyBroadcastFromContentfulEntry(hardcodedTopicBroadcastEntry);
+    .getLegacyBroadcastDataFromContentfulEntry(hardcodedTopicBroadcastEntry);
   t.is(result.campaignId, null);
   result.topic.should.equal(hardcodedTopicBroadcastEntry.fields.topic);
   result.message.text.should.equal(hardcodedTopicBroadcastEntry.fields.message);
