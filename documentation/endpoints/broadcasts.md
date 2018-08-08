@@ -8,15 +8,21 @@ Name | Type | Description
 -----|------|------------
 `id` | String | The Contentful entry id
 `name` | String | Internal name used to reference the broadcast
-`type` | String | The Contentful entry type, e.g. `autoReplyBroadcast`, `broadcast`
+`type` | String | The Contentful entry type, e.g. `askYesNo`, `autoReplyBroadcast`, `broadcast`
 `message` | Object | Contains the [outbound message content](https://github.com/DoSomething/gambit-conversations/blob/master/documentation/endpoints/messages.md) to send to user
 `message.text` | String |
 `message.attachments` | Array |
 `message.template` | String |
-`topic` | String | If set, updates the conversation topic to this string.*
-`campaignId` | Number | If set, updates the conversation topic to the given campaign's topic.*
+`message.topic` | Object | If an id property exists, its saved to the [conversation topic](https://github.com/DoSomething/gambit-conversations/blob/master/documentation/endpoints/topics.md) when broadcast is sent
+`templates` | Object | Defines replies for when this broadcast is saved as a [conversation topic](https://github.com/DoSomething/gambit-conversations/blob/master/documentation/endpoints/topics.md) -- used in `askYesNo`, which will update the conversation topic again if user answers yes
 
-* Note: These fields will likely be deprecated by a `topicId` per https://www.pivotaltracker.com/story/show/157369418
+Legacy fields (only used for type `broadcast`)
+
+Name | Type | Description
+-----|------|------------
+`topic` | String | (Legacy) If set, updates the conversation topic to this string.*
+`campaignId` | Number | (Legacy) If set, updates the conversation topic to the given campaign's topic.*
+
 
 
 ## Retrieve broadcasts
@@ -64,18 +70,37 @@ curl http://localhost:5000/v1/broadcasts?skip=20
       "topic": "survey_response"
     },
     {
-      "id": "4C2gkDV8oUAaewSMYeokEC",
-      "name": "VoterRegistration2018_Jul8_OhioSpecialHouseGeneralReminder",
-      "type": "broadcast",
-      "createdAt": "2018-07-06T18:28:51.478Z",
-      "updatedAt": "2018-07-06T18:31:55.968Z",
+      "id": "2X4r3fZrTGA2mGemowgiEI",
+      "name": "askYesNo test",
+      "type": "askYesNo",
+      "createdAt": "2018-08-06T23:34:56.395Z",
+      "updatedAt": "2018-08-08T22:20:14.822Z",
       "message": {
-        "text": "It's Freddie! Guess what -- Ohio needs YOU. Voters have the power to make a huge difference in your state, so make sure you're registered to vote in Ohio's special house general election before tonight's deadline! It takes just 2 mins: https://vote.dosomething.org/?r=user:{{user.id}},campaignID:8017,campaignRunID:8022,source:sms,source_details:broadcastID_4C2gkDV8oUAaewSMYeokEC",
+        "text": "Join Pump it Up? \n\nYes No",
         "attachments": [],
-        "template": "rivescript"
+        "template": "askYesNo",
+        "topic": {}
       },
-      "campaignId": null,
-      "topic": "survey_response"
+      "templates": {
+        "saidYes": {
+          "text": "Great! Text START to submit a photo.",
+          "topic": {
+            "id": "4xXe9sQqmIeiWauSUu6kAY"
+          }
+        },
+        "saidNo": {
+          "text": "Ok, we'll check in with you later.",
+          "topic": {}
+        },
+        "invalidAskYesNoResponse": {
+          "text": "Sorry, I didn't get that - did you want to join for Pump It Up? Yes or No",
+          "topic": {}
+        },
+        "autoReply": {
+          "text": "Sorry, I didn't understand that. Text Q if you have a question.",
+          "topic": {}
+        }
+      },
     },
     ...
   },
