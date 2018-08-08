@@ -34,17 +34,6 @@ test.afterEach(() => {
   sandbox.restore();
 });
 
-// getMessageTemplatesFromContentfulEntry
-test('getMessageTemplatesFromContentfulEntry returns an object with templates values if content type config has templates', () => {
-  const result = contentfulEntryHelper.getMessageTemplatesFromContentfulEntry(autoReplyEntry);
-  result.autoReply.text.should.equal(autoReplyEntry.fields.autoReply.fields.text);
-});
-
-test('getMessageTemplatesFromContentfulEntry returns an empty object if content type config does not have templates', () => {
-  const result = contentfulEntryHelper
-    .getMessageTemplatesFromContentfulEntry(autoReplyBroadcastEntry);
-  result.should.deep.equal({});
-});
 
 // getSummaryFromContentfulEntry
 test('getSummaryFromContentfulEntry returns an object with name and type properties', () => {
@@ -62,6 +51,18 @@ test('getSummaryFromContentfulEntry returns an object with name and type propert
   result.name.should.equal(stubNameText);
   result.createdAt.should.equal(stubEntryDate);
   result.updatedAt.should.equal(stubEntryDate);
+});
+
+// getTopicTemplatesFromContentfulEntry
+test('getTopicTemplatesFromContentfulEntry returns an object with templates values if content type config has templates', () => {
+  const result = contentfulEntryHelper.getTopicTemplatesFromContentfulEntry(autoReplyEntry);
+  result.autoReply.text.should.equal(autoReplyEntry.fields.autoReply);
+});
+
+test('getTopicTemplatesFromContentfulEntry returns an empty object if content type config does not have templates', () => {
+  const result = contentfulEntryHelper
+    .getTopicTemplatesFromContentfulEntry(autoReplyBroadcastEntry);
+  result.should.deep.equal({});
 });
 
 // isAutoReply
