@@ -222,7 +222,8 @@ test('getFieldValueFromContentfulEntryAndTemplateName returns the entry field va
 // getPostTypeFromContentType
 test('getPostTypeFromContentType returns postType string property from contentTypeConfig', () => {
   const result = topicHelper.getPostTypeFromContentType(topicContentType);
-  result.should.equal(config.contentTypes[topicContentType].postType);
+  const contentTypeConfigs = helpers.contentfulEntry.getContentTypeConfigs();
+  result.should.equal(contentTypeConfigs[topicContentType].postType);
 });
 
 // parseTopicFromContentfulEntry

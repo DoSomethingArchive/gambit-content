@@ -2,6 +2,7 @@
 
 const stubs = require('../../stubs');
 const messageFactory = require('./message');
+const autoReplyFactory = require('./autoReply');
 
 function getValidAutoReplyBroadcast() {
   const data = {
@@ -15,7 +16,7 @@ function getValidAutoReplyBroadcast() {
     },
     fields: {
       broadcast: messageFactory.getValidMessage(),
-      autoReply: messageFactory.getValidMessage(),
+      topic: autoReplyFactory.getValidAutoReply(),
     },
   };
   return data;

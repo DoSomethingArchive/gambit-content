@@ -10,13 +10,17 @@ const sinon = require('sinon');
 const contentful = require('../../../lib/contentful');
 const stubs = require('../../utils/stubs');
 const askYesNoEntryFactory = require('../../utils/factories/contentful/askYesNo');
+const autoReplyFactory = require('../../utils/factories/contentful/autoReply');
+const autoReplyBroadcastFactory = require('../../utils/factories/contentful/autoReplyBroadcast');
+const defaultTopicTriggerFactory = require('../../utils/factories/contentful/defaultTopicTrigger');
+const messageFactory = require('../../utils/factories/contentful/message');
 
 // stubs
-const stubEntryDate = Date.now();
-const stubEntry = askYesNoEntryFactory.getValidAskYesNo(stubEntryDate);
-const stubEntryId = stubs.getContentfulId();
-const stubContentType = stubs.getTopicContentType();
-const stubNameText = stubs.getBroadcastName();
+const askYesNoEntry = askYesNoEntryFactory.getValidAskYesNo();
+const autoReplyEntry = autoReplyFactory.getValidAutoReply();
+const autoReplyBroadcastEntry = autoReplyBroadcastFactory.getValidAutoReplyBroadcast();
+const defaultTopicTriggerEntry = defaultTopicTriggerFactory.getValidDefaultTopicTrigger();
+const messageEntry = messageFactory.getValidMessage();
 
 // Module to test
 const contentfulEntryHelper = require('../../../lib/helpers/contentfulEntry');
@@ -24,24 +28,34 @@ const contentfulEntryHelper = require('../../../lib/helpers/contentfulEntry');
 chai.should();
 chai.use(sinonChai);
 
-
 const sandbox = sinon.sandbox.create();
-
-test.beforeEach(() => {
-  sandbox.stub(contentful, 'getContentfulIdFromContentfulEntry')
-    .returns(stubEntryId);
-  sandbox.stub(contentful, 'getContentTypeFromContentfulEntry')
-    .returns(stubContentType);
-  sandbox.stub(contentful, 'getNameTextFromContentfulEntry')
-    .returns(stubNameText);
-});
 
 test.afterEach(() => {
   sandbox.restore();
 });
 
+// getMessageTemplatesFromContentfulEntry
+test('getMessageTemplatesFromContentfulEntry returns an object with templates values if content type config has templates', () => {
+  const result = contentfulEntryHelper.getMessageTemplatesFromContentfulEntry(autoReplyEntry);
+  result.autoReply.text.should.equal(autoReplyEntry.fields.autoReply.fields.text);
+});
+
+test('getMessageTemplatesFromContentfulEntry returns an empty object if content type config does not have templates', () => {
+  const result = contentfulEntryHelper
+    .getMessageTemplatesFromContentfulEntry(autoReplyBroadcastEntry);
+  result.should.deep.equal({});
+});
+
 // getSummaryFromContentfulEntry
 test('getSummaryFromContentfulEntry returns an object with name and type properties', () => {
+  const stubEntryDate = Date.now();
+  const stubEntry = askYesNoEntryFactory.getValidAskYesNo(stubEntryDate);
+  const stubEntryId = stubs.getContentfulId();
+  const stubContentType = stubs.getTopicContentType();
+  const stubNameText = stubs.getBroadcastName();
+  sandbox.stub(contentful, 'getContentTypeFromContentfulEntry')
+    .returns(stubContentType);
+
   const result = contentfulEntryHelper.getSummaryFromContentfulEntry(stubEntry);
   result.id.should.equal(stubEntryId);
   result.type.should.equal(stubContentType);
@@ -50,35 +64,26 @@ test('getSummaryFromContentfulEntry returns an object with name and type propert
   result.updatedAt.should.equal(stubEntryDate);
 });
 
+// isAutoReply
+test('isAutoReply returns whether content type is autoReply', (t) => {
+  t.falsy(contentfulEntryHelper.isAutoReply(askYesNoEntry));
+  t.truthy(contentfulEntryHelper.isAutoReply(autoReplyEntry));
+});
+
+// isBroadcastable
+test('isBroadcastable returns whether content type is broadcastable', (t) => {
+  t.truthy(contentfulEntryHelper.isBroadcastable(askYesNoEntry));
+  t.falsy(contentfulEntryHelper.isBroadcastable(messageEntry));
+});
+
 // isDefaultTopicTrigger
-test('isDefaultTopicTrigger is truthy if contentful.isContentType', (t) => {
-  sandbox.stub(contentful, 'isContentType')
-    .returns(true);
-  t.truthy(contentfulEntryHelper.isDefaultTopicTrigger(stubEntry));
+test('isDefaultTopicTrigger returns whether content type is defaultTopicTrigger', (t) => {
+  t.truthy(contentfulEntryHelper.isDefaultTopicTrigger(defaultTopicTriggerEntry));
+  t.falsy(contentfulEntryHelper.isDefaultTopicTrigger(messageEntry));
 });
-
-test('isDefaultTopicTrigger is falsy if not contentful.isContentType', (t) => {
-  sandbox.stub(contentful, 'isContentType')
-    .returns(false);
-  t.falsy(contentfulEntryHelper.isDefaultTopicTrigger(stubEntry));
-});
-
 
 // isMessage
-test('isMessage is truthy if contentful.isContentType', (t) => {
-  sandbox.stub(contentful, 'isContentType')
-    .returns(true);
-  t.truthy(contentfulEntryHelper.isMessage(stubEntry));
-});
-
-test('isMessage is falsy if not contentful.isContentType', (t) => {
-  sandbox.stub(contentful, 'isContentType')
-    .returns(false);
-  t.falsy(contentfulEntryHelper.isMessage(stubEntry));
-});
-
-test('isMessage returns false if not contentful.isContentType result with args entry and message ', (t) => {
-  sandbox.stub(contentful, 'isContentType')
-    .returns(false);
-  t.falsy(contentfulEntryHelper.isMessage(stubEntry));
+test('isMessage returns whether content type is message', (t) => {
+  t.truthy(contentfulEntryHelper.isMessage(messageEntry));
+  t.falsy(contentfulEntryHelper.isMessage(autoReplyEntry));
 });

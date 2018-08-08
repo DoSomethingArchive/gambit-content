@@ -31,10 +31,17 @@ test.afterEach(() => {
   sandbox.restore();
 });
 
+test.afterEach(() => {
+  sandbox.restore();
+});
+
 // fetch
 test('fetch returns contentful.fetchByContentTypes parsed as defaultTopicTrigger objects', async () => {
   const entries = [firstEntry, secondEntry];
+  const types = ['defaultTopicTrigger'];
   const fetchEntriesResult = stubs.contentful.getFetchByContentTypesResultWithArray(entries);
+  sandbox.stub(defaultTopicTriggerHelper, 'getContentTypes')
+    .returns(types);
   sandbox.stub(contentful, 'fetchByContentTypes')
     .returns(Promise.resolve(fetchEntriesResult));
   sandbox.stub(defaultTopicTriggerHelper, 'parseDefaultTopicTriggerFromContentfulEntry')
@@ -45,7 +52,7 @@ test('fetch returns contentful.fetchByContentTypes parsed as defaultTopicTrigger
 
   const result = await defaultTopicTriggerHelper.fetch();
   contentful.fetchByContentTypes
-    .should.have.been.calledWith(config.contentTypes);
+    .should.have.been.calledWith(types);
   defaultTopicTriggerHelper.parseDefaultTopicTriggerFromContentfulEntry
     .should.have.been.calledWith(firstEntry);
   defaultTopicTriggerHelper.parseDefaultTopicTriggerFromContentfulEntry
