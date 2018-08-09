@@ -12,8 +12,10 @@
  * fields to use if the field values are blank.
  *
  * A broadcastable content type currently requires a text field named "text" and attachments field
- * named "attachments" to define content for the outbound broadcast.
- *
+ * named "attachments" to define content for the outbound broadcast. If a topic reference field
+ * exists, it will include the topic in the outbound message, indicating that the conversation topic
+ * should be updated upon receiving the broadcast (otherwise, the broadcast itself can be used as a
+ * topic if it has templates -- e.g. askYesNo)
  */
 module.exports = {
   contentTypes: {
@@ -47,9 +49,17 @@ module.exports = {
     message: {
       type: 'message',
     },
+    photoPostBroadcast: {
+      type: 'photoPostBroadcast',
+      broadcastable: true,
+    },
     photoPostConfig: {
       type: 'photoPostConfig',
       postType: 'photo',
+    },
+    textPostBroadcast: {
+      type: 'textPostBroadcast',
+      broadcastable: true,
     },
     textPostConfig: {
       type: 'textPostConfig',
