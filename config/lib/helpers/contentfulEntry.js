@@ -1,5 +1,20 @@
 'use strict';
 
+/**
+ * This maps the fields in our Contentful types into broadcast, topic, and defaultTopicTriggers.
+ *
+ * Content types with either a templates or postType property set are returned as topics.
+ * If the type contains a templates array, each array item should correspond to a single value text
+ * field defined on the content type, which is used as a bot reply template in the topic.
+ * If the type contains a postType string property instead, its an older content type and its
+ * templates are configured via config/lib/helpers/topic. Ideally we should consolidate, but it'd
+ * take a bit of refactoring as the topic helper config contains default values for certain text
+ * fields to use if the field values are blank.
+ *
+ * A broadcastable content type currently requires a text field named "text" and attachments field
+ * named "attachments" to define content for the outbound broadcast.
+ *
+ */
 module.exports = {
   contentTypes: {
     askYesNo: {

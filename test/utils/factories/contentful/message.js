@@ -7,16 +7,7 @@ function getValidMessage() {
     sys: stubs.contentful.getSysWithTypeAndDate('message'),
     fields: {
       text: stubs.getRandomMessageText(),
-      attachments: [
-        {
-          sys: {
-            id: stubs.getContentfulId(),
-          },
-          fields: {
-            file: stubs.getAttachment(),
-          },
-        },
-      ],
+      attachments: stubs.contentful.getAttachments(),
     },
   };
   return data;
