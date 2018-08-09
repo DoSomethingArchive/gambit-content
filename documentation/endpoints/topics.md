@@ -118,7 +118,11 @@ curl http://localhost:5000/v1/topics?skip=5
         "saidYes": {
           "text": "Great! Text START to submit a photo.",
           "topic": {
-            "id": "4xXe9sQqmIeiWauSUu6kAY"
+            "id": "4xXe9sQqmIeiWauSUu6kAY",
+            "name": "Pump It Up - Submit Flyer",
+            "type": "photoPostConfig",
+            "createdAt": "2018-08-01T14:41:30.242Z",
+            "updatedAt": "2018-08-07T15:44:59.609Z"
           }
         },
         "saidNo": {
