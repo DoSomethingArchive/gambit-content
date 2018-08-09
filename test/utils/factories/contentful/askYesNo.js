@@ -10,7 +10,7 @@ function getValidAskYesNo(date = Date.now()) {
       name: stubs.getBroadcastName(),
       text: stubs.getRandomMessageText(),
       attachments: stubs.contentful.getAttachments(),
-      topic: textPostConfigFactory.getValidTextPostConfig(),
+      saidYesTopic: textPostConfigFactory.getValidTextPostConfig(),
       saidYes: stubs.getRandomMessageText(),
       saidNo: stubs.getRandomMessageText(),
       invalidAskYesNoResponse: stubs.getRandomMessageText(),

@@ -124,7 +124,7 @@ test('getById returns fetchById if resetCache arg is true', async () => {
 
 // parseBroadcastFromContentfulEntry
 test('parseBroadcastFromContentfulEntry returns object with message from getMessageTemplateFromContentfulEntryAndTemplateName', async () => {
-  const autoReplyBroadcastEntry = autoReplyBroadcastFactory.getValidAutoReplyBroadcast();
+  const contentfulEntry = autoReplyBroadcastFactory.getValidAutoReplyBroadcast();
   const stubContentType = stubs.getRandomWord();
   sandbox.stub(helpers.contentfulEntry, 'getSummaryFromContentfulEntry')
     .returns({ type: stubContentType });
@@ -132,9 +132,31 @@ test('parseBroadcastFromContentfulEntry returns object with message from getMess
   sandbox.stub(helpers.contentfulEntry, 'getMessageTemplateFromContentfulEntryAndTemplateName')
     .returns(stubTemplate);
 
-  const result = await broadcastHelper.parseBroadcastFromContentfulEntry(autoReplyBroadcastEntry);
+  const result = await broadcastHelper.parseBroadcastFromContentfulEntry(contentfulEntry);
+  helpers.contentfulEntry.getSummaryFromContentfulEntry
+    .should.have.been.calledWith(contentfulEntry);
   result.message.text.should.equal(stubTemplate.text);
   result.message.template.should.equal(stubContentType);
+  helpers.contentfulEntry.getMessageTemplateFromContentfulEntryAndTemplateName
+    .should.have.been.calledWith(contentfulEntry, stubContentType);
+});
+
+test('parseBroadcastFromContentfulEntry calls getLegacyBroadcastDataFromContentfulEntry if legacy broadcast', async () => {
+  const legacyBroadcastEntry = broadcastEntryFactory.getValidCampaignBroadcast();
+  const stubMessageText = stubs.getRandomMessageText;
+  sandbox.stub(helpers.contentfulEntry, 'isLegacyBroadcast')
+    .returns(true);
+  sandbox.stub(helpers.contentfulEntry, 'getSummaryFromContentfulEntry')
+    .returns({ type: stubMessageText });
+  sandbox.stub(broadcastHelper, 'getLegacyBroadcastDataFromContentfulEntry')
+    .returns({ message: { text: stubMessageText } });
+
+  const result = await broadcastHelper.parseBroadcastFromContentfulEntry(legacyBroadcastEntry);
+  helpers.contentfulEntry.getSummaryFromContentfulEntry
+    .should.have.been.calledWith(legacyBroadcastEntry);
+  broadcastHelper.getLegacyBroadcastDataFromContentfulEntry
+    .should.have.been.calledWith(legacyBroadcastEntry);
+  result.message.text.should.equal(stubMessageText);
 });
 
 // getLegacyBroadcastDataFromContentfulEntry
@@ -142,7 +164,7 @@ test('getLegacyBroadcastDataFromContentfulEntry returns an object with null topi
   sandbox.stub(contentful, 'getAttachmentsFromContentfulEntry')
     .returns(attachments);
   const result = broadcastHelper.getLegacyBroadcastDataFromContentfulEntry(broadcastEntry);
-  t.is(result.topic, null);
+  t.falsy(result.topic);
   result.campaignId.should.equal(campaignId);
   result.message.text.should.equal(broadcastEntry.fields.message);
   result.message.template.should.equal(broadcastEntry.fields.template);
@@ -158,4 +180,11 @@ test('getLegacyBroadcastDataFromContentfulEntry returns an object with null camp
   result.topic.should.equal(hardcodedTopicBroadcastEntry.fields.topic);
   result.message.text.should.equal(hardcodedTopicBroadcastEntry.fields.message);
   result.message.template.should.equal('rivescript');
+});
+
+test('getLegacyBroadcastDataFromContentfulEntry returns an object with askSignup template if campaign broadcast and template not set', () => {
+  const contentfulEntry = broadcastEntryFactory.getValidCampaignBroadcast();
+  delete contentfulEntry.fields.template;
+  const result = broadcastHelper.getLegacyBroadcastDataFromContentfulEntry(contentfulEntry);
+  result.message.template.should.equal('askSignup');
 });

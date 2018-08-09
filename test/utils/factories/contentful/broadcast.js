@@ -18,16 +18,7 @@ module.exports.getValidCampaignBroadcast = function getValidCampaignBroadcast(da
           campaignId: stubs.getCampaignId(),
         },
       },
-      attachments: [
-        {
-          sys: {
-            id: stubs.getContentfulId(),
-          },
-          fields: {
-            file: stubs.getAttachment(),
-          },
-        },
-      ],
+      attachments: stubs.contentful.getAttachments(),
     },
   };
 };
