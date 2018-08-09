@@ -2,7 +2,4 @@
 
 module.exports = {
   allDefaultTopicTriggersCacheKey: 'all',
-  contentTypes: [
-    'defaultTopicTrigger',
-  ],
 };

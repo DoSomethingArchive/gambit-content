@@ -26,6 +26,19 @@ function getAttachment() {
   };
 }
 
+function getAttachments() {
+  return [
+    {
+      sys: {
+        id: module.exports.getContentfulId(),
+      },
+      fields: {
+        file: module.exports.getAttachment(),
+      },
+    },
+  ];
+}
+
 /**
  * @return {String}
  */
@@ -44,6 +57,10 @@ function getFetchByContentTypesResultWithArray(data) {
     },
     data,
   };
+}
+
+function getRandomName() {
+  return `${chance.animal()} ${chance.word()}`;
 }
 
 /**
@@ -139,6 +156,7 @@ module.exports = {
   getRandomMessageText: function getRandomMessageText() {
     return chance.sentence();
   },
+  getRandomName,
   getRandomWord,
   getTemplateName: function getTemplateName() {
     return 'memberSupport';
@@ -273,6 +291,7 @@ module.exports = {
     return msg;
   },
   contentful: {
+    getAttachments,
     getFetchByContentTypesResultWithArray,
     getAllTemplatesForCampaignId: function getAllTemplatesForCampaignId() {
       return module.exports.getJSONstub('all-campaign-fields');
@@ -287,6 +306,25 @@ module.exports = {
       const path = '../stubs/contentful/';
       const result = require(`${path}get-entries-${contentType}.json`);
       return result;
+    },
+    /**
+     * Returns a mock sys property of an item in a Contentful getEnries response.
+     *
+     * @param {String} contentType
+     * @param {Date} date
+     * @return {Object}
+     */
+    getSysWithTypeAndDate: function getSysWithTypeAndDate(contentType, date = Date.now()) {
+      return {
+        id: module.exports.getContentfulId(),
+        contentType: {
+          sys: {
+            id: contentType,
+          },
+        },
+        createdAt: date,
+        updatedAt: date,
+      };
     },
   },
   getJSONstub: function getJSONstub(name, category = 'contentful') {

@@ -8,10 +8,10 @@ A conversation topic may be set to one of the following Contentful content types
 * `textPostConfig` - creates a signup and sends replies to create text post for a campaign
 * `externalPostConfig` - creates a signup for a campaign, but does not create a post via messaging. The campaign post is created externally when user visits the link included in the templates of an `externalPostConfig` topic.
 
+Under construction
 
-### Broadcast topics
-* `autoReplyBroadcast` - replies with an `autoReply` template after sending an outbound broadcast
-* `askChangeTopicBroadcast` - [under construction](https://i.amz.mshcdn.com/xxwMNSb7PAnpcIOmwhIU1dh80SA=/fit-in/1200x9600/https%3A%2F%2Fblueprint-api-production.s3.amazonaws.com%2Fuploads%2Fcard%2Fimage%2F168421%2Ftumblr_ks4m18IymX1qz4u07o1_250.gif)
+* `autoReply` - repeats a single `autoReply` template, creates a signup if campaign is set. This will deprecate the `externalPostConfig` type.
+* `askYesNo` - asks yes/no question (and can be sent as a [broadcast](./topics.md))
 
 Fields:
 
@@ -23,8 +23,9 @@ Name | Type | Description
 `campaign` | Object | The campaign this topic should create a signup and post for.
 `templates` | Object | Collection of outbound message templates that can be sent from this topic.
 `templates.raw` | String | The field value stored in Contentful to return for the template, or a hardcoded default value if the field value is not set
-`templates.rendered` | String | The `raw` value replaced with any campaign or command tags. See https://github.com/DoSomething/gambit-admin/wiki/Tags
+`templates.text` | String | The `raw` value replaced with any campaign or command tags. See https://github.com/DoSomething/gambit-admin/wiki/Tags
 `templates.override` | Boolean | Whether the `raw` value is set from a Contentful field value (override is `true`), or from a hardcoded default (override is `false`)
+`templates.topic` | Object | If an id is present, this reply template should update the conversation topic accordingly.
 `triggers` | Array | List of defaultTopicTriggers that change user conversation to this topic
 
 ## Retrieve topics
@@ -95,44 +96,46 @@ curl http://localhost:5000/v1/topics?skip=5
           "override": false,
           "rendered": "Text back your question and I'll try to get back to you within 24 hrs.\n\nIf you want to continue Lose Your V-Card, text back VCARD"
         },
-        "campaignClosed": {
-          "raw": "Want to make your voice heard? Take 2 mins to make sure you’re registered to vote: {{{custom_url}}}\n\nThis year DoSomething.org is unleashing the power of young people to make change online, in their communities, and at all levels of govt. Stay tuned for updates on how you can get involved!",
-          "override": true,
-          "rendered": "Want to make your voice heard? Take 2 mins to make sure you’re registered to vote: {{{custom_url}}}\n\nThis year DoSomething.org is unleashing the power of young people to make change online, in their communities, and at all levels of govt. Stay tuned for updates on how you can get involved!"
-        },
-        "askSignup": {
-          "raw": "{{tagline}}\n\nWant to join {{title}}?\n\nYes or No",
-          "override": false,
-          "rendered": "Help your friends register to vote!\n\nWant to join Lose Your V-Card?\n\nYes or No"
-        },
-        "declinedSignup": {
-          "raw": "Okay, that's the last you'll hear from me today! But before I go, I wanted to give you one action you can do in under 2 mins (for the chance to win a scholarship). We're creating the largest crowd-sourced guide with tips to beat bullying. Want to share a tip? Text POWER now. ",
-          "override": true,
-          "rendered": "Okay, that's the last you'll hear from me today! But before I go, I wanted to give you one action you can do in under 2 mins (for the chance to win a scholarship). We're creating the largest crowd-sourced guide with tips to beat bullying. Want to share a tip? Text POWER now. "
-        },
-        "invalidAskSignupResponse": {
-          "raw": "Sorry, I didn't get that. Did you want to join {{title}}?\n\nYes or No",
-          "override": false,
-          "rendered": "Sorry, I didn't get that. Did you want to join Lose Your V-Card?\n\nYes or No"
-        },
-        "askContinue": {
-          "raw": "Ready to get back to {{title}}?\n\nYes or No",
-          "override": false,
-          "rendered": "Ready to get back to Lose Your V-Card?\n\nYes or No"
-        },
-        "declinedContinue": {
-          "raw": "Right on, we'll check in with you about {{title}} later.\n\nText MENU if you'd like to find a different action to take.",
-          "override": false,
-          "rendered": "Right on, we'll check in with you about Lose Your V-Card later.\n\nText MENU if you'd like to find a different action to take."
-        },
-        "invalidAskContinueResponse": {
-          "raw": "Sorry, I didn't get that. Did you want to join {{title}}?\n\nYes or No",
-          "override": false,
-          "rendered": "Sorry, I didn't get that. Did you want to join Lose Your V-Card?\n\nYes or No"
-        }
+        ...
       },
       "triggers": [
         "vcard",
+      ]
+    },
+      {
+      "id": "2X4r3fZrTGA2mGemowgiEI",
+      "name": "askYesNo test",
+      "type": "askYesNo",
+      "createdAt": "2018-08-06T23:34:56.395Z",
+      "updatedAt": "2018-08-08T22:20:14.822Z",
+      "message": {
+        "text": "Join Pump it Up? \n\nYes No",
+        "attachments": [],
+        "template": "askYesNo",
+        "topic": {}
+      },
+      "templates": {
+        "saidYes": {
+          "text": "Great! Text START to submit a photo.",
+          "topic": {
+            "id": "4xXe9sQqmIeiWauSUu6kAY"
+          }
+        },
+        "saidNo": {
+          "text": "Ok, we'll check in with you later.",
+          "topic": {}
+        },
+        "invalidAskYesNoResponse": {
+          "text": "Sorry, I didn't get that - did you want to join for Pump It Up? Yes or No",
+          "topic": {}
+        },
+        "autoReply": {
+          "text": "Sorry, I didn't understand that. Text Q if you have a question.",
+          "topic": {}
+        }
+      },
+      "triggers": [
+        
       ]
     },
     {
@@ -157,106 +160,7 @@ curl http://localhost:5000/v1/topics?skip=5
           "override": true,
           "rendered": "Secondhand smoke causes cancer, which is why thousands of colleges have gone tobacco-free. Problem is, 3,273 campuses still allow tobacco, which means secondhand smoke is harming everyone on campus including our beloved mascots. \n\nTell your college (or a college near you) to pledge to go tobacco-free by telling them to #SaveTheMascots by clicking here: http://bit.ly/2GE8APl\n\nTake a screenshot of the post you share, then text START to share it with us (and enter for a chance to win a $2500 scholarship)!"
         },
-        "webStartPhotoPost": {
-          "raw": "Thanks for joining DoSomething.org's #SaveTheMascots! Ready to take a quick action (and enter for the chance to win a $2500 scholarship)? \n\nSecondhand smoke causes cancer, which is why thousands of colleges have gone tobacco-free. Problem is, 3,273 campuses still allow tobacco, which means secondhand smoke is harming everyone on campus including our beloved mascots. \n\nTell your college (or a college near you) to pledge to go tobacco-free by clicking here: http://bit.ly/2GE8APl\n\nTake a screenshot of the post you share, then text {{cmd_reportback}} to share it with us (and enter for the scholarship).",
-          "override": true,
-          "rendered": "Thanks for joining DoSomething.org's #SaveTheMascots! Ready to take a quick action (and enter for the chance to win a $2500 scholarship)? \n\nSecondhand smoke causes cancer, which is why thousands of colleges have gone tobacco-free. Problem is, 3,273 campuses still allow tobacco, which means secondhand smoke is harming everyone on campus including our beloved mascots. \n\nTell your college (or a college near you) to pledge to go tobacco-free by clicking here: http://bit.ly/2GE8APl\n\nTake a screenshot of the post you share, then text START to share it with us (and enter for the scholarship)."
-        },
-        "startPhotoPostAutoReply": {
-          "raw": "Sorry, I didn't understand that. Text {{cmd_reportback}} when you have asked your college (or one near you) to go tobacco-free!\n\nIf you have a question, text Q.",
-          "override": true,
-          "rendered": "Sorry, I didn't understand that. Text START when you have asked your college (or one near you) to go tobacco-free!\n\nIf you have a question, text Q."
-        },
-        "completedPhotoPost": {
-          "raw": "Thanks for urging the college or university to pledge to join the movement to have tobacco-free campuses! \n\nInterested in taking more actions and learning about other scholarship opportunities? Text MENU.",
-          "override": true,
-          "rendered": "Thanks for urging the college or university to pledge to join the movement to have tobacco-free campuses! \n\nInterested in taking more actions and learning about other scholarship opportunities? Text MENU."
-        },
-        "completedPhotoPostAutoReply": {
-          "raw": "Sorry, I didn't understand that.\n\nText {{cmd_reportback}} if you have shared more posts urging colleges or universities to join the movement to have tobacco free campuses! \n\nIf you have a question, text Q.",
-          "override": true,
-          "rendered": "Sorry, I didn't understand that.\n\nText START if you have shared more posts urging colleges or universities to join the movement to have tobacco free campuses! \n\nIf you have a question, text Q."
-        },
-        "askQuantity": {
-          "raw": "Sweet! First, what's the total number of posts you shared?\n\nBe sure to text in a number not a word (i.e. “4”, not “four”)",
-          "override": true,
-          "rendered": "Sweet! First, what's the total number of posts you shared?\n\nBe sure to text in a number not a word (i.e. “4”, not “four”)"
-        },
-        "invalidQuantity": {
-          "raw": "Sorry, that's not a valid number.\n\nWhat's the total number of posts you have shared?\n\nIf you have a question, text Q.",
-          "override": true,
-          "rendered": "Sorry, that's not a valid number.\n\nWhat's the total number of posts you have shared?\n\nIf you have a question, text Q."
-        },
-        "askPhoto": {
-          "raw": "Nice! Send back a screenshot of the tweet you posted asking your college (or one near you) to go tobacco-free.",
-          "override": true,
-          "rendered": "Nice! Send back a screenshot of the tweet you posted asking your college (or one near you) to go tobacco-free."
-        },
-        "invalidPhoto": {
-          "raw": "Sorry, I didn't get that.\n\nSend a photo of the posts you have shared.\n\nIf you have a question, text Q - I'll get back to you within 24 hours.",
-          "override": true,
-          "rendered": "Sorry, I didn't get that.\n\nSend a photo of the posts you have shared.\n\nIf you have a question, text Q - I'll get back to you within 24 hours."
-        },
-        "askCaption": {
-          "raw": "Got it! Now text back a caption for your photo (think Instagram)! Keep it short & sweet, under 60 characters please.",
-          "override": false,
-          "rendered": "Got it! Now text back a caption for your photo (think Instagram)! Keep it short & sweet, under 60 characters please."
-        },
-        "invalidCaption": {
-          "raw": "Sorry, I didn't get that.\n\nText back a caption for your photo -- keep it short & sweet, under 60 characters please. (but more than 3!)",
-          "override": false,
-          "rendered": "Sorry, I didn't get that.\n\nText back a caption for your photo -- keep it short & sweet, under 60 characters please. (but more than 3!)"
-        },
-        "askWhyParticipated": {
-          "raw": "Last question: Why was participating in {{title}} important to you? (No need to write an essay, one sentence is good).",
-          "override": false,
-          "rendered": "Last question: Why was participating in #SaveTheMascots important to you? (No need to write an essay, one sentence is good)."
-        },
-        "invalidWhyParticipated": {
-          "raw": "Sorry, I didn't get that.\n\nLast question: Why was participating in {{title}} important to you? (No need to write an essay, one sentence is good).",
-          "override": false,
-          "rendered": "Sorry, I didn't get that.\n\nLast question: Why was participating in #SaveTheMascots important to you? (No need to write an essay, one sentence is good)."
-        },
-        "memberSupport": {
-          "raw": "Text back your question and I'll try to get back to you within 24 hrs.\n\nIf you want to continue {{title}}, text back {{keyword}}",
-          "override": false,
-          "rendered": "Text back your question and I'll try to get back to you within 24 hrs.\n\nIf you want to continue #SaveTheMascots, text back MASCOT"
-        },
-        "campaignClosed": {
-          "raw": "Sorry, {{title}} is no longer available.\n\nText {{cmd_member_support}} for help.",
-          "override": false,
-          "rendered": "Sorry, #SaveTheMascots is no longer available.\n\nText Q for help."
-        },
-        "askSignup": {
-          "raw": "{{tagline}}\n\nWant to join {{title}}?\n\nYes or No",
-          "override": false,
-          "rendered": "Help us make every college campus tobacco-free.\n\nWant to join #SaveTheMascots?\n\nYes or No"
-        },
-        "declinedSignup": {
-          "raw": "Ok! Text MENU if you'd like to find a different action to take.",
-          "override": false,
-          "rendered": "Ok! Text MENU if you'd like to find a different action to take."
-        },
-        "invalidAskSignupResponse": {
-          "raw": "Sorry, I didn't get that. Did you want to join {{title}}?\n\nYes or No",
-          "override": false,
-          "rendered": "Sorry, I didn't get that. Did you want to join #SaveTheMascots?\n\nYes or No"
-        },
-        "askContinue": {
-          "raw": "Ready to get back to {{title}}?\n\nYes or No",
-          "override": false,
-          "rendered": "Ready to get back to #SaveTheMascots?\n\nYes or No"
-        },
-        "declinedContinue": {
-          "raw": "Right on, we'll check in with you about {{title}} later.\n\nText MENU if you'd like to find a different action to take.",
-          "override": false,
-          "rendered": "Right on, we'll check in with you about #SaveTheMascots later.\n\nText MENU if you'd like to find a different action to take."
-        },
-        "invalidAskContinueResponse": {
-          "raw": "Sorry, I didn't get that. Did you want to join {{title}}?\n\nYes or No",
-          "override": false,
-          "rendered": "Sorry, I didn't get that. Did you want to join #SaveTheMascots?\n\nYes or No"
-        }
+        ...
       },
       "triggers": [
         "mascot",
@@ -326,101 +230,7 @@ curl http://localhost:5000/v1/topics/6swLaA7HKE8AGI6iQuWk4y?cache=false \
         "override": true,
         "rendered": "Over 111,000 people have joined the movement to bring positivity to their schools. All it takes is posting encouraging notes in places that can trigger low self-esteem. Take 5 mins to post a note today. \n\nThen, text START to share a photo of the messages you posted (and you'll be entered to win a $2000 scholarship)!"
       },
-      "webStartPhotoPost": {
-        "raw": "Hey - this is Freddie from DoSomething. Thanks for joining a movement to spread positivity in school. You can do something simple to make a big impact for a stranger.\n\nLet's do this: post encouraging notes in places that can trigger low self-esteem, like school bathrooms.\n\nThen, text  {{cmd_reportback}}  to share a photo of the messages you posted (and you'll be entered to win a $2000 scholarship)!",
-        "override": true,
-        "rendered": "Hey - this is Freddie from DoSomething. Thanks for joining a movement to spread positivity in school. You can do something simple to make a big impact for a stranger.\n\nLet's do this: post encouraging notes in places that can trigger low self-esteem, like school bathrooms.\n\nThen, text  START  to share a photo of the messages you posted (and you'll be entered to win a $2000 scholarship)!"
-      },
-      "startPhotoPostAutoReply": {
-        "raw": "Sorry, I didn't get that.\n\nText {{cmd_reportback}} when you're ready to submit a post for {{title}}.",
-        "override": false,
-        "rendered": "Sorry, I didn't get that.\n\nText START when you're ready to submit a post for Mirror Messages."
-      },
-      "completedPhotoPost": {
-        "raw": "Great! We've got you down for {{quantity}} messages posted.\n\nTo submit another post for Mirror Messages, text {{cmd_reportback}}.",
-        "override": true,
-        "rendered": "Great! We've got you down for {{quantity}} messages posted.\n\nTo submit another post for Mirror Messages, text START."
-      },
-      "completedPhotoPostAutoReply": {
-        "raw": "Sorry I didn't get that.  If you've posted more messages, text {{cmd_reportback}}.\n\nText Q if you have a question, or text MENU to find a different action to take.",
-        "override": true,
-        "rendered": "Sorry I didn't get that.  If you've posted more messages, text START.\n\nText Q if you have a question, or text MENU to find a different action to take."
-      },
-      "askQuantity": {
-        "raw": "Sweet! First, what's the total number of messages you posted?\n\nBe sure to text in a number not a word (i.e. “4”, not “four”)",
-        "override": true,
-        "rendered": "Sweet! First, what's the total number of messages you posted?\n\nBe sure to text in a number not a word (i.e. “4”, not “four”)"
-      },
-      "invalidQuantity": {
-        "raw": "Sorry, that isn't a valid number. What's the total number of messages you posted? Be sure to text in a number not a word (i.e. “4”, not “four”)",
-        "override": true,
-        "rendered": "Sorry, that isn't a valid number. What's the total number of messages you posted? Be sure to text in a number not a word (i.e. “4”, not “four”)"
-      },
-      "askPhoto": {
-        "raw": "Send us your best pic of yourself and the messages you posted.",
-        "override": true,
-        "rendered": "Send us your best pic of yourself and the messages you posted."
-      },
-      "invalidPhoto": {
-        "raw": "Sorry, I didn't get that.\n\nSend us your best pic of yourself and the messages you posted. \n\nIf you have a question, text Q.",
-        "override": true,
-        "rendered": "Sorry, I didn't get that.\n\nSend us your best pic of yourself and the messages you posted. \n\nIf you have a question, text Q."
-      },
-      "askCaption": {
-        "raw": "Got it! Now text back a caption for your photo (think Instagram)! Keep it short & sweet, under 60 characters please.",
-        "override": false,
-        "rendered": "Got it! Now text back a caption for your photo (think Instagram)! Keep it short & sweet, under 60 characters please."
-      },
-      "invalidCaption": {
-        "raw": "Sorry, I didn't get that.\n\nText back a caption for your photo -- keep it short & sweet, under 60 characters please. (but more than 3!)",
-        "override": false,
-        "rendered": "Sorry, I didn't get that.\n\nText back a caption for your photo -- keep it short & sweet, under 60 characters please. (but more than 3!)"
-      },
-      "askWhyParticipated": {
-        "raw": "Last question: Why was participating in {{title}} important to you? (No need to write an essay, one sentence is good).",
-        "override": false,
-        "rendered": "Last question: Why was participating in Mirror Messages important to you? (No need to write an essay, one sentence is good)."
-      },
-      "invalidWhyParticipated": {
-        "raw": "Sorry, I didn't get that.\n\nLast question: Why was participating in {{title}} important to you? (No need to write an essay, one sentence is good).",
-        "override": false,
-        "rendered": "Sorry, I didn't get that.\n\nLast question: Why was participating in Mirror Messages important to you? (No need to write an essay, one sentence is good)."
-      },
-      "memberSupport": {
-        "raw": "Text back your question and I'll try to get back to you within 24 hrs.\n\nIf you want to continue {{title}}, text back {{keyword}}",
-        "override": false,
-        "rendered": "Text back your question and I'll try to get back to you within 24 hrs.\n\nIf you want to continue Mirror Messages, text back MIRROR"
-      },
-      "campaignClosed": {
-        "raw": "Sorry, {{title}} is no longer available.\n\nText {{cmd_member_support}} for help.",
-        "override": false,
-        "rendered": "Sorry, Mirror Messages is no longer available.\n\nText Q for help."
-      },
-      "askSignup": {
-        "raw": "{{tagline}}\n\nWant to join {{title}}?\n\nYes or No",
-        "override": false,
-        "rendered": "Boost a stranger's self-esteem with just a sticky note!\n\nWant to join Mirror Messages?\n\nYes or No"
-      },
-      "declinedSignup": {
-        "raw": "Ok! Text MENU if you'd like to find a different action to take.",
-        "override": false,
-        "rendered": "Ok! Text MENU if you'd like to find a different action to take."
-      },
-      "invalidAskSignupResponse": {
-        "raw": "Sorry, I didn't get that. Did you want to join {{title}}?\n\nYes or No",
-        "override": false,
-        "rendered": "Sorry, I didn't get that. Did you want to join Mirror Messages?\n\nYes or No"
-      },
-      "askContinue": {
-        "raw": "Ready to get back to {{title}}?\n\nYes or No",
-        "override": false,
-        "rendered": "Ready to get back to Mirror Messages?\n\nYes or No"
-      },
-      "declinedContinue": {
-        "raw": "Right on, we'll check in with you about {{title}} later.\n\nText MENU if you'd like to find a different action to take.",
-        "override": false,
-        "rendered": "Right on, we'll check in with you about Mirror Messages later.\n\nText MENU if you'd like to find a different action to take."
-      },
+      ...
       "invalidAskContinueResponse": {
         "raw": "Sorry, I didn't get that. Did you want to join {{title}}?\n\nYes or No",
         "override": false,
