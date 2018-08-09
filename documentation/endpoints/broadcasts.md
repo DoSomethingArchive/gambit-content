@@ -13,8 +13,8 @@ Name | Type | Description
 `message.text` | String |
 `message.attachments` | Array |
 `message.template` | String |
-`message.topic` | Object | If an id property exists, its saved to the [conversation topic](https://github.com/DoSomething/gambit-conversations/blob/master/documentation/endpoints/topics.md) when broadcast is sent
-`templates` | Object | Defines replies for when this broadcast is saved as a [conversation topic](https://github.com/DoSomething/gambit-conversations/blob/master/documentation/endpoints/topics.md) -- used in `askYesNo`, which will update the conversation topic again if user answers yes
+`message.topic` | Object | If an id property exists, its saved to the [conversation topic](https://github.com/DoSomething/gambit-campaigns/blob/master/documentation/endpoints/topics.md) when broadcast is sent
+`templates` | Object | Defines replies for when this broadcast is saved as a [conversation topic](https://github.com/DoSomething/gambit-campaigns/blob/master/documentation/endpoints/topics.md) -- used in `askYesNo`, which will update the conversation topic again if user answers yes
 
 Legacy fields (only used for type `broadcast`)
 
