@@ -17,6 +17,10 @@
  */
 module.exports = {
   contentTypes: {
+    askSubscriptionStatus: {
+      type: 'askSubscriptionStatus',
+      broadcastable: true,
+    },
     askYesNo: {
       type: 'askYesNo',
       broadcastable: true,
