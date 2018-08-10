@@ -13,8 +13,8 @@ Name | Type | Description
 `message.text` | String |
 `message.attachments` | Array |
 `message.template` | String |
-`message.topic` | Object | If an id property exists, its saved to the [conversation topic](https://github.com/DoSomething/gambit-campaigns/blob/master/documentation/endpoints/topics.md) when broadcast is sent
-`templates` | Object | Defines replies for when this broadcast is saved as a [conversation topic](https://github.com/DoSomething/gambit-campaigns/blob/master/documentation/endpoints/topics.md) -- used in `askYesNo`, which will update the conversation topic again if user answers yes
+`message.topic` | Object | Optional. If is set, the id saved to the [conversation topic](https://github.com/DoSomething/gambit-campaigns/blob/master/documentation/endpoints/topics.md) when user receives the message. Otherwise the topic is set to this broadcast id.
+`templates` | Object | Provides replies for when this broadcast is saved for a [conversation topic](https://github.com/DoSomething/gambit-campaigns/blob/master/documentation/endpoints/topics.md) -- used in `askYesNo`, which will update the conversation topic again if user answers yes
 
 Legacy fields (only used for type `broadcast`)
 
@@ -84,8 +84,12 @@ curl http://localhost:5000/v1/broadcasts?skip=20
       "templates": {
         "saidYes": {
           "text": "Great! Text START to submit a photo.",
-          "topic": {
-            "id": "4xXe9sQqmIeiWauSUu6kAY"
+           "topic": {
+            "id": "4xXe9sQqmIeiWauSUu6kAY",
+            "name": "Pump It Up - Submit Flyer",
+            "type": "photoPostConfig",
+            "createdAt": "2018-08-01T14:41:30.242Z",
+            "updatedAt": "2018-08-07T15:44:59.609Z"
           }
         },
         "saidNo": {

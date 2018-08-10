@@ -21,7 +21,7 @@ Name | Type | Description
 `userId` | `string` | **Required.** 
 `campaignId` | `string` | **Required.** Campaign that the User has signed up for.
 `campaignRunId` | `string` | **Required.** Campaign Run that the User has signed up for.
-`postType` | `string` | **Required.** Type of Post to submit for the Campaign.
+`postType` | `string` |  Optional -- type of campaign post to submit (when set to `text`) or begin (when set to `photo`) 
 `platform` | `string` | **Required.** Platform that message was sent from.
 `text` | `string` | Message text.
 `mediaUrl` | `string` | Message media URL.
