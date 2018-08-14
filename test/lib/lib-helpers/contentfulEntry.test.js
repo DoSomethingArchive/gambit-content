@@ -54,13 +54,13 @@ test('getSummaryFromContentfulEntry returns an object with name and type propert
 });
 
 // getTopicTemplatesFromContentfulEntry
-test('getTopicTemplatesFromContentfulEntry returns an object with templates values if content type config has templates', () => {
-  const result = contentfulEntryHelper.getTopicTemplatesFromContentfulEntry(autoReplyEntry);
+test('getTopicTemplatesFromContentfulEntry returns an object with templates values if content type config has templates', async () => {
+  const result = await contentfulEntryHelper.getTopicTemplatesFromContentfulEntry(autoReplyEntry);
   result.autoReply.text.should.equal(autoReplyEntry.fields.autoReply);
 });
 
-test('getTopicTemplatesFromContentfulEntry returns an empty object if content type config does not have templates', () => {
-  const result = contentfulEntryHelper
+test('getTopicTemplatesFromContentfulEntry returns an empty object if content type config does not have templates', async () => {
+  const result = await contentfulEntryHelper
     .getTopicTemplatesFromContentfulEntry(autoReplyBroadcastEntry);
   result.should.deep.equal({});
 });
