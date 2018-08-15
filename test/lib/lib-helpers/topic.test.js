@@ -12,6 +12,7 @@ const helpers = require('../../../lib/helpers');
 const stubs = require('../../utils/stubs');
 const config = require('../../../config/lib/helpers/topic');
 const askYesNoFactory = require('../../utils/factories/contentful/askYesNo');
+const autoReplyFactory = require('../../utils/factories/contentful/autoReply');
 const textPostConfigFactory = require('../../utils/factories/contentful/textPostConfig');
 const broadcastFactory = require('../../utils/factories/broadcast');
 
@@ -241,7 +242,7 @@ test('parseTopicFromContentfulEntry returns parseBroadcastFromContentfulEntry if
   result.should.deep.equal(broadcast);
 });
 
-test('parseTopicFromContentfulEntry calls campaignHelper getById if campaign field is set', async () => {
+test('parseTopicFromContentfulEntry gets campaign by id if campaign field is set', async () => {
   const textPostConfig = textPostConfigFactory.getValidTextPostConfig();
   const stubCampaign = { title: stubs.getRandomName() };
   const stubPostType = topicContentType;
@@ -267,4 +268,16 @@ test('parseTopicFromContentfulEntry calls campaignHelper getById if campaign fie
   helpers.topic.parseTopicTemplatesFromContentfulEntryAndCampaign
     .should.have.been.calledWith(textPostConfig, stubCampaign);
   result.templates.should.deep.equal(stubTemplates);
+});
+
+test('parseTopicFromContentfulEntry does not get campaign by id if campaign field undefined', async () => {
+  const textPostConfig = autoReplyFactory.getValidAutoReplyWithoutCampaign();
+  sandbox.stub(helpers.campaign, 'getById')
+    .returns(Promise.resolve({ data: { title: stubs.getRandomName() } }));
+  sandbox.stub(helpers.topic, 'parseTopicTemplatesFromContentfulEntryAndCampaign')
+    .returns({});
+
+  const result = await topicHelper.parseTopicFromContentfulEntry(textPostConfig);
+  helpers.campaign.getById.should.not.have.been.called;
+  result.campaign.should.deep.equal({});
 });

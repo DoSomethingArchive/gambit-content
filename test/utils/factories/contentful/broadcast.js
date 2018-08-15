@@ -1,6 +1,9 @@
 'use strict';
 
+// TODO: Rename this file and these functions as legacyBroadcast.
+
 const stubs = require('../../stubs');
+const campaignFactory = require('./campaign');
 
 module.exports.getValidCampaignBroadcast = function getValidCampaignBroadcast(date = Date.now()) {
   return {
@@ -10,14 +13,7 @@ module.exports.getValidCampaignBroadcast = function getValidCampaignBroadcast(da
       topic: null,
       message: stubs.getRandomMessageText(),
       template: 'askSignup',
-      campaign: {
-        sys: {
-          id: stubs.getContentfulId(),
-        },
-        fields: {
-          campaignId: stubs.getCampaignId(),
-        },
-      },
+      campaign: campaignFactory.getValidCampaign(),
       attachments: stubs.contentful.getAttachments(),
     },
   };
