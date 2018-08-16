@@ -1,6 +1,7 @@
 'use strict';
 
 const stubs = require('../../stubs');
+const autoReplyFactory = require('./autoReply');
 const textPostConfigFactory = require('./textPostConfig');
 
 function getValidAskYesNo(date = Date.now()) {
@@ -10,11 +11,11 @@ function getValidAskYesNo(date = Date.now()) {
       name: stubs.getBroadcastName(),
       text: stubs.getRandomMessageText(),
       attachments: stubs.contentful.getAttachments(),
-      saidYesTopic: textPostConfigFactory.getValidTextPostConfig(),
       saidYes: stubs.getRandomMessageText(),
+      saidYesTopic: textPostConfigFactory.getValidTextPostConfig(),
       saidNo: stubs.getRandomMessageText(),
+      saidNoTopic: autoReplyFactory.getValidAutoReplyWithoutCampaign(),
       invalidAskYesNoResponse: stubs.getRandomMessageText(),
-      autoReply: stubs.getRandomMessageText(),
     },
   };
 }
