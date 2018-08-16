@@ -7,13 +7,12 @@ const stubs = require('../../stubs');
  * reference to link topics to a Phoenix campaign (via the campaignId text field).
  */
 function getValidCampaign() {
-  const data = {
+  return {
     sys: stubs.contentful.getSysWithTypeAndDate('campaign'),
     fields: {
       campaignId: stubs.getCampaignId(),
     },
   };
-  return data;
 }
 
 module.exports = {
