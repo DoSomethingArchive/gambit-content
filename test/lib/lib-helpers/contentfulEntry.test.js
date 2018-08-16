@@ -24,7 +24,6 @@ const defaultTopicTriggerEntry = defaultTopicTriggerFactory.getValidDefaultTopic
 const messageEntry = messageFactory.getValidMessage();
 const fetchTopicResult = { id: stubs.getContentfulId() };
 
-
 // Module to test
 const contentfulEntryHelper = require('../../../lib/helpers/contentfulEntry');
 
@@ -99,12 +98,11 @@ test('getTopicTemplatesFromContentfulEntry returns an empty object if content ty
 });
 
 test('getTopicTemplatesFromContentfulEntry should call topic.getById to set saidYes template topic', async () => {
-  const stubFetchResult = { id: stubs.getContentfulId() };
   sandbox.stub(helpers.topic, 'getById')
-    .returns(stubFetchResult);
+    .returns(fetchTopicResult);
   const result = await contentfulEntryHelper
     .getTopicTemplatesFromContentfulEntry(askYesNoEntry);
-  result.saidYes.topic.should.deep.equal(stubFetchResult);
+  result.saidYes.topic.should.deep.equal(fetchTopicResult);
 });
 
 // isAutoReply

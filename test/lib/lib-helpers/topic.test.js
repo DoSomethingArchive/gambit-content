@@ -65,7 +65,6 @@ test('fetch throws if contentful.fetchByContentTypes fails', async (t) => {
   sandbox.stub(topicHelper, 'parseTopicFromContentfulEntry')
     .returns(Promise.resolve(topic));
 
-
   const result = await t.throws(topicHelper.fetch());
   result.should.deep.equal(error);
 });
@@ -169,7 +168,7 @@ test('getById returns fetchById if resetCache arg is true', async () => {
   result.should.deep.equal(topic);
 });
 
-// getDefaultTextForBotConfigTemplateName
+// getDefaultTextFromContentfulEntryAndTemplateName
 test('getDefaultTextFromContentfulEntryAndTemplateName returns default for templateName', () => {
   const result = topicHelper
     .getDefaultTextFromContentfulEntryAndTemplateName(campaignConfig, templateName);
@@ -184,6 +183,18 @@ test('getTemplateInfoFromContentfulEntryAndTemplateName returns an object', () =
     .getTemplateInfoFromContentfulEntryAndTemplateName(campaignConfig, templateName);
   contentful.getContentTypeFromContentfulEntry.should.have.been.called;
   result.should.equal(config.templatesByContentType[campaignConfigContentType][templateName]);
+});
+
+// getTopicTemplatesWithDefaultsFromContentfulEntryAndCampaign
+test('getTopicTemplatesWithDefaultsFromContentfulEntryAndCampaign returns an object', () => {
+  const stubTemplate = { autoReply: { text: stubs.getRandomWord() } };
+  sandbox.stub(topicHelper, 'getTemplatesWithDefaultsFromContentfulEntryAndCampaign')
+    .returns(stubTemplate);
+  const autoReply = autoReplyFactory.getValidAutoReplyWithoutCampaign();
+
+  const result = topicHelper
+    .getTopicTemplatesWithDefaultsFromContentfulEntryAndCampaign(autoReply, templateName);
+  result.should.deep.equal(stubTemplate);
 });
 
 // parseRawAndOverrideFromContentfulEntryAndTemplateName
