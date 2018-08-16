@@ -13,6 +13,7 @@ const underscore = require('underscore');
 const dateFns = require('date-fns');
 
 const helpers = require('../../../lib/helpers');
+const contentfulEntryHelper = require('../../../lib/helpers/contentfulEntry');
 const phoenix = require('../../../lib/phoenix');
 const stubs = require('../../utils/stubs');
 
@@ -47,11 +48,14 @@ test('fetchById calls phoenix.fetchCampaignById and parseCampaign', async () => 
     .returns(Promise.resolve(stubs.phoenix.getCampaign()));
   sandbox.stub(campaignHelper, 'parseCampaign')
     .returns(campaign);
+  const stubCampaignConfig = { id: stubs.getContentfulId() };
+  sandbox.stub(contentfulEntryHelper, 'fetchCampaignConfigByCampaignId')
+    .returns(Promise.resolve(stubCampaignConfig));
 
   const result = await campaignHelper.fetchById(campaignId);
   phoenix.fetchCampaignById.should.have.been.calledWith(campaignId);
   campaignHelper.parseCampaign.should.have.been.calledWith(campaign);
-  result.should.deep.equal(campaign);
+  result.should.deep.equal(Object.assign(campaign, { config: stubCampaignConfig }));
 });
 
 // getById
