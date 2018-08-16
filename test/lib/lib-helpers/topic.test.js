@@ -185,41 +185,41 @@ test('getTemplateInfoFromContentfulEntryAndTemplateName returns an object', () =
   result.should.equal(config.templatesByContentType[campaignConfigContentType][templateName]);
 });
 
-// getTopicTemplatesWithDefaultsFromContentfulEntryAndCampaign
-test('getTopicTemplatesWithDefaultsFromContentfulEntryAndCampaign returns an object of templates', () => {
+// getTopicTemplates
+test('getTopicTemplates returns an object of templates', () => {
   const stubTemplate = { autoReply: { text: stubs.getRandomWord() } };
-  sandbox.stub(topicHelper, 'getTemplatesWithDefaultsFromContentfulEntryAndCampaign')
+  sandbox.stub(topicHelper, 'getTemplates')
     .returns(stubTemplate);
   const autoReply = autoReplyFactory.getValidAutoReplyWithoutCampaign();
 
   const result = topicHelper
-    .getTopicTemplatesWithDefaultsFromContentfulEntryAndCampaign(autoReply, templateName);
+    .getTopicTemplates(autoReply, templateName);
   result.should.deep.equal(stubTemplate);
 });
 
-// parseRawAndOverrideFromContentfulEntryAndTemplateName
-test('parseRawAndOverrideFromContentfulEntryAndTemplateName returns default text when no field value exists', () => {
+// parseRawAndOverride
+test('parseRawAndOverride returns default text when no field value exists', () => {
   sandbox.stub(topicHelper, 'getDefaultTextFromContentfulEntryAndTemplateName')
     .returns(templateText);
   sandbox.stub(topicHelper, 'getFieldValueFromContentfulEntryAndTemplateName')
     .returns(null);
 
   const result = topicHelper
-    .parseRawAndOverrideFromContentfulEntryAndTemplateName(campaignConfig, templateName);
+    .parseRawAndOverride(campaignConfig, templateName);
   topicHelper.getDefaultTextFromContentfulEntryAndTemplateName.should.have.been.called;
   topicHelper.getFieldValueFromContentfulEntryAndTemplateName.should.have.been.called;
   result.override.should.equal(false);
   result.raw.should.equal(templateText);
 });
 
-test('parseRawAndOverrideFromContentfulEntryAndTemplateName returns template text when topic value exists', () => {
+test('parseRawAndOverride returns template text when topic value exists', () => {
   sandbox.stub(topicHelper, 'getDefaultTextFromContentfulEntryAndTemplateName')
     .returns(stubs.getRandomString());
   sandbox.stub(topicHelper, 'getFieldValueFromContentfulEntryAndTemplateName')
     .returns(templateText);
 
   const result = topicHelper
-    .parseRawAndOverrideFromContentfulEntryAndTemplateName(campaignConfig, templateName);
+    .parseRawAndOverride(campaignConfig, templateName);
   topicHelper.getDefaultTextFromContentfulEntryAndTemplateName.should.not.have.been.called;
   topicHelper.getFieldValueFromContentfulEntryAndTemplateName.should.have.been.called;
   result.override.should.equal(true);
@@ -265,7 +265,7 @@ test('parseTopicFromContentfulEntry gets campaign by id if campaign field is set
     .returns(stubPostType);
   sandbox.stub(helpers.campaign, 'getById')
     .returns(Promise.resolve(stubCampaign));
-  sandbox.stub(helpers.topic, 'getTopicTemplatesWithDefaultsFromContentfulEntryAndCampaign')
+  sandbox.stub(helpers.topic, 'getTopicTemplates')
     .returns(stubTemplates);
 
   const result = await topicHelper.parseTopicFromContentfulEntry(textPostConfig);
@@ -276,7 +276,7 @@ test('parseTopicFromContentfulEntry gets campaign by id if campaign field is set
   helpers.campaign.getById
     .should.have.been.calledWith(textPostConfig.fields.campaign.fields.campaignId);
   result.campaign.should.deep.equal(stubCampaign);
-  helpers.topic.getTopicTemplatesWithDefaultsFromContentfulEntryAndCampaign
+  helpers.topic.getTopicTemplates
     .should.have.been.calledWith(textPostConfig, stubCampaign);
   result.templates.should.deep.equal(stubTemplates);
 });
@@ -285,7 +285,7 @@ test('parseTopicFromContentfulEntry does not get campaign by id if campaign fiel
   const textPostConfig = autoReplyFactory.getValidAutoReplyWithoutCampaign();
   sandbox.stub(helpers.campaign, 'getById')
     .returns(Promise.resolve({ data: { title: stubs.getRandomName() } }));
-  sandbox.stub(helpers.topic, 'getTopicTemplatesWithDefaultsFromContentfulEntryAndCampaign')
+  sandbox.stub(helpers.topic, 'getTopicTemplates')
     .returns({});
 
   const result = await topicHelper.parseTopicFromContentfulEntry(textPostConfig);
