@@ -1,8 +1,9 @@
 'use strict';
 
 const stubs = require('../stubs');
+const topicFactory = require('./topic');
 
-function getValidCampaignBroadcast(date = Date.now()) {
+function getValidBroadcast(date = Date.now()) {
   return {
     id: stubs.getBroadcastId(),
     name: stubs.getBroadcastName(),
@@ -11,10 +12,17 @@ function getValidCampaignBroadcast(date = Date.now()) {
     message: {
       text: stubs.getRandomMessageText(),
       attachments: [],
-      template: 'askSignup',
+      template: 'textPostBroadcast',
+      topic: topicFactory.getValidTopic(),
     },
-    campaignId: stubs.getCampaignId(),
   };
+}
+
+function getValidCampaignBroadcast(date = Date.now()) {
+  const broadcast = getValidBroadcast(date);
+  broadcast.message.template = 'askSignup';
+  broadcast.campaignId = stubs.getCampaignId();
+  return broadcast;
 }
 
 function getValidTopicBroadcast(date = Date.now()) {
@@ -26,6 +34,7 @@ function getValidTopicBroadcast(date = Date.now()) {
 }
 
 module.exports = {
+  getValidBroadcast,
   getValidCampaignBroadcast,
   getValidTopicBroadcast,
 };

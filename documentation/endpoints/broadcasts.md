@@ -81,29 +81,55 @@ curl http://localhost:5000/v1/broadcasts?skip=20
         "template": "askYesNo",
         "topic": {}
       },
-      "templates": {
-        "saidYes": {
-          "text": "Great! Text START to submit a photo.",
-           "topic": {
-            "id": "4xXe9sQqmIeiWauSUu6kAY",
-            "name": "Pump It Up - Submit Flyer",
-            "type": "photoPostConfig",
-            "createdAt": "2018-08-01T14:41:30.242Z",
-            "updatedAt": "2018-08-07T15:44:59.609Z"
+    "templates": {
+      "saidYes": {
+        "text": "Great! Text START to submit a photo.",
+        "topic": {
+          "id": "4xXe9sQqmIeiWauSUu6kAY",
+          "name": "Pump It Up - Submit Flyer",
+          "type": "photoPostConfig",
+          "createdAt": "2018-08-01T14:41:30.242Z",
+          "updatedAt": "2018-08-13T13:31:32.583Z",
+          "postType": "photo",
+          "campaign": {
+            "id": 8142,
+            "title": "Pump It Up",
+            "tagline": "Print & post our tire flyers to keep friends safe on the road.",
+            "status": "active",
+            "currentCampaignRun": {
+              "id": 8161
+            },
+            "endDate": {
+              "date": "2018-09-30 23:59:00.000000",
+              "timezone_type": 1,
+              "timezone": "-04:00"
+            }
+          },
+          "templates": {
+            ...
           }
         },
         "saidNo": {
           "text": "Ok, we'll check in with you later.",
-          "topic": {}
+          "topic": {
+            "id": "61RPZx8atiGyeoeaqsckOE",
+            "name": "Generic autoReply",
+            "type": "autoReply",
+            "createdAt": "2018-08-07T17:43:06.893Z",
+            "updatedAt": "2018-08-13T18:08:16.056Z",
+            "campaign": {},
+            "templates": {
+              "autoReply": {
+                "text": "Sorry, I didn't understand that. Text Q if you have a question.",
+                "topic": {}
+              }
+            }
+          }
         },
         "invalidAskYesNoResponse": {
           "text": "Sorry, I didn't get that - did you want to join for Pump It Up? Yes or No",
           "topic": {}
         },
-        "autoReply": {
-          "text": "Sorry, I didn't understand that. Text Q if you have a question.",
-          "topic": {}
-        }
       },
     },
     ...

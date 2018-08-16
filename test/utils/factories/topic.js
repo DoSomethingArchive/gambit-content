@@ -11,6 +11,17 @@ function getValidTopic() {
     name: stubs.getRandomMessageText(),
     type: 'textPostConfig',
     postType: 'text',
+    campaign: {
+      id: stubs.getCampaignId(),
+      title: stubs.getRandomName(),
+      status: 'active',
+      currentCampaignRun: {
+        id: stubs.getCampaignRunId(),
+      },
+    },
+    templates: {
+      askText: stubs.getRandomMessageText(),
+    },
   };
 }
 

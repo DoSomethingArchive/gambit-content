@@ -30,7 +30,6 @@ module.exports = {
         'saidYes',
         'saidNo',
         'invalidAskYesNoResponse',
-        'autoReply',
       ],
     },
     autoReply: {
