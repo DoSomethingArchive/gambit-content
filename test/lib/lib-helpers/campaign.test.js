@@ -51,11 +51,14 @@ test('fetchById calls phoenix.fetchCampaignById and parseCampaign', async () => 
   const stubCampaignConfig = { id: stubs.getContentfulId() };
   sandbox.stub(contentfulEntryHelper, 'fetchCampaignConfigByCampaignId')
     .returns(Promise.resolve(stubCampaignConfig));
+  sandbox.stub(helpers.cache.campaigns, 'set')
+    .returns(Promise.resolve(campaign));
 
   const result = await campaignHelper.fetchById(campaignId);
   phoenix.fetchCampaignById.should.have.been.calledWith(campaignId);
   campaignHelper.parseCampaign.should.have.been.calledWith(campaign);
   result.should.deep.equal(Object.assign(campaign, { config: stubCampaignConfig }));
+  helpers.cache.campaigns.set.should.have.been.calledWith(campaignId, campaign);
 });
 
 // getById
@@ -76,13 +79,10 @@ test('getById returns fetchById and sets cache if cache not set', async () => {
     .returns(Promise.resolve(null));
   sandbox.stub(campaignHelper, 'fetchById')
     .returns(Promise.resolve(campaign));
-  sandbox.stub(helpers.cache.campaigns, 'set')
-    .returns(Promise.resolve(campaign));
 
   const result = await campaignHelper.getById(campaignId);
   helpers.cache.campaigns.get.should.have.been.calledWith(campaignId);
   campaignHelper.fetchById.should.have.been.calledWith(campaignId);
-  helpers.cache.campaigns.set.should.have.been.calledWith(`${campaignId}`, campaign);
   result.should.deep.equal(campaign);
 });
 
