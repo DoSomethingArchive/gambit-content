@@ -85,23 +85,23 @@ test('getSummaryFromContentfulEntry returns an object with name and type propert
   result.updatedAt.should.equal(stubEntryDate);
 });
 
-// getTopicTemplatesFromContentfulEntry
-test('getTopicTemplatesFromContentfulEntry returns an object with templates values if content type config has templates', async () => {
-  const result = await contentfulEntryHelper.getTopicTemplatesFromContentfulEntry(autoReplyEntry);
+// getTopicTemplates
+test('getTopicTemplates returns an object with templates values if content type config has templates', async () => {
+  const result = await contentfulEntryHelper.getTopicTemplates(autoReplyEntry);
   result.autoReply.text.should.equal(autoReplyEntry.fields.autoReply);
 });
 
-test('getTopicTemplatesFromContentfulEntry returns an empty object if content type config does not have templates', async () => {
+test('getTopicTemplates returns an empty object if content type config does not have templates', async () => {
   const result = await contentfulEntryHelper
-    .getTopicTemplatesFromContentfulEntry(autoReplyBroadcastEntry);
+    .getTopicTemplates(autoReplyBroadcastEntry);
   result.should.deep.equal({});
 });
 
-test('getTopicTemplatesFromContentfulEntry should call topic.getById to set saidYes and saidNo topics', async () => {
+test('getTopicTemplates should call topic.getById to set saidYes and saidNo topics', async () => {
   sandbox.stub(helpers.topic, 'getById')
     .returns(fetchTopicResult);
   const result = await contentfulEntryHelper
-    .getTopicTemplatesFromContentfulEntry(askYesNoEntry);
+    .getTopicTemplates(askYesNoEntry);
   result.saidYes.topic.should.deep.equal(fetchTopicResult);
   result.saidNo.topic.should.deep.equal(fetchTopicResult);
 });
