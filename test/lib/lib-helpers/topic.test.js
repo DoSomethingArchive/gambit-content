@@ -186,7 +186,7 @@ test('getTemplateInfoFromContentfulEntryAndTemplateName returns an object', () =
 });
 
 // getTopicTemplatesWithDefaultsFromContentfulEntryAndCampaign
-test('getTopicTemplatesWithDefaultsFromContentfulEntryAndCampaign returns an object', () => {
+test('getTopicTemplatesWithDefaultsFromContentfulEntryAndCampaign returns an object of templates', () => {
   const stubTemplate = { autoReply: { text: stubs.getRandomWord() } };
   sandbox.stub(topicHelper, 'getTemplatesWithDefaultsFromContentfulEntryAndCampaign')
     .returns(stubTemplate);

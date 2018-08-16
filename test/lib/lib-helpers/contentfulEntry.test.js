@@ -97,12 +97,13 @@ test('getTopicTemplatesFromContentfulEntry returns an empty object if content ty
   result.should.deep.equal({});
 });
 
-test('getTopicTemplatesFromContentfulEntry should call topic.getById to set saidYes template topic', async () => {
+test('getTopicTemplatesFromContentfulEntry should call topic.getById to set saidYes and saidNo topics', async () => {
   sandbox.stub(helpers.topic, 'getById')
     .returns(fetchTopicResult);
   const result = await contentfulEntryHelper
     .getTopicTemplatesFromContentfulEntry(askYesNoEntry);
   result.saidYes.topic.should.deep.equal(fetchTopicResult);
+  result.saidNo.topic.should.deep.equal(fetchTopicResult);
 });
 
 // isAutoReply
