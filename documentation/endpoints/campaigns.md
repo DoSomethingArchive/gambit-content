@@ -31,9 +31,10 @@ Returns a list of campaigns that active topics.
 <details><summary>**Example Request**</summary><p>
 
 ```
-curl http://localhost:5000/v1/campaigns \
-  -H "Accept: application/json" \
-  -H "Content-Type: application/json" \
+curl http://localhost:5000/v1/campaigns
+  -H "x-gambit-api-key: totallysecret"
+  -H "Accept: application/json"
+  -H "Content-Type: application/json"
 ```
 
 </p></details>
@@ -124,9 +125,10 @@ Name | Type | Description
 <details><summary>**Example Request**</summary><p>
 
 ```
-curl http://localhost:5000/v1/campaigns/7 \
-     -H "Accept: application/json" \
-     -H "Content-Type: application/json" \
+curl http://localhost:5000/v1/campaigns/7
+  -H "x-gambit-api-key: totallysecret"
+  -H "Accept: application/json"
+  -H "Content-Type: application/json"
 ```
 
 </p></details>
