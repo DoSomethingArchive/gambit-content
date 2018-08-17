@@ -21,6 +21,7 @@ const campaignEntryFactory = require('../../utils/factories/contentful/campaign'
 const campaign = stubs.phoenix.getCampaign().data;
 const campaignId = campaign.id;
 const campaignConfigEntry = campaignEntryFactory.getValidCampaign();
+const parsedCampaignConfig = { id: stubs.getContentfulId() };
 
 // Config
 const config = require('../../../config/lib/helpers/campaign');
@@ -45,7 +46,7 @@ test.afterEach(() => {
 });
 
 // fetchById
-test('fetchById calls phoenix.fetchCampaignById and parseCampaign', async () => {
+test('fetchById calls phoenix.fetchCampaignById, parseCampaign, and sets cache', async () => {
   sandbox.stub(phoenix, 'fetchCampaignById')
     .returns(Promise.resolve(stubs.phoenix.getCampaign()));
   sandbox.stub(campaignHelper, 'parseCampaign')
@@ -61,20 +62,19 @@ test('fetchById calls phoenix.fetchCampaignById and parseCampaign', async () => 
 });
 
 // fetchCampaignConfigByCampaignId
-test('fetchCampaignConfigByCampaignId calls contentful.fetchEntries and parseCampaignConfig', async () => {
+test('fetchCampaignConfigByCampaignId calls contentful.fetchEntries, parseCampaignConfig, and sets cache', async () => {
   sandbox.stub(contentful, 'fetchEntries')
     .returns(Promise.resolve({ items: [campaignConfigEntry] }));
-  const parsedConfig = { id: stubs.getContentfulId() };
   sandbox.stub(campaignHelper, 'parseCampaignConfig')
-    .returns(parsedConfig);
+    .returns(parsedCampaignConfig);
   sandbox.stub(helpers.cache.campaignConfigs, 'set')
-    .returns(Promise.resolve(parsedConfig));
+    .returns(Promise.resolve(parsedCampaignConfig));
 
   const result = await campaignHelper.fetchCampaignConfigByCampaignId(campaignId);
   contentful.fetchEntries.should.have.been.called;
   campaignHelper.parseCampaignConfig.should.have.been.calledWith(campaignConfigEntry);
-  helpers.cache.campaignConfigs.set.should.have.been.calledWith(campaignId, parsedConfig);
-  result.should.deep.equal(parsedConfig);
+  helpers.cache.campaignConfigs.set.should.have.been.calledWith(campaignId, parsedCampaignConfig);
+  result.should.deep.equal(parsedCampaignConfig);
 });
 
 // getById
@@ -90,7 +90,7 @@ test('getById returns campaigns cache if set', async () => {
   result.should.deep.equal(campaign);
 });
 
-test('getById returns fetchById and sets cache if cache not set', async () => {
+test('getById returns fetchById if cache not set', async () => {
   sandbox.stub(helpers.cache.campaigns, 'get')
     .returns(Promise.resolve(null));
   sandbox.stub(campaignHelper, 'fetchById')
@@ -100,6 +100,31 @@ test('getById returns fetchById and sets cache if cache not set', async () => {
   helpers.cache.campaigns.get.should.have.been.calledWith(campaignId);
   campaignHelper.fetchById.should.have.been.calledWith(campaignId);
   result.should.deep.equal(campaign);
+});
+
+// getCampaignConfigByCampaignId
+test('getCampaignConfigByCampaignId returns campaignConfigs cache if set', async () => {
+  sandbox.stub(helpers.cache.campaignConfigs, 'get')
+    .returns(Promise.resolve(parsedCampaignConfig));
+  sandbox.stub(campaignHelper, 'fetchCampaignConfigByCampaignId')
+    .returns(Promise.resolve(parsedCampaignConfig));
+
+  const result = await campaignHelper.getCampaignConfigByCampaignId(campaignId);
+  helpers.cache.campaignConfigs.get.should.have.been.calledWith(campaignId);
+  campaignHelper.fetchCampaignConfigByCampaignId.should.not.have.been.called;
+  result.should.deep.equal(parsedCampaignConfig);
+});
+
+test('getCampaignConfigByCampaignId returns fetchCampaignConfigByCampaignId if cache not set', async () => {
+  sandbox.stub(helpers.cache.campaignConfigs, 'get')
+    .returns(Promise.resolve(null));
+  sandbox.stub(campaignHelper, 'fetchCampaignConfigByCampaignId')
+    .returns(Promise.resolve(parsedCampaignConfig));
+
+  const result = await campaignHelper.getCampaignConfigByCampaignId(campaignId);
+  helpers.cache.campaignConfigs.get.should.have.been.calledWith(campaignId);
+  campaignHelper.fetchCampaignConfigByCampaignId.should.have.been.calledWith(campaignId);
+  result.should.deep.equal(parsedCampaignConfig);
 });
 
 // isClosed
