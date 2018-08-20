@@ -14,10 +14,14 @@ const dateFns = require('date-fns');
 
 const helpers = require('../../../lib/helpers');
 const phoenix = require('../../../lib/phoenix');
+const contentful = require('../../../lib/contentful');
 const stubs = require('../../utils/stubs');
+const campaignEntryFactory = require('../../utils/factories/contentful/campaign');
 
 const campaign = stubs.phoenix.getCampaign().data;
 const campaignId = campaign.id;
+const campaignConfigEntry = campaignEntryFactory.getValidCampaign();
+const parsedCampaignConfig = { id: stubs.getContentfulId() };
 
 // Config
 const config = require('../../../config/lib/helpers/campaign');
@@ -42,16 +46,35 @@ test.afterEach(() => {
 });
 
 // fetchById
-test('fetchById calls phoenix.fetchCampaignById and parseCampaign', async () => {
+test('fetchById calls phoenix.fetchCampaignById, parseCampaign, and sets cache', async () => {
   sandbox.stub(phoenix, 'fetchCampaignById')
     .returns(Promise.resolve(stubs.phoenix.getCampaign()));
   sandbox.stub(campaignHelper, 'parseCampaign')
     .returns(campaign);
+  sandbox.stub(helpers.cache.campaigns, 'set')
+    .returns(Promise.resolve(campaign));
 
   const result = await campaignHelper.fetchById(campaignId);
   phoenix.fetchCampaignById.should.have.been.calledWith(campaignId);
   campaignHelper.parseCampaign.should.have.been.calledWith(campaign);
+  helpers.cache.campaigns.set.should.have.been.calledWith(campaignId, campaign);
   result.should.deep.equal(campaign);
+});
+
+// fetchCampaignConfigByCampaignId
+test('fetchCampaignConfigByCampaignId calls contentful.fetchEntries, parseCampaignConfig, and sets cache', async () => {
+  sandbox.stub(contentful, 'fetchEntries')
+    .returns(Promise.resolve({ items: [campaignConfigEntry] }));
+  sandbox.stub(campaignHelper, 'parseCampaignConfig')
+    .returns(parsedCampaignConfig);
+  sandbox.stub(helpers.cache.campaignConfigs, 'set')
+    .returns(Promise.resolve(parsedCampaignConfig));
+
+  const result = await campaignHelper.fetchCampaignConfigByCampaignId(campaignId);
+  contentful.fetchEntries.should.have.been.called;
+  campaignHelper.parseCampaignConfig.should.have.been.calledWith(campaignConfigEntry);
+  helpers.cache.campaignConfigs.set.should.have.been.calledWith(campaignId, parsedCampaignConfig);
+  result.should.deep.equal(parsedCampaignConfig);
 });
 
 // getById
@@ -67,19 +90,41 @@ test('getById returns campaigns cache if set', async () => {
   result.should.deep.equal(campaign);
 });
 
-test('getById returns fetchById and sets cache if cache not set', async () => {
+test('getById returns fetchById if cache not set', async () => {
   sandbox.stub(helpers.cache.campaigns, 'get')
     .returns(Promise.resolve(null));
   sandbox.stub(campaignHelper, 'fetchById')
-    .returns(Promise.resolve(campaign));
-  sandbox.stub(helpers.cache.campaigns, 'set')
     .returns(Promise.resolve(campaign));
 
   const result = await campaignHelper.getById(campaignId);
   helpers.cache.campaigns.get.should.have.been.calledWith(campaignId);
   campaignHelper.fetchById.should.have.been.calledWith(campaignId);
-  helpers.cache.campaigns.set.should.have.been.calledWith(`${campaignId}`, campaign);
   result.should.deep.equal(campaign);
+});
+
+// getCampaignConfigByCampaignId
+test('getCampaignConfigByCampaignId returns campaignConfigs cache if set', async () => {
+  sandbox.stub(helpers.cache.campaignConfigs, 'get')
+    .returns(Promise.resolve(parsedCampaignConfig));
+  sandbox.stub(campaignHelper, 'fetchCampaignConfigByCampaignId')
+    .returns(Promise.resolve(parsedCampaignConfig));
+
+  const result = await campaignHelper.getCampaignConfigByCampaignId(campaignId);
+  helpers.cache.campaignConfigs.get.should.have.been.calledWith(campaignId);
+  campaignHelper.fetchCampaignConfigByCampaignId.should.not.have.been.called;
+  result.should.deep.equal(parsedCampaignConfig);
+});
+
+test('getCampaignConfigByCampaignId returns fetchCampaignConfigByCampaignId if cache not set', async () => {
+  sandbox.stub(helpers.cache.campaignConfigs, 'get')
+    .returns(Promise.resolve(null));
+  sandbox.stub(campaignHelper, 'fetchCampaignConfigByCampaignId')
+    .returns(Promise.resolve(parsedCampaignConfig));
+
+  const result = await campaignHelper.getCampaignConfigByCampaignId(campaignId);
+  helpers.cache.campaignConfigs.get.should.have.been.calledWith(campaignId);
+  campaignHelper.fetchCampaignConfigByCampaignId.should.have.been.calledWith(campaignId);
+  result.should.deep.equal(parsedCampaignConfig);
 });
 
 // isClosed
