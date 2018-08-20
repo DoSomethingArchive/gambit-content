@@ -31,15 +31,15 @@ Name | Type | Description
 <details><summary>**Example Request**</summary><p>
 
 ```
-curl -X "POST" "http://localhost:5000/v1/campaignActivity" \
-     -H "x-gambit-api-key: totallysecret" \
-     -H "Content-Type: application/x-www-form-urlencoded; charset=utf-8" \
-     --data-urlencode "userId=59cd4c1910707d778633e30f" \
+curl -X "POST" "http://localhost:5000/v1/campaignActivity"
+     -H "x-gambit-api-key: totallysecret"
+     -H "Content-Type: application/x-www-form-urlencoded; charset=utf-8"
+     --data-urlencode "userId=59cd4c1910707d778633e30f"
      --data-urlencode "text=I love rock and roll"
      --data-urlencode "postType=text"
      --data-urlencode "platform=alexa"
      --data-urlencode "campaignRunId=8873"
-     --data-urlencode "campaignId=6620" \
+     --data-urlencode "campaignId=6620"
 ```
 
 </p></details>
