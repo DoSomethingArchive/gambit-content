@@ -198,6 +198,21 @@ test('parseCampaign should return parseAshesCampaign if phoenixConfig.useAshes',
   result.should.equal(mockResult);
 });
 
+// parseCampaignConfig
+test('parseCampaignConfig should return empty object if contentfulEntry undefined', async () => {
+  const result = await campaignHelper.parseCampaignConfig();
+  result.should.deep.equal({});
+});
+
+test('parseCampaignConfig should return object with id and templates properties', async () => {
+  const stubTemplate = { text: stubs.getRandomMessageText() };
+  sandbox.stub(helpers.contentfulEntry, 'getMessageTemplateFromContentfulEntryAndTemplateName')
+    .returns(Promise.resolve(stubTemplate));
+  const result = await campaignHelper.parseCampaignConfig(campaignConfigEntry);
+  result.id.should.equal(campaignConfigEntry.sys.id);
+  result.templates.webSignup.should.deep.equal(stubTemplate);
+});
+
 // parseAshesCampaign
 test('parseAshesCampaign returns an object with parsed properties from arg', () => {
   const ashesCampaign = stubs.phoenix.getAshesCampaign().data;

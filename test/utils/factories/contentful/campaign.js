@@ -11,6 +11,16 @@ function getValidCampaign() {
     sys: stubs.contentful.getSysWithTypeAndDate('campaign'),
     fields: {
       campaignId: stubs.getCampaignId(),
+      webSignup: {
+        sys: stubs.contentful.getSysWithTypeAndDate('webSignup'),
+        fields: {
+          text: stubs.getRandomMessageText(),
+          attachments: stubs.contentful.getAttachments(),
+          topic: {
+            sys: stubs.contentful.getSysWithTypeAndDate('textPostConfig'),
+          },
+        },
+      },
     },
   };
 }
