@@ -198,6 +198,12 @@ test('parseCampaign should return parseAshesCampaign if phoenixConfig.useAshes',
   result.should.equal(mockResult);
 });
 
+// parseCampaignConfig
+test('parseCampaignConfig should return empty object if contentfulEntry undefined', async () => {
+  const result = await campaignHelper.parseCampaignConfig();
+  result.should.deep.equal({});
+});
+
 // parseAshesCampaign
 test('parseAshesCampaign returns an object with parsed properties from arg', () => {
   const ashesCampaign = stubs.phoenix.getAshesCampaign().data;
