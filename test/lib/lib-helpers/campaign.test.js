@@ -25,7 +25,6 @@ const parsedCampaignConfig = { id: stubs.getContentfulId() };
 
 // Config
 const config = require('../../../config/lib/helpers/campaign');
-const phoenixConfig = require('../../../config/lib/phoenix');
 
 // Module to test
 const campaignHelper = require('../../../lib/helpers/campaign');
@@ -163,17 +162,12 @@ test('parseStatus returns closed status value if campaign isClosed', () => {
 });
 
 // parseCampaign
-test('parseCampaign validations', (t) => {
+test('parseCampaign returns an object with parsed properties from a Phoenix campaign', (t) => {
   const mockStatus = 'active';
   sandbox.stub(campaignHelper, 'parseStatus')
     .returns(mockStatus);
-  sandbox.stub(campaignHelper, 'parseAshesCampaign')
-    .returns(underscore.noop);
-  sandbox.stub(phoenixConfig, 'useAshes')
-    .returns(false);
 
   const result = campaignHelper.parseCampaign(campaign);
-  campaignHelper.parseAshesCampaign.should.not.have.been.called;
   result.id.should.equal(Number(campaign.legacyCampaignId));
   result.title.should.equal(campaign.title);
   result.tagline.should.equal(campaign.tagline);
@@ -181,21 +175,6 @@ test('parseCampaign validations', (t) => {
   result.status.should.equal(mockStatus);
   t.deepEqual(result.endDate, campaign.endDate);
   result.currentCampaignRun.id.should.equal(Number(campaign.legacyCampaignRunId));
-});
-
-test('parseCampaign should return parseAshesCampaign if phoenixConfig.useAshes', () => {
-  const mockResult = { id: stubs.getCampaignId() };
-  sandbox.stub(campaignHelper, 'parseStatus')
-    .returns(underscore.noop);
-  sandbox.stub(campaignHelper, 'parseAshesCampaign')
-    .returns(mockResult);
-  sandbox.stub(phoenixConfig, 'useAshes')
-    .returns(true);
-
-  const result = campaignHelper.parseCampaign(campaign);
-  campaignHelper.parseAshesCampaign.should.have.been.called;
-  campaignHelper.parseStatus.should.not.have.been.called;
-  result.should.equal(mockResult);
 });
 
 // parseCampaignConfig
@@ -211,17 +190,4 @@ test('parseCampaignConfig should return object with id and templates properties'
   const result = await campaignHelper.parseCampaignConfig(campaignConfigEntry);
   result.id.should.equal(campaignConfigEntry.sys.id);
   result.templates.webSignup.should.deep.equal(stubTemplate);
-});
-
-// parseAshesCampaign
-test('parseAshesCampaign returns an object with parsed properties from arg', () => {
-  const ashesCampaign = stubs.phoenix.getAshesCampaign().data;
-  const languageCode = ashesCampaign.language.language_code;
-  const result = campaignHelper.parseAshesCampaign(ashesCampaign);
-  result.id.should.equal(Number(ashesCampaign.id));
-  result.title.should.equal(ashesCampaign.title);
-  result.tagline.should.equal(ashesCampaign.tagline);
-  result.status.should.equal(ashesCampaign.status);
-  const runId = Number(ashesCampaign.campaign_runs.current[languageCode].id);
-  result.currentCampaignRun.id.should.equal(runId);
 });
