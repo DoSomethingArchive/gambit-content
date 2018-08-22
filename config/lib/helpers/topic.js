@@ -27,25 +27,9 @@ module.exports = {
    */
   templatesByContentType: {
     campaign: {
-      memberSupport: {
-        fieldName: 'memberSupportMessage',
-        defaultText: 'Text back your question and I\'ll try to get back to you within 24 hrs.',
-      },
       campaignClosed: {
         fieldName: 'campaignClosedMessage',
         defaultText: 'Sorry, {{title}} is no longer available.\n\nText {{cmd_member_support}} for help.',
-      },
-      askSignup: {
-        fieldName: 'askSignupMessage',
-        defaultText: `{{tagline}}\n\nWant to join {{title}}?${defaultText.yesNo}`,
-      },
-      declinedSignup: {
-        fieldName: 'declinedSignupMessage',
-        defaultText: `Ok! ${defaultText.declined}`,
-      },
-      invalidAskSignupResponse: {
-        fieldName: 'invalidSignupResponseMessage',
-        defaultText: `${defaultText.invalidInput} Did you want to join {{title}}?${defaultText.yesNo}`,
       },
       askContinue: {
         fieldName: 'askContinueMessage',
