@@ -1,7 +1,7 @@
 'use strict';
 
 const defaultText = {
-  declined: 'Text MENU if you\'d like to find a different action to take.',
+  declined: 'Text Q if you have a question.',
   invalidInput: 'Sorry, I didn\'t get that.',
   yesNo: '\n\nYes or No',
 };
