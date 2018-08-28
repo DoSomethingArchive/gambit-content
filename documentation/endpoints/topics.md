@@ -91,11 +91,6 @@ curl http://localhost:5000/v1/topics?skip=5
           "override": true,
           "rendered": "Whoops, I didn't understand that. To enter to win the $2000 scholarship, click here and tag a friend: https://www.dosomething.org/us/campaigns/lose-your-v-card/blocks/7UYxNKCmS4OqEOiKSSAE2?user_id={{user.id}}\n\nHave a question for me? Text QUESTION and I will respond within 24 hours."
         },
-        "memberSupport": {
-          "raw": "Text back your question and I'll try to get back to you within 24 hrs.\n\nIf you want to continue {{title}}, text back {{keyword}}",
-          "override": false,
-          "rendered": "Text back your question and I'll try to get back to you within 24 hrs.\n\nIf you want to continue Lose Your V-Card, text back VCARD"
-        },
         ...
       },
       "triggers": [

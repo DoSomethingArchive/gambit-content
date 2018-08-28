@@ -230,7 +230,7 @@ test('parseRawAndOverride returns template text when topic value exists', () => 
 test('getFieldValueFromContentfulEntryAndTemplateName returns the entry field value for templateName', () => {
   const result = topicHelper
     .getFieldValueFromContentfulEntryAndTemplateName(campaignConfig, templateName);
-  result.should.deep.equal(campaignConfig.fields.memberSupportMessage);
+  result.should.deep.equal(campaignConfig.fields.campaignClosedMessage);
 });
 
 // getPostTypeFromContentType
