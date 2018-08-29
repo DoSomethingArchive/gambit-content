@@ -2,16 +2,15 @@
 
 A conversation topic may be set to one of the following Contentful content types:
 
-### Campaign topics
-
+* `askYesNo` - asks yes/no question (and can be sent as a [broadcast](./topics.md))
+* `autoReply` - repeats a single `autoReply` template, creates a signup if campaign is set
 * `photoPostConfig` - creates a signup and sends replies to create a photo post for a campaign
 * `textPostConfig` - creates a signup and sends replies to create text post for a campaign
-* `externalPostConfig` - creates a signup for a campaign, but does not create a post via messaging. The campaign post is created externally when user visits the link included in the templates of an `externalPostConfig` topic.
 
-Under construction
+To be deprecated:
 
-* `autoReply` - repeats a single `autoReply` template, creates a signup if campaign is set. This will deprecate the `externalPostConfig` type.
-* `askYesNo` - asks yes/no question (and can be sent as a [broadcast](./topics.md))
+* `externalPostConfig` - creates a signup for a campaign, `autoReply` should be used instead
+
 
 Fields:
 
@@ -60,49 +59,29 @@ curl http://localhost:5000/v1/topics?skip=5
 {
   "data": [
     {
-      "id": "5MSUDKlVp6kqkUMw8gW004",
-      "type": "externalPostConfig",
-      "postType": "external",
+      "id": "2Wzzquygx2wwMWe8kQAMgc",
+      "name": "Two Books Blue Books autoReply",
+      "type": "autoReply",
+      "createdAt": "2018-08-10T00:36:19.926Z",
+      "updatedAt": "2018-08-13T14:16:42.499Z",
       "campaign": {
-        "id": 7059,
-        "title": "Lose Your V-Card",
-        "tagline": "Help your friends register to vote!",
+        "id": 2299,
+        "title": "Two Books Blue Books",
+        "tagline": "Host a Dr. Seuss book drive to benefit kids in family shelters.",
         "status": "active",
         "currentCampaignRun": {
-          "id": 8128
-        },
-        "keywords": [
-          "VCARD"
-        ]
+          "id": 6441
+        }
       },
       "templates": {
-        "startExternalPost": {
-          "raw": "One of the most impactful ways to create change in our communities and on issues we care about is by making our voices heard through voting. Your generation has the power to decide the next election. \n\nWhether you are old enough to vote or not -- you can make a difference. Tag a friend (who is 18 or older) on Facebook and give them an easy way to register to vote. By sharing this, you'll be entered to win a 2000 scholarship: https://www.dosomething.org/us/campaigns/lose-your-v-card/blocks/7UYxNKCmS4OqEOiKSSAE2?user_id={{user.id}}",
-          "override": true,
-          "rendered": "One of the most impactful ways to create change in our communities and on issues we care about is by making our voices heard through voting. Your generation has the power to decide the next election. \n\nWhether you are old enough to vote or not -- you can make a difference. Tag a friend (who is 18 or older) on Facebook and give them an easy way to register to vote. By sharing this, you'll be entered to win a 2000 scholarship: https://www.dosomething.org/us/campaigns/lose-your-v-card/blocks/7UYxNKCmS4OqEOiKSSAE2?user_id={{user.id}}"
-        },
-        "webStartExternalPost": {
-          "raw": "Hi it's Freddie from DoSomething! Over 69 million young people are eligible to vote in 2018. Your generation has the power to decide this election. We need your help to spread the word!\n\nTag a friend (who is 18 or older) on Facebook and give them an easy way to register to vote. By sharing this, you'll be entered to win a 2000 scholarship: https://www.dosomething.org/us/campaigns/lose-your-v-card/blocks/7UYxNKCmS4OqEOiKSSAE2?user_id={{user.id}}",
-          "override": true,
-          "rendered": "Hi it's Freddie from DoSomething! Over 69 million young people are eligible to vote in 2018. Your generation has the power to decide this election. We need your help to spread the word!\n\nTag a friend (who is 18 or older) on Facebook and give them an easy way to register to vote. By sharing this, you'll be entered to win a 2000 scholarship: https://www.dosomething.org/us/campaigns/lose-your-v-card/blocks/7UYxNKCmS4OqEOiKSSAE2?user_id={{user.id}}"
-        },
-        "startExternalPostAutoReply": {
-          "raw": "Whoops, I didn't understand that. To enter to win the $2000 scholarship, click here and tag a friend: https://www.dosomething.org/us/campaigns/lose-your-v-card/blocks/7UYxNKCmS4OqEOiKSSAE2?user_id={{user.id}}\n\nHave a question for me? Text QUESTION and I will respond within 24 hours.",
-          "override": true,
-          "rendered": "Whoops, I didn't understand that. To enter to win the $2000 scholarship, click here and tag a friend: https://www.dosomething.org/us/campaigns/lose-your-v-card/blocks/7UYxNKCmS4OqEOiKSSAE2?user_id={{user.id}}\n\nHave a question for me? Text QUESTION and I will respond within 24 hours."
-        },
-        "memberSupport": {
-          "raw": "Text back your question and I'll try to get back to you within 24 hrs.\n\nIf you want to continue {{title}}, text back {{keyword}}",
-          "override": false,
-          "rendered": "Text back your question and I'll try to get back to you within 24 hrs.\n\nIf you want to continue Lose Your V-Card, text back VCARD"
-        },
-        ...
+        "autoReply": {
+          "text": "Who let the dogs out?",
+          "topic": {}
+        }
       },
-      "triggers": [
-        "vcard",
-      ]
+      "triggers": []
     },
-      {
+    {
       "id": "2X4r3fZrTGA2mGemowgiEI",
       "name": "askYesNo test",
       "type": "askYesNo",
@@ -138,9 +117,7 @@ curl http://localhost:5000/v1/topics?skip=5
           "topic": {}
         }
       },
-      "triggers": [
-        
-      ]
+      "triggers": [],
     },
     {
       "id": "3peS2Oye08o6OwUMAEcS2c",
