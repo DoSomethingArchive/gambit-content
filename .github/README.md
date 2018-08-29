@@ -8,7 +8,7 @@ Gambit Campaigns is a [Gambit Conversations](https://github.com/dosomething/gamb
 
 * Querying Contentful for a list of active Keywords and Campaigns available running on Gambit.
 
-* Querying [Phoenix Ashes](https://github.com/DoSomething/gambit-campaigns/wiki/Admin#available-variables) for Campaign data used in Gambit message templates.
+* Querying [Phoenix](https://github.com/DoSomething/phoenix) for Campaign data used in Gambit message templates.
 
 
 Gambit Campaigns is built using [Express](http://expressjs.com/), [MongoDB](https://www.mongodb.com), and [Redis](https://redis.io/).
