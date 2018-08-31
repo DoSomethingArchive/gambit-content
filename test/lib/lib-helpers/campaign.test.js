@@ -63,7 +63,7 @@ test('fetchById calls phoenix.fetchCampaignById, parseCampaign, and sets cache',
 // fetchCampaignConfigByCampaignId
 test('fetchCampaignConfigByCampaignId calls contentful.fetchEntries, parseCampaignConfig, and sets cache', async () => {
   sandbox.stub(contentful, 'fetchEntries')
-    .returns(Promise.resolve({ items: [campaignConfigEntry] }));
+    .returns(Promise.resolve({ data: [campaignConfigEntry] }));
   sandbox.stub(campaignHelper, 'parseCampaignConfig')
     .returns(parsedCampaignConfig);
   sandbox.stub(helpers.cache.campaignConfigs, 'set')
