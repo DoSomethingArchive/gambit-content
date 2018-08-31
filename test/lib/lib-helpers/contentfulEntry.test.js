@@ -10,19 +10,24 @@ const sinon = require('sinon');
 const contentful = require('../../../lib/contentful');
 const helpers = require('../../../lib/helpers');
 const stubs = require('../../utils/stubs');
+// Contentful factories
 const askYesNoEntryFactory = require('../../utils/factories/contentful/askYesNo');
 const autoReplyFactory = require('../../utils/factories/contentful/autoReply');
 const autoReplyBroadcastFactory = require('../../utils/factories/contentful/autoReplyBroadcast');
 const defaultTopicTriggerFactory = require('../../utils/factories/contentful/defaultTopicTrigger');
 const messageFactory = require('../../utils/factories/contentful/message');
+// Parsed factories
+const broadcastFactory = require('../../utils/factories/broadcast');
 
-// stubs
+// Contentful stubs
 const askYesNoEntry = askYesNoEntryFactory.getValidAskYesNo();
 const autoReplyEntry = autoReplyFactory.getValidAutoReply();
 const autoReplyBroadcastEntry = autoReplyBroadcastFactory.getValidAutoReplyBroadcast();
 const defaultTopicTriggerEntry = defaultTopicTriggerFactory.getValidDefaultTopicTrigger();
 const messageEntry = messageFactory.getValidMessage();
 const fetchTopicResult = { id: stubs.getContentfulId() };
+// Parsed stubs
+const broadcast = broadcastFactory.getValidBroadcast();
 
 // Module to test
 const contentfulEntryHelper = require('../../../lib/helpers/contentfulEntry');
@@ -34,6 +39,35 @@ const sandbox = sinon.sandbox.create();
 
 test.afterEach(() => {
   sandbox.restore();
+});
+
+// fetch
+test('fetch returns parsed contentful.fetch result', async () => {
+  const query = { content_type: 'campaign' };
+  sandbox.stub(contentful, 'fetchEntries')
+    .returns(Promise.resolve({ data: [askYesNoEntry] }));
+  const parsedResponse = { raw: askYesNoEntry, parsed: broadcast };
+  sandbox.stub(contentfulEntryHelper, 'parseContentfulEntry')
+    .returns(Promise.resolve(parsedResponse));
+
+  const result = await contentfulEntryHelper.fetch(query);
+  contentful.fetchEntries.should.have.been.calledWith(query);
+  contentfulEntryHelper.parseContentfulEntry.should.have.been.calledWith(askYesNoEntry);
+  result.data.should.deep.equal([parsedResponse]);
+});
+
+// fetchById
+test('fetchById returns parsed contentful.fetchByContentfulId result', async () => {
+  sandbox.stub(contentful, 'fetchByContentfulId')
+    .returns(Promise.resolve(askYesNoEntry));
+  const parsedResponse = { raw: askYesNoEntry, parsed: broadcast };
+  sandbox.stub(contentfulEntryHelper, 'parseContentfulEntry')
+    .returns(Promise.resolve(parsedResponse));
+
+  const result = await contentfulEntryHelper.fetchById(broadcast.id);
+  contentful.fetchByContentfulId.should.have.been.calledWith(broadcast.id);
+  contentfulEntryHelper.parseContentfulEntry.should.have.been.calledWith(askYesNoEntry);
+  result.should.deep.equal(parsedResponse);
 });
 
 // getMessageTemplateFromContentfulEntryAndTemplateName
