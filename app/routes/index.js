@@ -38,11 +38,11 @@ module.exports = function init(app) {
   regGlobalMiddleware(app);
   app.get('/', statusRoute);
 
-  // Returns list of Contentful entries.
-  app.use('/v1/contentfulEntries/', contentfulEntriesIndexRoute);
-
   // Returns data for a Contentful entry.
   app.use('/v1/contentfulEntries/:contentfulId', contentfulEntriesSingleRoute);
+
+  // Returns list of Contentful entries.
+  app.use('/v1/contentfulEntries/', contentfulEntriesIndexRoute);
 
   // Provides data for a chatbot broadcast.
   app.use('/v1/broadcasts/:broadcastId', broadcastsSingleRoute);
