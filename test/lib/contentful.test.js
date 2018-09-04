@@ -188,7 +188,7 @@ test('fetchEntries should call contentfulError when it fails', async (t) => {
   });
 
   // test
-  await t.throws(contentful.fetchEntries());
+  await t.throws(contentful.fetchEntries({}));
   contentful.contentfulError.should.have.been.called;
 });
 

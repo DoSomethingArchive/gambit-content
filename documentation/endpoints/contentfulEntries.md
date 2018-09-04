@@ -139,9 +139,6 @@ curl http://localhost:5000/v1/contentfulEntries/5IZR2IQlJSw6UOaiwQgkWm
 <details><summary>**Example Response**</summary><p>
   
 ```
-// 20180831170241
-// http://localhost:5000/v1/contentfulEntries/5IZR2IQlJSw6UOaiwQgkWm?apiKey=totallysecret&content_type=campaign&fields.webSignup[exists]=true
-
 {
   "data": {
     "raw": {
