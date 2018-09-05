@@ -12,15 +12,15 @@ const underscore = require('underscore');
 const stubs = require('../../../../utils/stubs');
 const helpers = require('../../../../../lib/helpers');
 
-const broadcastFactory = require('../../../../utils/factories/broadcast');
+const askYesNoFactory = require('../../../../utils/factories/contentful/askYesNo');
 
-const broadcast = broadcastFactory.getValidCampaignBroadcast();
+const askYesNoEntry = askYesNoFactory.getValidAskYesNo();
 
 chai.should();
 chai.use(sinonChai);
 
 // module to be tested
-const getBroadcast = require('../../../../../lib/middleware/broadcasts/single/broadcast-get');
+const getContentfulEntry = require('../../../../../lib/middleware/contentfulEntries/single/contentfulEntry-get');
 
 const sandbox = sinon.sandbox.create();
 
@@ -29,7 +29,7 @@ test.beforeEach((t) => {
     .returns(underscore.noop);
   t.context.req = httpMocks.createRequest();
   t.context.req.params = {
-    broadcastId: stubs.getBroadcastId(),
+    contentfulId: stubs.getContentfulId(),
   };
   t.context.res = httpMocks.createResponse();
   sandbox.spy(t.context.res, 'send');
@@ -40,29 +40,31 @@ test.afterEach((t) => {
   t.context = {};
 });
 
-test('getBroadcast should send data with getById result', async (t) => {
+test('getContentfulEntry should send data with fetchById result', async (t) => {
   const next = sinon.stub();
-  const middleware = getBroadcast();
-  sandbox.stub(helpers.broadcast, 'getById')
-    .returns(Promise.resolve(broadcast));
+  const middleware = getContentfulEntry();
+  sandbox.stub(helpers.contentfulEntry, 'fetchById')
+    .returns(Promise.resolve(askYesNoEntry));
 
   // test
   await middleware(t.context.req, t.context.res, next);
-  helpers.broadcast.getById.should.have.been.calledWith(t.context.req.params.broadcastId);
-  t.context.res.send.should.have.been.calledWith({ data: broadcast });
+  helpers.contentfulEntry.fetchById
+    .should.have.been.calledWith(t.context.req.params.contentfulId);
+  t.context.res.send.should.have.been.calledWith({ data: askYesNoEntry });
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
-test('getBroadcast should sendErrorResponse if getById fails', async (t) => {
+test('getContentfulEntry should sendErrorResponse if fetchById fails', async (t) => {
   const next = sinon.stub();
-  const middleware = getBroadcast();
+  const middleware = getContentfulEntry();
   const mockError = { message: 'Epic fail' };
-  sandbox.stub(helpers.broadcast, 'getById')
+  sandbox.stub(helpers.contentfulEntry, 'fetchById')
     .returns(Promise.reject(mockError));
 
   // test
   await middleware(t.context.req, t.context.res, next);
-  helpers.broadcast.getById.should.have.been.calledWith(t.context.req.params.broadcastId);
+  helpers.contentfulEntry.fetchById
+    .should.have.been.calledWith(t.context.req.params.contentfulId);
   t.context.res.send.should.not.have.been.called;
   helpers.sendErrorResponse.should.have.been.calledWith(t.context.res, mockError);
 });
