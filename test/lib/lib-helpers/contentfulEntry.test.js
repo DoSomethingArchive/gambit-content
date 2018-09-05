@@ -47,12 +47,12 @@ test('fetch returns parsed contentful.fetch result', async () => {
   sandbox.stub(contentful, 'fetchEntries')
     .returns(Promise.resolve({ data: [askYesNoEntry] }));
   const parsedResponse = { raw: askYesNoEntry, parsed: broadcast };
-  sandbox.stub(contentfulEntryHelper, 'parseContentfulEntry')
+  sandbox.stub(contentfulEntryHelper, 'formatForApi')
     .returns(Promise.resolve(parsedResponse));
 
   const result = await contentfulEntryHelper.fetch(query);
   contentful.fetchEntries.should.have.been.calledWith(query);
-  contentfulEntryHelper.parseContentfulEntry.should.have.been.calledWith(askYesNoEntry);
+  contentfulEntryHelper.formatForApi.should.have.been.calledWith(askYesNoEntry);
   result.data.should.deep.equal([parsedResponse]);
 });
 
@@ -61,13 +61,38 @@ test('fetchById returns parsed contentful.fetchByContentfulId result', async () 
   sandbox.stub(contentful, 'fetchByContentfulId')
     .returns(Promise.resolve(askYesNoEntry));
   const parsedResponse = { raw: askYesNoEntry, parsed: broadcast };
-  sandbox.stub(contentfulEntryHelper, 'parseContentfulEntry')
+  sandbox.stub(contentfulEntryHelper, 'formatForApi')
     .returns(Promise.resolve(parsedResponse));
 
   const result = await contentfulEntryHelper.fetchById(broadcast.id);
   contentful.fetchByContentfulId.should.have.been.calledWith(broadcast.id);
-  contentfulEntryHelper.parseContentfulEntry.should.have.been.calledWith(askYesNoEntry);
+  contentfulEntryHelper.formatForApi.should.have.been.calledWith(askYesNoEntry);
   result.should.deep.equal(parsedResponse);
+});
+
+// formatForApi
+test('formatForApi eventually returns an object with raw and parsed properties', async () => {
+  const mockSys = { sys: { id: broadcast.id } };
+  sandbox.stub(contentfulEntryHelper, 'formatSys')
+    .returns(mockSys);
+  sandbox.stub(contentfulEntryHelper, 'parseContentfulEntry')
+    .returns(Promise.resolve(broadcast));
+
+  const result = await contentfulEntryHelper.formatForApi(askYesNoEntry);
+  result.raw.sys.should.deep.equal(mockSys);
+  result.raw.fields.should.deep.equal(askYesNoEntry.fields);
+  result.parsed.should.deep.equal(broadcast);
+});
+
+// formatSys
+test('formatSys returns object with properties from contentfulEntry.sys', () => {
+  const result = contentfulEntryHelper.formatSys(askYesNoEntry);
+  result.should.deep.equal({
+    id: askYesNoEntry.sys.id,
+    contentType: askYesNoEntry.sys.contentType,
+    createdAt: askYesNoEntry.sys.createdAt,
+    updatedAt: askYesNoEntry.sys.updatedAt,
+  });
 });
 
 // getMessageTemplateFromContentfulEntryAndTemplateName

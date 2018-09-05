@@ -6,8 +6,8 @@ Fields:
 
 Name | Type | Description
 -----|------|------------
-`raw` | Object | The response from a Contentful API query for an entry. This data can be used to pass query string parameters to proxy to the Contentful API. 
-`parsed` | Object | The parsed raw property, if entry type is used in a `GET /broadcasts`, `GET /defaultTopicTriggers`, or `GET /topics` request. This property is set to `null` otherwise (e.g.  `campaign`, `webSignup` types).
+`raw` | Object | Formatted response of a Contentful Entries API request for a Contentful entry. 
+`parsed` | Object | Contains corresponding response of a `GET /broadcasts`, `GET /defaultTopicTriggers`, or`GET /topics` request for the Contentful entry. Set to `null` when content type is not returned as a resource (e.g.  the `campaign`, `message`, or `webSignup` types).
 
 
 ## Retrieve Contentful entries
