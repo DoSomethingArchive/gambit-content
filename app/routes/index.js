@@ -6,8 +6,9 @@ const broadcastsSingleRoute = require('./broadcasts/single');
 const campaignsIndexRoute = require('./campaigns/index');
 const campaignsSingleRoute = require('./campaigns/single');
 const campaignActivityRoute = require('./campaignActivity');
-const defaultTopicTriggersRoute = require('./defaultTopicTriggers');
+const contentfulEntriesIndexRoute = require('./contentfulEntries/index');
 const contentfulEntriesSingleRoute = require('./contentfulEntries/single');
+const defaultTopicTriggersRoute = require('./defaultTopicTriggers');
 const topicsIndexRoute = require('./topics/index');
 const topicsSingleRoute = require('./topics/single');
 const statusRoute = require('./status');
@@ -37,8 +38,11 @@ module.exports = function init(app) {
   regGlobalMiddleware(app);
   app.get('/', statusRoute);
 
-  // Returns data for a contentful entry.
+  // Returns data for a Contentful entry.
   app.use('/v1/contentfulEntries/:contentfulId', contentfulEntriesSingleRoute);
+
+  // Returns list of Contentful entries.
+  app.use('/v1/contentfulEntries/', contentfulEntriesIndexRoute);
 
   // Provides data for a chatbot broadcast.
   app.use('/v1/broadcasts/:broadcastId', broadcastsSingleRoute);

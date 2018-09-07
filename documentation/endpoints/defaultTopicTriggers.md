@@ -22,6 +22,15 @@ GET /v1/defaultTopicTriggers
 
 Returns defaultTopicTrigger entries.
 
+Note: This endpoint currently returns a cached list of defaultTopicTrigger entries if exists. We will no longer need to cache the list once the Conversations API uses Redis to cache parsed Rivescript.
+@see https://github.com/DoSomething/gambit-conversations/pull/398
+
+### Query parameters
+
+Name | Type | Description
+-----|------|------------
+`cache` | string | If set to `false`, fetches default topic triggers from Contentful instead of checking cache.
+
 
 <details><summary>**Example Request**</summary><p>
 

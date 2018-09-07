@@ -39,20 +39,41 @@ test.afterEach((t) => {
   t.context = {};
 });
 
-test('getDefaultTopicTriggers should send helpers.defaultTopicTrigger.getAll result', async (t) => {
+test('getDefaultTopicTriggers should send helpers.defaultTopicTrigger.getAll result if req.query.cache is not false', async (t) => {
   const next = sinon.stub();
   const middleware = getDefaultTopicTriggers();
   sandbox.stub(helpers.defaultTopicTrigger, 'getAll')
     .returns(Promise.resolve(defaultTopicTriggerStubs));
+  sandbox.stub(helpers.defaultTopicTrigger, 'fetch')
+    .returns(Promise.resolve(true));
+
 
   // test
   await middleware(t.context.req, t.context.res, next);
   helpers.defaultTopicTrigger.getAll.should.have.been.called;
+  helpers.defaultTopicTrigger.fetch.should.not.have.been.called;
   helpers.response.sendIndexData
     .should.have.been.calledWith(t.context.res, defaultTopicTriggerStubs);
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
+test('getDefaultTopicTriggers should send helpers.defaultTopicTrigger.fetch result if req.query.cache is false', async (t) => {
+  const next = sinon.stub();
+  const middleware = getDefaultTopicTriggers();
+  sandbox.stub(helpers.defaultTopicTrigger, 'getAll')
+    .returns(Promise.resolve(defaultTopicTriggerStubs));
+  sandbox.stub(helpers.defaultTopicTrigger, 'fetch')
+    .returns(Promise.resolve(defaultTopicTriggerStubs));
+  t.context.req.query = { cache: 'false' };
+
+  // test
+  await middleware(t.context.req, t.context.res, next);
+  helpers.defaultTopicTrigger.getAll.should.not.have.been.called;
+  helpers.defaultTopicTrigger.fetch.should.have.been.calledWith(t.context.req.query);
+  helpers.response.sendIndexData
+    .should.have.been.calledWith(t.context.res, defaultTopicTriggerStubs);
+  helpers.sendErrorResponse.should.not.have.been.called;
+});
 
 test('getDefaultTopicTriggers should send errorResponse if helpers.defaultTopicTrigger.getAll fails', async (t) => {
   const next = sinon.stub();

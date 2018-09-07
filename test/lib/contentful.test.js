@@ -160,6 +160,39 @@ test('fetchByContentTypes should call contentfulError when it fails', async (t) 
   contentful.contentfulError.should.have.been.called;
 });
 
+// fetchEntries
+test('fetchEntries should call getEntries with given query object', async () => {
+  const queryParams = { 'fields.campaignId': stubs.getCampaignId() };
+  const data = ['abc', 'def'];
+  contentful.__set__('client', {
+    getEntries: sinon.stub().returns(getEntriesStub),
+  });
+  sandbox.stub(contentful, 'parseGetEntriesResponse')
+    .returns(data);
+
+  const query = contentful.getQueryBuilder()
+    .custom(queryParams)
+    .orderByDescCreatedAt()
+    .build();
+
+  // test
+  const result = await contentful.fetchEntries(queryParams);
+  contentful.getClient().getEntries.getCall(0).args[0].should.be.eql(query);
+  result.should.deep.equal(data);
+});
+
+test('fetchEntries should call contentfulError when it fails', async (t) => {
+  sandbox.spy(contentful, 'contentfulError');
+  contentful.__set__('client', {
+    getEntries: sinon.stub().returns(failStub),
+  });
+
+  // test
+  await t.throws(contentful.fetchEntries({}));
+  contentful.contentfulError.should.have.been.called;
+});
+
+
 // getContentfulIdFromContentfulEntry
 test('getContentfulIdFromContentfulEntry returns contentful entry id of given entry', () => {
   const result = contentful.getContentfulIdFromContentfulEntry(campaignConfigStub);
