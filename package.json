@@ -66,8 +66,7 @@
     "serve-favicon": "^2.5.0",
     "simple-oauth2": "^1.5.2",
     "stathat": "0.0.8",
-    "superagent": "^2.3.0",
-    "superagent-use": "^0.1.0",
+    "superagent": "^3.8.3",
     "throng": "^4.0.0",
     "underscore": "^1.9.0",
     "winston": "2.3.x"
