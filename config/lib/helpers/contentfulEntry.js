@@ -27,7 +27,7 @@ module.exports = {
       type: 'askVotingPlanStatus',
       broadcastable: true,
       templates: [
-        'invalidVotingStatus',
+        'invalidVotingPlanStatus',
         'saidVoting',
         'saidNotVoting',
       ],
