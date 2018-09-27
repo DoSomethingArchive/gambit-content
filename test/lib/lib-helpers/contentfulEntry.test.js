@@ -116,6 +116,12 @@ test('getMessageTemplateFromContentfulEntryAndTemplateName should call topic.get
   result.template.should.equal(messageTemplate);
 });
 
+test('getMessageTemplateFromContentfulEntryAndTemplateName result should be empty object if contentfulEntry undefined', async () => {
+  const result = await contentfulEntryHelper
+    .getMessageTemplateFromContentfulEntryAndTemplateName(null, stubs.getRandomWord());
+  result.should.deep.equal({});
+});
+
 test('getMessageTemplateFromContentfulEntryAndTemplateName should not call topic.getById if topic reference field undefined', async () => {
   sandbox.stub(helpers.topic, 'getById')
     .returns(fetchTopicResult);
