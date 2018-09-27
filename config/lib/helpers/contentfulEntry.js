@@ -23,6 +23,15 @@ module.exports = {
       type: 'askSubscriptionStatus',
       broadcastable: true,
     },
+    askVotingPlanStatus: {
+      type: 'askVotingPlanStatus',
+      broadcastable: true,
+      templates: [
+        'invalidVotingStatus',
+        'saidVoting',
+        'saidNotVoting',
+      ],
+    },
     askYesNo: {
       type: 'askYesNo',
       broadcastable: true,
