@@ -15,9 +15,11 @@ const cacheHelper = rewire('../../../lib/helpers/cache');
 
 // stubs
 const stubs = require('../../utils/stubs');
+const campaignConfigFactory = require('../../utils/factories/contentful/campaign');
 const defaultTopicTriggerFactory = require('../../utils/factories/defaultTopicTrigger');
 
 const campaign = stubs.getPhoenixCampaign();
+const campaignConfig = campaignConfigFactory.getValidCampaign();
 const campaignId = stubs.getCampaignId();
 const contentfulId = stubs.getContentfulId();
 const defaultTopicTrigger = defaultTopicTriggerFactory.getValidDefaultTopicTriggerWithReply();
@@ -28,7 +30,48 @@ const sandbox = sinon.sandbox.create();
 test.afterEach(() => {
   sandbox.restore();
   cacheHelper.__set__('campaignsCache', undefined);
-  cacheHelper.__set__('defaultTopicTriggersCache', undefined);
+  cacheHelper.__set__('parsedContentfulEntriesCache', undefined);
+});
+
+/**
+ * broadcasts
+ */
+test('broadcasts.get should return object when cache exists', async () => {
+  cacheHelper.__set__('parsedContentfulEntriesCache', {
+    get: () => Promise.resolve(topic),
+  });
+  const result = await cacheHelper.broadcasts.get(contentfulId);
+  result.should.deep.equal(topic);
+});
+
+test('broadcasts.get should return falsy when cache undefined', async (t) => {
+  cacheHelper.__set__('parsedContentfulEntriesCache', {
+    get: () => Promise.resolve(null),
+  });
+  const result = await cacheHelper.broadcasts.get(contentfulId);
+  t.falsy(result);
+});
+
+test('broadcasts.get should throw when cache set fails', async (t) => {
+  cacheHelper.__set__('parsedContentfulEntriesCache', {
+    get: () => Promise.reject(new Error()),
+  });
+  await t.throws(cacheHelper.broadcasts.get(contentfulId));
+});
+
+test('broadcasts.set should return an object', async () => {
+  cacheHelper.__set__('parsedContentfulEntriesCache', {
+    set: () => Promise.resolve(JSON.stringify(topic)),
+  });
+  const result = await cacheHelper.broadcasts.set(contentfulId);
+  result.should.deep.equal(topic);
+});
+
+test('broadcasts.set should throw when cache set fails', async (t) => {
+  cacheHelper.__set__('parsedContentfulEntriesCache', {
+    set: () => Promise.reject(new Error()),
+  });
+  await t.throws(cacheHelper.broadcasts.set(contentfulId));
 });
 
 /**
@@ -73,10 +116,51 @@ test('campaigns.set should throw when cache set fails', async (t) => {
 });
 
 /**
+ * campaignConfigs
+ */
+test('campaignConfigs.get should return object when cache exists', async () => {
+  cacheHelper.__set__('parsedContentfulEntriesCache', {
+    get: () => Promise.resolve(campaignConfig),
+  });
+  const result = await cacheHelper.campaignConfigs.get(campaignId);
+  result.should.deep.equal(campaignConfig);
+});
+
+test('campaignConfigs.get should return falsy when cache undefined', async (t) => {
+  cacheHelper.__set__('parsedContentfulEntriesCache', {
+    get: () => Promise.resolve(null),
+  });
+  const result = await cacheHelper.campaignConfigs.get(campaignId);
+  t.falsy(result);
+});
+
+test('campaignConfigs.get should throw when cache set fails', async (t) => {
+  cacheHelper.__set__('parsedContentfulEntriesCache', {
+    get: () => Promise.reject(new Error()),
+  });
+  await t.throws(cacheHelper.campaignConfigs.get(campaignId));
+});
+
+test('campaignConfigs.set should return an object', async () => {
+  cacheHelper.__set__('parsedContentfulEntriesCache', {
+    set: () => Promise.resolve(JSON.stringify(topic)),
+  });
+  const result = await cacheHelper.campaignConfigs.set(campaignId);
+  result.should.deep.equal(topic);
+});
+
+test('campaignConfigs.set should throw when cache set fails', async (t) => {
+  cacheHelper.__set__('parsedContentfulEntriesCache', {
+    set: () => Promise.reject(new Error()),
+  });
+  await t.throws(cacheHelper.campaignConfigs.set(campaignId));
+});
+
+/**
  * defaultTopicTriggers
  */
 test('defaultTopicTriggers.get should return object when cache exists', async () => {
-  cacheHelper.__set__('defaultTopicTriggersCache', {
+  cacheHelper.__set__('parsedContentfulEntriesCache', {
     get: () => Promise.resolve(defaultTopicTrigger),
   });
   const result = await cacheHelper.defaultTopicTriggers.get(contentfulId);
@@ -84,7 +168,7 @@ test('defaultTopicTriggers.get should return object when cache exists', async ()
 });
 
 test('defaultTopicTriggers.get should return falsy when cache undefined', async (t) => {
-  cacheHelper.__set__('defaultTopicTriggersCache', {
+  cacheHelper.__set__('parsedContentfulEntriesCache', {
     get: () => Promise.resolve(null),
   });
   const result = await cacheHelper.defaultTopicTriggers.get(contentfulId);
@@ -92,14 +176,14 @@ test('defaultTopicTriggers.get should return falsy when cache undefined', async 
 });
 
 test('defaultTopicTriggers.get should throw when cache set fails', async (t) => {
-  cacheHelper.__set__('defaultTopicTriggersCache', {
+  cacheHelper.__set__('parsedContentfulEntriesCache', {
     get: () => Promise.reject(new Error()),
   });
   await t.throws(cacheHelper.defaultTopicTriggers.get(contentfulId));
 });
 
 test('defaultTopicTriggers.set should return an object', async () => {
-  cacheHelper.__set__('defaultTopicTriggersCache', {
+  cacheHelper.__set__('parsedContentfulEntriesCache', {
     set: () => Promise.resolve(JSON.stringify(defaultTopicTrigger)),
   });
   const result = await cacheHelper.defaultTopicTriggers.set(contentfulId);
@@ -107,7 +191,7 @@ test('defaultTopicTriggers.set should return an object', async () => {
 });
 
 test('defaultTopicTriggers.set should throw when cache set fails', async (t) => {
-  cacheHelper.__set__('defaultTopicTriggersCache', {
+  cacheHelper.__set__('parsedContentfulEntriesCache', {
     set: () => Promise.reject(new Error()),
   });
   await t.throws(cacheHelper.defaultTopicTriggers.set(contentfulId));
@@ -117,7 +201,7 @@ test('defaultTopicTriggers.set should throw when cache set fails', async (t) => 
  * topics
  */
 test('topics.get should return object when cache exists', async () => {
-  cacheHelper.__set__('topicsCache', {
+  cacheHelper.__set__('parsedContentfulEntriesCache', {
     get: () => Promise.resolve(topic),
   });
   const result = await cacheHelper.topics.get(contentfulId);
@@ -125,7 +209,7 @@ test('topics.get should return object when cache exists', async () => {
 });
 
 test('topics.get should return falsy when cache undefined', async (t) => {
-  cacheHelper.__set__('topicsCache', {
+  cacheHelper.__set__('parsedContentfulEntriesCache', {
     get: () => Promise.resolve(null),
   });
   const result = await cacheHelper.topics.get(contentfulId);
@@ -133,14 +217,14 @@ test('topics.get should return falsy when cache undefined', async (t) => {
 });
 
 test('topics.get should throw when cache set fails', async (t) => {
-  cacheHelper.__set__('topicsCache', {
+  cacheHelper.__set__('parsedContentfulEntriesCache', {
     get: () => Promise.reject(new Error()),
   });
   await t.throws(cacheHelper.topics.get(contentfulId));
 });
 
 test('topics.set should return an object', async () => {
-  cacheHelper.__set__('topicsCache', {
+  cacheHelper.__set__('parsedContentfulEntriesCache', {
     set: () => Promise.resolve(JSON.stringify(topic)),
   });
   const result = await cacheHelper.topics.set(contentfulId);
@@ -148,7 +232,7 @@ test('topics.set should return an object', async () => {
 });
 
 test('topics.set should throw when cache set fails', async (t) => {
-  cacheHelper.__set__('topicsCache', {
+  cacheHelper.__set__('parsedContentfulEntriesCache', {
     set: () => Promise.reject(new Error()),
   });
   await t.throws(cacheHelper.topics.set(contentfulId));
