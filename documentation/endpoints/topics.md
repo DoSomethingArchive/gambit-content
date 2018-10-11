@@ -2,6 +2,7 @@
 
 A conversation topic may be set to one of the following Contentful content types:
 
+* `askVotingPlanStatus` - asks user their voting plan status, and asks for voting plan info if they plan to vote
 * `askYesNo` - asks yes/no question (and can be sent as a [broadcast](./topics.md))
 * `autoReply` - repeats a single `autoReply` template, creates a signup if campaign is set
 * `photoPostConfig` - creates a signup and sends replies to create a photo post for a campaign
