@@ -98,8 +98,8 @@ test('formatSys returns object with properties from contentfulEntry.sys', () => 
   });
 });
 
-// getMessageTemplateFromContentfulEntryAndTemplateName
-test('getMessageTemplateFromContentfulEntryAndTemplateName should call topic.getById to set topic if topic reference field saved', async () => {
+// getMessageTemplate
+test('getMessageTemplate should call topic.getById to set topic if topic reference field saved', async () => {
   const messageTemplate = stubs.getRandomWord();
   const messageText = stubs.getRandomMessageText();
   const messageAttachments = [{ name: 'Tyrion' }, { name: 'Cersei' }];
@@ -111,7 +111,7 @@ test('getMessageTemplateFromContentfulEntryAndTemplateName should call topic.get
     .returns(fetchTopicResult);
 
   const result = await contentfulEntryHelper
-    .getMessageTemplateFromContentfulEntryAndTemplateName(autoReplyBroadcastEntry, messageTemplate);
+    .getMessageTemplate(autoReplyBroadcastEntry, messageTemplate);
   helpers.topic.getById.should.have.been.calledWith(autoReplyBroadcastEntry.fields.topic.sys.id);
   result.text.should.equal(messageText);
   result.attachments.should.deep.equal(messageAttachments);
@@ -119,18 +119,18 @@ test('getMessageTemplateFromContentfulEntryAndTemplateName should call topic.get
   result.template.should.equal(messageTemplate);
 });
 
-test('getMessageTemplateFromContentfulEntryAndTemplateName result should be empty object if contentfulEntry undefined', async () => {
+test('getMessageTemplate result should be empty object if contentfulEntry undefined', async () => {
   const result = await contentfulEntryHelper
-    .getMessageTemplateFromContentfulEntryAndTemplateName(null, stubs.getRandomWord());
+    .getMessageTemplate(null, stubs.getRandomWord());
   result.should.deep.equal({});
 });
 
-test('getMessageTemplateFromContentfulEntryAndTemplateName should not call topic.getById if topic reference field undefined', async () => {
+test('getMessageTemplate should not call topic.getById if topic reference field undefined', async () => {
   sandbox.stub(helpers.topic, 'getById')
     .returns(fetchTopicResult);
 
   const result = await contentfulEntryHelper
-    .getMessageTemplateFromContentfulEntryAndTemplateName(askYesNoEntry, stubs.getRandomWord());
+    .getMessageTemplate(askYesNoEntry, stubs.getRandomWord());
   helpers.topic.getById.should.not.have.been.called;
   result.topic.should.deep.equal({});
 });
