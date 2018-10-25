@@ -10,6 +10,9 @@ const sinon = require('sinon');
 const contentful = require('../../../lib/contentful');
 const helpers = require('../../../lib/helpers');
 const stubs = require('../../utils/stubs');
+
+const config = require('../../../config/lib/helpers/contentfulEntry');
+
 // Contentful factories
 const askYesNoEntryFactory = require('../../utils/factories/contentful/askYesNo');
 const autoReplyFactory = require('../../utils/factories/contentful/autoReply');
@@ -193,4 +196,16 @@ test('isDefaultTopicTrigger returns whether content type is defaultTopicTrigger'
 test('isMessage returns whether content type is message', (t) => {
   t.truthy(contentfulEntryHelper.isMessage(messageEntry));
   t.falsy(contentfulEntryHelper.isMessage(autoReplyEntry));
+});
+
+// isTransitionTemplate
+test('isTransitionTemplate returns whether contentType config for templateName is a transition field', (t) => {
+  const askVotingPlanStatus = config.contentTypes.askVotingPlanStatus;
+  const autoReply = config.contentTypes.autoReply;
+  let templateName = askVotingPlanStatus.templates.votingPlanStatusVoted.name;
+  t.truthy(contentfulEntryHelper
+    .isTransitionTemplate(askVotingPlanStatus.type, templateName));
+  templateName = autoReply.templates.autoReply.name;
+  t.falsy(contentfulEntryHelper
+    .isTransitionTemplate(autoReply.type, templateName));
 });

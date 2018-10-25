@@ -1,7 +1,9 @@
 'use strict';
 
-const textFieldType = 'text';
-const transitionFieldType = 'transition';
+const templateFieldTypes = {
+  text: 'text',
+  transition: 'transition',
+};
 
 /**
  * This maps the fields in our Contentful types into broadcast, topic, and defaultTopicTriggers.
@@ -30,19 +32,22 @@ module.exports = {
       type: 'askVotingPlanStatus',
       broadcastable: true,
       templates: {
+        // These template names correspond to the macros that get executed if user matches a trigger
+        // within the ask_voting_plan_status topic in Gambit Conversations.
+        // @see https://github.com/DoSomething/gambit-conversations/blob/master/brain/topics/askVotingPlanStatus.rive
         votingPlanStatusCantVote: {
           fieldName: 'cantVoteTransition',
-          fieldType: transitionFieldType,
+          fieldType: templateFieldTypes.transition,
           name: 'votingPlanStatusCantVote',
         },
         votingPlanStatusNotVoting: {
           fieldName: 'notVotingTransition',
-          fieldType: transitionFieldType,
+          fieldType: templateFieldTypes.transition,
           name: 'votingPlanStatusNotVoting',
         },
         votingPlanStatusVoted: {
           fieldName: 'votedTransition',
-          fieldType: transitionFieldType,
+          fieldType: templateFieldTypes.transition,
           name: 'votingPlanStatusVoted',
         },
       },
@@ -64,7 +69,7 @@ module.exports = {
       templates: {
         autoReply: {
           fieldName: 'autoReply',
-          fieldType: textFieldType,
+          fieldType: templateFieldTypes.text,
           name: 'autoReply',
         },
       },
@@ -111,4 +116,5 @@ module.exports = {
       broadcastable: true,
     },
   },
+  templateFieldTypes,
 };
