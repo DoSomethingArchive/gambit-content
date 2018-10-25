@@ -174,6 +174,12 @@ test('getTopicTemplates should call topic.getById to set saidYes and saidNo topi
   result.saidNo.topic.should.deep.equal(fetchTopicResult);
 });
 
+// isAskYesNo
+test('isAskYesNo returns whether content type is askYesNo', (t) => {
+  t.truthy(contentfulEntryHelper.isAskYesNo(askYesNoEntry));
+  t.falsy(contentfulEntryHelper.isAskYesNo(autoReplyEntry));
+});
+
 // isAutoReply
 test('isAutoReply returns whether content type is autoReply', (t) => {
   t.falsy(contentfulEntryHelper.isAutoReply(askYesNoEntry));
