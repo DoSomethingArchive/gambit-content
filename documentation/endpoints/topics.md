@@ -80,7 +80,6 @@ curl http://localhost:5000/v1/topics?skip=5
           "topic": {}
         }
       },
-      "triggers": []
     },
     {
       "id": "2X4r3fZrTGA2mGemowgiEI",
@@ -118,7 +117,6 @@ curl http://localhost:5000/v1/topics?skip=5
           "topic": {}
         }
       },
-      "triggers": [],
     },
     {
       "id": "3peS2Oye08o6OwUMAEcS2c",
@@ -144,9 +142,6 @@ curl http://localhost:5000/v1/topics?skip=5
         },
         ...
       },
-      "triggers": [
-        "mascot",
-      ]
     },
     ...
   ],
