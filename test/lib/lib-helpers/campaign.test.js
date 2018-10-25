@@ -185,7 +185,7 @@ test('parseCampaignConfig should return empty object if contentfulEntry undefine
 
 test('parseCampaignConfig should return object with id and templates properties', async () => {
   const stubTemplate = { text: stubs.getRandomMessageText() };
-  sandbox.stub(helpers.contentfulEntry, 'getMessageTemplateFromContentfulEntryAndTemplateName')
+  sandbox.stub(helpers.contentfulEntry, 'getMessageTemplate')
     .returns(Promise.resolve(stubTemplate));
   const result = await campaignHelper.parseCampaignConfig(campaignConfigEntry);
   result.id.should.equal(campaignConfigEntry.sys.id);

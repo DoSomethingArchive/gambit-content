@@ -123,13 +123,13 @@ test('getById returns fetchById if resetCache arg is true', async () => {
 });
 
 // parseBroadcastFromContentfulEntry
-test('parseBroadcastFromContentfulEntry returns object with message from getMessageTemplateFromContentfulEntryAndTemplateName', async () => {
+test('parseBroadcastFromContentfulEntry returns object with message from getMessageTemplate', async () => {
   const contentfulEntry = autoReplyBroadcastFactory.getValidAutoReplyBroadcast();
   const stubContentType = stubs.getRandomWord();
   sandbox.stub(helpers.contentfulEntry, 'getSummaryFromContentfulEntry')
     .returns({ type: stubContentType });
   const stubTemplate = { text: stubs.getRandomMessageText(), template: stubContentType };
-  sandbox.stub(helpers.contentfulEntry, 'getMessageTemplateFromContentfulEntryAndTemplateName')
+  sandbox.stub(helpers.contentfulEntry, 'getMessageTemplate')
     .returns(stubTemplate);
 
   const result = await broadcastHelper.parseBroadcastFromContentfulEntry(contentfulEntry);
@@ -137,7 +137,7 @@ test('parseBroadcastFromContentfulEntry returns object with message from getMess
     .should.have.been.calledWith(contentfulEntry);
   result.message.text.should.equal(stubTemplate.text);
   result.message.template.should.equal(stubContentType);
-  helpers.contentfulEntry.getMessageTemplateFromContentfulEntryAndTemplateName
+  helpers.contentfulEntry.getMessageTemplate
     .should.have.been.calledWith(contentfulEntry, stubContentType);
 });
 
