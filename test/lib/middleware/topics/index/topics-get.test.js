@@ -38,26 +38,16 @@ test.afterEach((t) => {
 test('getTopics should send helpers.topic.fetch result', async (t) => {
   const next = sinon.stub();
   const middleware = getTopics();
-  const triggers = [stubs.getRandomWord()];
-  const firstTopic = topicFactory.getValidTopic();
-  const secondTopic = topicFactory.getValidTopic();
-  const topics = [firstTopic, secondTopic];
+  const topics = [topicFactory.getValidTopic(), topicFactory.getValidTopic()];
   const fetchResult = stubs.contentful.getFetchByContentTypesResultWithArray(topics);
   sandbox.stub(helpers.topic, 'fetch')
     .returns(Promise.resolve(fetchResult));
-  sandbox.stub(helpers.defaultTopicTrigger, 'getByTopicId')
-    .returns(Promise.resolve(fetchResult));
-  sandbox.stub(helpers.defaultTopicTrigger, 'getTriggersFromDefaultTopicTriggers')
-    .returns(triggers);
   const queryParams = { skip: 20 };
   t.context.req.query = queryParams;
 
   // test
   await middleware(t.context.req, t.context.res, next);
   helpers.topic.fetch.should.have.been.calledWith(queryParams);
-  helpers.defaultTopicTrigger.getByTopicId.should.have.been.calledWith(firstTopic.id);
-  helpers.defaultTopicTrigger.getByTopicId.should.have.been.calledWith(secondTopic.id);
-
   helpers.response.sendIndexData
     .should.have.been.calledWith(t.context.res, fetchResult.data, fetchResult.meta);
   helpers.sendErrorResponse.should.not.have.been.called;
