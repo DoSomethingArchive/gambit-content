@@ -1,5 +1,6 @@
 'use strict';
 
+const textFieldType = 'text';
 const transitionFieldType = 'transition';
 
 /**
@@ -60,10 +61,13 @@ module.exports = {
     },
     autoReply: {
       type: 'autoReply',
-      // TODO: Refactor templates as an object.
-      templates: [
-        'autoReply',
-      ],
+      templates: {
+        autoReply: {
+          fieldName: 'autoReply',
+          fieldType: textFieldType,
+          name: 'autoReply',
+        },
+      },
     },
     autoReplyBroadcast: {
       type: 'autoReplyBroadcast',
@@ -81,17 +85,17 @@ module.exports = {
     },
     photoPostConfig: {
       type: 'photoPostConfig',
+      // TODO: Refactor photoPostConfig in config/lib/helpers/topic here to DRY.
       postType: 'photo',
-      // TODO: Refactor topic config to define templates here and DRY.
     },
     textPostBroadcast: {
       type: 'textPostBroadcast',
+      broadcastable: true,
     },
     textPostConfig: {
       type: 'textPostConfig',
+      // TODO: Move textPostConfig in config/lib/helpers/topic here to DRY.
       postType: 'text',
-      broadcastable: true,
-      // TODO: Refactor topic config to define templates here and DRY.
     },
     // Legacy types:
     // Ideally we'd backfill all legacy entries as their new types, but we likely can't change the
