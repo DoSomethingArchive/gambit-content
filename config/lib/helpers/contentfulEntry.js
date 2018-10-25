@@ -1,5 +1,7 @@
 'use strict';
 
+const transitionFieldType = 'transition';
+
 /**
  * This maps the fields in our Contentful types into broadcast, topic, and defaultTopicTriggers.
  *
@@ -26,15 +28,30 @@ module.exports = {
     askVotingPlanStatus: {
       type: 'askVotingPlanStatus',
       broadcastable: true,
-      templates: [
-        'votingPlanStatusCantVote',
-        'votingPlanStatusNotVoting',
-        'votingPlanStatusVoted',
-      ],
+      templates: {
+        votingPlanStatusCantVote: {
+          fieldName: 'cantVoteTransition',
+          fieldType: transitionFieldType,
+          name: 'votingPlanStatusCantVote',
+        },
+        votingPlanStatusNotVoting: {
+          fieldName: 'notVotingTransition',
+          fieldType: transitionFieldType,
+          name: 'votingPlanStatusNotVoting',
+        },
+        votingPlanStatusVoted: {
+          fieldName: 'votedTransition',
+          fieldType: transitionFieldType,
+          name: 'votingPlanStatusVoted',
+        },
+      },
     },
     askYesNo: {
       type: 'askYesNo',
       broadcastable: true,
+      // TODO: Refactor templates as an object. We'll want new transition fields, but also need to
+      // backfill legacy saidYes, saidYesTopic, saidNo, and saidNoTopic fields.
+      // That or we define a new content type, as we can't easily rename our content type name.
       templates: [
         'saidYes',
         'saidNo',
@@ -43,6 +60,7 @@ module.exports = {
     },
     autoReply: {
       type: 'autoReply',
+      // TODO: Refactor templates as an object.
       templates: [
         'autoReply',
       ],
@@ -64,14 +82,16 @@ module.exports = {
     photoPostConfig: {
       type: 'photoPostConfig',
       postType: 'photo',
+      // TODO: Refactor topic config to define templates here and DRY.
     },
     textPostBroadcast: {
       type: 'textPostBroadcast',
-      broadcastable: true,
     },
     textPostConfig: {
       type: 'textPostConfig',
       postType: 'text',
+      broadcastable: true,
+      // TODO: Refactor topic config to define templates here and DRY.
     },
     // Legacy types:
     // Ideally we'd backfill all legacy entries as their new types, but we likely can't change the
