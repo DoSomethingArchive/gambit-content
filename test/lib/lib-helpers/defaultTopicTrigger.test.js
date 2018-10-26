@@ -12,14 +12,15 @@ const stubs = require('../../utils/stubs');
 const helpers = require('../../../lib/helpers');
 const config = require('../../../config/lib/helpers/defaultTopicTrigger');
 
-const defaultTopicTriggerContentfulFactory = require('../../utils/factories/contentful/defaultTopicTrigger');
+const defaultTopicTriggerEntryFactory = require('../../utils/factories/contentful/defaultTopicTrigger');
+const messageEntryFactory = require('../../utils/factories/contentful/message');
 const defaultTopicTriggerFactory = require('../../utils/factories/defaultTopicTrigger');
 const topicFactory = require('../../utils/factories/topic');
 
 const contentfulId = stubs.getContentfulId();
-const firstEntry = defaultTopicTriggerContentfulFactory.getValidDefaultTopicTrigger();
+const firstEntry = defaultTopicTriggerEntryFactory.getValidDefaultTopicTrigger();
 const firstDefaultTopicTrigger = defaultTopicTriggerFactory.getValidDefaultTopicTriggerWithReply();
-const secondEntry = defaultTopicTriggerContentfulFactory.getValidDefaultTopicTrigger();
+const secondEntry = defaultTopicTriggerEntryFactory.getValidDefaultTopicTrigger();
 const secondDefaultTopicTrigger = defaultTopicTriggerFactory.getValidDefaultTopicTriggerWithReply();
 
 // Module to test
@@ -111,6 +112,26 @@ test('getTriggersFromDefaultTopicTriggers returns array of trigger properties', 
 });
 
 // parseDefaultTopicTrigger
+test('parseDefaultTopicTrigger returns null if entry response reference is falsy', async (t) => {
+  sandbox.stub(contentful, 'getResponseEntryFromDefaultTopicTrigger')
+    .returns(null);
+
+  const result = await defaultTopicTriggerHelper.parseDefaultTopicTrigger(firstEntry);
+  t.is(result, null);
+});
+
+test('parseDefaultTopicTrigger returns object without topic if entry response is a message', async (t) => {
+  const messageEntry = messageEntryFactory.getValidMessage();
+  const triggerText = stubs.getRandomMessageText();
+  sandbox.stub(contentful, 'getTextFromMessage')
+    .returns(triggerText);
+  const triggerEntry = defaultTopicTriggerEntryFactory.getValidDefaultTopicTrigger(messageEntry);
+
+  const result = await defaultTopicTriggerHelper.parseDefaultTopicTrigger(triggerEntry);
+  result.reply.should.equal(triggerText);
+  result.should.not.have.property('topic');
+});
+
 test('parseDefaultTopicTrigger returns object with reply and topic if entry is transitionable', async () => {
   const topic = topicFactory.getValidTopic();
   const triggerText = stubs.getRandomMessageText();
