@@ -11,9 +11,12 @@ const contentful = require('../../../lib/contentful');
 const stubs = require('../../utils/stubs');
 const helpers = require('../../../lib/helpers');
 const config = require('../../../config/lib/helpers/defaultTopicTrigger');
+
 const defaultTopicTriggerContentfulFactory = require('../../utils/factories/contentful/defaultTopicTrigger');
 const defaultTopicTriggerFactory = require('../../utils/factories/defaultTopicTrigger');
+const topicFactory = require('../../utils/factories/topic');
 
+const contentfulId = stubs.getContentfulId();
 const firstEntry = defaultTopicTriggerContentfulFactory.getValidDefaultTopicTrigger();
 const firstDefaultTopicTrigger = defaultTopicTriggerFactory.getValidDefaultTopicTriggerWithReply();
 const secondEntry = defaultTopicTriggerContentfulFactory.getValidDefaultTopicTrigger();
@@ -31,10 +34,6 @@ test.afterEach(() => {
   sandbox.restore();
 });
 
-test.afterEach(() => {
-  sandbox.restore();
-});
-
 // fetch
 test('fetch returns contentful.fetchByContentTypes parsed as defaultTopicTrigger objects', async () => {
   const entries = [firstEntry, secondEntry];
@@ -44,7 +43,7 @@ test('fetch returns contentful.fetchByContentTypes parsed as defaultTopicTrigger
     .returns(types);
   sandbox.stub(contentful, 'fetchByContentTypes')
     .returns(Promise.resolve(fetchEntriesResult));
-  sandbox.stub(defaultTopicTriggerHelper, 'parseDefaultTopicTriggerFromContentfulEntry')
+  sandbox.stub(defaultTopicTriggerHelper, 'parseDefaultTopicTrigger')
     .onCall(0)
     .returns(firstDefaultTopicTrigger)
     .onCall(1)
@@ -53,9 +52,9 @@ test('fetch returns contentful.fetchByContentTypes parsed as defaultTopicTrigger
   const result = await defaultTopicTriggerHelper.fetch();
   contentful.fetchByContentTypes
     .should.have.been.calledWith(types);
-  defaultTopicTriggerHelper.parseDefaultTopicTriggerFromContentfulEntry
+  defaultTopicTriggerHelper.parseDefaultTopicTrigger
     .should.have.been.calledWith(firstEntry);
-  defaultTopicTriggerHelper.parseDefaultTopicTriggerFromContentfulEntry
+  defaultTopicTriggerHelper.parseDefaultTopicTrigger
     .should.have.been.calledWith(secondEntry);
   result.should.deep.equal([firstDefaultTopicTrigger, secondDefaultTopicTrigger]);
 });
@@ -64,7 +63,7 @@ test('fetch throws if contentful.fetchByContentTypes fails', async (t) => {
   const error = new Error('epic fail');
   sandbox.stub(contentful, 'fetchByContentTypes')
     .returns(Promise.reject(error));
-  sandbox.stub(defaultTopicTriggerHelper, 'parseDefaultTopicTriggerFromContentfulEntry')
+  sandbox.stub(defaultTopicTriggerHelper, 'parseDefaultTopicTrigger')
     .returns(firstDefaultTopicTrigger);
 
   const result = await t.throws(defaultTopicTriggerHelper.fetch());
@@ -109,6 +108,25 @@ test('getTriggersFromDefaultTopicTriggers returns array of trigger properties', 
   const result = defaultTopicTriggerHelper
     .getTriggersFromDefaultTopicTriggers(defaultTopicTriggers);
   result.should.deep.equal([firstDefaultTopicTrigger.trigger, secondDefaultTopicTrigger.trigger]);
+});
+
+// parseDefaultTopicTrigger
+test('parseDefaultTopicTrigger returns object with reply and topic if entry is transitionable', async () => {
+  const topic = topicFactory.getValidTopic();
+  const triggerText = stubs.getRandomMessageText();
+  sandbox.stub(contentful, 'getContentfulIdFromContentfulEntry')
+    .returns(contentfulId);
+  sandbox.stub(contentful, 'getTextFromMessage')
+    .returns(triggerText);
+  sandbox.stub(helpers.contentfulEntry, 'isTransitionable')
+    .returns(true);
+  sandbox.stub(helpers.topic, 'getById')
+    .returns(Promise.resolve(topic));
+
+  const result = await defaultTopicTriggerHelper.parseDefaultTopicTrigger(firstEntry);
+  result.id.should.equal(contentfulId);
+  result.reply.should.equal(triggerText);
+  result.topic.should.deep.equal(topic);
 });
 
 // removeInvalidDefaultTopicTriggers
