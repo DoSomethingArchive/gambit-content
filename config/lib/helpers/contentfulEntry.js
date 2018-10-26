@@ -9,8 +9,9 @@ const templateFieldTypes = {
  * This maps the fields in our Contentful types into broadcast, topic, and defaultTopicTriggers.
  *
  * Content types with either a templates or postType property set are returned as topics.
- * If the type contains a templates array, each array item should correspond to a single value text
- * field defined on the content type, which is used as a bot reply template in the topic.
+ *
+ * If the type contains a templates object, each property defines the Contentful field name and type
+ * to use as a bot reply template fir the topic.
  * If the type contains a postType string property instead, its an older content type and its
  * templates are configured via config/lib/helpers/topic. Ideally we should consolidate, but it'd
  * take a bit of refactoring as the topic helper config contains default values for certain text
@@ -21,6 +22,8 @@ const templateFieldTypes = {
  * exists, it will include the topic in the outbound message, indicating that the conversation topic
  * should be updated upon receiving the broadcast (otherwise, the broadcast itself can be used as a
  * topic if it has templates -- e.g. askYesNo)
+ *
+ * A transitionable content type requires a text field named "text" and a reference field "topic".
  */
 module.exports = {
   contentTypes: {
@@ -87,6 +90,10 @@ module.exports = {
       type: 'autoReplyBroadcast',
       broadcastable: true,
     },
+    autoReplyTransition: {
+      type: 'autoReplyTransition',
+      transitionable: true,
+    },
     defaultTopicTrigger: {
       type: 'defaultTopicTrigger',
     },
@@ -102,6 +109,10 @@ module.exports = {
       // TODO: Refactor photoPostConfig in config/lib/helpers/topic here to DRY.
       postType: 'photo',
     },
+    photoPostTransition: {
+      type: 'photoPostTransition',
+      transitionable: true,
+    },
     textPostBroadcast: {
       type: 'textPostBroadcast',
       broadcastable: true,
@@ -110,6 +121,10 @@ module.exports = {
       type: 'textPostConfig',
       // TODO: Move textPostConfig in config/lib/helpers/topic here to DRY.
       postType: 'text',
+    },
+    textPostTransition: {
+      type: 'textPostTransition',
+      transitionable: true,
     },
     // Legacy types:
     // Ideally we'd backfill all legacy entries as their new types, but we likely can't change the
