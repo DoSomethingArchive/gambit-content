@@ -61,15 +61,15 @@ module.exports = {
           fieldType: templateFieldTypes.text,
           name: 'invalidAskYesNoResponse',
         },
-        saidNo: {
-          fieldName: 'noTransition',
-          fieldType: templateFieldTypes.transition,
-          name: 'saidNo',
-        },
         saidYes: {
           fieldName: 'yesTransition',
           fieldType: templateFieldTypes.transition,
           name: 'saidYes',
+        },
+        saidNo: {
+          fieldName: 'noTransition',
+          fieldType: templateFieldTypes.transition,
+          name: 'saidNo',
         },
       },
     },
