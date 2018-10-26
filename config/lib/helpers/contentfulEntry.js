@@ -11,7 +11,7 @@ const templateFieldTypes = {
  * Content types with either a templates or postType property set are returned as topics.
  *
  * If the type contains a templates object, each property defines the Contentful field name and type
- * to use as a bot reply template fir the topic.
+ * to use as a template within the topic.
  * If the type contains a postType string property instead, its an older content type and its
  * templates are configured via config/lib/helpers/topic. Ideally we should consolidate, but it'd
  * take a bit of refactoring as the topic helper config contains default values for certain text
