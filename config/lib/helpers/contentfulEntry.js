@@ -55,14 +55,23 @@ module.exports = {
     askYesNo: {
       type: 'askYesNo',
       broadcastable: true,
-      // TODO: Refactor templates as an object. We'll want new transition fields, but also need to
-      // backfill legacy saidYes, saidYesTopic, saidNo, and saidNoTopic fields.
-      // That or we define a new content type, as we can't easily rename our content type name.
-      templates: [
-        'saidYes',
-        'saidNo',
-        'invalidAskYesNoResponse',
-      ],
+      templates: {
+        invalidAskYesNoResponse: {
+          fieldName: 'invalidAskYesNoResponse',
+          fieldType: templateFieldTypes.text,
+          name: 'invalidAskYesNoResponse',
+        },
+        saidYes: {
+          fieldName: 'yesTransition',
+          fieldType: templateFieldTypes.transition,
+          name: 'saidYes',
+        },
+        saidNo: {
+          fieldName: 'noTransition',
+          fieldType: templateFieldTypes.transition,
+          name: 'saidNo',
+        },
+      },
     },
     autoReply: {
       type: 'autoReply',
