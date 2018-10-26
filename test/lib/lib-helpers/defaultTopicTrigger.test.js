@@ -102,15 +102,6 @@ test('getAll returns fetch results if cache not set', async () => {
   result.should.deep.equal(fetchResult);
 });
 
-// getTriggersFromDefaultTopicTriggers
-test('getTriggersFromDefaultTopicTriggers returns array of trigger properties', () => {
-  const defaultTopicTriggers = [firstDefaultTopicTrigger, secondDefaultTopicTrigger];
-
-  const result = defaultTopicTriggerHelper
-    .getTriggersFromDefaultTopicTriggers(defaultTopicTriggers);
-  result.should.deep.equal([firstDefaultTopicTrigger.trigger, secondDefaultTopicTrigger.trigger]);
-});
-
 // parseDefaultTopicTrigger
 test('parseDefaultTopicTrigger returns null if entry response reference is falsy', async (t) => {
   sandbox.stub(contentful, 'getResponseEntryFromDefaultTopicTrigger')
@@ -120,7 +111,7 @@ test('parseDefaultTopicTrigger returns null if entry response reference is falsy
   t.is(result, null);
 });
 
-test('parseDefaultTopicTrigger returns object without topic if entry response is a message', async (t) => {
+test('parseDefaultTopicTrigger returns object without topic if entry response is a message', async () => {
   const messageEntry = messageEntryFactory.getValidMessage();
   const triggerText = stubs.getRandomMessageText();
   sandbox.stub(contentful, 'getTextFromMessage')
