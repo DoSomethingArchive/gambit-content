@@ -1,5 +1,10 @@
 'use strict';
 
+const templateFieldTypes = {
+  text: 'text',
+  transition: 'transition',
+};
+
 /**
  * This maps the fields in our Contentful types into broadcast, topic, and defaultTopicTriggers.
  *
@@ -26,26 +31,57 @@ module.exports = {
     askVotingPlanStatus: {
       type: 'askVotingPlanStatus',
       broadcastable: true,
-      templates: [
-        'votingPlanStatusCantVote',
-        'votingPlanStatusNotVoting',
-        'votingPlanStatusVoted',
-      ],
+      templates: {
+        // These template names correspond to the macros that get executed if user matches a trigger
+        // within the ask_voting_plan_status topic in Gambit Conversations.
+        // @see https://github.com/DoSomething/gambit-conversations/blob/master/brain/topics/askVotingPlanStatus.rive
+        votingPlanStatusCantVote: {
+          fieldName: 'cantVoteTransition',
+          fieldType: templateFieldTypes.transition,
+          name: 'votingPlanStatusCantVote',
+        },
+        votingPlanStatusNotVoting: {
+          fieldName: 'notVotingTransition',
+          fieldType: templateFieldTypes.transition,
+          name: 'votingPlanStatusNotVoting',
+        },
+        votingPlanStatusVoted: {
+          fieldName: 'votedTransition',
+          fieldType: templateFieldTypes.transition,
+          name: 'votingPlanStatusVoted',
+        },
+      },
     },
     askYesNo: {
       type: 'askYesNo',
       broadcastable: true,
-      templates: [
-        'saidYes',
-        'saidNo',
-        'invalidAskYesNoResponse',
-      ],
+      templates: {
+        invalidAskYesNoResponse: {
+          fieldName: 'invalidAskYesNoResponse',
+          fieldType: templateFieldTypes.text,
+          name: 'invalidAskYesNoResponse',
+        },
+        saidYes: {
+          fieldName: 'yesTransition',
+          fieldType: templateFieldTypes.transition,
+          name: 'saidYes',
+        },
+        saidNo: {
+          fieldName: 'noTransition',
+          fieldType: templateFieldTypes.transition,
+          name: 'saidNo',
+        },
+      },
     },
     autoReply: {
       type: 'autoReply',
-      templates: [
-        'autoReply',
-      ],
+      templates: {
+        autoReply: {
+          fieldName: 'autoReply',
+          fieldType: templateFieldTypes.text,
+          name: 'autoReply',
+        },
+      },
     },
     autoReplyBroadcast: {
       type: 'autoReplyBroadcast',
@@ -63,6 +99,7 @@ module.exports = {
     },
     photoPostConfig: {
       type: 'photoPostConfig',
+      // TODO: Refactor photoPostConfig in config/lib/helpers/topic here to DRY.
       postType: 'photo',
     },
     textPostBroadcast: {
@@ -71,6 +108,7 @@ module.exports = {
     },
     textPostConfig: {
       type: 'textPostConfig',
+      // TODO: Move textPostConfig in config/lib/helpers/topic here to DRY.
       postType: 'text',
     },
     // Legacy types:
@@ -87,4 +125,5 @@ module.exports = {
       broadcastable: true,
     },
   },
+  templateFieldTypes,
 };
