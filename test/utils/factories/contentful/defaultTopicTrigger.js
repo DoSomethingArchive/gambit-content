@@ -1,22 +1,16 @@
 'use strict';
 
 const stubs = require('../../stubs');
+const autoReplyTransitionFactory = require('./autoReplyTransition');
 
-function getValidDefaultTopicTrigger() {
-  const data = {
-    sys: {
-      id: '51QDjTsMbmCcW804IUGaQg',
-      contentType: {
-        sys: {
-          id: 'defaultTopicTrigger',
-        },
-      },
-    },
+function getValidDefaultTopicTrigger(responseEntry) {
+  return {
+    sys: stubs.contentful.getSysWithTypeAndDate('defaultTopicTrigger'),
     fields: {
       trigger: stubs.getRandomWord(),
+      response: responseEntry || autoReplyTransitionFactory.getValidAutoReplyTransition(),
     },
   };
-  return data;
 }
 
 module.exports = {
