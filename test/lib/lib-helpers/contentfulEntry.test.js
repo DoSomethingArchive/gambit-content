@@ -17,6 +17,7 @@ const config = require('../../../config/lib/helpers/contentfulEntry');
 const askYesNoEntryFactory = require('../../utils/factories/contentful/askYesNo');
 const autoReplyFactory = require('../../utils/factories/contentful/autoReply');
 const autoReplyBroadcastFactory = require('../../utils/factories/contentful/autoReplyBroadcast');
+const autoReplyTransitionFactory = require('../../utils/factories/contentful/autoReplyTransition');
 const defaultTopicTriggerFactory = require('../../utils/factories/contentful/defaultTopicTrigger');
 const messageFactory = require('../../utils/factories/contentful/message');
 // Parsed factories
@@ -26,6 +27,7 @@ const broadcastFactory = require('../../utils/factories/broadcast');
 const askYesNoEntry = askYesNoEntryFactory.getValidAskYesNo();
 const autoReplyEntry = autoReplyFactory.getValidAutoReply();
 const autoReplyBroadcastEntry = autoReplyBroadcastFactory.getValidAutoReplyBroadcast();
+const autoReplyTransitionEntry = autoReplyTransitionFactory.getValidAutoReplyTransition();
 const defaultTopicTriggerEntry = defaultTopicTriggerFactory.getValidDefaultTopicTrigger();
 const messageEntry = messageFactory.getValidMessage();
 const fetchTopicResult = { id: stubs.getContentfulId() };
@@ -202,6 +204,12 @@ test('isDefaultTopicTrigger returns whether content type is defaultTopicTrigger'
 test('isMessage returns whether content type is message', (t) => {
   t.truthy(contentfulEntryHelper.isMessage(messageEntry));
   t.falsy(contentfulEntryHelper.isMessage(autoReplyEntry));
+});
+
+// isTransitionable
+test('isTransitionable returns whether content type is transitionable', (t) => {
+  t.truthy(contentfulEntryHelper.isTransitionable(autoReplyTransitionEntry));
+  t.falsy(contentfulEntryHelper.isTransitionable(autoReplyBroadcastEntry));
 });
 
 // isTransitionTemplate

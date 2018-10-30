@@ -15,7 +15,6 @@ const photoPostDefaultText = {
   completedPhotoPostAutoReply: `${defaultText.invalidInput}\n\n${completeAnotherPhotoPostText}`,
   startPhotoPost: startPhotoPostText,
   startPhotoPostAutoReply: `${defaultText.invalidInput}\n\nText ${startCommand} when you're ready to submit a post for {{title}}.`,
-  webStartPhotoPost: `Hi it's Freddie from DoSomething! ${startPhotoPostText}`,
 };
 
 module.exports = {
@@ -48,9 +47,6 @@ module.exports = {
       startExternalPost: {
         fieldName: 'startExternalPostMessage',
       },
-      webStartExternalPost: {
-        fieldName: 'webStartExternalPostMessage',
-      },
       startExternalPostAutoReply: {
         fieldName: 'startExternalPostAutoReplyMessage',
       },
@@ -61,10 +57,6 @@ module.exports = {
       startPhotoPost: {
         fieldName: 'gambitSignupMenuMessage',
         defaultText: photoPostDefaultText.startPhotoPost,
-      },
-      webStartPhotoPost: {
-        fieldName: 'externalSignupMenuMessage',
-        defaultText: photoPostDefaultText.webStartPhotoPost,
       },
       startPhotoPostAutoReply: {
         fieldName: 'invalidSignupMenuCommandMessage',
@@ -111,9 +103,6 @@ module.exports = {
     textPostConfig: {
       askText: {
         fieldName: 'askTextMessage',
-      },
-      webAskText: {
-        fieldName: 'webAskTextMessage',
       },
       invalidText: {
         fieldName: 'invalidTextMessage',
