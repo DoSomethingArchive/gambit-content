@@ -99,11 +99,6 @@ function start(processId) {
     })
     .catch((error) => {
       logger.error(`Gambit could not connect to port:${config.port} env:${config.environment}.`);
-      /**
-       * Note: Mongoose throws an error about the signups collection defining its own _id. Earlier
-       * versions allowed this - we may likely move draft submissions into a new collection in
-       * Conversations, porting over the relevant middleware for creating text and photo posts.
-       */
       logger.error(error.message);
     });
 }
