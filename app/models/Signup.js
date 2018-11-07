@@ -20,10 +20,8 @@ const upsertOptions = helpers.upsertOptions();
  * Schema.
  */
 const signupSchema = new mongoose.Schema({
-
   _id: {
     type: Number,
-    index: true,
   },
   user: {
     type: String,
@@ -41,7 +39,6 @@ const signupSchema = new mongoose.Schema({
   // any existing or updates to Reportbacks for this Signup.
   total_quantity_submitted: Number,
   broadcast_id: Number,
-
 });
 
 /**
