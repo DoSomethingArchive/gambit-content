@@ -15,8 +15,10 @@ function getValidTopic() {
       id: stubs.getCampaignId(),
       title: stubs.getRandomName(),
       status: 'active',
+      // TODO: This will be removed.
+      // @see lib/helpers/campaign.parseCampaign
       currentCampaignRun: {
-        id: stubs.getCampaignRunId(),
+        id: stubs.getCampaignId(),
       },
     },
     templates: {

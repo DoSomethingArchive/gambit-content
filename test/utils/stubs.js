@@ -122,9 +122,6 @@ module.exports = {
   getCampaignId: function getCampaignId() {
     return 2299;
   },
-  getCampaignRunId: function getCampaignRunId() {
-    return 6677;
-  },
   getBroadcastId: function getBroadcastId() {
     return this.getContentfulId();
   },
