@@ -5,7 +5,6 @@ const configVars = {};
 configVars.containerProperty = 'body';
 configVars.requiredParams = [
   'campaignId',
-  'campaignRunId',
   'platform',
   'userId',
 ];

@@ -9,7 +9,6 @@ configVars.paramsMap = {
   keyword: 'keyword',
   broadcastId: 'broadcast_id',
   campaignId: 'campaignId',
-  campaignRunId: 'campaignRunId',
   postType: 'postType',
   text: 'incoming_message',
   mediaUrl: 'incoming_image_url',

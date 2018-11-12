@@ -56,7 +56,8 @@ test('getSignup should call setSignup and setDraftSubmission on lookup success',
   // setup
   const next = sinon.stub();
   const middleware = getSignup();
-  sandbox.stub(Signup, 'lookupCurrentSignupForReq').returns(signupLookupStub);
+  sandbox.stub(Signup, 'lookupByUserIdAndCampaignId')
+    .returns(signupLookupStub);
 
   // test
   await middleware(t.context.req, t.context.res, next);
@@ -71,7 +72,8 @@ test('getSignup should resolve to false if a Signup was not found', async (t) =>
   // setup
   const next = sinon.stub();
   const middleware = getSignup();
-  sandbox.stub(Signup, 'lookupCurrentSignupForReq').returns(signupLookupNotFoundStub);
+  sandbox.stub(Signup, 'lookupByUserIdAndCampaignId')
+    .returns(signupLookupNotFoundStub);
 
   // test
   await middleware(t.context.req, t.context.res, next);
@@ -84,8 +86,10 @@ test('getSignup should resolve to false if a Signup was not found', async (t) =>
 test('getSignup should call sendErrorResponse when an error occurs', async (t) => {
   // setup
   const next = sinon.stub();
-  sandbox.stub(Signup, 'lookupCurrentSignupForReq').returns(signupLookupFailStub);
-  sandbox.stub(helpers, 'sendErrorResponse').returns(sendErrorResponseStub);
+  sandbox.stub(Signup, 'lookupByUserIdAndCampaignId')
+    .returns(signupLookupFailStub);
+  sandbox.stub(helpers, 'sendErrorResponse')
+    .returns(sendErrorResponseStub);
   const middleware = getSignup();
 
   // test

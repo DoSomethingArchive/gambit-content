@@ -10,6 +10,7 @@ const rewire = require('rewire');
 const Promise = require('bluebird');
 
 const stubs = require('../../test/utils/stubs');
+const signupFactory = require('../../test/utils/factories/signup');
 
 chai.should();
 chai.use(sinonChai);
@@ -50,13 +51,14 @@ test('rogue.createSignup() should call rogueClient.Signups.create()', () => {
   client.Signups.create.should.have.been.called;
 });
 
-test('rogue.getSignupsByUserIdAndCampaignRunId() should call rogueClient.Signups.getByUserIdAndCampaignRunId()', () => {
+test('rogue.fetchSignups() should call rogueClient.Signups.index()', async () => {
   const client = rogue.getClient();
-  sandbox.stub(client.Signups, 'getByUserIdAndCampaignRunId')
-    .returns(Promise.resolve(true));
+  const query = { northstar_id: stubs.getUserId() };
+  const signup = signupFactory.getValidSignup();
+  sandbox.stub(client.Signups, 'index')
+    .returns(Promise.resolve([signup]));
 
-  rogue.getSignupsByUserIdAndCampaignRunId(
-    stubs.getUserId(),
-    stubs.getCampaignRunId());
-  client.Signups.getByUserIdAndCampaignRunId.should.have.been.called;
+  const result = await rogue.fetchSignups(query);
+  client.Signups.index.should.have.been.calledWith(query);
+  result.should.deep.equal([signup]);
 });

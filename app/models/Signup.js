@@ -61,39 +61,35 @@ function parseActivityData(activityData) {
 
 /**
  * Gets current Signup for given User / Campaign from DS API, stores if found. Returns false if not.
- * @param {string} userId
- * @param {number} campaignId.
+ * @param {String} userId
+ * @param {Number} campaignId.
+ * @return {Promise}
  */
-signupSchema.statics.lookupCurrentSignupForReq = function (req) {
+signupSchema.statics.lookupByUserIdAndCampaignId = async function (userId, campaignId) {
   const model = this;
-  const userId = req.userId;
-  const campaignRunId = req.campaignRunId;
+  const query = {
+    northstar_id: userId,
+    campaign_id: campaignId,
+  };
+  logger.debug('fetching signups', query);
+  try {
+    const res = await rogue.fetchSignups(query);
+    if (res.data.length < 1) {
+      logger.debug('signup not found', query);
+      return false;
+    }
+    const signupData = parseActivityData(res.data);
+    const signupId = signupData.id;
+    logger.debug('found signup', { signup: signupData });
 
-  return new Promise((resolve, reject) => {
-    logger.debug(`Signup.lookupCurrent(${userId}, ${campaignRunId})`);
-
-    return rogue.getSignupsByUserIdAndCampaignRunId(userId, campaignRunId)
-      .then((res) => {
-        if (res.data.length < 1) {
-          return resolve(false);
-        }
-        const signupData = parseActivityData(res.data);
-        const signupId = signupData.id;
-        logger.info('Signup.lookupCurrent', { signupId });
-
-        return model.findOneAndUpdate({ _id: signupId }, signupData, upsertOptions)
-          .populate('draft_reportback_submission')
-          .exec();
-      })
-      .then(signupDoc => resolve(signupDoc))
-      .catch((err) => {
-        const scope = err;
-        scope.message = `Signup.lookupCurrent error:${err.message}`;
-
-        return reject(scope);
-      });
-  });
+    return model.findOneAndUpdate({ _id: signupId }, signupData, upsertOptions)
+      .populate('draft_reportback_submission')
+      .exec();
+  } catch (err) {
+    throw new Error(`lookupByUserIdAndCampaignId error:${err.message}`);
+  }
 };
+
 
 /**
  * Posts Signup to DS API and creates Signup model.
