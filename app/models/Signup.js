@@ -90,7 +90,6 @@ signupSchema.statics.lookupByUserIdAndCampaignId = async function (userId, campa
   }
 };
 
-
 /**
  * Posts Signup to DS API and creates Signup model.
  * @param {object} req - Express request

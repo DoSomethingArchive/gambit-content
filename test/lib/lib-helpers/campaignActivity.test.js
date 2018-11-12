@@ -38,7 +38,6 @@ test.beforeEach((t) => {
   t.context.req.userId = stubs.getUserId();
   t.context.req.incoming_message = mockMessageText;
   t.context.req.campaignId = stubs.getCampaignId();
-  t.context.req.campaignRunId = stubs.getCampaignRunId();
   t.context.req.platform = stubs.getPlatform();
   t.context.req.signup = mockSignup;
 });
@@ -74,7 +73,6 @@ test('createTextPostFromReq calls createPost with getCreateTextPostPayloadFromRe
 test('getDefaultCreatePayloadFromReq returns an object', (t) => {
   const result = activityHelper.getDefaultCreatePayloadFromReq(t.context.req);
   result.campaign_id.should.equal(t.context.req.campaignId);
-  result.campaign_run_id.should.equal(t.context.req.campaignRunId);
   result.northstar_id.should.equal(t.context.req.userId);
   result.source.should.equal(t.context.req.platform);
 });
