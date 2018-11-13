@@ -8,11 +8,7 @@
     "title": "#SaveTheMascots",
     "slug": "savethemascots",
     "status": null,
-    "endDate": {
-      "date": "2018-04-30 23:59:00.000000",
-      "timezone_type": 1,
-      "timezone": "-05:00"
-    },
+    "endDate": "2018-04-30T05:00:00Z",
     "callToAction": "Tag your school to help us make every college campus tobacco-free!",
     "tagline": "Tag your school to help us make every college campus tobacco-free!",
     "blurb": "",
