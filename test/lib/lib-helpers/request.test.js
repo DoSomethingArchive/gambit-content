@@ -96,14 +96,6 @@ test('isStartCommand returns true if getMessageText is lowercase Start Command',
   t.truthy(requestHelper.isStartCommand(t.context.req));
 });
 
-// isTextPost
-test('isTextPost returns whether req.postType is text', (t) => {
-  t.context.req.postType = 'text';
-  t.truthy(requestHelper.isTextPost(t.context.req));
-  t.context.req.postType = 'photo';
-  t.falsy(requestHelper.isTextPost(t.context.req));
-});
-
 // isValidReportbackQuantity
 test('isValidReportbackQuantity returns true if incoming_message is positive integer', (t) => {
   t.context.req.incoming_message = '33';

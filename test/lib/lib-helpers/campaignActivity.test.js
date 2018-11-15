@@ -48,28 +48,6 @@ test.afterEach((t) => {
   t.context = {};
 });
 
-// createPhotoPostFromReq
-test('createDraftFromReq calls req.signup.createDraftReportbackSubmission', async (t) => {
-  sandbox.stub(activityHelper, 'getDefaultCreatePayloadFromReq')
-    .returns(mockDefaultCreatePayload);
-
-  const result = await activityHelper.createTextPostFromReq(t.context.req);
-  activityHelper.getDefaultCreatePayloadFromReq.should.have.been.called;
-  rogue.createPost.should.have.been.calledWith(mockDefaultCreatePayload);
-  result.should.equal(mockPost);
-});
-
-// createPhotoPostFromReq
-test('createTextPostFromReq calls createPost with getCreateTextPostPayloadFromReq', async (t) => {
-  sandbox.stub(activityHelper, 'getDefaultCreatePayloadFromReq')
-    .returns(mockDefaultCreatePayload);
-
-  const result = await activityHelper.createTextPostFromReq(t.context.req);
-  activityHelper.getDefaultCreatePayloadFromReq.should.have.been.called;
-  rogue.createPost.should.have.been.calledWith(mockDefaultCreatePayload);
-  result.should.equal(mockPost);
-});
-
 // getDefaultCreatePayloadFromReq
 test('getDefaultCreatePayloadFromReq returns an object', (t) => {
   const result = activityHelper.getDefaultCreatePayloadFromReq(t.context.req);
@@ -104,18 +82,6 @@ test('getReportbackTextFromReq returns a string', (t) => {
   result.should.equal(mockResult);
   helpers.request.getMessageText.should.have.been.calledWith(t.context.req);
   helpers.util.trimText.should.have.been.calledWith(mockMessageText);
-});
-
-// getCreateTextPostPayloadFromReq
-test('getCreateTextPostPayloadFromReq returns an object', (t) => {
-  sandbox.stub(activityHelper, 'getDefaultCreatePayloadFromReq')
-    .returns(mockDefaultCreatePayload);
-  sandbox.stub(activityHelper, 'getReportbackTextFromReq')
-    .returns(mockMessageText);
-
-  const result = activityHelper.getCreateTextPostPayloadFromReq(t.context.req);
-  activityHelper.getReportbackTextFromReq.should.have.been.called;
-  result.text.should.equal(mockMessageText);
 });
 
 // saveDraftCaptionFromReq
