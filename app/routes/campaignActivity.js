@@ -16,9 +16,6 @@ const validateRequestMiddleware = require('../../lib/middleware/campaignActivity
 // Middleware for External Posts.
 const externalPostMiddleware = require('../../lib/middleware/campaignActivity/external');
 
-// Middleware for Text Posts.
-const createTextPostMiddleware = require('../../lib/middleware/campaignActivity/text/post-create');
-
 // Middleware for Photo Posts.
 const draftSubmissionNotFoundMiddleware = require('../../lib/middleware/campaignActivity/photo/draft-not-found');
 const draftSubmissionQuantityMiddleware = require('../../lib/middleware/campaignActivity/photo/draft-quantity');
@@ -58,16 +55,9 @@ router.use(validateRequestMiddleware());
 router.use(externalPostMiddleware());
 
 /**
- * Handle Text Post requests.
- */
-router.use(createTextPostMiddleware());
-
-/**
  * Handle Photo Post requests.
  */
-
-// If user doesn't have a draft, check if the request is a start command and create new draft.
-// Otherwise send autoReply templates, prompting user to start a draft or take another action.
+// If user doesn't have a draft, check if the request is a start command to create new draft.
 router.use(draftSubmissionNotFoundMiddleware());
 // Save photo post data to the draft.
 router.use(draftSubmissionQuantityMiddleware());
