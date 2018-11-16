@@ -53,7 +53,7 @@ test('getCampaign should return getById result with config property set to getCa
 
   // test
   await middleware(t.context.req, t.context.res, next);
-  helpers.response.sendData.should.have.been.calledWith(data);
+  helpers.response.sendData.should.have.been.calledWith(t.context.res, data);
   helpers.sendErrorResponse.should.not.have.been.called;
 });
 
