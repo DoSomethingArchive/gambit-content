@@ -2,15 +2,16 @@
 
 A conversation topic may be set to one of the following Contentful content types:
 
-* `askVotingPlanStatus` - asks user their voting plan status, and asks for voting plan info if they plan to vote
-* `askYesNo` - asks yes/no question (and can be sent as a [broadcast](./topics.md))
+* `askSubscriptionStatus` - asks user their SMS broadcast preferences (and can be sent as a [broadcast](./broadcasts.md))
+* `askVotingPlanStatus` - asks user their voting plan status, and asks for voting plan info if they plan to vote (and can be sent as a [broadcast](./broadcasts.md))
+* `askYesNo` - asks yes/no question (and can be sent as a [broadcast](./broadcasts.md))
 * `autoReply` - repeats a single `autoReply` template, creates a signup if campaign is set
 * `photoPostConfig` - creates a signup and sends replies to create a photo post for a campaign
 * `textPostConfig` - creates a signup and sends replies to create text post for a campaign
 
-To be deprecated:
+Legacy types:
 
-* `externalPostConfig` - creates a signup for a campaign, `autoReply` should be used instead
+* `externalPostConfig` - creates a signup for a campaign, `autoReply` is to be used instead
 
 
 Fields:
@@ -26,7 +27,6 @@ Name | Type | Description
 `templates.text` | String | The `raw` value replaced with any campaign or command tags. See https://github.com/DoSomething/gambit-admin/wiki/Tags
 `templates.override` | Boolean | Whether the `raw` value is set from a Contentful field value (override is `true`), or from a hardcoded default (override is `false`)
 `templates.topic` | Object | If an id is present, this reply template should update the conversation topic accordingly.
-`triggers` | Array | List of defaultTopicTriggers that change user conversation to this topic
 
 ## Retrieve topics
 
