@@ -18,7 +18,6 @@ const photoPostDefaultText = {
 };
 
 module.exports = {
-  allTopicsCacheKey: 'allTopics',
   defaultPostType: 'photo',
   /*
    * Maps each content type with a map of templateNames and its corresponding field name and

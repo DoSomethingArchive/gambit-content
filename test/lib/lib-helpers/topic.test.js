@@ -16,7 +16,6 @@ const autoReplyFactory = require('../../utils/factories/contentful/autoReply');
 const textPostConfigFactory = require('../../utils/factories/contentful/textPostConfig');
 const broadcastFactory = require('../../utils/factories/broadcast');
 
-const campaignId = stubs.getCampaignId();
 const campaignConfig = stubs.contentful.getEntries('default-campaign').items[0];
 const campaignTemplates = config.templatesByContentType.campaign;
 const campaignConfigContentType = 'campaign';
@@ -85,50 +84,6 @@ test('fetchById returns contentful.fetchByContentfulId parsed as cached topic ob
   topicHelper.parseTopicFromContentfulEntry.should.have.been.calledWith(fetchEntryResult);
   result.should.deep.equal(topic);
   helpers.cache.topics.set.should.have.been.calledWith(topicId, topic);
-});
-
-// getAll
-test('getAll returns allTopics cache if set', async () => {
-  const allTopicsCacheResult = [{ id: '132' }];
-  sandbox.stub(helpers.cache.topics, 'get')
-    .returns(Promise.resolve(allTopicsCacheResult));
-  sandbox.stub(topicHelper, 'fetch')
-    .returns(Promise.resolve(allTopicsCacheResult));
-
-
-  const result = await topicHelper.getAll();
-  helpers.cache.topics.get.should.have.been.calledWith(config.allTopicsCacheKey);
-  topicHelper.fetch.should.not.have.been.called;
-  result.should.deep.equal(allTopicsCacheResult);
-});
-
-test('getAll returns fetch results if cache not set', async () => {
-  const allTopics = [{ id: '132' }];
-  sandbox.stub(helpers.cache.topics, 'get')
-    .returns(Promise.resolve(null));
-  sandbox.stub(topicHelper, 'fetch')
-    .returns(Promise.resolve({ data: allTopics }));
-  sandbox.stub(helpers.cache.topics, 'set')
-    .returns(Promise.resolve(allTopics));
-
-  const result = await topicHelper.getAll();
-  helpers.cache.topics.get.should.have.been.calledWith(config.allTopicsCacheKey);
-  topicHelper.fetch.should.have.been.called;
-  result.should.deep.equal(allTopics);
-});
-
-// getByCampaignId
-test('getByCampaignId returns filtered results of getAll', async () => {
-  const getTopicsResult = [{ id: '132' }];
-  sandbox.stub(topicHelper, 'getAll')
-    .returns(Promise.resolve(getTopicsResult));
-  sandbox.stub(getTopicsResult, 'filter')
-    .returns(getTopicsResult);
-
-  const result = await topicHelper.getByCampaignId(campaignId);
-  topicHelper.getAll.should.have.been.called;
-  getTopicsResult.filter.should.have.been.called;
-  result.should.deep.equal(getTopicsResult);
 });
 
 // getById

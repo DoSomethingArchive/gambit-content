@@ -17,7 +17,6 @@ Name | Type | Description
 `config.id` | String | The id of the chatbot configuration
 `config.templates` | Object | Message templates defined for the campaign
 `config.templates.webSignup` | Object | Message template to user if they signed up for this campaign on the web
-`topics` | Array | To be deprecated -- List of active [topics](/topics.md) available for the campaign.
 
 
 ## Retrieve all campaigns
@@ -164,7 +163,6 @@ curl http://localhost:5000/v1/campaigns/7
         }
       }
     },
-    "topics": [...],
   }
 }
 ```
