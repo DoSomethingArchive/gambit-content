@@ -1,7 +1,6 @@
 # Campaigns
 
-The `campaigns` resource queries the Phoenix API for campaigns, and our Contentful space for chatbot
-configurations.
+The `campaigns` resource queries the Phoenix API for a campaign, and our Contentful space for chatbot configurations.
 
 
 Fields:
@@ -18,96 +17,6 @@ Name | Type | Description
 `config.templates` | Object | Message templates defined for the campaign
 `config.templates.webSignup` | Object | Message template to user if they signed up for this campaign on the web
 
-
-## Retrieve all campaigns
-
-```
-GET /v1/campaigns
-```
-
-Returns a list of campaigns that active topics.
-
-<details><summary>**Example Request**</summary><p>
-
-```
-curl http://localhost:5000/v1/campaigns
-  -H "x-gambit-api-key: totallysecret"
-  -H "Accept: application/json"
-  -H "Content-Type: application/json"
-```
-
-</p></details>
-
-<details><summary>**Example Response**</summary><p>
-
-```
-{
-  "data": [
-    {
-      "id": 7,
-      "title": "Mirror Messages",
-      "tagline": "Boost a stranger's self-esteem with just a sticky note!",
-      "status": "active",
-      "currentCampaignRun": {
-        "id": 8076
-      },
-      "config": {
-        "id": "68Oy1FcaR2EiaMieicaoom",
-        "templates": {
-          "webSignup": {
-            "text": "Hi this is Freddie from DoSomething! Thanks for signing up for mirror messages. When youve posted some notes and ready to send a photo, text START",
-            "attachments": [],
-            "template": "webSignup",
-            "topic": {
-              "id": "6W1kHJ1XYASOK8w8Q42eum",
-              "name": "Mirror Messages - Post a note",
-              "type": "photoPostConfig",
-              "createdAt": "2018-06-27T17:13:46.755Z",
-              "updatedAt": "2018-08-08T14:45:12.186Z",
-              "postType": "text",
-              "campaign": {...},
-              "templates": {...}
-            }
-          }
-        }
-      },
-      "topics": [
-        {
-          "id": "6swLaA7HKE8AGI6iQuWk4y",
-          "name": "Mirror Messages",
-          "postType": "photo",
-          "triggers": [
-            "mirror"
-          ]
-        }
-      ]
-    },
-    {
-      "id": 2178,
-      "title": "Give a Spit About Cancer",
-      "tagline": "Fight blood cancer just by swabbing your cheek.",
-      "status": "closed",
-      "currentCampaignRun": {
-        "id": 8044
-      },
-      "topics": [
-        {
-          "id": "tv7e98JGXmMM2kskGaUA2",
-          "name": "Give A Spit - Share link",
-          "postType": "external",
-          "triggers": [
-            "spit"
-          ]
-        }
-      ]
-    },
-  ]
-}
-```
-
-</p></details>
-
-## Retrieve campaign
 
 ```
 GET /v1/campaigns/:id
