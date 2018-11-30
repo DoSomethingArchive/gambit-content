@@ -10,15 +10,12 @@ const sinon = require('sinon');
 const contentful = require('../../../lib/contentful');
 const helpers = require('../../../lib/helpers');
 const stubs = require('../../utils/stubs');
-const config = require('../../../config/lib/helpers/topic');
 const askYesNoFactory = require('../../utils/factories/contentful/askYesNo');
 const autoReplyFactory = require('../../utils/factories/contentful/autoReply');
 const textPostConfigFactory = require('../../utils/factories/contentful/textPostConfig');
 const broadcastFactory = require('../../utils/factories/broadcast');
 
-const textPostConfigEntry = textPostConfigFactory.getValidTextPostConfig();
 const topic = stubs.getTopic();
-const topicContentType = 'textPostConfig';
 const topicId = stubs.getContentfulId();
 
 // Module to test
@@ -35,7 +32,7 @@ test.afterEach(() => {
 
 // fetch
 test('fetch returns contentful.fetchByContentTypes parsed as topic objects', async () => {
-  const contentTypes = [topicContentType];
+  const contentTypes = ['textPostConfig'];
   const entries = [textPostConfigFactory.getValidTextPostConfig()];
   const fetchEntriesResult = stubs.contentful.getFetchByContentTypesResultWithArray(entries);
   sandbox.stub(topicHelper, 'getContentTypes')
@@ -117,14 +114,6 @@ test('getById returns fetchById if resetCache arg is true', async () => {
   helpers.cache.topics.get.should.not.have.been.called;
   topicHelper.fetchById.should.have.been.calledWith(topicId);
   result.should.deep.equal(topic);
-});
-
-// getTemplateInfoFromContentfulEntryAndTemplateName
-test('getTemplateInfoFromContentfulEntryAndTemplateName returns an object', () => {
-  const templateName = 'invalidText';
-  const result = topicHelper
-    .getTemplateInfoFromContentfulEntryAndTemplateName(textPostConfigEntry, templateName);
-  result.should.equal(config.templatesByContentType.textPostConfig[templateName]);
 });
 
 // parseTopicFromContentfulEntry
