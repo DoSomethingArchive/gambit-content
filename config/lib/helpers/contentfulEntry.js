@@ -5,22 +5,12 @@ const templateFieldTypes = {
   transition: 'transition',
 };
 
-// Default text.
-const defaultText = {
-  declined: 'Text Q if you have a question.',
-  invalidInput: 'Sorry, I didn\'t get that.',
-  yesNo: '\n\nYes or No',
-};
+// Defaults for templates fields that are optional.
+const campaignTitleTag = '{{topic.campaign.title}}';
 const startCommand = 'START';
-const startPhotoPostText = `Thanks for signing up for {{topic.campaign.title}}! Text ${startCommand} to submit a post.`;
-const completeAnotherPhotoPostText = `To submit another post for {{topic.campaign.title}}, text ${startCommand}`;
-const photoPostDefaultText = {
-  askWhyParticipated: 'Last question: Why was participating in {{topic.campaign.title}} important to you? (No need to write an essay, one sentence is good).',
-  completedPhotoPost: `Thanks for submitting. ${completeAnotherPhotoPostText}`,
-  completedPhotoPostAutoReply: `${defaultText.invalidInput}\n\n${completeAnotherPhotoPostText}`,
-  startPhotoPost: startPhotoPostText,
-  startPhotoPostAutoReply: `${defaultText.invalidInput}\n\nText ${startCommand} when you're ready to submit a post for {{title}}.`,
-};
+const askWhyParticipatedText = `Why was participating in ${campaignTitleTag} important to you? (No need to write an essay, one sentence is good).`;
+const completedPhotoPostText = `To submit another post for ${campaignTitleTag}, text ${startCommand}.`;
+const invalidInputText = 'Sorry, I didn\'t get that. Text Q if you have a question.';
 
 /**
  * This maps the fields in our Contentful types into broadcast, topic, and defaultTopicTriggers.
@@ -127,20 +117,20 @@ module.exports = {
       type: 'photoPostConfig',
       templates: {
         startPhotoPostAutoReply: {
-          defaultText: photoPostDefaultText.startPhotoPostAutoReply,
+          defaultText: `${invalidInputText}\n\nText ${startCommand} when you're ready to submit a post for ${campaignTitleTag}`,
           fieldName: 'invalidSignupMenuCommandMessage',
           fieldType: templateFieldTypes.text,
           name: 'startPhotoPostAutoReply',
         },
         completedPhotoPost: {
-          defaultText: photoPostDefaultText.completedPhotoPost,
+          defaultText: `Thanks for your submission. ${completedPhotoPostText}`,
           fieldName: 'completedMenuMessage',
           fieldType: templateFieldTypes.text,
           name: 'completedPhotoPost',
         },
         completedPhotoPostAutoReply: {
           fieldName: 'invalidCompletedMenuCommandMessage',
-          defaultText: photoPostDefaultText.completedPhotoPostAutoReply,
+          defaultText: `${invalidInputText}\n\n${completedPhotoPostText}`,
           fieldType: templateFieldTypes.text,
           name: 'completedPhotoPostAutoReply',
         },
@@ -171,19 +161,19 @@ module.exports = {
           name: 'askCaption',
         },
         invalidCaption: {
-          defaultText: `${defaultText.invalidInput}\n\nText back a caption for your photo -- keep it short & sweet, under 60 characters please. (but more than 3!)`,
+          defaultText: `${invalidInputText}\n\nText back a caption for your photo -- keep it short & sweet, under 60 characters please. (but more than 3!)`,
           fieldName: 'invalidCaptionMessage',
           fieldType: templateFieldTypes.text,
           name: 'invalidCaption',
         },
         askWhyParticipated: {
-          defaultText: photoPostDefaultText.askWhyParticipated,
+          defaultText: `Last question: ${askWhyParticipatedText}`,
           fieldName: 'askWhyParticipatedMessage',
           fieldType: templateFieldTypes.text,
           name: 'askWhyParticipated',
         },
         invalidWhyParticipated: {
-          defaultText: `${defaultText.invalidInput}\n\n${photoPostDefaultText.askWhyParticipated}`,
+          defaultText: `${invalidInputText}\n\n${askWhyParticipatedText}`,
           fieldName: 'invalidWhyParticipatedMessage',
           fieldType: templateFieldTypes.text,
           name: 'askWhyParticipated',
@@ -232,6 +222,8 @@ module.exports = {
       templates: {
         autoReply: {
           fieldName: 'startExternalPostMessage',
+          fieldType: templateFieldTypes.text,
+          name: 'autoReply',
         },
       },
     },
