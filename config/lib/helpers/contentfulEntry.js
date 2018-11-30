@@ -208,14 +208,13 @@ module.exports = {
       transitionable: true,
     },
     /**
-     * ## Legacy types ##
+     * Legacy types.
      *
      * Ideally we'd backfill all legacy entries as their new types, but we likely can't change the
      * the type of a Contentful entry without changing its id (if that's the case - we'd need to
      * bulk update all documents in the Conversations messages DB).
      *
-     * Auto replies were first called externalPostConfig, deprecated by autoReply via the
-     * optional campaign reference field.
+     * The externalPostConfig has been deprecated by autoReply via its optional campaign field.
      */
     externalPostConfig: {
       type: 'externalPostConfig',
@@ -228,8 +227,9 @@ module.exports = {
       },
     },
     /**
-     * We used one broadcast type with a few fields to handle the various types of broadcasts.
-     * Deprecated by separate content types e.g. askSubscriptionStatus, askYesNo, autoReplyBroadcast
+     * We used one 'broadcast' type with a few fields to handle all types of broadcasts, but it'd be
+     * tricky to configure. This has been deprecated by building out a new content type for each
+     * broadcast type we send e.g. askSubscriptionStatus, askYesNo, autoReplyBroadcast, etc.
      */
     legacyBroadcast: {
       type: 'broadcast',
