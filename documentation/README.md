@@ -14,4 +14,3 @@ Endpoint                                       | Functionality
 `GET /v1/defaultTopicTriggers` | [Retrieve all additional default topic triggers](endpoints/defaultTopicTriggers.md)
 `GET /v1/topics` | [Retrieve topics](endpoints/topics.md#retrieve-topics)
 `GET /v1/topics/:id` | [Retrieve a topic](endpoints/topics.md#retrieve-topic)
-`POST /v1/campaignActivity` | [Parses an inbound message from user as campaign activity](endpoints/campaignActivity.md)
