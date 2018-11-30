@@ -5,6 +5,23 @@ const templateFieldTypes = {
   transition: 'transition',
 };
 
+// Default text.
+const defaultText = {
+  declined: 'Text Q if you have a question.',
+  invalidInput: 'Sorry, I didn\'t get that.',
+  yesNo: '\n\nYes or No',
+};
+const startCommand = 'START';
+const startPhotoPostText = `Thanks for signing up for {{topic.campaign.title}}! Text ${startCommand} to submit a post.`;
+const completeAnotherPhotoPostText = `To submit another post for {{topic.campaign.title}}, text ${startCommand}`;
+const photoPostDefaultText = {
+  askWhyParticipated: 'Last question: Why was participating in {{topic.campaign.title}} important to you? (No need to write an essay, one sentence is good).',
+  completedPhotoPost: `Thanks for submitting. ${completeAnotherPhotoPostText}`,
+  completedPhotoPostAutoReply: `${defaultText.invalidInput}\n\n${completeAnotherPhotoPostText}`,
+  startPhotoPost: startPhotoPostText,
+  startPhotoPostAutoReply: `${defaultText.invalidInput}\n\nText ${startCommand} when you're ready to submit a post for {{title}}.`,
+};
+
 /**
  * This maps the fields in our Contentful types into broadcast, topic, and defaultTopicTriggers.
  *
@@ -108,7 +125,70 @@ module.exports = {
     },
     photoPostConfig: {
       type: 'photoPostConfig',
-      // TODO: Refactor photoPostConfig in config/lib/helpers/topic here to DRY.
+      templates: {
+        startPhotoPostAutoReply: {
+          defaultText: photoPostDefaultText.startPhotoPostAutoReply,
+          fieldName: 'invalidSignupMenuCommandMessage',
+          fieldType: templateFieldTypes.text,
+          name: 'startPhotoPostAutoReply',
+        },
+        completedPhotoPost: {
+          defaultText: photoPostDefaultText.completedPhotoPost,
+          fieldName: 'completedMenuMessage',
+          fieldType: templateFieldTypes.text,
+          name: 'completedPhotoPost',
+        },
+        completedPhotoPostAutoReply: {
+          fieldName: 'invalidCompletedMenuCommandMessage',
+          defaultText: photoPostDefaultText.completedPhotoPostAutoReply,
+          fieldType: templateFieldTypes.text,
+          name: 'completedPhotoPostAutoReply',
+        },
+        askQuantity: {
+          fieldName: 'askQuantityMessage',
+          fieldType: templateFieldTypes.text,
+          name: 'askQuantity',
+        },
+        invalidQuantity: {
+          fieldName: 'invalidQuantityMessage',
+          fieldType: templateFieldTypes.text,
+          name: 'invalidQuantity',
+        },
+        askPhoto: {
+          fieldName: 'askPhotoMessage',
+          fieldType: templateFieldTypes.text,
+          name: 'askPhoto',
+        },
+        invalidPhoto: {
+          fieldName: 'invalidPhotoMessage',
+          fieldType: templateFieldTypes.text,
+          name: 'invalidPhoto',
+        },
+        askCaption: {
+          defaultText: 'Got it! Now text back a caption for your photo (think Instagram)! Keep it short & sweet, under 60 characters please.',
+          fieldName: 'askCaptionMessage',
+          fieldType: templateFieldTypes.text,
+          name: 'askCaption',
+        },
+        invalidCaption: {
+          defaultText: `${defaultText.invalidInput}\n\nText back a caption for your photo -- keep it short & sweet, under 60 characters please. (but more than 3!)`,
+          fieldName: 'invalidCaptionMessage',
+          fieldType: templateFieldTypes.text,
+          name: 'invalidCaption',
+        },
+        askWhyParticipated: {
+          defaultText: photoPostDefaultText.askWhyParticipated,
+          fieldName: 'askWhyParticipatedMessage',
+          fieldType: templateFieldTypes.text,
+          name: 'askWhyParticipated',
+        },
+        invalidWhyParticipated: {
+          defaultText: `${defaultText.invalidInput}\n\n${photoPostDefaultText.askWhyParticipated}`,
+          fieldName: 'invalidWhyParticipatedMessage',
+          fieldType: templateFieldTypes.text,
+          name: 'askWhyParticipated',
+        },
+      },
     },
     photoPostTransition: {
       type: 'photoPostTransition',
@@ -120,7 +200,18 @@ module.exports = {
     },
     textPostConfig: {
       type: 'textPostConfig',
-      // TODO: Move textPostConfig in config/lib/helpers/topic here to DRY.
+      templates: {
+        invalidText: {
+          fieldName: 'invalidTextMessage',
+          fieldType: templateFieldTypes.text,
+          name: 'invalidText',
+        },
+        completedTextPost: {
+          fieldName: 'completedTextPostMessage',
+          fieldType: templateFieldTypes.text,
+          name: 'completedTextPost',
+        },
+      },
     },
     textPostTransition: {
       type: 'textPostTransition',
@@ -138,6 +229,11 @@ module.exports = {
      */
     externalPostConfig: {
       type: 'externalPostConfig',
+      templates: {
+        autoReply: {
+          fieldName: 'startExternalPostMessage',
+        },
+      },
     },
     /**
      * We used one broadcast type with a few fields to handle the various types of broadcasts.

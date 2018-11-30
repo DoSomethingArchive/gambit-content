@@ -39,7 +39,6 @@ module.exports = {
         fieldName: 'invalidCompletedMenuCommandMessage',
         defaultText: photoPostDefaultText.completedPhotoPostAutoReply,
       },
-      // End fields that renaming.
       askQuantity: {
         fieldName: 'askQuantityMessage',
       },

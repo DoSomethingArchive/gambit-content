@@ -149,7 +149,7 @@ test('parseTopicFromContentfulEntry gets campaign by id if campaign field is set
     .returns(stubSummary);
   sandbox.stub(helpers.campaign, 'getById')
     .returns(Promise.resolve(stubCampaign));
-  sandbox.stub(helpers.topic, 'getTopicTemplates')
+  sandbox.stub(helpers.contentfulEntry, 'getTopicTemplates')
     .returns(stubTemplates);
 
   const result = await topicHelper.parseTopicFromContentfulEntry(textPostConfig);
@@ -158,8 +158,7 @@ test('parseTopicFromContentfulEntry gets campaign by id if campaign field is set
   helpers.campaign.getById
     .should.have.been.calledWith(textPostConfig.fields.campaign.fields.campaignId);
   result.campaign.should.deep.equal(stubCampaign);
-  helpers.topic.getTopicTemplates
-    .should.have.been.calledWith(textPostConfig, stubCampaign);
+  helpers.contentfulEntry.getTopicTemplates.should.have.been.calledWith(textPostConfig);
   result.templates.should.deep.equal(stubTemplates);
 });
 
@@ -167,7 +166,7 @@ test('parseTopicFromContentfulEntry does not get campaign by id if campaign fiel
   const textPostConfig = autoReplyFactory.getValidAutoReplyWithoutCampaign();
   sandbox.stub(helpers.campaign, 'getById')
     .returns(Promise.resolve({ data: { title: stubs.getRandomName() } }));
-  sandbox.stub(helpers.topic, 'getTopicTemplates')
+  sandbox.stub(helpers.contentfulEntry, 'getTopicTemplates')
     .returns({});
 
   const result = await topicHelper.parseTopicFromContentfulEntry(textPostConfig);
