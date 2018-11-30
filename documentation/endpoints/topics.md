@@ -25,13 +25,10 @@ Name | Type | Description
 -----|------|------------
 `id` | String | The Contentful entry id
 `type` | String | The Contentful entry type, e.g. `photoPostConfig`, `textPostConfig`
-`postType` | String | The type of post the topic should create, e.g. `photo`
 `campaign` | Object | The campaign this topic should create a signup and post for.
-`templates` | Object | Collection of outbound message templates that can be sent from this topic.
-`templates.raw` | String | The field value stored in Contentful to return for the template, or a hardcoded default value if the field value is not set
-`templates.text` | String | The `raw` value replaced with any campaign or command tags. See https://github.com/DoSomething/gambit-admin/wiki/Tags
-`templates.override` | Boolean | Whether the `raw` value is set from a Contentful field value (override is `true`), or from a hardcoded default (override is `false`)
-`templates.topic` | Object | If an id is present, this reply template should update the conversation topic accordingly.
+`templates` | Object | Collection of outbound reply templates that can be sent from this topic.
+`templates.text` | String | Message to send
+`templates.topic` | Object | If set, the conversation should be changed to this topic
 
 ```
 GET /v1/topics/:id
