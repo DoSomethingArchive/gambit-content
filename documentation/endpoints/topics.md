@@ -60,31 +60,29 @@ curl http://localhost:5000/v1/topics/6swLaA7HKE8AGI6iQuWk4y?cache=false \
 ```
 {
   "data": {
-    "id": "6swLaA7HKE8AGI6iQuWk4y",
-    "type": "photoPostConfig",
-    "postType": "photo",
+    "id": "5SjLFshPcAyO26qCYyCei4",
+    "name": "Escape the Vape - campaign autoReply",
+    "type": "autoReply",
+    "createdAt": "2018-10-24T02:07:11.606Z",
+    "updatedAt": "2018-11-01T17:06:26.833Z",
     "campaign": {
-      "id": 7,
-      "title": "Mirror Messages",
-      "tagline": "Boost a stranger's self-esteem with just a sticky note!",
+      "id": 8190,
+      "title": "Escape the Vape",
+      "tagline": "Take this 5-question quiz to learn what's really in e-cigs.",
       "status": "active",
       "currentCampaignRun": {
-        "id": 8076
+        "id": 8191
       },
+      "endDate": "2018-12-16T03:59:00Z"
     },
     "templates": {
-      "startPhotoPost": {
-        "raw": "Over 111,000 people have joined the movement to bring positivity to their schools. All it takes is posting encouraging notes in places that can trigger low self-esteem. Take 5 mins to post a note today. \n\nThen, text {{cmd_reportback}} to share a photo of the messages you posted (and you'll be entered to win a $2000 scholarship)!",
-        "override": true,
-        "rendered": "Over 111,000 people have joined the movement to bring positivity to their schools. All it takes is posting encouraging notes in places that can trigger low self-esteem. Take 5 mins to post a note today. \n\nThen, text START to share a photo of the messages you posted (and you'll be entered to win a $2000 scholarship)!"
-      },
-      ...
-      "invalidAskContinueResponse": {
-        "raw": "Sorry, I didn't get that. Did you want to join {{title}}?\n\nYes or No",
-        "override": false,
-        "rendered": "Sorry, I didn't get that. Did you want to join Mirror Messages?\n\nYes or No"
+      "autoReply": {
+        "text": "Sorry I didn't get that. Text Q if you have a question.\n\nBy taking and sharing this 5 question quiz, you can educate your friends AND be automatically entered for a chance to win a $5,000 scholarship!\nhttps://www.dosomething.org/us/campaigns/escape-vape/quiz/vape-quiz?user_id={{user.id}}",
+        "topic": {
+          
+        }
       }
-    },
+    }
   }
 }
 ```

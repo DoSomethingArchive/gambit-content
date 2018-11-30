@@ -24,39 +24,9 @@ module.exports = {
    * default text to use, if a field value doesn't exist. Fields without defaults are required.
    */
   templatesByContentType: {
-    campaign: {
-      campaignClosed: {
-        fieldName: 'campaignClosedMessage',
-        defaultText: 'Sorry, {{title}} is no longer available.\n\nText {{cmd_member_support}} for help.',
-      },
-      askContinue: {
-        fieldName: 'askContinueMessage',
-        defaultText: `Ready to get back to {{title}}?${defaultText.yesNo}`,
-      },
-      declinedContinue: {
-        fieldName: 'declinedContinueMessage',
-        defaultText: `Right on, we'll check in with you about {{title}} later.\n\n${defaultText.declined}`,
-      },
-      invalidAskContinueResponse: {
-        fieldName: 'invalidContinueResponseMessage',
-        defaultText: `${defaultText.invalidInput} Did you want to join {{title}}?${defaultText.yesNo}`,
-      },
-    },
-    externalPostConfig: {
-      startExternalPost: {
-        fieldName: 'startExternalPostMessage',
-      },
-      startExternalPostAutoReply: {
-        fieldName: 'startExternalPostAutoReplyMessage',
-      },
-    },
     photoPostConfig: {
       // These templates correspond to Contentful fields that need to be renamed + migrated.
       // @see https://github.com/DoSomething/gambit-campaigns/issues/1037
-      startPhotoPost: {
-        fieldName: 'gambitSignupMenuMessage',
-        defaultText: photoPostDefaultText.startPhotoPost,
-      },
       startPhotoPostAutoReply: {
         fieldName: 'invalidSignupMenuCommandMessage',
         defaultText: photoPostDefaultText.startPhotoPostAutoReply,
@@ -100,14 +70,24 @@ module.exports = {
       },
     },
     textPostConfig: {
-      askText: {
-        fieldName: 'askTextMessage',
-      },
       invalidText: {
         fieldName: 'invalidTextMessage',
       },
       completedTextPost: {
         fieldName: 'completedTextPostMessage',
+      },
+    },
+    /**
+     * The externalPostConfig type has been deprecated by the autoReply type, but we haven't
+     * migrated these old entries to new autoReply entries (it's not possible to change an entry
+     * type and keep its id. Leaving this here to support these legacy topics.
+     */
+    externalPostConfig: {
+      startExternalPost: {
+        fieldName: 'startExternalPostMessage',
+      },
+      startExternalPostAutoReply: {
+        fieldName: 'startExternalPostAutoReplyMessage',
       },
     },
   },

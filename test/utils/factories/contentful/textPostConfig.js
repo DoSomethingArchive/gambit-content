@@ -17,6 +17,7 @@ function getValidTextPostConfig() {
       name: stubs.getRandomMessageText(),
       // A campaign reference is required for a textPostConfig conversation to create text posts.
       campaign: campaignFactory.getValidCampaign(),
+      invalidText: stubs.getRandomMessageText(),
     },
   };
   return data;

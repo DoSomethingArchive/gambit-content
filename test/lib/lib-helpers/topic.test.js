@@ -16,13 +16,9 @@ const autoReplyFactory = require('../../utils/factories/contentful/autoReply');
 const textPostConfigFactory = require('../../utils/factories/contentful/textPostConfig');
 const broadcastFactory = require('../../utils/factories/broadcast');
 
-const campaignConfig = stubs.contentful.getEntries('default-campaign').items[0];
-const campaignTemplates = config.templatesByContentType.campaign;
-const campaignConfigContentType = 'campaign';
-const topicContentType = 'textPostConfig';
-const templateName = stubs.getTemplateName();
-const templateText = stubs.getRandomString();
+const textPostConfigEntry = textPostConfigFactory.getValidTextPostConfig();
 const topic = stubs.getTopic();
+const topicContentType = 'textPostConfig';
 const topicId = stubs.getContentfulId();
 
 // Module to test
@@ -123,69 +119,12 @@ test('getById returns fetchById if resetCache arg is true', async () => {
   result.should.deep.equal(topic);
 });
 
-// getDefaultTextFromContentfulEntryAndTemplateName
-test('getDefaultTextFromContentfulEntryAndTemplateName returns default for templateName', () => {
-  const result = topicHelper
-    .getDefaultTextFromContentfulEntryAndTemplateName(campaignConfig, templateName);
-  result.should.equal(campaignTemplates[templateName].defaultText);
-});
-
 // getTemplateInfoFromContentfulEntryAndTemplateName
 test('getTemplateInfoFromContentfulEntryAndTemplateName returns an object', () => {
-  sandbox.stub(contentful, 'getContentTypeFromContentfulEntry')
-    .returns(campaignConfigContentType);
+  const templateName = 'invalidText';
   const result = topicHelper
-    .getTemplateInfoFromContentfulEntryAndTemplateName(campaignConfig, templateName);
-  contentful.getContentTypeFromContentfulEntry.should.have.been.called;
-  result.should.equal(config.templatesByContentType[campaignConfigContentType][templateName]);
-});
-
-// getTopicTemplates
-test('getTopicTemplates returns an object of templates', () => {
-  const stubTemplate = { autoReply: { text: stubs.getRandomWord() } };
-  sandbox.stub(topicHelper, 'getTemplates')
-    .returns(stubTemplate);
-  const autoReply = autoReplyFactory.getValidAutoReplyWithoutCampaign();
-
-  const result = topicHelper
-    .getTopicTemplates(autoReply, templateName);
-  result.should.deep.equal(stubTemplate);
-});
-
-// parseRawAndOverride
-test('parseRawAndOverride returns default text when no field value exists', () => {
-  sandbox.stub(topicHelper, 'getDefaultTextFromContentfulEntryAndTemplateName')
-    .returns(templateText);
-  sandbox.stub(topicHelper, 'getFieldValueFromContentfulEntryAndTemplateName')
-    .returns(null);
-
-  const result = topicHelper
-    .parseRawAndOverride(campaignConfig, templateName);
-  topicHelper.getDefaultTextFromContentfulEntryAndTemplateName.should.have.been.called;
-  topicHelper.getFieldValueFromContentfulEntryAndTemplateName.should.have.been.called;
-  result.override.should.equal(false);
-  result.raw.should.equal(templateText);
-});
-
-test('parseRawAndOverride returns template text when topic value exists', () => {
-  sandbox.stub(topicHelper, 'getDefaultTextFromContentfulEntryAndTemplateName')
-    .returns(stubs.getRandomString());
-  sandbox.stub(topicHelper, 'getFieldValueFromContentfulEntryAndTemplateName')
-    .returns(templateText);
-
-  const result = topicHelper
-    .parseRawAndOverride(campaignConfig, templateName);
-  topicHelper.getDefaultTextFromContentfulEntryAndTemplateName.should.not.have.been.called;
-  topicHelper.getFieldValueFromContentfulEntryAndTemplateName.should.have.been.called;
-  result.override.should.equal(true);
-  result.raw.should.equal(templateText);
-});
-
-// getFieldValueFromContentfulEntryAndTemplateName
-test('getFieldValueFromContentfulEntryAndTemplateName returns the entry field value for templateName', () => {
-  const result = topicHelper
-    .getFieldValueFromContentfulEntryAndTemplateName(campaignConfig, templateName);
-  result.should.deep.equal(campaignConfig.fields.campaignClosedMessage);
+    .getTemplateInfoFromContentfulEntryAndTemplateName(textPostConfigEntry, templateName);
+  result.should.equal(config.templatesByContentType.textPostConfig[templateName]);
 });
 
 // getPostTypeFromContentType

@@ -158,9 +158,6 @@ module.exports = {
   },
   getRandomName,
   getRandomWord,
-  getTemplateName: function getTemplateName() {
-    return 'campaignClosed';
-  },
   getUserId: function getUserId() {
     return '597b9ef910707d07c84b00aa';
   },
