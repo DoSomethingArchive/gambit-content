@@ -127,13 +127,6 @@ test('getTemplateInfoFromContentfulEntryAndTemplateName returns an object', () =
   result.should.equal(config.templatesByContentType.textPostConfig[templateName]);
 });
 
-// getPostTypeFromContentType
-test('getPostTypeFromContentType returns postType string property from contentTypeConfig', () => {
-  const result = topicHelper.getPostTypeFromContentType(topicContentType);
-  const contentTypeConfigs = helpers.contentfulEntry.getContentTypeConfigs();
-  result.should.equal(contentTypeConfigs[topicContentType].postType);
-});
-
 // parseTopicFromContentfulEntry
 test('parseTopicFromContentfulEntry returns parseBroadcastFromContentfulEntry if contentfulEntry is broadcastable', async () => {
   const askYesNo = askYesNoFactory.getValidAskYesNo();
@@ -150,13 +143,10 @@ test('parseTopicFromContentfulEntry returns parseBroadcastFromContentfulEntry if
 test('parseTopicFromContentfulEntry gets campaign by id if campaign field is set', async () => {
   const textPostConfig = textPostConfigFactory.getValidTextPostConfig();
   const stubCampaign = { title: stubs.getRandomName() };
-  const stubPostType = topicContentType;
   const stubSummary = { name: stubs.getRandomName() };
   const stubTemplates = { askText: stubs.getRandomMessageText() };
   sandbox.stub(helpers.contentfulEntry, 'getSummaryFromContentfulEntry')
     .returns(stubSummary);
-  sandbox.stub(helpers.topic, 'getPostTypeFromContentType')
-    .returns(stubPostType);
   sandbox.stub(helpers.campaign, 'getById')
     .returns(Promise.resolve(stubCampaign));
   sandbox.stub(helpers.topic, 'getTopicTemplates')
@@ -165,8 +155,6 @@ test('parseTopicFromContentfulEntry gets campaign by id if campaign field is set
   const result = await topicHelper.parseTopicFromContentfulEntry(textPostConfig);
   helpers.contentfulEntry.getSummaryFromContentfulEntry.should.have.been.calledWith(textPostConfig);
   result.name.should.equal(stubSummary.name);
-  helpers.topic.getPostTypeFromContentType.should.have.been.calledWith(stubPostType);
-  result.postType.should.equal(stubPostType);
   helpers.campaign.getById
     .should.have.been.calledWith(textPostConfig.fields.campaign.fields.campaignId);
   result.campaign.should.deep.equal(stubCampaign);

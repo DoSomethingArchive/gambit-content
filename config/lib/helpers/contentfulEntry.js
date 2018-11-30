@@ -35,9 +35,11 @@ module.exports = {
       type: 'askVotingPlanStatus',
       broadcastable: true,
       templates: {
-        // These template names correspond to the macros that get executed if user matches a trigger
-        // within the ask_voting_plan_status topic in Gambit Conversations.
-        // @see https://github.com/DoSomething/gambit-conversations/blob/master/brain/topics/askVotingPlanStatus.rive
+        /**
+         * These template names correspond to the macros that get executed if user matches a trigger
+         * within the ask_voting_plan_status topic in Gambit Conversations.
+         * @see https://github.com/DoSomething/gambit-conversations/blob/master/brain/topics/askVotingPlanStatus.rive
+         */
         votingPlanStatusCantVote: {
           fieldName: 'cantVoteTransition',
           fieldType: templateFieldTypes.transition,
@@ -107,7 +109,6 @@ module.exports = {
     photoPostConfig: {
       type: 'photoPostConfig',
       // TODO: Refactor photoPostConfig in config/lib/helpers/topic here to DRY.
-      postType: 'photo',
     },
     photoPostTransition: {
       type: 'photoPostTransition',
@@ -120,21 +121,28 @@ module.exports = {
     textPostConfig: {
       type: 'textPostConfig',
       // TODO: Move textPostConfig in config/lib/helpers/topic here to DRY.
-      postType: 'text',
     },
     textPostTransition: {
       type: 'textPostTransition',
       transitionable: true,
     },
-    // Legacy types:
-    // Ideally we'd backfill all legacy entries as their new types, but we likely can't change the
-    // the type of a Contentful entry without changing its id (if that's the case - we'd need to
-    // bulk update all documents in the Conversations messages DB)
-    // This externalPostConfig type will deprecated by an autoReply:
+    /**
+     * ## Legacy types ##
+     *
+     * Ideally we'd backfill all legacy entries as their new types, but we likely can't change the
+     * the type of a Contentful entry without changing its id (if that's the case - we'd need to
+     * bulk update all documents in the Conversations messages DB).
+     *
+     * Auto replies were first called externalPostConfig, deprecated by autoReply via the
+     * optional campaign reference field.
+     */
     externalPostConfig: {
       type: 'externalPostConfig',
-      postType: 'external',
     },
+    /**
+     * We used one broadcast type with a few fields to handle the various types of broadcasts.
+     * Deprecated by separate content types e.g. askSubscriptionStatus, askYesNo, autoReplyBroadcast
+     */
     legacyBroadcast: {
       type: 'broadcast',
       broadcastable: true,
