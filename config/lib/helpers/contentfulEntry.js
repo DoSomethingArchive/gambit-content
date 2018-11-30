@@ -117,7 +117,7 @@ module.exports = {
       type: 'photoPostConfig',
       templates: {
         startPhotoPostAutoReply: {
-          defaultText: `${invalidInputText}\n\nText ${startCommand} when you're ready to submit a post for ${campaignTitleTag}`,
+          defaultText: `${invalidInputText}\n\nText ${startCommand} when you're ready to submit a post for ${campaignTitleTag}.`,
           fieldName: 'invalidSignupMenuCommandMessage',
           fieldType: templateFieldTypes.text,
           name: 'startPhotoPostAutoReply',
