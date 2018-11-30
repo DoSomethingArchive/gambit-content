@@ -70,20 +70,8 @@ function getRandomWord() {
   return chance.word();
 }
 
-/**
- * @return {Object}
- */
-function getTopic() {
-  return {
-    id: module.exports.getContentfulId(),
-    type: module.exports.getTopicContentType(),
-    postType: module.exports.getPostType(),
-  };
-}
-
 module.exports = {
   getAttachment,
-  getTopic,
   rogueClient: {
     getOauth2ClientToken: (expiresInSeconds = 3600) => {
       const tokenString = 'tacos';

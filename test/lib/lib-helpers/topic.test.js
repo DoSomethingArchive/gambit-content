@@ -14,8 +14,9 @@ const askYesNoFactory = require('../../utils/factories/contentful/askYesNo');
 const autoReplyFactory = require('../../utils/factories/contentful/autoReply');
 const textPostConfigFactory = require('../../utils/factories/contentful/textPostConfig');
 const broadcastFactory = require('../../utils/factories/broadcast');
+const topicFactory = require('../../utils/factories/topic');
 
-const topic = stubs.getTopic();
+const topic = topicFactory.getValidTopic();
 const topicId = stubs.getContentfulId();
 
 // Module to test

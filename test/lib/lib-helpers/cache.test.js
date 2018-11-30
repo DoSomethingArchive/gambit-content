@@ -17,13 +17,14 @@ const cacheHelper = rewire('../../../lib/helpers/cache');
 const stubs = require('../../utils/stubs');
 const campaignConfigFactory = require('../../utils/factories/contentful/campaign');
 const defaultTopicTriggerFactory = require('../../utils/factories/defaultTopicTrigger');
+const topicFactory = require('../../utils/factories/topic');
 
 const campaign = stubs.getPhoenixCampaign();
 const campaignConfig = campaignConfigFactory.getValidCampaign();
 const campaignId = stubs.getCampaignId();
 const contentfulId = stubs.getContentfulId();
 const defaultTopicTrigger = defaultTopicTriggerFactory.getValidDefaultTopicTriggerWithReply();
-const topic = stubs.getTopic();
+const topic = topicFactory.getValidTopic();
 
 const sandbox = sinon.sandbox.create();
 
