@@ -95,7 +95,6 @@ function start(processId) {
   });
 }
 
-
 // Initialize Concurrency
 throng({
   workers: config.webConcurrency,
