@@ -7,7 +7,6 @@ const chai = require('chai');
 const sinonChai = require('sinon-chai');
 const sinon = require('sinon');
 const rewire = require('rewire');
-const Promise = require('bluebird');
 
 chai.should();
 chai.use(sinonChai);
