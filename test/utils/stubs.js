@@ -120,65 +120,14 @@ module.exports = {
   getContentfulId: function getContentfulId() {
     return '5xa3oDEx4Ao0Sm2qoQCeI';
   },
-  getKeyword: function getKeyword() {
-    return 'bookbot';
-  },
-  getPlatform: function getPlatform() {
-    return 'sms';
-  },
-  getPhotoUrl: function getPhotoUrl() {
-    return 'https://www.wired.com/wp-content/uploads/2015/03/The-X-Files1-1024x768.jpg';
-  },
-  getPost: function getPost() {
-    return { id: this.getPostId() };
-  },
   getTopicContentType: function getTopicContentType() {
     return 'textPostConfig';
-  },
-  getPostId: function getPostId() {
-    return 9040481;
-  },
-  getPostType: function getPostType() {
-    return 'text';
   },
   getRandomMessageText: function getRandomMessageText() {
     return chance.sentence();
   },
   getRandomName,
   getRandomWord,
-  getUserId: function getUserId() {
-    return '597b9ef910707d07c84b00aa';
-  },
-  getPhoneNumber: function getPhoneNumber() {
-    return '5559108329';
-  },
-  // Mocks a Signup populated with a draft Reportback Submission.
-  getSignupWithDraft: function getSignupWithDraft() {
-    return {
-      _id: 4036807,
-      __v: 0,
-      user: '597b9ef910707d07c84b00aa',
-      campaign: 7,
-      draft_reportback_submission: module.exports.getDraft,
-    };
-  },
-  getSignupWithTotalQuantitySubmitted: function getSignupWithTotalQuantitySubmitted() {
-    const result = this.getSignupWithDraft();
-    result.total_quantity_submitted = 20;
-    return result;
-  },
-  getDraft: function getDraft() {
-    return {
-      _id: 'ObjectId("598091807a11380d7ae5ad86")',
-      campaign: 7,
-      user: '597b9ef910707d07c84b00aa',
-      created_at: 'ISODate("2017-08-01T14:30:20.651Z")',
-      __v: 0,
-      quantity: 2,
-      photo: this.getPhotoUrl(),
-      caption: this.getRandomString(),
-    };
-  },
   helpers: {
     getValidCommandValues: function getValidCommandValues() {
       return {
