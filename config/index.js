@@ -19,7 +19,6 @@ const defaultConfig = {
   environment,
   port: process.env.PORT || 5000,
   webConcurrency: process.env.WEB_CONCURRENCY || 1,
-  dbUri: process.env.DB_URI || 'mongodb://localhost/ds-mdata-responder',
   apiKey: process.env.GAMBIT_API_KEY || 'totallysecret',
   // overridden in production to true
   forceHttps: false,
@@ -32,16 +31,6 @@ const configVars = underscore.extend({}, defaultConfig, envConfig);
  * We don't need to export the Logger. Just require adhoc in whatever file we need it,
  * like: const logger = require('winston');
  */
-require('./logger')({
-  dbUri: configVars.dbUri,
-});
-
-/**
- * Mongo connection setup
- * export mongooseConnection
- */
-configVars.mongooseConnection = require('./mongoose')({
-  dbUri: configVars.dbUri,
-});
+require('./logger')({});
 
 module.exports = configVars;
