@@ -1,7 +1,7 @@
 {
-  "name": "gambit-campaigns",
-  "version": "5.17.0",
-  "description": "The DoSomething.org chatbot service for campaigns and their activity.",
+  "name": "gambit-content",
+  "version": "6.0.0",
+  "description": "Content API for the DoSomething.org chatbot.",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -49,8 +49,6 @@
     "body-parser": "^1.9.2",
     "cacheman": "^2.2.1",
     "cacheman-redis": "^1.1.2",
-    "camelcase": "^5.0.0",
-    "camelcase-keys-deep": "^0.1.0",
     "connect-timeout": "^1.8.0",
     "contentful": "^3.8.0",
     "date-fns": "^1.29.0",
@@ -58,7 +56,6 @@
     "express-sslify": "^1.2.0",
     "file-exists": "^4.0.0",
     "html-entities": "^1.1.1",
-    "mongoose": "^4.13.17",
     "newrelic": "4.7.0",
     "path": "~0.4.9",
     "redis": "^2.8.0",

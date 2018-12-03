@@ -4,7 +4,6 @@
 const broadcastsIndexRoute = require('./broadcasts/index');
 const broadcastsSingleRoute = require('./broadcasts/single');
 const campaignsSingleRoute = require('./campaigns/single');
-const campaignActivityRoute = require('./campaignActivity');
 const contentfulEntriesIndexRoute = require('./contentfulEntries/index');
 const contentfulEntriesSingleRoute = require('./contentfulEntries/single');
 const defaultTopicTriggersRoute = require('./defaultTopicTriggers');
@@ -50,9 +49,6 @@ module.exports = function init(app) {
 
   // Provides keywords and templates for a single Campaign.
   app.use('/v1/campaigns/:campaignId', campaignsSingleRoute);
-
-  // Receives inbound message from Gambit Conversations service.
-  app.use('/v1/campaignActivity', campaignActivityRoute);
 
   // Provides list of defaultTopicTriggers
   app.use('/v1/defaultTopicTriggers', defaultTopicTriggersRoute);
