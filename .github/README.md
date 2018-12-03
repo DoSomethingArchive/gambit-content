@@ -16,7 +16,6 @@ Endpoint                                       | Functionality
 `GET /v1/contentfulEntries/` | [Retrieve Contentful entries](endpoints/contentfulEntries.md#retrieve-contentful-entries)
 `GET /v1/contentfulEntries/:id` | [Retrieve a Contentful entry](endpoints/contentfulEntries.md#retrieve-contentful-entry)
 `GET /v1/defaultTopicTriggers` | [Retrieve all additional default topic triggers](endpoints/defaultTopicTriggers.md)
-`GET /v1/topics` | [Retrieve topics](endpoints/topics.md#retrieve-topics)
 `GET /v1/topics/:id` | [Retrieve a topic](endpoints/topics.md#retrieve-topic)
 
 ## Development
