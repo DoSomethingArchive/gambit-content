@@ -10,19 +10,13 @@ const sinon = require('sinon');
 const contentful = require('../../../lib/contentful');
 const helpers = require('../../../lib/helpers');
 const stubs = require('../../utils/stubs');
-const config = require('../../../config/lib/helpers/topic');
 const askYesNoFactory = require('../../utils/factories/contentful/askYesNo');
 const autoReplyFactory = require('../../utils/factories/contentful/autoReply');
 const textPostConfigFactory = require('../../utils/factories/contentful/textPostConfig');
 const broadcastFactory = require('../../utils/factories/broadcast');
+const topicFactory = require('../../utils/factories/topic');
 
-const campaignConfig = stubs.contentful.getEntries('default-campaign').items[0];
-const campaignTemplates = config.templatesByContentType.campaign;
-const campaignConfigContentType = 'campaign';
-const topicContentType = 'textPostConfig';
-const templateName = stubs.getTemplateName();
-const templateText = stubs.getRandomString();
-const topic = stubs.getTopic();
+const topic = topicFactory.getValidTopic();
 const topicId = stubs.getContentfulId();
 
 // Module to test
@@ -39,7 +33,7 @@ test.afterEach(() => {
 
 // fetch
 test('fetch returns contentful.fetchByContentTypes parsed as topic objects', async () => {
-  const contentTypes = [topicContentType];
+  const contentTypes = ['textPostConfig'];
   const entries = [textPostConfigFactory.getValidTextPostConfig()];
   const fetchEntriesResult = stubs.contentful.getFetchByContentTypesResultWithArray(entries);
   sandbox.stub(topicHelper, 'getContentTypes')
@@ -123,78 +117,6 @@ test('getById returns fetchById if resetCache arg is true', async () => {
   result.should.deep.equal(topic);
 });
 
-// getDefaultTextFromContentfulEntryAndTemplateName
-test('getDefaultTextFromContentfulEntryAndTemplateName returns default for templateName', () => {
-  const result = topicHelper
-    .getDefaultTextFromContentfulEntryAndTemplateName(campaignConfig, templateName);
-  result.should.equal(campaignTemplates[templateName].defaultText);
-});
-
-// getTemplateInfoFromContentfulEntryAndTemplateName
-test('getTemplateInfoFromContentfulEntryAndTemplateName returns an object', () => {
-  sandbox.stub(contentful, 'getContentTypeFromContentfulEntry')
-    .returns(campaignConfigContentType);
-  const result = topicHelper
-    .getTemplateInfoFromContentfulEntryAndTemplateName(campaignConfig, templateName);
-  contentful.getContentTypeFromContentfulEntry.should.have.been.called;
-  result.should.equal(config.templatesByContentType[campaignConfigContentType][templateName]);
-});
-
-// getTopicTemplates
-test('getTopicTemplates returns an object of templates', () => {
-  const stubTemplate = { autoReply: { text: stubs.getRandomWord() } };
-  sandbox.stub(topicHelper, 'getTemplates')
-    .returns(stubTemplate);
-  const autoReply = autoReplyFactory.getValidAutoReplyWithoutCampaign();
-
-  const result = topicHelper
-    .getTopicTemplates(autoReply, templateName);
-  result.should.deep.equal(stubTemplate);
-});
-
-// parseRawAndOverride
-test('parseRawAndOverride returns default text when no field value exists', () => {
-  sandbox.stub(topicHelper, 'getDefaultTextFromContentfulEntryAndTemplateName')
-    .returns(templateText);
-  sandbox.stub(topicHelper, 'getFieldValueFromContentfulEntryAndTemplateName')
-    .returns(null);
-
-  const result = topicHelper
-    .parseRawAndOverride(campaignConfig, templateName);
-  topicHelper.getDefaultTextFromContentfulEntryAndTemplateName.should.have.been.called;
-  topicHelper.getFieldValueFromContentfulEntryAndTemplateName.should.have.been.called;
-  result.override.should.equal(false);
-  result.raw.should.equal(templateText);
-});
-
-test('parseRawAndOverride returns template text when topic value exists', () => {
-  sandbox.stub(topicHelper, 'getDefaultTextFromContentfulEntryAndTemplateName')
-    .returns(stubs.getRandomString());
-  sandbox.stub(topicHelper, 'getFieldValueFromContentfulEntryAndTemplateName')
-    .returns(templateText);
-
-  const result = topicHelper
-    .parseRawAndOverride(campaignConfig, templateName);
-  topicHelper.getDefaultTextFromContentfulEntryAndTemplateName.should.not.have.been.called;
-  topicHelper.getFieldValueFromContentfulEntryAndTemplateName.should.have.been.called;
-  result.override.should.equal(true);
-  result.raw.should.equal(templateText);
-});
-
-// getFieldValueFromContentfulEntryAndTemplateName
-test('getFieldValueFromContentfulEntryAndTemplateName returns the entry field value for templateName', () => {
-  const result = topicHelper
-    .getFieldValueFromContentfulEntryAndTemplateName(campaignConfig, templateName);
-  result.should.deep.equal(campaignConfig.fields.campaignClosedMessage);
-});
-
-// getPostTypeFromContentType
-test('getPostTypeFromContentType returns postType string property from contentTypeConfig', () => {
-  const result = topicHelper.getPostTypeFromContentType(topicContentType);
-  const contentTypeConfigs = helpers.contentfulEntry.getContentTypeConfigs();
-  result.should.equal(contentTypeConfigs[topicContentType].postType);
-});
-
 // parseTopicFromContentfulEntry
 test('parseTopicFromContentfulEntry returns parseBroadcastFromContentfulEntry if contentfulEntry is broadcastable', async () => {
   const askYesNo = askYesNoFactory.getValidAskYesNo();
@@ -211,28 +133,22 @@ test('parseTopicFromContentfulEntry returns parseBroadcastFromContentfulEntry if
 test('parseTopicFromContentfulEntry gets campaign by id if campaign field is set', async () => {
   const textPostConfig = textPostConfigFactory.getValidTextPostConfig();
   const stubCampaign = { title: stubs.getRandomName() };
-  const stubPostType = topicContentType;
   const stubSummary = { name: stubs.getRandomName() };
   const stubTemplates = { askText: stubs.getRandomMessageText() };
   sandbox.stub(helpers.contentfulEntry, 'getSummaryFromContentfulEntry')
     .returns(stubSummary);
-  sandbox.stub(helpers.topic, 'getPostTypeFromContentType')
-    .returns(stubPostType);
   sandbox.stub(helpers.campaign, 'getById')
     .returns(Promise.resolve(stubCampaign));
-  sandbox.stub(helpers.topic, 'getTopicTemplates')
+  sandbox.stub(helpers.contentfulEntry, 'getTopicTemplates')
     .returns(stubTemplates);
 
   const result = await topicHelper.parseTopicFromContentfulEntry(textPostConfig);
   helpers.contentfulEntry.getSummaryFromContentfulEntry.should.have.been.calledWith(textPostConfig);
   result.name.should.equal(stubSummary.name);
-  helpers.topic.getPostTypeFromContentType.should.have.been.calledWith(stubPostType);
-  result.postType.should.equal(stubPostType);
   helpers.campaign.getById
     .should.have.been.calledWith(textPostConfig.fields.campaign.fields.campaignId);
   result.campaign.should.deep.equal(stubCampaign);
-  helpers.topic.getTopicTemplates
-    .should.have.been.calledWith(textPostConfig, stubCampaign);
+  helpers.contentfulEntry.getTopicTemplates.should.have.been.calledWith(textPostConfig);
   result.templates.should.deep.equal(stubTemplates);
 });
 
@@ -240,7 +156,7 @@ test('parseTopicFromContentfulEntry does not get campaign by id if campaign fiel
   const textPostConfig = autoReplyFactory.getValidAutoReplyWithoutCampaign();
   sandbox.stub(helpers.campaign, 'getById')
     .returns(Promise.resolve({ data: { title: stubs.getRandomName() } }));
-  sandbox.stub(helpers.topic, 'getTopicTemplates')
+  sandbox.stub(helpers.contentfulEntry, 'getTopicTemplates')
     .returns({});
 
   const result = await topicHelper.parseTopicFromContentfulEntry(textPostConfig);

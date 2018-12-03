@@ -5,6 +5,13 @@ const templateFieldTypes = {
   transition: 'transition',
 };
 
+// Defaults for templates fields that are optional.
+const campaignTitleTag = '{{topic.campaign.title}}';
+const startCommand = 'START';
+const askWhyParticipatedText = `Why was participating in ${campaignTitleTag} important to you? (No need to write an essay, one sentence is good).`;
+const completedPhotoPostText = `To submit another post for ${campaignTitleTag}, text ${startCommand}.`;
+const invalidInputText = 'Sorry, I didn\'t get that. Text Q if you have a question.';
+
 /**
  * This maps the fields in our Contentful types into broadcast, topic, and defaultTopicTriggers.
  *
@@ -35,9 +42,11 @@ module.exports = {
       type: 'askVotingPlanStatus',
       broadcastable: true,
       templates: {
-        // These template names correspond to the macros that get executed if user matches a trigger
-        // within the ask_voting_plan_status topic in Gambit Conversations.
-        // @see https://github.com/DoSomething/gambit-conversations/blob/master/brain/topics/askVotingPlanStatus.rive
+        /**
+         * These template names correspond to the macros that get executed if user matches a trigger
+         * within the ask_voting_plan_status topic in Gambit Conversations.
+         * @see https://github.com/DoSomething/gambit-conversations/blob/master/brain/topics/askVotingPlanStatus.rive
+         */
         votingPlanStatusCantVote: {
           fieldName: 'cantVoteTransition',
           fieldType: templateFieldTypes.transition,
@@ -106,8 +115,70 @@ module.exports = {
     },
     photoPostConfig: {
       type: 'photoPostConfig',
-      // TODO: Refactor photoPostConfig in config/lib/helpers/topic here to DRY.
-      postType: 'photo',
+      templates: {
+        startPhotoPostAutoReply: {
+          defaultText: `${invalidInputText}\n\nText ${startCommand} when you're ready to submit a post for ${campaignTitleTag}.`,
+          fieldName: 'invalidSignupMenuCommandMessage',
+          fieldType: templateFieldTypes.text,
+          name: 'startPhotoPostAutoReply',
+        },
+        completedPhotoPost: {
+          defaultText: `Thanks for your submission. ${completedPhotoPostText}`,
+          fieldName: 'completedMenuMessage',
+          fieldType: templateFieldTypes.text,
+          name: 'completedPhotoPost',
+        },
+        completedPhotoPostAutoReply: {
+          fieldName: 'invalidCompletedMenuCommandMessage',
+          defaultText: `${invalidInputText}\n\n${completedPhotoPostText}`,
+          fieldType: templateFieldTypes.text,
+          name: 'completedPhotoPostAutoReply',
+        },
+        askQuantity: {
+          fieldName: 'askQuantityMessage',
+          fieldType: templateFieldTypes.text,
+          name: 'askQuantity',
+        },
+        invalidQuantity: {
+          fieldName: 'invalidQuantityMessage',
+          fieldType: templateFieldTypes.text,
+          name: 'invalidQuantity',
+        },
+        askPhoto: {
+          fieldName: 'askPhotoMessage',
+          fieldType: templateFieldTypes.text,
+          name: 'askPhoto',
+        },
+        invalidPhoto: {
+          fieldName: 'invalidPhotoMessage',
+          fieldType: templateFieldTypes.text,
+          name: 'invalidPhoto',
+        },
+        askCaption: {
+          defaultText: 'Got it! Now text back a caption for your photo (think Instagram)! Keep it short & sweet, under 60 characters please.',
+          fieldName: 'askCaptionMessage',
+          fieldType: templateFieldTypes.text,
+          name: 'askCaption',
+        },
+        invalidCaption: {
+          defaultText: `${invalidInputText}\n\nText back a caption for your photo -- keep it short & sweet, under 60 characters please. (but more than 3!)`,
+          fieldName: 'invalidCaptionMessage',
+          fieldType: templateFieldTypes.text,
+          name: 'invalidCaption',
+        },
+        askWhyParticipated: {
+          defaultText: `Last question: ${askWhyParticipatedText}`,
+          fieldName: 'askWhyParticipatedMessage',
+          fieldType: templateFieldTypes.text,
+          name: 'askWhyParticipated',
+        },
+        invalidWhyParticipated: {
+          defaultText: `${invalidInputText}\n\n${askWhyParticipatedText}`,
+          fieldName: 'invalidWhyParticipatedMessage',
+          fieldType: templateFieldTypes.text,
+          name: 'askWhyParticipated',
+        },
+      },
     },
     photoPostTransition: {
       type: 'photoPostTransition',
@@ -119,22 +190,47 @@ module.exports = {
     },
     textPostConfig: {
       type: 'textPostConfig',
-      // TODO: Move textPostConfig in config/lib/helpers/topic here to DRY.
-      postType: 'text',
+      templates: {
+        invalidText: {
+          fieldName: 'invalidTextMessage',
+          fieldType: templateFieldTypes.text,
+          name: 'invalidText',
+        },
+        completedTextPost: {
+          fieldName: 'completedTextPostMessage',
+          fieldType: templateFieldTypes.text,
+          name: 'completedTextPost',
+        },
+      },
     },
     textPostTransition: {
       type: 'textPostTransition',
       transitionable: true,
     },
-    // Legacy types:
-    // Ideally we'd backfill all legacy entries as their new types, but we likely can't change the
-    // the type of a Contentful entry without changing its id (if that's the case - we'd need to
-    // bulk update all documents in the Conversations messages DB)
-    // This externalPostConfig type will deprecated by an autoReply:
+    /**
+     * Legacy types.
+     *
+     * Ideally we'd backfill all legacy entries as their new types, but we likely can't change the
+     * the type of a Contentful entry without changing its id (if that's the case - we'd need to
+     * bulk update all documents in the Conversations messages DB).
+     *
+     * The externalPostConfig has been deprecated by autoReply via its optional campaign field.
+     */
     externalPostConfig: {
       type: 'externalPostConfig',
-      postType: 'external',
+      templates: {
+        autoReply: {
+          fieldName: 'startExternalPostMessage',
+          fieldType: templateFieldTypes.text,
+          name: 'autoReply',
+        },
+      },
     },
+    /**
+     * We used one 'broadcast' type with a few fields to handle all types of broadcasts, but it'd be
+     * tricky to configure. This has been deprecated by building out a new content type for each
+     * broadcast type we send e.g. askSubscriptionStatus, askYesNo, autoReplyBroadcast, etc.
+     */
     legacyBroadcast: {
       type: 'broadcast',
       broadcastable: true,
