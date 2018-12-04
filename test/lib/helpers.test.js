@@ -14,7 +14,6 @@ const sinon = require('sinon');
 
 // App Modules
 const stubs = require('../../test/utils/stubs');
-const stathat = require('../../lib/stathat');
 
 // Module to test
 const helpers = require('../../lib/helpers');
@@ -29,7 +28,6 @@ const sandbox = sinon.sandbox.create();
 test.beforeEach((t) => {
   stubs.stubLogger(sandbox, logger);
   sandbox.stub(newrelic, 'addCustomParameters');
-  sandbox.stub(stathat, 'postStat');
 
   // setup spies
   sandbox.spy(helpers, 'sendErrorResponse');

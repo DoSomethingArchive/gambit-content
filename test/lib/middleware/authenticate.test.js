@@ -8,9 +8,7 @@ const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
 const httpMocks = require('node-mocks-http');
 const logger = require('winston');
-const underscore = require('underscore');
 
-const stathat = require('../../../lib/stathat');
 const config = require('../../../config/lib/middleware/authenticate');
 const stubs = require('../../utils/stubs');
 
@@ -26,13 +24,10 @@ const sandbox = sinon.sandbox.create();
 
 // stubs
 const endpointStub = '/v1/topics';
-const stathatStub = underscore.noop;
 
 // Setup!
 test.beforeEach((t) => {
   stubs.stubLogger(sandbox, logger);
-  sandbox.stub(stathat, 'postStat').returns(stathatStub);
-
   // setup res mock
   t.context.res = httpMocks.createResponse();
 });
