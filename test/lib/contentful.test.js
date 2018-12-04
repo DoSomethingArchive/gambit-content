@@ -13,7 +13,6 @@ const underscore = require('underscore');
 
 // app modules
 const stubs = require('../../test/utils/stubs');
-const stathat = require('../../lib/stathat');
 const utilHelper = require('../../lib/helpers/util');
 const contentfulAPI = require('contentful');
 const broadcastContentfulFactory = require('../../test/utils/factories/contentful/broadcast');
@@ -46,7 +45,6 @@ const contentfulAPIStub = {
 // Setup!
 test.beforeEach(() => {
   stubs.stubLogger(sandbox, logger);
-  sandbox.stub(stathat, 'postStat');
   sandbox.stub(contentfulAPI, 'createClient')
     .returns(contentfulAPIStub);
 });
