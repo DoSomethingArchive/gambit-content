@@ -61,7 +61,6 @@
     "redis": "^2.8.0",
     "s3-upload-stream": "^1.0.7",
     "serve-favicon": "^2.5.0",
-    "simple-oauth2": "^1.5.2",
     "superagent": "^3.8.3",
     "throng": "^4.0.0",
     "underscore": "^1.9.0",
