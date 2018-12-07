@@ -13,18 +13,18 @@ chai.use(sinonChai);
 const sandbox = sinon.sandbox.create();
 
 // Module to test
-const rogue = rewire('../../lib/rogue');
+const gateway = rewire('../../lib/gateway');
 
 test.beforeEach(() => {
 });
 
 test.afterEach(() => {
   sandbox.restore();
-  rogue.__set__('rogueClient', undefined);
+  gateway.__set__('gatewayClient', undefined);
 });
 
-test('rogue.getClient() should return the same instance', () => {
-  const client = rogue.getClient();
-  const newClient = rogue.getClient();
+test('gateway.getClient() should return the same instance', () => {
+  const client = gateway.getClient();
+  const newClient = gateway.getClient();
   client.should.be.equal(newClient);
 });
