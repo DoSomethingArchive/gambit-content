@@ -2,6 +2,9 @@
 
 const stubs = require('../../stubs');
 
+/**
+ * @see https://github.com/DoSomething/rogue/blob/master/docs/endpoints/campaigns.md
+ */
 function getValidCampaign() {
   return {
     id: stubs.getCampaignId(),
