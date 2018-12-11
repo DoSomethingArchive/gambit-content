@@ -5,13 +5,6 @@ const templateFieldTypes = {
   transition: 'transition',
 };
 
-// Defaults for templates fields that are optional.
-const campaignTitleTag = '{{topic.campaign.title}}';
-const startCommand = 'START';
-const askWhyParticipatedText = `Why was participating in ${campaignTitleTag} important to you? (No need to write an essay, one sentence is good).`;
-const completedPhotoPostText = `To submit another post for ${campaignTitleTag}, text ${startCommand}.`;
-const invalidInputText = 'Sorry, I didn\'t get that. Text Q if you have a question.';
-
 /**
  * This maps the fields in our Contentful types into broadcast, topic, and defaultTopicTriggers.
  *
@@ -117,20 +110,17 @@ module.exports = {
       type: 'photoPostConfig',
       templates: {
         startPhotoPostAutoReply: {
-          defaultText: `${invalidInputText}\n\nText ${startCommand} when you're ready to submit a post for ${campaignTitleTag}.`,
           fieldName: 'invalidSignupMenuCommandMessage',
           fieldType: templateFieldTypes.text,
           name: 'startPhotoPostAutoReply',
         },
         completedPhotoPost: {
-          defaultText: `Thanks for your submission. ${completedPhotoPostText}`,
           fieldName: 'completedMenuMessage',
           fieldType: templateFieldTypes.text,
           name: 'completedPhotoPost',
         },
         completedPhotoPostAutoReply: {
           fieldName: 'invalidCompletedMenuCommandMessage',
-          defaultText: `${invalidInputText}\n\n${completedPhotoPostText}`,
           fieldType: templateFieldTypes.text,
           name: 'completedPhotoPostAutoReply',
         },
@@ -161,19 +151,17 @@ module.exports = {
           name: 'askCaption',
         },
         invalidCaption: {
-          defaultText: `${invalidInputText}\n\nText back a caption for your photo -- keep it short & sweet, under 60 characters please. (but more than 3!)`,
+          defaultText: 'Sorry, I didn\'t get that. Text Q if you have a question.\n\nText back a caption for your photo -- keep it short & sweet, under 60 characters please. (but more than 3!)',
           fieldName: 'invalidCaptionMessage',
           fieldType: templateFieldTypes.text,
           name: 'invalidCaption',
         },
         askWhyParticipated: {
-          defaultText: `Last question: ${askWhyParticipatedText}`,
           fieldName: 'askWhyParticipatedMessage',
           fieldType: templateFieldTypes.text,
           name: 'askWhyParticipated',
         },
         invalidWhyParticipated: {
-          defaultText: `${invalidInputText}\n\n${askWhyParticipatedText}`,
           fieldName: 'invalidWhyParticipatedMessage',
           fieldType: templateFieldTypes.text,
           name: 'askWhyParticipated',
