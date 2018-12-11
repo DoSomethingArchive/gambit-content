@@ -131,7 +131,9 @@ test('parseCampaign returns an object with parsed properties from a Rogue campai
   const result = campaignHelper.parseCampaign(rogueCampaign);
   result.id.should.equal(rogueCampaign.id);
   result.title.should.equal(rogueCampaign.internal_title);
+  result.internalTitle.should.equal(rogueCampaign.internal_title);
   result.status.should.equal(mockStatus);
+  result.startDate.should.equal(rogueCampaign.start_date);
   // TODO: Test for campaign with endDate.date
   t.is(result.endDate, null);
 });
