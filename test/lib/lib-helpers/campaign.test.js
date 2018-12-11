@@ -24,6 +24,8 @@ const campaignId = campaign.id;
 const campaignConfigEntry = campaignEntryFactory.getValidCampaign();
 const parsedCampaignConfig = { id: stubs.getContentfulId() };
 
+const config = require('../../../config/lib/helpers/campaign');
+
 // Module to test
 const campaignHelper = require('../../../lib/helpers/campaign');
 
@@ -151,4 +153,15 @@ test('parseCampaignConfig should return object with id and templates properties'
   const result = await campaignHelper.parseCampaignConfig(campaignConfigEntry);
   result.id.should.equal(campaignConfigEntry.sys.id);
   result.templates.webSignup.should.deep.equal(stubTemplate);
+});
+
+test('parseCampaignStatus should return active status if Rogue campaign has no end_date', () => {
+  const result = campaignHelper.parseCampaignStatus(rogueCampaign);
+  result.should.equal(config.statuses.active);
+});
+
+test('parseCampaignStatus should return closed status if Rogue campaign end_date has past', () => {
+  const closedRogueCampaign = rogueCampaignFactory.getValidClosedCampaign();
+  const result = campaignHelper.parseCampaignStatus(closedRogueCampaign);
+  result.should.equal(config.statuses.closed);
 });
