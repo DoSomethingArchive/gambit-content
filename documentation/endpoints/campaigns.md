@@ -47,6 +47,7 @@ curl http://localhost:5000/v1/campaigns/7
 {
   "data": {
     "id": 72332,
+    "internal_title": "Mirror Messages Run 87",
     "title": "Mirror Messages Run 87",
     "startDate": "2018-03-29T00:00:00+00:00",
     "endDate": "2029-03-29T00:00:00+00:00",
