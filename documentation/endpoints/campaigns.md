@@ -8,8 +8,10 @@ Fields:
 Name | Type | Description
 -----|------|------------
 `id` | Number | The campaign id
-`title` | String | The internal campaign title
+`internal_title` | String | The internal campaign title
+`title` | String | To be deprecated (same as `internal_title`)
 `status` | String | Either `'active'` or `'closed'`. Users may not participate in chatbot topics for closed campaigns.
+`startDate` | Date | 
 `endDate` | Date | Used to determine `status` - if endDate is set and passed, status is `closed`
 `config` | Object | The chatbot configuration for this campaign
 `config.id` | String | The id of the chatbot configuration
@@ -44,15 +46,16 @@ curl http://localhost:5000/v1/campaigns/7
 ```
 {
   "data": {
-    "id": 7,
-    "title": "Mirror Messages",
+    "id": 72332,
+    "title": "Mirror Messages Run 87",
+    "startDate": "2018-03-29T00:00:00+00:00",
+    "endDate": "2029-03-29T00:00:00+00:00",
     "status": "active",
-    "endDate": null,
     "config": {
       "id": "68Oy1FcaR2EiaMieicaoom",
       "templates": {
         "webSignup": {
-          "text": "Hi this is Freddie from DoSomething! Thanks for signing up for mirror messages. When youve posted some notes and ready to send a photo, text START",
+          "text": "Hi this is Freddie from DoSomething! Thanks for signing up for Mirror Messages. When you've posted some notes and ready to send a photo, text START",
           "attachments": [],
           "template": "webSignup",
           "topic": {
