@@ -146,7 +146,7 @@ test('parseCampaignConfig should return empty object if contentfulEntry undefine
   result.should.deep.equal({});
 });
 
-test('parseCampaignConfig should return object with id and templates properties', async () => {
+test('parseCampaignConfig should return templates object with webSignup if contentfulEntry webSignup field is set', async () => {
   const stubTemplate = { text: stubs.getRandomMessageText() };
   sandbox.stub(helpers.contentfulEntry, 'getMessageTemplate')
     .returns(Promise.resolve(stubTemplate));
