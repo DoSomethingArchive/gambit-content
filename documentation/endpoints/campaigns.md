@@ -8,8 +8,8 @@ Fields:
 Name | Type | Description
 -----|------|------------
 `id` | Number | The campaign id
-`internal_title` | String | The internal campaign title
-`title` | String | To be deprecated (same as `internal_title`)
+`internalTitle` | String | The internal campaign title
+`title` | String | To be deprecated (same as `internalTitle`)
 `status` | String | Either `'active'` or `'closed'`. Users may not participate in chatbot topics for closed campaigns.
 `startDate` | Date | 
 `endDate` | Date | Used to determine `status` - if endDate is set and passed, status is `closed`
@@ -47,7 +47,7 @@ curl http://localhost:5000/v1/campaigns/7
 {
   "data": {
     "id": 72332,
-    "internal_title": "Mirror Messages Run 87",
+    "internalTitle": "Mirror Messages Run 87",
     "title": "Mirror Messages Run 87",
     "startDate": "2018-03-29T00:00:00+00:00",
     "endDate": "2029-03-29T00:00:00+00:00",
