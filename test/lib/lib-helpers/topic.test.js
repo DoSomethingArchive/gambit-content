@@ -31,37 +31,6 @@ test.afterEach(() => {
   sandbox.restore();
 });
 
-// fetch
-test('fetch returns contentful.fetchByContentTypes parsed as topic objects', async () => {
-  const contentTypes = ['textPostConfig'];
-  const entries = [textPostConfigFactory.getValidTextPostConfig()];
-  const fetchEntriesResult = stubs.contentful.getFetchByContentTypesResultWithArray(entries);
-  sandbox.stub(topicHelper, 'getContentTypes')
-    .returns(contentTypes);
-  sandbox.stub(contentful, 'fetchByContentTypes')
-    .returns(Promise.resolve(fetchEntriesResult));
-  sandbox.stub(topicHelper, 'parseTopicFromContentfulEntry')
-    .returns(Promise.resolve(topic));
-
-  const result = await topicHelper.fetch();
-  contentful.fetchByContentTypes.should.have.been.calledWith(contentTypes, {});
-  entries.forEach((entry) => {
-    topicHelper.parseTopicFromContentfulEntry.should.have.been.calledWith(entry);
-  });
-  result.data.should.deep.equal([topic]);
-});
-
-test('fetch throws if contentful.fetchByContentTypes fails', async (t) => {
-  const error = new Error('epic fail');
-  sandbox.stub(contentful, 'fetchByContentTypes')
-    .returns(Promise.reject(error));
-  sandbox.stub(topicHelper, 'parseTopicFromContentfulEntry')
-    .returns(Promise.resolve(topic));
-
-  const result = await t.throws(topicHelper.fetch());
-  result.should.deep.equal(error);
-});
-
 // fetchById
 test('fetchById returns contentful.fetchByContentfulId parsed as cached topic object', async () => {
   const fetchEntryResult = { id: '132' };
