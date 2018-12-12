@@ -99,6 +99,18 @@ test('getById returns fetchById if cache not set', async () => {
   result.should.deep.equal(campaign);
 });
 
+test('getById returns fetchById if called with a false resetCache arg', async () => {
+  sandbox.stub(helpers.cache.campaigns, 'get')
+    .returns(Promise.resolve(null));
+  sandbox.stub(campaignHelper, 'fetchById')
+    .returns(Promise.resolve(campaign));
+
+  const result = await campaignHelper.getById(campaignId, false);
+  helpers.cache.campaigns.get.should.have.been.calledWith(campaignId);
+  campaignHelper.fetchById.should.have.been.calledWith(campaignId);
+  result.should.deep.equal(campaign);
+});
+
 // getCampaignConfigByCampaignId
 test('getCampaignConfigByCampaignId returns campaignConfigs cache if set', async () => {
   sandbox.stub(helpers.cache.campaignConfigs, 'get')
@@ -119,6 +131,18 @@ test('getCampaignConfigByCampaignId returns fetchCampaignConfigByCampaignId if c
     .returns(Promise.resolve(parsedCampaignConfig));
 
   const result = await campaignHelper.getCampaignConfigByCampaignId(campaignId);
+  helpers.cache.campaignConfigs.get.should.have.been.calledWith(campaignId);
+  campaignHelper.fetchCampaignConfigByCampaignId.should.have.been.calledWith(campaignId);
+  result.should.deep.equal(parsedCampaignConfig);
+});
+
+test('getCampaignConfigByCampaignId returns fetchCampaignConfigByCampaignId if called with a false resetCache arg', async () => {
+  sandbox.stub(helpers.cache.campaignConfigs, 'get')
+    .returns(Promise.resolve(null));
+  sandbox.stub(campaignHelper, 'fetchCampaignConfigByCampaignId')
+    .returns(Promise.resolve(parsedCampaignConfig));
+
+  const result = await campaignHelper.getCampaignConfigByCampaignId(campaignId, false);
   helpers.cache.campaignConfigs.get.should.have.been.calledWith(campaignId);
   campaignHelper.fetchCampaignConfigByCampaignId.should.have.been.calledWith(campaignId);
   result.should.deep.equal(parsedCampaignConfig);
