@@ -91,20 +91,7 @@ curl http://localhost:5000/v1/broadcasts?skip=20
           "createdAt": "2018-08-01T14:41:30.242Z",
           "updatedAt": "2018-08-13T13:31:32.583Z",
           "postType": "photo",
-          "campaign": {
-            "id": 8142,
-            "title": "Pump It Up",
-            "tagline": "Print & post our tire flyers to keep friends safe on the road.",
-            "status": "active",
-            "currentCampaignRun": {
-              "id": 8161
-            },
-            "endDate": {
-              "date": "2018-09-30 23:59:00.000000",
-              "timezone_type": 1,
-              "timezone": "-04:00"
-            }
-          },
+          "campaign": { ... },
           "templates": {
             ...
           }
