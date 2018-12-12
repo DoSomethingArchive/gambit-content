@@ -19,11 +19,13 @@ function start(processId) {
   // app modules
   const app = require('./app');
 
+  // Setup Gateway client.
+  require('./lib/gateway').getClient();
+
   /**
    * Profiler setup
    * TODO: Move out to external file
    */
-
   const Profiler = require('./lib/tools/profiler');
   const Uploader = require('./lib/tools/uploader');
 

@@ -15,9 +15,6 @@ function getValidTopic() {
       id: stubs.getCampaignId(),
       title: stubs.getRandomName(),
       status: 'active',
-      currentCampaignRun: {
-        id: stubs.getCampaignRunId(),
-      },
     },
     templates: {
       askText: stubs.getRandomMessageText(),

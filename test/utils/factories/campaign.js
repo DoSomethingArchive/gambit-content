@@ -6,8 +6,13 @@ function getValidCampaign() {
   return {
     id: stubs.getCampaignId(),
     title: stubs.getRandomMessageText(),
-    currentCampaignRun: {
-      id: stubs.getCampaignRunId(),
+    status: 'active',
+    endDate: null,
+    config: {
+      webSignup: {
+        text: stubs.getRandomMessageText(),
+        topic: {},
+      },
     },
   };
 }

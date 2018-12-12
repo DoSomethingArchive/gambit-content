@@ -9,21 +9,21 @@ const chai = require('chai');
 const logger = require('winston');
 const sinonChai = require('sinon-chai');
 const sinon = require('sinon');
-const underscore = require('underscore');
-const dateFns = require('date-fns');
 
 const helpers = require('../../../lib/helpers');
-const phoenix = require('../../../lib/phoenix');
+const gateway = require('../../../lib/gateway');
 const contentful = require('../../../lib/contentful');
 const stubs = require('../../utils/stubs');
 const campaignEntryFactory = require('../../utils/factories/contentful/campaign');
+const rogueCampaignFactory = require('../../utils/factories/rogue/campaign');
+const campaignFactory = require('../../utils/factories/campaign');
 
-const campaign = stubs.phoenix.getCampaign().data;
+const rogueCampaign = rogueCampaignFactory.getValidCampaign();
+const campaign = campaignFactory.getValidCampaign();
 const campaignId = campaign.id;
 const campaignConfigEntry = campaignEntryFactory.getValidCampaign();
 const parsedCampaignConfig = { id: stubs.getContentfulId() };
 
-// Config
 const config = require('../../../config/lib/helpers/campaign');
 
 // Module to test
@@ -36,8 +36,6 @@ const sandbox = sinon.sandbox.create();
 
 test.beforeEach(() => {
   stubs.stubLogger(sandbox, logger);
-  sandbox.stub(dateFns, 'parse')
-    .returns(underscore.noop);
 });
 
 test.afterEach(() => {
@@ -46,16 +44,16 @@ test.afterEach(() => {
 
 // fetchById
 test('fetchById calls phoenix.fetchCampaignById, parseCampaign, and sets cache', async () => {
-  sandbox.stub(phoenix, 'fetchCampaignById')
-    .returns(Promise.resolve(stubs.phoenix.getCampaign()));
+  sandbox.stub(gateway, 'fetchCampaignById')
+    .returns(Promise.resolve({ data: rogueCampaign }));
   sandbox.stub(campaignHelper, 'parseCampaign')
     .returns(campaign);
   sandbox.stub(helpers.cache.campaigns, 'set')
     .returns(Promise.resolve(campaign));
 
   const result = await campaignHelper.fetchById(campaignId);
-  phoenix.fetchCampaignById.should.have.been.calledWith(campaignId);
-  campaignHelper.parseCampaign.should.have.been.calledWith(campaign);
+  gateway.fetchCampaignById.should.have.been.calledWith(campaignId);
+  campaignHelper.parseCampaign.should.have.been.calledWith(rogueCampaign);
   helpers.cache.campaigns.set.should.have.been.calledWith(campaignId, campaign);
   result.should.deep.equal(campaign);
 });
@@ -126,55 +124,20 @@ test('getCampaignConfigByCampaignId returns fetchCampaignConfigByCampaignId if c
   result.should.deep.equal(parsedCampaignConfig);
 });
 
-// isClosed
-test('isClosed validations', () => {
-  // If status property exists, check against config.statuses
-  campaignHelper.isClosed({ status: config.statuses.closed }).should.equal(true);
-  campaignHelper.isClosed({ status: config.statuses.active }).should.equal(false);
-  // If status and endDate undefined, isClosed
-  campaignHelper.isClosed({}).should.equal(false);
-});
-
-// hasEnded
-test('hasEnded returns false if campaign.endDate not isPast', () => {
-  sandbox.stub(dateFns, 'isPast')
-    .returns(false);
-  campaignHelper.hasEnded(campaign).should.equal(false);
-});
-
-test('hasEnded returns true if campaign.endDate isPast', () => {
-  sandbox.stub(dateFns, 'isPast')
-    .returns(true);
-  campaignHelper.hasEnded(campaign).should.equal(true);
-});
-
-// parseStatus
-test('parseStatus returns active status value if campaign not isClosed', () => {
-  sandbox.stub(campaignHelper, 'isClosed')
-    .returns(false);
-  campaignHelper.parseStatus(campaign).should.equal(config.statuses.active);
-});
-
-test('parseStatus returns closed status value if campaign isClosed', () => {
-  sandbox.stub(campaignHelper, 'isClosed')
-    .returns(true);
-  campaignHelper.parseStatus(campaign).should.equal(config.statuses.closed);
-});
-
 // parseCampaign
-test('parseCampaign returns an object with parsed properties from a Phoenix campaign', (t) => {
+test('parseCampaign returns an object with parsed properties from a Rogue campaign', (t) => {
   const mockStatus = 'active';
-  sandbox.stub(campaignHelper, 'parseStatus')
+  sandbox.stub(campaignHelper, 'parseCampaignStatus')
     .returns(mockStatus);
 
-  const result = campaignHelper.parseCampaign(campaign);
-  result.id.should.equal(Number(campaign.legacyCampaignId));
-  result.title.should.equal(campaign.title);
-  result.tagline.should.equal(campaign.tagline);
-  campaignHelper.parseStatus.should.have.been.called;
+  const result = campaignHelper.parseCampaign(rogueCampaign);
+  result.id.should.equal(rogueCampaign.id);
+  result.title.should.equal(rogueCampaign.internal_title);
+  result.internalTitle.should.equal(rogueCampaign.internal_title);
   result.status.should.equal(mockStatus);
-  t.deepEqual(result.endDate, campaign.endDate);
-  result.currentCampaignRun.id.should.equal(Number(campaign.legacyCampaignRunId));
+  result.startDate.should.equal(rogueCampaign.start_date);
+  // TODO: Test for campaign with endDate.date
+  t.is(result.endDate, null);
 });
 
 // parseCampaignConfig
@@ -183,11 +146,22 @@ test('parseCampaignConfig should return empty object if contentfulEntry undefine
   result.should.deep.equal({});
 });
 
-test('parseCampaignConfig should return object with id and templates properties', async () => {
+test('parseCampaignConfig should return templates object with webSignup if contentfulEntry webSignup field is set', async () => {
   const stubTemplate = { text: stubs.getRandomMessageText() };
   sandbox.stub(helpers.contentfulEntry, 'getMessageTemplate')
     .returns(Promise.resolve(stubTemplate));
   const result = await campaignHelper.parseCampaignConfig(campaignConfigEntry);
   result.id.should.equal(campaignConfigEntry.sys.id);
   result.templates.webSignup.should.deep.equal(stubTemplate);
+});
+
+test('parseCampaignStatus should return active status if Rogue campaign has no end_date', () => {
+  const result = campaignHelper.parseCampaignStatus(rogueCampaign);
+  result.should.equal(config.statuses.active);
+});
+
+test('parseCampaignStatus should return closed status if Rogue campaign end_date has past', () => {
+  const closedRogueCampaign = rogueCampaignFactory.getValidClosedCampaign();
+  const result = campaignHelper.parseCampaignStatus(closedRogueCampaign);
+  result.should.equal(config.statuses.closed);
 });
