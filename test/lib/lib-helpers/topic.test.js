@@ -86,6 +86,14 @@ test('getById returns fetchById if resetCache arg is true', async () => {
   result.should.deep.equal(topic);
 });
 
+// getContentTypes
+test('getContentTypes returns types that have templates in contentfulEntry config', () => {
+  const expected = Object.values(helpers.contentfulEntry.getContentTypeConfigs())
+    .filter(typeConfig => typeConfig.templates)
+    .map(typeConfig => typeConfig.type);
+  expected.should.deep.equal(topicHelper.getContentTypes());
+});
+
 // parseTopicFromContentfulEntry
 test('parseTopicFromContentfulEntry returns parseBroadcastFromContentfulEntry if contentfulEntry is broadcastable', async () => {
   const askYesNo = askYesNoFactory.getValidAskYesNo();
