@@ -45,34 +45,6 @@ test.afterEach((t) => {
   t.context = {};
 });
 
-/**
- * Tests
- */
-
-// replacePhoenixCampaignVars
-test('replacePhoenixCampaignVars', async () => {
-  const phoenixCampaign = stubs.getPhoenixCampaign();
-  let renderedMessage = '';
-  // signedup through gambit
-  const signedupGambitMsg = stubs.getDefaultContenfulCampaignMessage('gambitSignupMenu');
-  renderedMessage = await helpers
-    .replacePhoenixCampaignVars(signedupGambitMsg, phoenixCampaign);
-  renderedMessage.should.have.string(phoenixCampaign.title);
-  // invalid sign up command
-  const invalidSignedupCmdMsg = stubs.getDefaultContenfulCampaignMessage('invalidSignupMenuCommand');
-  renderedMessage = await helpers
-    .replacePhoenixCampaignVars(invalidSignedupCmdMsg, phoenixCampaign);
-  renderedMessage.should.have.string('Sorry, I didn\'t understand that.');
-
-  // TODO: test more messages!
-});
-
-test('replacePhoenixCampaignVars with no message should return empty string', () => {
-  const phoenixCampaign = stubs.getPhoenixCampaign();
-  const renderedMessage = helpers.replacePhoenixCampaignVars(undefined, phoenixCampaign);
-  renderedMessage.should.equal('');
-});
-
 // sendTimeoutResponse
 test('sendTimeoutResponse', (t) => {
   sandbox.spy(t.context.res, 'status');

@@ -64,12 +64,9 @@ curl http://localhost:5000/v1/topics/6swLaA7HKE8AGI6iQuWk4y?cache=false \
     "updatedAt": "2018-11-01T17:06:26.833Z",
     "campaign": {
       "id": 8190,
-      "title": "Escape the Vape",
-      "tagline": "Take this 5-question quiz to learn what's really in e-cigs.",
+      "internal_title": "Escape the Vape",
       "status": "active",
-      "currentCampaignRun": {
-        "id": 8191
-      },
+      "startDate": "2015-12-16T03:59:00Z",
       "endDate": "2018-12-16T03:59:00Z"
     },
     "templates": {
