@@ -99,6 +99,10 @@ module.exports = {
     defaultTopicTrigger: {
       type: 'defaultTopicTrigger',
     },
+    faqAnswer: {
+      type: 'faqAnswer',
+    },
+    // To be deprecated by faqAnswer
     message: {
       type: 'message',
     },

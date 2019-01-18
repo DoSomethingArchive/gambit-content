@@ -19,6 +19,7 @@ const autoReplyFactory = require('../../utils/factories/contentful/autoReply');
 const autoReplyBroadcastFactory = require('../../utils/factories/contentful/autoReplyBroadcast');
 const autoReplyTransitionFactory = require('../../utils/factories/contentful/autoReplyTransition');
 const defaultTopicTriggerFactory = require('../../utils/factories/contentful/defaultTopicTrigger');
+const faqAnswerFactory = require('../../utils/factories/contentful/faqAnswer');
 const messageFactory = require('../../utils/factories/contentful/message');
 // Parsed factories
 const broadcastFactory = require('../../utils/factories/broadcast');
@@ -200,10 +201,11 @@ test('isDefaultTopicTrigger returns whether content type is defaultTopicTrigger'
   t.falsy(contentfulEntryHelper.isDefaultTopicTrigger(messageEntry));
 });
 
-// isMessage
-test('isMessage returns whether content type is message', (t) => {
-  t.truthy(contentfulEntryHelper.isMessage(messageEntry));
-  t.falsy(contentfulEntryHelper.isMessage(autoReplyEntry));
+// isFaqTemplate
+test('isFaqTemplate returns true if content type is message or faqTemplate', (t) => {
+  t.truthy(contentfulEntryHelper.isFaqAnswer(messageEntry));
+  t.falsy(contentfulEntryHelper.isFaqAnswer(autoReplyEntry));
+  t.truthy(contentfulEntryHelper.isFaqAnswer(faqAnswerFactory.getValidFaqAnswer()));
 });
 
 // isTransitionable
